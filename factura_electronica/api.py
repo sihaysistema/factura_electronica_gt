@@ -344,7 +344,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		#La funcion se encarga de guardar la respuesta de Infile en la base de datos de ERPNEXT
 		guardar_factura_electronica(respuesta, dato_factura, tiempo_enviado)
 
-		# Crea y Guarda la respuesta en XML que envia INFILE as
+		# Crea y Guarda la respuesta en XML que envia INFILE
+		
 		with open('respuesta.xml', 'w') as recibidoxml:
 			recibidoxml.write(respuesta)
 			recibidoxml.close()
