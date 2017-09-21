@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include factura_electronica *.css
+recursive-include factura_electronica *.csv
+recursive-include factura_electronica *.html
+recursive-include factura_electronica *.ico
+recursive-include factura_electronica *.js
+recursive-include factura_electronica *.json
+recursive-include factura_electronica *.md
+recursive-include factura_electronica *.png
+recursive-include factura_electronica *.py
+recursive-include factura_electronica *.svg
+recursive-include factura_electronica *.txt
+recursive-exclude factura_electronica *.pyc
