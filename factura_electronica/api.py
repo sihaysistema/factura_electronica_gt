@@ -12,7 +12,7 @@ import xml.etree.cElementTree as ET
 import sys
 
 reload(sys)  
-
+ 
 #sys.setdefaultencoding('Cp1252')
 sys.setdefaultencoding('utf-8')
 
