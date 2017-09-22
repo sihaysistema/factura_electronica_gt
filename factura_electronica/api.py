@@ -7,9 +7,12 @@ import xmltodict
 import time 
 import os
 import xml.etree.cElementTree as ET
+
 # Resuelve el problema de decodificacion
 import sys
+
 reload(sys)  
+
 #sys.setdefaultencoding('Cp1252')
 sys.setdefaultencoding('utf-8')
 
