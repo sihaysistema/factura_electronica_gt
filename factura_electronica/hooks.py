@@ -16,7 +16,7 @@ app_license = "MIT"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/factura_electronica/css/factura_electronica.css"
-# app_include_js = "/assets/factura_electronica/js/factura_electronica.js"
+app_include_js = "/assets/factura_electronica/js/facelec.min.js" 
 
 # include js, css files in header of web template
 # web_include_css = "/assets/factura_electronica/css/factura_electronica.css"

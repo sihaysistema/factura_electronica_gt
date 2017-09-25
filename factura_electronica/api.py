@@ -72,7 +72,14 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 	except:
 		frappe.msgprint(_("Error: No se genero correctamente la Factura Electronica"))
 
-
+#Draft
+#Return
+#Credit Note Issued
+#Submitted
+#Paid
+#Unpaid
+#Overdue
+#Cancelled
 @frappe.whitelist()
 #Conexion y Consumo del Web Service Infile
 def generar_factura_electronica(serie_factura, nombre_cliente):
