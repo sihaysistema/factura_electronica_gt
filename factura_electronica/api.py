@@ -7,10 +7,9 @@ import xmltodict
 import time 
 import os
 import xml.etree.cElementTree as ET
-
 # Resuelve el problema de decodificacion
 import sys
-
+ 
 reload(sys)  
 #sys.setdefaultencoding('Cp1252')
 sys.setdefaultencoding('utf-8')
@@ -42,13 +41,16 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 
 #FIXME:
 		# Obtiene y Guarda la Descripcion
-		#tabFacturaElectronica.descripcion = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
+		#descripciones = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
+
+		#tabFacturaElectronica.descripcion = json.loads(descripciones)
+		#frappe.msgprint(_((json.loads(descripciones))))
 		
 		# Obtiene y Guarda la Validez
 		tabFacturaElectronica.valido = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['valido'])
 		
 		# Obtiene y Guarda el Numero DTE
-		tabFacturaElectronica.numero_dte = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['numeroDte'])
+	#tabFacturaElectronica.numero_dte = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['numeroDte'])
 		
 		# Obtiene y Guarda el Rango Final Autorizado
 		#tabFacturaElectronica.rango_final_autorizado = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['rangoFinalAutorizado'])
@@ -72,14 +74,6 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 	except:
 		frappe.msgprint(_("Error: No se genero correctamente la Factura Electronica"))
 
-#Draft
-#Return
-#Credit Note Issued
-#Submitted
-#Paid
-#Unpaid
-#Overdue
-#Cancelled
 @frappe.whitelist()
 #Conexion y Consumo del Web Service Infile
 def generar_factura_electronica(serie_factura, nombre_cliente):
@@ -112,7 +106,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 	'serie_documento', 'usuario', 'serie_autorizada', 'numero_resolucion', 'regimen_isr', 'nit_gface', 'importe_total_exento'
 	], as_dict = 1)
 
-		frappe.msgprint(_('DATOS OBTENIDOS CON EXITO'))
+		#frappe.msgprint(_('DATOS OBTENIDOS CON EXITO'))
 	except:
 		frappe.msgprint(_('Error: Con Base de Datos!'))
 
@@ -150,7 +144,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		salida.write(body_parte1)
 		salida.close()
  
-	frappe.msgprint(_('Primera parte XML generada!'))
+	#frappe.msgprint(_('Primera parte XML generada!'))
 
 # CONSTRUYENDO LA SEGUNDA PARTE DEL CUERPO XML
 # SI hay mas de un producto en la Factura, genera los 'detalleDte' necesarios, agregandolos al archivo 'envio_request.xml'
@@ -194,7 +188,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 				salida.write(body_parte2)	
 			salida.close()
 
-		frappe.msgprint(_('Segunda parte XML generada!'))
+		#frappe.msgprint(_('Segunda parte XML generada!'))
 
 # SI hay un solo producto en la factura, se creara directamente la segunda parte del cuerpo XML
 	else:
@@ -235,7 +229,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			salida.write(body_parte2)	
 			salida.close()
 
-		frappe.msgprint(_('Segunda parte XML generada!'))
+		#frappe.msgprint(_('Segunda parte XML generada!'))
 
 # CREANDO LA TERCERA PARTE DEL CUERPO XML
 	#Asigna a cada variable su valor correspondiente	
@@ -329,7 +323,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		salida.write(body_parte3)	
 		salida.close()
 
-	frappe.msgprint(_('Tercera parte XML generada!'))
+	#frappe.msgprint(_('Tercera parte XML generada!'))
 
 	try:
 		# lee el archivo request.xml generado para ser enviado a INFILE
@@ -343,21 +337,40 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 		#Obtiene la respuesta por medio del metodo post, con los argumentos data, headers y time out
 		#timeout: cumple la funcion de tiempo de espera, despues del tiempo asignado deja de esperar respuestas
-		response = requests.post(url, data=envio_datos, headers=headers, timeout=3)
+		response = requests.post(url, data=envio_datos, headers=headers, timeout=4)
 
 		#respuesta: guarda el cotenido 
 		respuesta = response.content
-
-		#frappe.msgprint(_(respuesta))
-
-		#La funcion se encarga de guardar la respuesta de Infile en la base de datos de ERPNEXT
-		guardar_factura_electronica(respuesta, dato_factura, tiempo_enviado)
-
-		# Crea y Guarda la respuesta en XML que envia INFILE
 		
-		with open('respuesta.xml', 'w') as recibidoxml:
-			recibidoxml.write(respuesta)
-			recibidoxml.close()
+		#Obtener detalles de los errores
+		documento_descripcion = xmltodict.parse(respuesta)
+
+		#Los errores, se describen el descripcion del response.xml que envia de vuelva INFILE
+		descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
+
+		#Reemplaza los caracteres descritos para finalmente convertirlo a un diccionario
+		encuentra_errores = descripciones
+		reemplazo_A = encuentra_errores.replace("&quot;", '"')
+		reemplazo_B = reemplazo_A.replace(";", ",")
+		reemplazo_C = reemplazo_B.replace("[", " ")
+		json_errores = reemplazo_C.replace("]", " ")
+		errores_diccionario = eval(json_errores)
+
+		#Si en el diccionario de errores hay por lo menos uno, se ejecutara la descripcion de cada error
+		if(len(errores_diccionario)>0): 
+			frappe.msgprint(_('SE ENCONTRARON {} ERRORES, VERIFIQUE SU MANUAL'.format(str(len(errores_diccionario)))))    						
+			for llave in errores_diccionario:
+				frappe.msgprint(_('ERROR ' + ' (' + (llave) + ') = ' + (errores_diccionario[llave])))
+		#Si no hay ningun error se procedera a guardar los datos de factura electronica en la base de datos
+		else:
+			frappe.msgprint(_('SIN ERRORES'))	
+			#La funcion se encarga de guardar la respuesta de Infile en la base de datos de ERPNEXT	
+			guardar_factura_electronica(respuesta, dato_factura, tiempo_enviado)
+
+			# Crea y Guarda la respuesta en XML que envia INFILE
+			with open('respuesta.xml', 'w') as recibidoxml:
+				recibidoxml.write(respuesta)
+				recibidoxml.close()
 	except:
 		frappe.msgprint(_('Error en la comunicacion, intente mas tarde!'))
 
