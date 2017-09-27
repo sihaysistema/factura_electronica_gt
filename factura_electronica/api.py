@@ -22,7 +22,7 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 		documento = xmltodict.parse(datos_recibidos)
 
 		# Crea un nuevo documento de Facturas Electronica
-		tabFacturaElectronica = frappe.new_doc("Facturas Electronicas") 
+		tabFacturaElectronica = frappe.new_doc("Envios Facturas Electronicas") 
 
 		# Obtiene y Guarda la serie de factura
 		tabFacturaElectronica.serie_factura_original = serie_fact

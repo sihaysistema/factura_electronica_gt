@@ -2,15 +2,15 @@
 // rename this file from _test_[name] to test_[name] to activate
 // and remove above this line
 
-QUnit.test("test: Facturas Electronicas", function (assert) {
+QUnit.test("test: Envios Facturas Electronicas", function (assert) {
 	let done = assert.async();
 
 	// number of asserts
 	assert.expect(1);
 
 	frappe.run_serially([
-		// insert a new Facturas Electronicas
-		() => frappe.tests.make('Facturas Electronicas', [
+		// insert a new Envios Facturas Electronicas
+		() => frappe.tests.make('Envios Facturas Electronicas', [
 			// values to be set
 			{key: 'value'}
 		]),
