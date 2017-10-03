@@ -286,8 +286,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 			#Obtiene la respuesta por medio del metodo post, con los argumentos data, headers y time out
 			#timeout: cumple la funcion de tiempo de espera, despues del tiempo asignado deja de esperar respuestas
-			response = requests.post(url, data=envio_datos, headers=headers, timeout=3)
-
+			response = requests.post(url, data=envio_datos, headers=headers, timeout=2)
 			#respuesta: guarda el cotenido 
 			respuesta = response.content
 			
@@ -298,12 +297,13 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			errores_diccionario = errores(descripciones)
 			#Obtener detalles de los errores
 			#Si en el diccionario de errores hay por lo menos uno, se ejecutara la descripcion de cada error
-			if(len(errores_diccionario)>0): 
-				frappe.msgprint(_('<b>SE ENCONTRARON {} ERRORES, VERIFIQUE SU MANUAL</b>'.format(str(len(errores_diccionario)))))    						
+			if (len(errores_diccionario)>0): 
+				frappe.msgprint(_('<span class="label label-default" style="font-size: 14px">SE ENCONTRARON {} ERRORES, VERIFIQUE SU MANUAL</span>'.format(str(len(errores_diccionario)))))    						
+				#frappe.msgprint(_(errores_diccionario['detalles.tipo_producto']))
 				for llave in errores_diccionario:
-					frappe.msgprint(_('<b>ERROR </b>' + ' (<b>' + (llave) + '</b>) = ' + (errores_diccionario[llave])))
+					frappe.msgprint(_('<span class="label label-warning" style="font-size: 14px">{}</span>'.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
 			#Si no hay ningun error se procedera a guardar los datos de factura electronica en la base de datos
-				guardar(respuesta, dato_factura, tiempo_enviado)
+				#guardar(respuesta, dato_factura, tiempo_enviado)	
 			else:
 				frappe.msgprint(_('SIN ERRORES'))	
 				#La funcion se encarga de guardar la respuesta de Infile en la base de datos de ERPNEXT	
@@ -313,6 +313,5 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 				with open('respuesta.xml', 'w') as recibidoxml:
 					recibidoxml.write(respuesta)
 					recibidoxml.close()
-			frappe.msgprint(_('TIEMPO: {}'.format(len(diccionario_errores))))
 		except:
 			frappe.msgprint(_('Error en la comunicacion, intente mas tarde!'))
