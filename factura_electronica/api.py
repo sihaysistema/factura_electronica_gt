@@ -4,9 +4,10 @@ import frappe
 from frappe import _
 import requests
 import xmltodict
-import time 
 import os
+from datetime import datetime, date, time
 from guardar_factura import guardar_factura_electronica as guardar
+from valida_errores import encuentra_errores as errores
 # Resuelve el problema de decodificacion
 import sys
  
@@ -54,7 +55,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		'serie_documento', 'usuario', 'serie_autorizada', 'numero_resolucion', 'regimen_isr', 'nit_gface', 'importe_total_exento']
 		, as_dict = 1)
 
-			#frappe.msgprint(_('DATOS OBTENIDOS CON EXITO'))
+			#frappe.msgprint(_(datetime.now()))
 		except:
 			frappe.msgprint(_('Error: Con Base de Datos!'))
 
@@ -70,20 +71,20 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 	# Formatenado la Primera parte del cuerpo XML
 		body_parte1 = """<?xml version="1.0" ?>
-		<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
-		<S:Body>
-		<ns2:registrarDte xmlns:ns2="http://listener.ingface.com/">
+	<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
+	<S:Body>
+	<ns2:registrarDte xmlns:ns2="http://listener.ingface.com/">
 
-		<dte>
-		<clave>{0}</clave>
+	<dte>
+	<clave>{0}</clave>
 
-		<dte>
-			<codigoEstablecimiento>{1}</codigoEstablecimiento>
-			<codigoMoneda>{2}</codigoMoneda>
-			<correoComprador>{3}</correoComprador>
-			<departamentoComprador>{4}</departamentoComprador>
-			<departamentoVendedor>{5}</departamentoVendedor>
-			<descripcionOtroImpuesto>{6}</descripcionOtroImpuesto>""".format(claveTag_Value, codigoEstablecimientoTag_Value,
+	<dte>
+		<codigoEstablecimiento>{1}</codigoEstablecimiento>
+		<codigoMoneda>{2}</codigoMoneda>
+		<correoComprador>{3}</correoComprador>
+		<departamentoComprador>{4}</departamentoComprador>
+		<departamentoVendedor>{5}</departamentoVendedor>
+		<descripcionOtroImpuesto>{6}</descripcionOtroImpuesto>""".format(claveTag_Value, codigoEstablecimientoTag_Value,
 		codigoMonedaTag_Value, correoCompradorTag_Value, departamentoCompradorTag_Value, departamentoVendedorTag_Value,
 		descripcionOtroImpuestoTag_Value)
 
@@ -116,21 +117,21 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 					body_parte2 = """
 
-					<detalleDte>
-						<cantidad>{0}</cantidad>
-						<codigoProducto>{1}</codigoProducto>
-						<descripcionProducto>{2}</descripcionProducto>
-						<detalleImpuestosIva>{3}</detalleImpuestosIva>
-						<importeExento>{4}</importeExento>
-						<importeNetoGravado>{5}</importeNetoGravado>
-						<importeOtrosImpuestos>{6}</importeOtrosImpuestos>
-						<importeTotalOperacion>{7}</importeTotalOperacion>
-						<montoBruto>{8}</montoBruto>
-						<montoDescuento>{9}</montoDescuento>
-						<precioUnitario>{10}</precioUnitario>
-						<tipoProducto>{11}</tipoProducto>
-						<unidadMedida>{12}</unidadMedida>
-					</detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
+				<detalleDte>
+					<cantidad>{0}</cantidad>
+					<codigoProducto>{1}</codigoProducto>
+					<descripcionProducto>{2}</descripcionProducto>
+					<detalleImpuestosIva>{3}</detalleImpuestosIva>
+					<importeExento>{4}</importeExento>
+					<importeNetoGravado>{5}</importeNetoGravado>
+					<importeOtrosImpuestos>{6}</importeOtrosImpuestos>
+					<importeTotalOperacion>{7}</importeTotalOperacion>
+					<montoBruto>{8}</montoBruto>
+					<montoDescuento>{9}</montoDescuento>
+					<precioUnitario>{10}</precioUnitario>
+					<tipoProducto>{11}</tipoProducto>
+					<unidadMedida>{12}</unidadMedida>
+				</detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
 					importeExentoTag_Value, importeNetoGravadoTag_Value, importeOtrosImpuestosTag_Value, importeTotalOperacionTag_Value,
 					montoBrutoTag_Value, montoDescuentoTag_Value, precioUnitarioTag_Value, tipoProductoTag_Value, unidadMedidaTag_Value) 
 					salida.write(body_parte2)	
@@ -156,21 +157,21 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 			body_parte2 = """
 
-			<detalleDte>
-				<cantidad>{0}</cantidad>
-				<codigoProducto>{1}</codigoProducto>
-				<descripcionProducto>{2}</descripcionProducto>
-				<detalleImpuestosIva>{3}</detalleImpuestosIva>
-				<importeExento>{4}</importeExento>
-				<importeNetoGravado>{5}</importeNetoGravado>
-				<importeOtrosImpuestos>{6}</importeOtrosImpuestos>
-				<importeTotalOperacion>{7}</importeTotalOperacion>
-				<montoBruto>{8}</montoBruto>
-				<montoDescuento>{9}</montoDescuento>
-				<precioUnitario>{10}</precioUnitario>
-				<tipoProducto>{11}</tipoProducto>
-				<unidadMedida>{12}</unidadMedida>
-			</detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
+		<detalleDte>
+			<cantidad>{0}</cantidad>
+			<codigoProducto>{1}</codigoProducto>
+			<descripcionProducto>{2}</descripcionProducto>
+			<detalleImpuestosIva>{3}</detalleImpuestosIva>
+			<importeExento>{4}</importeExento>
+			<importeNetoGravado>{5}</importeNetoGravado>
+			<importeOtrosImpuestos>{6}</importeOtrosImpuestos>
+			<importeTotalOperacion>{7}</importeTotalOperacion>
+			<montoBruto>{8}</montoBruto>
+			<montoDescuento>{9}</montoDescuento>
+			<precioUnitario>{10}</precioUnitario>
+			<tipoProducto>{11}</tipoProducto>
+			<unidadMedida>{12}</unidadMedida>
+		</detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
 			importeExentoTag_Value, importeNetoGravadoTag_Value, importeOtrosImpuestosTag_Value, importeTotalOperacionTag_Value,
 			montoBrutoTag_Value, montoDescuentoTag_Value, precioUnitarioTag_Value, tipoProductoTag_Value, unidadMedidaTag_Value)
 			with open('envio_request.xml', 'a') as salida: 
@@ -217,48 +218,48 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 		body_parte3 = """
 
-			<detalleImpuestosIva>{0}</detalleImpuestosIva>
-			<direccionComercialComprador>{1}</direccionComercialComprador>
-			<direccionComercialVendedor>{2}</direccionComercialVendedor>
-			<estadoDocumento>{3}</estadoDocumento>
-			<fechaAnulacion>{4}</fechaAnulacion>
-			<fechaDocumento>{5}</fechaDocumento>
-			<fechaResolucion>{6}</fechaResolucion>
-			<idDispositivo>{7}</idDispositivo>
-			<importeBruto>{8}</importeBruto>
-			<importeDescuento>{9}</importeDescuento>
-			<importeNetoGravado>{10}</importeNetoGravado>
-			<importeOtrosImpuestos>{11}</importeOtrosImpuestos>
-			<importeTotalExento>{12}</importeTotalExento>
-			<montoTotalOperacion>{13}</montoTotalOperacion>
-			<municipioComprador>{14}</municipioComprador>
-			<municipioVendedor>{15}</municipioVendedor>
-			<nitComprador>{16}</nitComprador>
-			<nitGFACE>{17}</nitGFACE>
-			<nitVendedor>{18}</nitVendedor>
-			<nombreComercialComprador>{19}</nombreComercialComprador>
-			<nombreComercialRazonSocialVendedor>{20}</nombreComercialRazonSocialVendedor>
-			<nombreCompletoVendedor>{21}</nombreCompletoVendedor>
-			<numeroDocumento>{22}</numeroDocumento>
-			<numeroResolucion>{23}</numeroResolucion>
-			<regimen2989>{24}</regimen2989>
-			<regimenISR>{25}</regimenISR>
-			<serieAutorizada>{26}</serieAutorizada>
-			<serieDocumento>{27}</serieDocumento>
-			<telefonoComprador>{28}</telefonoComprador>
-			<tipoCambio>{29}</tipoCambio>
-			<tipoDocumento>{30}</tipoDocumento>
+		<detalleImpuestosIva>{0}</detalleImpuestosIva>
+		<direccionComercialComprador>{1}</direccionComercialComprador>
+		<direccionComercialVendedor>{2}</direccionComercialVendedor>
+		<estadoDocumento>{3}</estadoDocumento>
+		<fechaAnulacion>{4}</fechaAnulacion>
+		<fechaDocumento>{5}</fechaDocumento>
+		<fechaResolucion>{6}</fechaResolucion>
+		<idDispositivo>{7}</idDispositivo>
+		<importeBruto>{8}</importeBruto>
+		<importeDescuento>{9}</importeDescuento>
+		<importeNetoGravado>{10}</importeNetoGravado>
+		<importeOtrosImpuestos>{11}</importeOtrosImpuestos>
+		<importeTotalExento>{12}</importeTotalExento>
+		<montoTotalOperacion>{13}</montoTotalOperacion>
+		<municipioComprador>{14}</municipioComprador>
+		<municipioVendedor>{15}</municipioVendedor>
+		<nitComprador>{16}</nitComprador>
+		<nitGFACE>{17}</nitGFACE>
+		<nitVendedor>{18}</nitVendedor>
+		<nombreComercialComprador>{19}</nombreComercialComprador>
+		<nombreComercialRazonSocialVendedor>{20}</nombreComercialRazonSocialVendedor>
+		<nombreCompletoVendedor>{21}</nombreCompletoVendedor>
+		<numeroDocumento>{22}</numeroDocumento>
+		<numeroResolucion>{23}</numeroResolucion>
+		<regimen2989>{24}</regimen2989>
+		<regimenISR>{25}</regimenISR>
+		<serieAutorizada>{26}</serieAutorizada>
+		<serieDocumento>{27}</serieDocumento>
+		<telefonoComprador>{28}</telefonoComprador>
+		<tipoCambio>{29}</tipoCambio>
+		<tipoDocumento>{30}</tipoDocumento>
 
-		</dte>
+	</dte>
 
-			<usuario>{31}</usuario>
-			<validador>{32}</validador>
+		<usuario>{31}</usuario>
+		<validador>{32}</validador>
 
-		</dte>
+	</dte>
 		
-		</ns2:registrarDte>
-		</S:Body>
-		</S:Envelope>""".format(detalleImpuestosIvaTag_Value, direccionComercialCompradorTag_Value, direccionComercialVendedorTag_Value, 
+	</ns2:registrarDte>
+	</S:Body>
+	</S:Envelope>""".format(detalleImpuestosIvaTag_Value, direccionComercialCompradorTag_Value, direccionComercialVendedorTag_Value, 
 		estadoDocumentoTag_Value, fechaAnulacionTag_Value, fechaDocumentoTag_Value, fechaResolucionTag_Value, idDispositivoTag_Value,
 		importeBrutoTag_Value, importeDescuentoTag_Value, importeNetoGravadoTag_Value, importeOtrosImpuestosTag_Value, importeTotalExentoTag_Value,
 		importeTotalOperacionTag_Value, municipioCompradorTag_Value, municipioVendedorTag_Value, nitCompradorTag_Value, nitGFACETag_Value,
@@ -278,39 +279,31 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			envio_datos = open('envio_request.xml', 'r').read()#.splitlines()
 
 			#Obtiene el tiempo en que se envian los datos a INFILE
-			tiempo_enviado = time.strftime("%c") #fixme:
+			tiempo_enviado = datetime.now()
 
 			url="https://www.ingface.net/listener/ingface?wsdl" #URL de listener de INFILE
 			headers = {'content-type': 'text/xml'} #CABECERAS: Indican el tipo de datos
 
 			#Obtiene la respuesta por medio del metodo post, con los argumentos data, headers y time out
 			#timeout: cumple la funcion de tiempo de espera, despues del tiempo asignado deja de esperar respuestas
-			response = requests.post(url, data=envio_datos, headers=headers, timeout=4)
+			response = requests.post(url, data=envio_datos, headers=headers, timeout=3)
 
 			#respuesta: guarda el cotenido 
 			respuesta = response.content
 			
-			#Obtener detalles de los errores
 			documento_descripcion = xmltodict.parse(respuesta)
-
-			#Los errores, se describen el descripcion del response.xml que envia de vuelva INFILE
+    		#Los errores, se describen el descripcion del response.xml que envia de vuelva INFILE
 			descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
 
-			#Reemplaza los caracteres descritos para finalmente convertirlo a un diccionario
-			encuentra_errores = descripciones
-			reemplazo_A = encuentra_errores.replace("&quot;", '"')
-			reemplazo_B = reemplazo_A.replace(";", ",")
-			reemplazo_C = reemplazo_B.replace("[", " ")
-			json_errores = reemplazo_C.replace("]", " ")
-			errores_diccionario = eval(json_errores)
-
+			errores_diccionario = errores(descripciones)
+			#Obtener detalles de los errores
 			#Si en el diccionario de errores hay por lo menos uno, se ejecutara la descripcion de cada error
 			if(len(errores_diccionario)>0): 
 				frappe.msgprint(_('<b>SE ENCONTRARON {} ERRORES, VERIFIQUE SU MANUAL</b>'.format(str(len(errores_diccionario)))))    						
 				for llave in errores_diccionario:
 					frappe.msgprint(_('<b>ERROR </b>' + ' (<b>' + (llave) + '</b>) = ' + (errores_diccionario[llave])))
 			#Si no hay ningun error se procedera a guardar los datos de factura electronica en la base de datos
-				#guardar(respuesta, dato_factura, tiempo_enviado)
+				guardar(respuesta, dato_factura, tiempo_enviado)
 			else:
 				frappe.msgprint(_('SIN ERRORES'))	
 				#La funcion se encarga de guardar la respuesta de Infile en la base de datos de ERPNEXT	
@@ -320,5 +313,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 				with open('respuesta.xml', 'w') as recibidoxml:
 					recibidoxml.write(respuesta)
 					recibidoxml.close()
+			frappe.msgprint(_('TIEMPO: {}'.format(len(diccionario_errores))))
 		except:
 			frappe.msgprint(_('Error en la comunicacion, intente mas tarde!'))
