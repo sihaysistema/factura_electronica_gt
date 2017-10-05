@@ -24,7 +24,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 	try:
 		factura_electronica = frappe.db.get_values('Envios Facturas Electronicas', filters = {'serie_factura_original': dato_factura},
-	fieldname = 'serie_factura_original, cae')
+	fieldname = 'serie_factura_original')
 		frappe.msgprint(_('<b>ERROR:</b> La Factura ya fue generada Anteriormente <b>{}</b>'.format(str(factura_electronica[0][0]))))
 
 	except:
@@ -347,7 +347,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			if (len(errores_diccionario)>0): 
 				frappe.msgprint(_('''
 				ERRORES <span class="label label-default" style="font-size: 16px">{}</span>
-				'''.format(str(len(errores_diccionario)))))
+				'''.format(str(len(errores_diccionario)))+ ' VERIFIQUE SU MANUAL'))
 				for llave in errores_diccionario:
 					frappe.msgprint(_('<span class="label label-warning" style="font-size: 14px">{}</span>'.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
 				#Si no hay ningun error se procedera a guardar los datos de factura electronica en la base de datos
