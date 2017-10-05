@@ -26,7 +26,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		factura_electronica = frappe.db.get_values('Envios Facturas Electronicas', filters = {'serie_factura_original': dato_factura},
 	fieldname = 'serie_factura_original, cae')
 		frappe.msgprint(_('<b>ERROR:</b> La Factura ya fue generada Anteriormente <b>{}</b>'.format(str(factura_electronica[0][0]))))
-	#frappe.msgprint(_(factura_electronica))
+
 	except:
 		frappe.msgprint(_('Generando Factura Electronica...'))
 
@@ -38,7 +38,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 			sales_invoice_item = frappe.db.get_values('Sales Invoice Item', filters = {'parent': dato_factura}, 
 		fieldname = ['item_name', 'qty', 'item_code', 'description', 'net_amount', 'base_net_amount', 
-		'discount_percentage', 'net_rate', 'stock_uom', 'serial_no'], as_dict = 1)			
+		'discount_percentage', 'net_rate', 'stock_uom', 'serial_no', 'item_group'], as_dict = 1)			
 
 			datos_compania = frappe.db.get_values('Company', filters = {'name': 'CODEX'},
 		fieldname = ['company_name', 'default_currency', 'country', 'nit'], as_dict = 1)
@@ -150,8 +150,14 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 					montoBrutoTag_Value = str(sales_invoice_item[i]['base_net_amount'])
 					montoDescuentoTag_Value = str(sales_invoice_item[i]['discount_percentage'])
 					precioUnitarioTag_Value = str(sales_invoice_item[i]['net_rate'])
-					tipoProductoTag_Value = str(sales_invoice_item[i]['item_code'])
 					unidadMedidaTag_Value = str(sales_invoice_item[i]['stock_uom'])
+
+					if (str(sales_invoice_item[i]['item_group']) == 'Servicios'):
+							tipoProductoTag_Value = 'S'
+					if (str(sales_invoice_item[i]['item_group']) == 'Productos'):
+							tipoProductoTag_Value = 'B'
+					if (str(sales_invoice_item[i]['item_group']) == 'Consumible'):
+							tipoProductoTag_Value = 'B'
 
 					body_parte2 = """
 
@@ -190,8 +196,14 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			montoBrutoTag_Value = str(sales_invoice_item[0]['base_net_amount'])
 			montoDescuentoTag_Value = str(sales_invoice_item[0]['discount_percentage'])
 			precioUnitarioTag_Value = str(sales_invoice_item[0]['net_rate'])
-			tipoProductoTag_Value = str(sales_invoice_item[0]['item_code'])
 			unidadMedidaTag_Value = str(sales_invoice_item[0]['stock_uom'])
+
+			if (str(sales_invoice_item[0]['item_group']) == 'Servicios'):
+					tipoProductoTag_Value = 'S'
+			if (str(sales_invoice_item[0]['item_group']) == 'Productos'):
+					tipoProductoTag_Value = 'B'
+			if (str(sales_invoice_item[0]['item_group']) == 'Consumible'):
+					tipoProductoTag_Value = 'B'
 
 			body_parte2 = """
 
@@ -220,7 +232,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 	# CREANDO LA TERCERA PARTE DEL CUERPO XML
 		#Asigna a cada variable su valor correspondiente	
-		detalleImpuestosIvaTag_Value = "24.0"
 		direccionComercialVendedorTag_Value = str(datos_compania[0]['country'])
 		estadoDocumentoTag_Value = "ACTIVO" # VERFICAR EL DATO 
 		fechaAnulacionTag_Value = str((sales_invoice[0]['creation']).isoformat()) #Usa el mismo formato que Fecha Documento, en caso el estado del documento
@@ -250,6 +261,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		tipoDocumentoTag_Value = str(datos_configuracion[0]['tipo_documento'])
 		usuarioTag_Value = str(datos_configuracion[0]['usuario'])
 		validadorTag_Value = str(datos_configuracion[0]['validador'])
+		detalleImpuestosIvaTag_Value = str((float(importeBrutoTag_Value) * 0.12) - float(importeExentoTag_Value))
 
 		body_parte3 = """
 
