@@ -24,7 +24,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 	try:
 		factura_electronica = frappe.db.get_values('Envios Facturas Electronicas', filters = {'serie_factura_original': dato_factura},
-	fieldname = 'serie_factura_original')
+	fieldname = 'serie_factura_original, cae')
 		frappe.msgprint(_('<b>ERROR:</b> La Factura ya fue generada Anteriormente <b>{}</b>'.format(str(factura_electronica[0][0]))))
 	#frappe.msgprint(_(factura_electronica))
 	except:
@@ -44,7 +44,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		fieldname = ['company_name', 'default_currency', 'country', 'nit'], as_dict = 1)
 
 			datos_cliente = frappe.db.get_values('Address', filters = {'address_title': dato_cliente},
-		fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone'], as_dict = 1)
+		fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone', 'address_title'], as_dict = 1)
 
 			nit_cliente = frappe.db.get_values('Customer', filters = {'name': dato_cliente},
 		fieldname = 'nit')
@@ -55,18 +55,56 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		'serie_documento', 'usuario', 'serie_autorizada', 'numero_resolucion', 'regimen_isr', 'nit_gface', 'importe_total_exento']
 		, as_dict = 1)
 
-			#frappe.msgprint(_(datetime.now()))
 		except:
 			frappe.msgprint(_('Error: Con Base de Datos!'))
 
 	# CONSTRUYENDO PRIMERA PARTE DEL CUERPO XML
 		# A cada variable se le asigna el valor que requiere
+		try:
+			if ((datos_cliente[0]['address_title']) is None): fallo = True
+		except:
+			correoCompradorTag_Value = 'N/A'
+			departamentoCompradorTag_Value = 'N/A'
+			direccionComercialCompradorTag_Value = 'N/A'
+			nombreComercialCompradorTag_Value = 'Consumidor Final'
+			telefonoCompradorTag_Value = 'N/A'
+			municipioCompradorTag_Value = 'N/A'
+		else:
+			if ((datos_cliente[0]['email_id']) is None): 
+					correoCompradorTag_Value = 'N/A'
+			else:
+					correoCompradorTag_Value = str(datos_cliente[0]['email_id'])
+
+			if ((datos_cliente[0]['state']) is None): 
+					departamentoCompradorTag_Value = 'N/A'
+			else: 
+					departamentoCompradorTag_Value = str(datos_cliente[0]['state'])
+
+			if ((datos_cliente[0]['address_line1']) is None): 
+					direccionComercialCompradorTag_Value = 'N/A'
+			else:
+					direccionComercialCompradorTag_Value = str((datos_cliente[0]['address_line1']).encode('utf-8'))
+
+			if (str(nit_cliente[0][0]) == 'C/F'):
+					nombreComercialCompradorTag_Value = 'Consumidor Final'
+			else:    		
+					nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
+
+			if ((datos_cliente[0]['phone']) is None):
+					telefonoCompradorTag_Value = 'N/A'
+			else:
+					telefonoCompradorTag_Value = str(datos_cliente[0]['phone'])
+
+			if ((datos_cliente[0]['state']) is None):
+					municipioCompradorTag_Value = 'N/A'
+			else:
+					municipioCompradorTag_Value = str(datos_cliente[0]['state'])
+
 		claveTag_Value = str(datos_configuracion[0]['clave'])
 		codigoEstablecimientoTag_Value = str(datos_configuracion[0]['codigo_establecimiento'])
 		codigoMonedaTag_Value = str(datos_compania[0]['default_currency'])
-		correoCompradorTag_Value = str(datos_cliente[0]['email_id'])
-		departamentoCompradorTag_Value = str(datos_cliente[0]['state'])
-		departamentoVendedorTag_Value = str(datos_compania[0]['country'])
+
+		departamentoVendedorTag_Value = str(datos_compania[0]['country']) 
 		descripcionOtroImpuestoTag_Value = str(datos_configuracion[0]['descripcion_otro_impuesto'])
 
 	# Formatenado la Primera parte del cuerpo XML
@@ -183,11 +221,11 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 	# CREANDO LA TERCERA PARTE DEL CUERPO XML
 		#Asigna a cada variable su valor correspondiente	
 		detalleImpuestosIvaTag_Value = "24.0"
-		direccionComercialCompradorTag_Value = str((datos_cliente[0]['address_line1']).encode('utf-8'))
 		direccionComercialVendedorTag_Value = str(datos_compania[0]['country'])
-		estadoDocumentoTag_Value = "ACTIVO" #str(sales_invoice[0]['status'])
-		fechaAnulacionTag_Value = "2013-10-10T00:00:00.000-06:00"
-		fechaDocumentoTag_Value = "2013-10-10T00:00:00.000-06:00" #str(sales_invoice[0]['creation'])
+		estadoDocumentoTag_Value = "ACTIVO" # VERFICAR EL DATO 
+		fechaAnulacionTag_Value = str((sales_invoice[0]['creation']).isoformat()) #Usa el mismo formato que Fecha Documento, en caso el estado del documento
+		#sea activo este campo no se tomara en cuenta, ya que va de la mano con estado documento porque puede ser Anulado
+		fechaDocumentoTag_Value = str((sales_invoice[0]['creation']).isoformat()) #(sales_invoice[0]['creation']) #"2013-10-10T00:00:00.000-06:00"
 		fechaResolucionTag_Value = "2013-02-15T00:00:00.000-06:00"
 		idDispositivoTag_Value = str(datos_configuracion[0]['id_dispositivo']) 
 		importeBrutoTag_Value = str(sales_invoice_item[0]['net_amount'])
@@ -196,11 +234,9 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		importeOtrosImpuestosTag_Value = str(datos_configuracion[0]['importe_otros_impuestos'])
 		importeTotalExentoTag_Value = str(datos_configuracion[0]['importe_total_exento'])
 		montoTotalOperacionTag_Value = str(sales_invoice[0]['total'])
-		municipioCompradorTag_Value = str(datos_cliente[0]['state'])
-		nitCompradorTag_Value = str(nit_cliente[0][0])
+		nitCompradorTag_Value = str(nit_cliente[0][0]) 			
 		nitGFACETag_Value = str(datos_configuracion[0]['nit_gface'])
-		nitVendedorTag_Value = str(datos_compania[0]['nit'])
-		nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
+		nitVendedorTag_Value = str(datos_compania[0]['nit'])		
 		nombreComercialRazonSocialVendedorTag_Value = "DEMO,S.A."
 		nombreCompletoVendedorTag_Value = str(datos_compania[0]['company_name'])
 		numeroDocumentoTag_Value = str(datos_configuracion[0]['numero_documento'])
@@ -209,9 +245,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		regimenISRTag_Value = str(datos_configuracion[0]['regimen_isr'])
 		serieAutorizadaTag_Value = str(datos_configuracion[0]['serie_autorizada'])
 		serieDocumentoTag_Value = str(datos_configuracion[0]['serie_documento'])
-		telefonoCompradorTag_Value = str(datos_cliente[0]['phone'])
 		municipioVendedorTag_Value = str(datos_compania[0]['country'])
-		tipoCambioTag_Value = "7.35" #AGREGAR A DOCTYPE
+		tipoCambioTag_Value = "1.00" #Cuando es moneda local, obligatoriamente debe llevar 1.00
 		tipoDocumentoTag_Value = str(datos_configuracion[0]['tipo_documento'])
 		usuarioTag_Value = str(datos_configuracion[0]['usuario'])
 		validadorTag_Value = str(datos_configuracion[0]['validador'])
