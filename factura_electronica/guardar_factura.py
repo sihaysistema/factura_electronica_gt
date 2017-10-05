@@ -69,6 +69,6 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 		# Guarda todos los datos en la tabla llamada 'FACTURAS ELECTRONICAS' de la base de datos de ERPNEXT
 		tabFacturaElectronica.save()
 
-		frappe.msgprint(_("Factura Electronica Generada!"))
+		#frappe.msgprint(_("Factura Electronica Generada!"))
 	except:
 		frappe.msgprint(_("Error: No se genero correctamente la Factura Electronica"))

@@ -28,7 +28,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		frappe.msgprint(_('<b>ERROR:</b> La Factura ya fue generada Anteriormente <b>{}</b>'.format(str(factura_electronica[0][0]))))
 
 	except:
-		frappe.msgprint(_('Generando Factura Electronica...'))
+		#frappe.msgprint(_('Generando Factura Electronica...'))
 
 		try:
 		# Obteniendo datos necesarios para INFILE
@@ -345,11 +345,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			#Obtener detalles de los errores
 			#Si en el diccionario de errores hay por lo menos uno, se ejecutara la descripcion de cada error
 			if (len(errores_diccionario)>0): 
-				frappe.msgprint(_('<span class="label label-default" style="font-size: 14px">SE ENCONTRARON {} ERRORES, VERIFIQUE SU MANUAL</span>'.format(str(len(errores_diccionario)))))    						
-				#frappe.msgprint(_(errores_diccionario['detalles.tipo_producto']))
+				frappe.msgprint(_('''
+				ERRORES <span class="label label-default" style="font-size: 16px">{}</span>
+				'''.format(str(len(errores_diccionario)))))
 				for llave in errores_diccionario:
 					frappe.msgprint(_('<span class="label label-warning" style="font-size: 14px">{}</span>'.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
-			#Si no hay ningun error se procedera a guardar los datos de factura electronica en la base de datos
+				#Si no hay ningun error se procedera a guardar los datos de factura electronica en la base de datos
 				#guardar(respuesta, dato_factura, tiempo_enviado)	
 			else:
 				frappe.msgprint(_('SIN ERRORES'))	
@@ -362,3 +363,4 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 					recibidoxml.close()
 		except:
 			frappe.msgprint(_('Error en la comunicacion, intente mas tarde!'))
+	return frappe.msgprint(_('''FACTURA GENERADA CON EXITO'''))
