@@ -326,41 +326,39 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			envio_datos = open('envio_request.xml', 'r').read()#.splitlines()
 
 			#Obtiene el tiempo en que se envian los datos a INFILE
-			tiempo_enviado = datetime.now()
 
 			url="https://www.ingface.net/listener/ingface?wsdl" #URL de listener de INFILE
 			headers = {'content-type': 'text/xml'} #CABECERAS: Indican el tipo de datos
 
 			#Obtiene la respuesta por medio del metodo post, con los argumentos data, headers y time out
 			#timeout: cumple la funcion de tiempo de espera, despues del tiempo asignado deja de esperar respuestas
-			response = requests.post(url, data=envio_datos, headers=headers, timeout=2)
-			#respuesta: guarda el cotenido 
+			tiempo_enviado = datetime.now()
+			response = requests.post(url, data=envio_datos, headers=headers, timeout=5)
 			respuesta = response.content
-			
+		except:
+			frappe.msgprint(_('Error en la Comunicacion, intente mas tarde!'))
+		else:
 			documento_descripcion = xmltodict.parse(respuesta)
     		#Los errores, se describen el descripcion del response.xml que envia de vuelva INFILE
 			descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
-
 			errores_diccionario = errores(descripciones)
-			#Obtener detalles de los errores
-			#Si en el diccionario de errores hay por lo menos uno, se ejecutara la descripcion de cada error
-			if (len(errores_diccionario)>0): 
-				frappe.msgprint(_('''
-				ERRORES <span class="label label-default" style="font-size: 16px">{}</span>
-				'''.format(str(len(errores_diccionario)))+ ' VERIFIQUE SU MANUAL'))
-				for llave in errores_diccionario:
-					frappe.msgprint(_('<span class="label label-warning" style="font-size: 14px">{}</span>'.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
-				#Si no hay ningun error se procedera a guardar los datos de factura electronica en la base de datos
-				#guardar(respuesta, dato_factura, tiempo_enviado)	
-			else:
-				frappe.msgprint(_('SIN ERRORES'))	
-				#La funcion se encarga de guardar la respuesta de Infile en la base de datos de ERPNEXT	
-				guardar(respuesta, dato_factura, tiempo_enviado)
 
-				# Crea y Guarda la respuesta en XML que envia INFILE
-				with open('respuesta.xml', 'w') as recibidoxml:
-					recibidoxml.write(respuesta)
-					recibidoxml.close()
-		except:
-			frappe.msgprint(_('Error en la comunicacion, intente mas tarde!'))
+			if (len(errores_diccionario)>0): 
+					frappe.msgprint(_('''
+					ERRORES <span class="label label-default" style="font-size: 16px">{}</span>
+					'''.format(str(len(errores_diccionario)))+ ' VERIFIQUE SU MANUAL'))
+					for llave in errores_diccionario:
+						frappe.msgprint(_('<span class="label label-warning" style="font-size: 14px">{}</span>'.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
+					#Si no hay ningun error se procedera a guardar los datos de factura electronica en la base de datos
+					#guardar(respuesta, dato_factura, tiempo_enviado)	
+			else:
+					frappe.msgprint(_('Guardando...'))	
+					#La funcion se encarga de guardar la respuesta de Infile en la base de datos de ERPNEXT	
+					guardar(respuesta, dato_factura, tiempo_enviado)
+
+					# Crea y Guarda la respuesta en XML que envia INFILE
+					with open('respuesta.xml', 'w') as recibidoxml:
+						recibidoxml.write(respuesta)
+						recibidoxml.close()
+
 	return frappe.msgprint(_('''FACTURA GENERADA CON EXITO'''))
