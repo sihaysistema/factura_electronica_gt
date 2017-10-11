@@ -10,15 +10,13 @@ from guardar_factura import guardar_factura_electronica as guardar
 from valida_errores import encuentra_errores as errores
 # Resuelve el problema de decodificacion
 import sys
- 
 reload(sys)  
-#sys.setdefaultencoding('Cp1252')
 sys.setdefaultencoding('utf-8')
 
 @frappe.whitelist()
 #Conexion y Consumo del Web Service Infile
 def generar_factura_electronica(serie_factura, nombre_cliente):
-##############################		OBTENER DATOS REQUERIDOS DE LA BASE DE DATOS ##############################
+	"""Obtencion de datos requeridos y construccion de request"""
 	dato_factura = serie_factura
 	dato_cliente = nombre_cliente
 
@@ -29,16 +27,16 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 	except:
 		#frappe.msgprint(_('Generando Factura Electronica...'))
-
 		try:
 		# Obteniendo datos necesarios para INFILE
 			sales_invoice = frappe.db.get_values('Sales Invoice', filters = {'name': dato_factura},
 		fieldname = ['name', 'idx', 'territory','total','grand_total', 'customer_name', 'company',
-		'naming_series', 'creation', 'status', 'discount_amount', 'docstatus', 'modified'], as_dict = 1)
+		'naming_series', 'creation', 'status', 'discount_amount', 'docstatus', 'modified', 'conversion_rate',
+		'total_taxes_and_charges', 'net_total'], as_dict = 1)
 
 			sales_invoice_item = frappe.db.get_values('Sales Invoice Item', filters = {'parent': dato_factura}, 
 		fieldname = ['item_name', 'qty', 'item_code', 'description', 'net_amount', 'base_net_amount', 
-		'discount_percentage', 'net_rate', 'stock_uom', 'serial_no', 'item_group'], as_dict = 1)			
+		'discount_percentage', 'net_rate', 'stock_uom', 'serial_no', 'item_group', 'rate', 'amount'], as_dict = 1)			
 
 			datos_compania = frappe.db.get_values('Company', filters = {'name': 'CODEX'},
 		fieldname = ['company_name', 'default_currency', 'country', 'nit'], as_dict = 1)
@@ -109,12 +107,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 	# Formatenado la Primera parte del cuerpo XML
 		body_parte1 = """<?xml version="1.0" ?>
-	<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
-	<S:Body>
-	<ns2:registrarDte xmlns:ns2="http://listener.ingface.com/">
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
+<S:Body>
+<ns2:registrarDte xmlns:ns2="http://listener.ingface.com/">
 
-	<dte>
-	<clave>{0}</clave>
+<dte>
+<clave>{0}</clave>
 
 	<dte>
 		<codigoEstablecimiento>{1}</codigoEstablecimiento>
@@ -139,43 +137,44 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			n_productos = (len(sales_invoice_item))
 			with open('envio_request.xml', 'a') as salida:
 				for i in range(0, n_productos):
-					cantidadTag_Value = str(sales_invoice_item[i]['qty'])
+					cantidadTag_Value = float(sales_invoice_item[i]['qty'])
 					codigoProductoTag_Value = str(sales_invoice_item[i]['item_code'])
 					descripcionProductoTag_Value = str((sales_invoice_item[i]['description']))
-					detalleImpuestosIvaTag_Value = str(24.0)
-					importeExentoTag_Value = str((datos_configuracion[0]['importe_exento']))
-					importeNetoGravadoTag_Value = str((sales_invoice[0]['grand_total']))
-					importeOtrosImpuestosTag_Value = str((datos_configuracion[0]['importe_otros_impuestos']))
-					importeTotalOperacionTag_Value = str(sales_invoice_item[i]['net_amount'])
-					montoBrutoTag_Value = str(sales_invoice_item[i]['base_net_amount'])
-					montoDescuentoTag_Value = str(sales_invoice_item[i]['discount_percentage'])
-					precioUnitarioTag_Value = str(sales_invoice_item[i]['net_rate'])
+					importeExentoTag_Value = float((datos_configuracion[0]['importe_exento']))
+					importeNetoGravadoTag_Value = float((sales_invoice_item[i]['amount']))
+					montoBrutoTag_Value =  float(sales_invoice_item[i]['net_amount'])
+					# Calculo IVA segun requiere infile
+					detalleImpuestosIvaTag_Value = '{0:.2f}'.format(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12))
+					importeOtrosImpuestosTag_Value = float((datos_configuracion[0]['importe_otros_impuestos']))
+					importeTotalOperacionTag_Value = float((sales_invoice_item[i]['amount']))					
+					montoDescuentoTag_Value = float(sales_invoice_item[i]['discount_percentage'])
+					precioUnitarioTag_Value = float(sales_invoice_item[i]['rate'])
 					unidadMedidaTag_Value = str(sales_invoice_item[i]['stock_uom'])
 
-					if (str(sales_invoice_item[i]['item_group']) == 'Servicios'):
-							tipoProductoTag_Value = 'S'
-					if (str(sales_invoice_item[i]['item_group']) == 'Productos'):
-							tipoProductoTag_Value = 'B'
-					if (str(sales_invoice_item[i]['item_group']) == 'Consumible'):
+					detalle_stock = frappe.db.get_values('Item', filters = {'item_code': codigoProductoTag_Value},	fieldname = ['is_stock_item'])
+
+					if (int((detalle_stock[0][0])) == 0):
+    						tipoProductoTag_Value = 'S'
+					if (int((detalle_stock[0][0])) == 1):
 							tipoProductoTag_Value = 'B'
 
 					body_parte2 = """
 
-				<detalleDte>
-					<cantidad>{0}</cantidad>
-					<codigoProducto>{1}</codigoProducto>
-					<descripcionProducto>{2}</descripcionProducto>
-					<detalleImpuestosIva>{3}</detalleImpuestosIva>
-					<importeExento>{4}</importeExento>
-					<importeNetoGravado>{5}</importeNetoGravado>
-					<importeOtrosImpuestos>{6}</importeOtrosImpuestos>
-					<importeTotalOperacion>{7}</importeTotalOperacion>
-					<montoBruto>{8}</montoBruto>
-					<montoDescuento>{9}</montoDescuento>
-					<precioUnitario>{10}</precioUnitario>
-					<tipoProducto>{11}</tipoProducto>
-					<unidadMedida>{12}</unidadMedida>
-				</detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
+			<detalleDte>
+				<cantidad>{0}</cantidad>
+				<codigoProducto>{1}</codigoProducto>
+				<descripcionProducto>{2}</descripcionProducto>
+				<detalleImpuestosIva>{3}</detalleImpuestosIva>
+				<importeExento>{4}</importeExento>
+				<importeNetoGravado>{5}</importeNetoGravado>
+				<importeOtrosImpuestos>{6}</importeOtrosImpuestos>
+				<importeTotalOperacion>{7}</importeTotalOperacion>
+				<montoBruto>{8}</montoBruto>
+				<montoDescuento>{9}</montoDescuento>
+				<precioUnitario>{10}</precioUnitario>
+				<tipoProducto>{11}</tipoProducto>
+				<unidadMedida>{12}</unidadMedida>
+			</detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
 					importeExentoTag_Value, importeNetoGravadoTag_Value, importeOtrosImpuestosTag_Value, importeTotalOperacionTag_Value,
 					montoBrutoTag_Value, montoDescuentoTag_Value, precioUnitarioTag_Value, tipoProductoTag_Value, unidadMedidaTag_Value) 
 					salida.write(body_parte2)	
@@ -185,43 +184,44 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 	# SI hay un solo producto en la factura, se creara directamente la segunda parte del cuerpo XML
 		else:
-			cantidadTag_Value = str(sales_invoice_item[0]['qty'])
+			cantidadTag_Value = float(sales_invoice_item[0]['qty'])
 			codigoProductoTag_Value = str(sales_invoice_item[0]['item_code'])
 			descripcionProductoTag_Value = str((sales_invoice_item[0]['description']))
-			detalleImpuestosIvaTag_Value = str(24.0)
-			importeExentoTag_Value = str((datos_configuracion[0]['importe_exento']))
-			importeNetoGravadoTag_Value = str((sales_invoice[0]['grand_total']))
-			importeOtrosImpuestosTag_Value = str((datos_configuracion[0]['importe_otros_impuestos']))
-			importeTotalOperacionTag_Value = str(sales_invoice_item[0]['net_amount'])
-			montoBrutoTag_Value = str(sales_invoice_item[0]['base_net_amount'])
-			montoDescuentoTag_Value = str(sales_invoice_item[0]['discount_percentage'])
-			precioUnitarioTag_Value = str(sales_invoice_item[0]['net_rate'])
+			importeExentoTag_Value = float((datos_configuracion[0]['importe_exento']))
+			importeNetoGravadoTag_Value = float((sales_invoice_item[0]['amount']))
+			montoBrutoTag_Value =  float(sales_invoice_item[0]['net_amount'])
+			# Calculo IVA segun requiere infile
+			detalleImpuestosIvaTag_Value = '{0:.2f}'.format(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12))
+			importeOtrosImpuestosTag_Value = float((datos_configuracion[0]['importe_otros_impuestos']))
+			importeTotalOperacionTag_Value = float((sales_invoice_item[0]['amount']))					
+			montoDescuentoTag_Value = float(sales_invoice_item[0]['discount_percentage'])
+			precioUnitarioTag_Value = float(sales_invoice_item[0]['rate'])
 			unidadMedidaTag_Value = str(sales_invoice_item[0]['stock_uom'])
 
-			if (str(sales_invoice_item[0]['item_group']) == 'Servicios'):
-					tipoProductoTag_Value = 'S'
-			if (str(sales_invoice_item[0]['item_group']) == 'Productos'):
-					tipoProductoTag_Value = 'B'
-			if (str(sales_invoice_item[0]['item_group']) == 'Consumible'):
+			detalle_stock = frappe.db.get_values('Item', filters = {'item_code': codigoProductoTag_Value},	fieldname = ['is_stock_item'])
+
+			if (int((detalle_stock[0][0])) == 0):
+    				tipoProductoTag_Value = 'S'
+			if (int((detalle_stock[0][0])) == 1):
 					tipoProductoTag_Value = 'B'
 
 			body_parte2 = """
 
-		<detalleDte>
-			<cantidad>{0}</cantidad>
-			<codigoProducto>{1}</codigoProducto>
-			<descripcionProducto>{2}</descripcionProducto>
-			<detalleImpuestosIva>{3}</detalleImpuestosIva>
-			<importeExento>{4}</importeExento>
-			<importeNetoGravado>{5}</importeNetoGravado>
-			<importeOtrosImpuestos>{6}</importeOtrosImpuestos>
-			<importeTotalOperacion>{7}</importeTotalOperacion>
-			<montoBruto>{8}</montoBruto>
-			<montoDescuento>{9}</montoDescuento>
-			<precioUnitario>{10}</precioUnitario>
-			<tipoProducto>{11}</tipoProducto>
-			<unidadMedida>{12}</unidadMedida>
-		</detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
+	<detalleDte>
+		<cantidad>{0}</cantidad>
+		<codigoProducto>{1}</codigoProducto>
+		<descripcionProducto>{2}</descripcionProducto>
+		<detalleImpuestosIva>{3}</detalleImpuestosIva>
+		<importeExento>{4}</importeExento>
+		<importeNetoGravado>{5}</importeNetoGravado>
+		<importeOtrosImpuestos>{6}</importeOtrosImpuestos>
+		<importeTotalOperacion>{7}</importeTotalOperacion>
+		<montoBruto>{8}</montoBruto>
+		<montoDescuento>{9}</montoDescuento>
+		<precioUnitario>{10}</precioUnitario>
+		<tipoProducto>{11}</tipoProducto>
+		<unidadMedida>{12}</unidadMedida>
+	</detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
 			importeExentoTag_Value, importeNetoGravadoTag_Value, importeOtrosImpuestosTag_Value, importeTotalOperacionTag_Value,
 			montoBrutoTag_Value, montoDescuentoTag_Value, precioUnitarioTag_Value, tipoProductoTag_Value, unidadMedidaTag_Value)
 			with open('envio_request.xml', 'a') as salida: 
@@ -237,18 +237,20 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		fechaAnulacionTag_Value = str((sales_invoice[0]['creation']).isoformat()) #Usa el mismo formato que Fecha Documento, en caso el estado del documento
 		#sea activo este campo no se tomara en cuenta, ya que va de la mano con estado documento porque puede ser Anulado
 		fechaDocumentoTag_Value = str((sales_invoice[0]['creation']).isoformat()) #(sales_invoice[0]['creation']) #"2013-10-10T00:00:00.000-06:00"
-		fechaResolucionTag_Value = "2013-02-15T00:00:00.000-06:00"
+		fechaResolucionTag_Value = (datos_configuracion[0]['fecha_resolucion'])
 		idDispositivoTag_Value = str(datos_configuracion[0]['id_dispositivo']) 
-		importeBrutoTag_Value = str(sales_invoice_item[0]['net_amount'])
-		importeDescuentoTag_Value = str(sales_invoice[0]['discount_amount'])
-		importeNetoGravadoTag_Value = str(sales_invoice[0]['grand_total'])
-		importeOtrosImpuestosTag_Value = str(datos_configuracion[0]['importe_otros_impuestos'])
-		importeTotalExentoTag_Value = str(datos_configuracion[0]['importe_total_exento'])
-		montoTotalOperacionTag_Value = str(sales_invoice[0]['total'])
+		importeBrutoTag_Value = float(sales_invoice[0]['net_total'])
+		importeDescuentoTag_Value = float(sales_invoice[0]['discount_amount'])
+		importeNetoGravadoTag_Value = float(sales_invoice[0]['grand_total'])
+		importeOtrosImpuestosTag_Value = float(datos_configuracion[0]['importe_otros_impuestos'])
+		importeTotalExentoTag_Value = float(datos_configuracion[0]['importe_total_exento'])
+		montoTotalOperacionTag_Value = float(sales_invoice[0]['total'])
 		nitCompradorTag_Value = str(nit_cliente[0][0]) 			
 		nitGFACETag_Value = str(datos_configuracion[0]['nit_gface'])
-		nitVendedorTag_Value = str(datos_compania[0]['nit'])		
+		nitVendedorTag_Value = str(datos_compania[0]['nit'])
+		#FIXME:		
 		nombreComercialRazonSocialVendedorTag_Value = "DEMO,S.A."
+		
 		nombreCompletoVendedorTag_Value = str(datos_compania[0]['company_name'])
 		numeroDocumentoTag_Value = str(datos_configuracion[0]['numero_documento'])
 		numeroResolucionTag_Value = str(datos_configuracion[0]['numero_resolucion'])
@@ -257,11 +259,11 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		serieAutorizadaTag_Value = str(datos_configuracion[0]['serie_autorizada'])
 		serieDocumentoTag_Value = str(datos_configuracion[0]['serie_documento'])
 		municipioVendedorTag_Value = str(datos_compania[0]['country'])
-		tipoCambioTag_Value = "1.00" #Cuando es moneda local, obligatoriamente debe llevar 1.00
+		tipoCambioTag_Value = float(sales_invoice[0]['conversion_rate']) #Cuando es moneda local, obligatoriamente debe llevar 1.00
 		tipoDocumentoTag_Value = str(datos_configuracion[0]['tipo_documento'])
 		usuarioTag_Value = str(datos_configuracion[0]['usuario'])
 		validadorTag_Value = str(datos_configuracion[0]['validador'])
-		detalleImpuestosIvaTag_Value = str((float(importeBrutoTag_Value) * 0.12) - float(importeExentoTag_Value))
+		detalleImpuestosIvaTag_Value = float(sales_invoice[0]['total_taxes_and_charges'])
 
 		body_parte3 = """
 
@@ -299,14 +301,14 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 	</dte>
 
-		<usuario>{31}</usuario>
-		<validador>{32}</validador>
+	<usuario>{31}</usuario>
+	<validador>{32}</validador>
 
-	</dte>
+</dte>
 		
-	</ns2:registrarDte>
-	</S:Body>
-	</S:Envelope>""".format(detalleImpuestosIvaTag_Value, direccionComercialCompradorTag_Value, direccionComercialVendedorTag_Value, 
+</ns2:registrarDte>
+</S:Body>
+</S:Envelope>""".format(detalleImpuestosIvaTag_Value, direccionComercialCompradorTag_Value, direccionComercialVendedorTag_Value, 
 		estadoDocumentoTag_Value, fechaAnulacionTag_Value, fechaDocumentoTag_Value, fechaResolucionTag_Value, idDispositivoTag_Value,
 		importeBrutoTag_Value, importeDescuentoTag_Value, importeNetoGravadoTag_Value, importeOtrosImpuestosTag_Value, importeTotalExentoTag_Value,
 		importeTotalOperacionTag_Value, municipioCompradorTag_Value, municipioVendedorTag_Value, nitCompradorTag_Value, nitGFACETag_Value,
@@ -348,7 +350,9 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 					ERRORES <span class="label label-default" style="font-size: 16px">{}</span>
 					'''.format(str(len(errores_diccionario)))+ ' VERIFIQUE SU MANUAL'))
 					for llave in errores_diccionario:
-						frappe.msgprint(_('<span class="label label-warning" style="font-size: 14px">{}</span>'.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
+						frappe.msgprint(_('''
+						<span class="label label-warning" style="font-size: 14px">{}</span>
+						'''.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
 					#Si no hay ningun error se procedera a guardar los datos de factura electronica en la base de datos
 					#guardar(respuesta, dato_factura, tiempo_enviado)	
 			else:
@@ -359,6 +363,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 					# Crea y Guarda la respuesta en XML que envia INFILE
 					with open('respuesta.xml', 'w') as recibidoxml:
 						recibidoxml.write(respuesta)
-						recibidoxml.close()
+						recibidoxml.close() 
 
 	return frappe.msgprint(_('''FACTURA GENERADA CON EXITO'''))
