@@ -5,9 +5,8 @@ from frappe import _
 import xmltodict
 import time 
 import os
-# Resuelve el problema de decodificacion
+# Resuelve el problema de codificacion
 import sys
- 
 reload(sys)  
 #sys.setdefaultencoding('Cp1252')
 sys.setdefaultencoding('utf-8')
@@ -71,4 +70,4 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 
 		#frappe.msgprint(_("Factura Electronica Generada!"))
 	except:
-		frappe.msgprint(_("Error: No se genero correctamente la Factura Electronica"))
+		frappe.msgprint(_("Error: No se guardo correctamente la Factura Electronica"))

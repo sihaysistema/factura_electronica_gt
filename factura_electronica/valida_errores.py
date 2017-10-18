@@ -5,7 +5,6 @@ from frappe import _
 import os
 import sys
 reload(sys)  
-#sys.setdefaultencoding('Cp1252')
 sys.setdefaultencoding('utf-8')
 
 def encuentra_errores(cadena):    

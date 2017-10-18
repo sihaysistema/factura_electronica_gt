@@ -8,7 +8,7 @@ import os
 from datetime import datetime, date, time
 from guardar_factura import guardar_factura_electronica as guardar
 from valida_errores import encuentra_errores as errores
-# Resuelve el problema de decodificacion
+# Resuelve el problema de codificacion
 import sys
 reload(sys)  
 sys.setdefaultencoding('utf-8')
@@ -26,7 +26,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		frappe.msgprint(_('<b>ERROR:</b> La Factura ya fue generada Anteriormente <b>{}</b>'.format(str(factura_electronica[0][0]))))
 
 	except:
-		#frappe.msgprint(_('Generando Factura Electronica...'))
 		try:
 		# Obteniendo datos necesarios para INFILE
 			sales_invoice = frappe.db.get_values('Sales Invoice', filters = {'name': dato_factura},
@@ -49,16 +48,16 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 			datos_configuracion = frappe.db.get_values('Configuracion Factura Electronica', filters = {'name': 'CONFIG-FAC00001'},
 		fieldname = ['descripcion_otro_impuesto', 'importe_exento', 'id_dispositivo', 'validador', 'clave', 'fecha_resolucion',
-		'codigo_establecimiento', 'numero_documento', 'importe_otros_impuestos', 'regimen_2989', 'tipo_documento',
+		'codigo_establecimiento', 'estado_documento', 'importe_otros_impuestos', 'regimen_2989', 'tipo_documento',
 		'serie_documento', 'usuario', 'serie_autorizada', 'numero_resolucion', 'regimen_isr', 'nit_gface', 'importe_total_exento']
 		, as_dict = 1)
 
 		except:
-			frappe.msgprint(_('Error: Con Base de Datos!'))
+			frappe.msgprint(_('Error: Problemas con la Base de Datos!'))
 
 	# CONSTRUYENDO PRIMERA PARTE DEL CUERPO XML
-		# A cada variable se le asigna el valor que requiere
 		try:
+			# Si no encuentra datos sobre el cliente, pondra los campos con valor 'N/A'.
 			if ((datos_cliente[0]['address_title']) is None): fallo = True
 		except:
 			correoCompradorTag_Value = 'N/A'
@@ -68,6 +67,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			telefonoCompradorTag_Value = 'N/A'
 			municipioCompradorTag_Value = 'N/A'
 		else:
+    		# Si, si encuentra datos de cliente, verificara uno a uno para que quede con el 
+			# valor correspondiente.
 			if ((datos_cliente[0]['email_id']) is None): 
 					correoCompradorTag_Value = 'N/A'
 			else:
@@ -105,7 +106,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		departamentoVendedorTag_Value = str(datos_compania[0]['country']) 
 		descripcionOtroImpuestoTag_Value = str(datos_configuracion[0]['descripcion_otro_impuesto'])
 
-	# Formatenado la Primera parte del cuerpo XML
+	# Formatenado la Primera parte del cuerpo de request XML
 		body_parte1 = """<?xml version="1.0" ?>
 <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
 <S:Body>
@@ -124,15 +125,13 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		codigoMonedaTag_Value, correoCompradorTag_Value, departamentoCompradorTag_Value, departamentoVendedorTag_Value,
 		descripcionOtroImpuestoTag_Value)
 
-	# Crear un archivo 'envio_request.xml' y luego escribe y guarda en el la primera parte del cuerpo XML
+		# Crear un archivo 'envio_request.xml' y luego escribe y guarda en el la primera parte del cuerpo XML
 		with open('envio_request.xml', 'w') as salida:
 			salida.write(body_parte1)
 			salida.close()
-	
-		#frappe.msgprint(_('Primera parte XML generada!'))
 
-	# CONSTRUYENDO LA SEGUNDA PARTE DEL CUERPO XML
-	# SI hay mas de un producto en la Factura, genera los 'detalleDte' necesarios, agregandolos al archivo 'envio_request.xml'
+		# CONSTRUYENDO LA SEGUNDA PARTE DEL CUERPO XML
+		# SI hay mas de un producto en la Factura, genera los 'detalleDte' necesarios, agregandolos al archivo 'envio_request.xml'
 		if (len(sales_invoice_item)>1):
 			n_productos = (len(sales_invoice_item))
 			with open('envio_request.xml', 'a') as salida:
@@ -143,14 +142,17 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 					importeExentoTag_Value = float((datos_configuracion[0]['importe_exento']))
 					importeNetoGravadoTag_Value = float((sales_invoice_item[i]['amount']))
 					montoBrutoTag_Value =  float(sales_invoice_item[i]['net_amount'])
+
 					# Calculo IVA segun requiere infile
 					detalleImpuestosIvaTag_Value = '{0:.2f}'.format(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12))
+
 					importeOtrosImpuestosTag_Value = float((datos_configuracion[0]['importe_otros_impuestos']))
 					importeTotalOperacionTag_Value = float((sales_invoice_item[i]['amount']))					
 					montoDescuentoTag_Value = float(sales_invoice_item[i]['discount_percentage'])
 					precioUnitarioTag_Value = float(sales_invoice_item[i]['rate'])
 					unidadMedidaTag_Value = str(sales_invoice_item[i]['stock_uom'])
 
+					# Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien
 					detalle_stock = frappe.db.get_values('Item', filters = {'item_code': codigoProductoTag_Value},	fieldname = ['is_stock_item'])
 
 					if (int((detalle_stock[0][0])) == 0):
@@ -180,8 +182,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 					salida.write(body_parte2)	
 				salida.close()
 
-			#frappe.msgprint(_('Segunda parte XML generada!'))
-
 	# SI hay un solo producto en la factura, se creara directamente la segunda parte del cuerpo XML
 		else:
 			cantidadTag_Value = float(sales_invoice_item[0]['qty'])
@@ -190,14 +190,17 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			importeExentoTag_Value = float((datos_configuracion[0]['importe_exento']))
 			importeNetoGravadoTag_Value = float((sales_invoice_item[0]['amount']))
 			montoBrutoTag_Value =  float(sales_invoice_item[0]['net_amount'])
+
 			# Calculo IVA segun requiere infile
 			detalleImpuestosIvaTag_Value = '{0:.2f}'.format(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12))
+
 			importeOtrosImpuestosTag_Value = float((datos_configuracion[0]['importe_otros_impuestos']))
 			importeTotalOperacionTag_Value = float((sales_invoice_item[0]['amount']))					
 			montoDescuentoTag_Value = float(sales_invoice_item[0]['discount_percentage'])
 			precioUnitarioTag_Value = float(sales_invoice_item[0]['rate'])
 			unidadMedidaTag_Value = str(sales_invoice_item[0]['stock_uom'])
 
+			# Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien
 			detalle_stock = frappe.db.get_values('Item', filters = {'item_code': codigoProductoTag_Value},	fieldname = ['is_stock_item'])
 
 			if (int((detalle_stock[0][0])) == 0):
@@ -224,19 +227,25 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 	</detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
 			importeExentoTag_Value, importeNetoGravadoTag_Value, importeOtrosImpuestosTag_Value, importeTotalOperacionTag_Value,
 			montoBrutoTag_Value, montoDescuentoTag_Value, precioUnitarioTag_Value, tipoProductoTag_Value, unidadMedidaTag_Value)
+
 			with open('envio_request.xml', 'a') as salida: 
 				salida.write(body_parte2)	
 				salida.close()
 
-			#frappe.msgprint(_('Segunda parte XML generada!'))
-
-	# CREANDO LA TERCERA PARTE DEL CUERPO XML
+		# CREANDO LA TERCERA PARTE DEL CUERPO XML
 		#Asigna a cada variable su valor correspondiente	
 		direccionComercialVendedorTag_Value = str(datos_compania[0]['country'])
-		estadoDocumentoTag_Value = "ACTIVO" # VERFICAR EL DATO 
-		fechaAnulacionTag_Value = str((sales_invoice[0]['creation']).isoformat()) #Usa el mismo formato que Fecha Documento, en caso el estado del documento
+
+		# Depende si una factura esta cancelada o es valida, **MODIFICAR PARA FUTURAS IMPLEMENTACIONES**
+		estadoDocumentoTag_Value = str(datos_configuracion[0]['estado_documento']) 
+
+		#Usa el mismo formato que Fecha Documento, en caso el estado del documento
 		#sea activo este campo no se tomara en cuenta, ya que va de la mano con estado documento porque puede ser Anulado
-		fechaDocumentoTag_Value = str((sales_invoice[0]['creation']).isoformat()) #(sales_invoice[0]['creation']) #"2013-10-10T00:00:00.000-06:00"
+		fechaAnulacionTag_Value = str((sales_invoice[0]['creation']).isoformat()) 
+
+		#Formato de fechas = "2013-10-10T00:00:00.000-06:00"
+		fechaDocumentoTag_Value = str((sales_invoice[0]['creation']).isoformat())  
+
 		fechaResolucionTag_Value = (datos_configuracion[0]['fecha_resolucion'])
 		idDispositivoTag_Value = str(datos_configuracion[0]['id_dispositivo']) 
 		importeBrutoTag_Value = float(sales_invoice[0]['net_total'])
@@ -245,21 +254,24 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		importeOtrosImpuestosTag_Value = float(datos_configuracion[0]['importe_otros_impuestos'])
 		importeTotalExentoTag_Value = float(datos_configuracion[0]['importe_total_exento'])
 		montoTotalOperacionTag_Value = float(sales_invoice[0]['total'])
-		nitCompradorTag_Value = str(nit_cliente[0][0]) 			
+		nitCompradorTag_Value = str(nit_cliente[0][0]) 	# Tomar en cuenta este campo para otras implementaciones		
 		nitGFACETag_Value = str(datos_configuracion[0]['nit_gface'])
 		nitVendedorTag_Value = str(datos_compania[0]['nit'])
-		#FIXME:		
-		nombreComercialRazonSocialVendedorTag_Value = "DEMO,S.A."
+	
+		nombreComercialRazonSocialVendedorTag_Value = str(datos_compania[0]['company_name'])
 		
 		nombreCompletoVendedorTag_Value = str(datos_compania[0]['company_name'])
-		numeroDocumentoTag_Value = str(datos_configuracion[0]['numero_documento'])
+		numeroDocumentoTag_Value = str(dato_factura)
 		numeroResolucionTag_Value = str(datos_configuracion[0]['numero_resolucion'])
 		regimen2989Tag_Value = str(datos_configuracion[0]['regimen_2989'])
 		regimenISRTag_Value = str(datos_configuracion[0]['regimen_isr'])
 		serieAutorizadaTag_Value = str(datos_configuracion[0]['serie_autorizada'])
 		serieDocumentoTag_Value = str(datos_configuracion[0]['serie_documento'])
 		municipioVendedorTag_Value = str(datos_compania[0]['country'])
-		tipoCambioTag_Value = float(sales_invoice[0]['conversion_rate']) #Cuando es moneda local, obligatoriamente debe llevar 1.00
+
+		#Cuando es moneda local, obligatoriamente debe llevar 1.00
+		tipoCambioTag_Value = float(sales_invoice[0]['conversion_rate']) 
+
 		tipoDocumentoTag_Value = str(datos_configuracion[0]['tipo_documento'])
 		usuarioTag_Value = str(datos_configuracion[0]['usuario'])
 		validadorTag_Value = str(datos_configuracion[0]['validador'])
@@ -321,13 +333,9 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			salida.write(body_parte3)	
 			salida.close()
 
-		#frappe.msgprint(_('Tercera parte XML generada!'))
-
 		try:
-			# lee el archivo request.xml generado para ser enviado a INFILE
+			# lee el archivo request.xml generado anteriormente para luego ser enviado a INFILE
 			envio_datos = open('envio_request.xml', 'r').read()#.splitlines()
-
-			#Obtiene el tiempo en que se envian los datos a INFILE
 
 			url="https://www.ingface.net/listener/ingface?wsdl" #URL de listener de INFILE
 			headers = {'content-type': 'text/xml'} #CABECERAS: Indican el tipo de datos
@@ -338,31 +346,34 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			response = requests.post(url, data=envio_datos, headers=headers, timeout=5)
 			respuesta = response.content
 		except:
-			frappe.msgprint(_('Error en la Comunicacion, intente mas tarde!'))
+			frappe.msgprint(_('Error en la Comunicacion, Verifique su conexion a Internet o intente mas tarde!'))
 		else:
+    		# Proceso para la obtencion de los errores generados, en caso exista mas de uno.
 			documento_descripcion = xmltodict.parse(respuesta)
     		#Los errores, se describen el descripcion del response.xml que envia de vuelva INFILE
 			descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
 			errores_diccionario = errores(descripciones)
-
+			
+			# Tomar en cuenta que cuando la factura electronica se genera correctamente, infile retorna un mensaje
+			# indicando la generacion correcta.
 			if (len(errores_diccionario)>0): 
-					frappe.msgprint(_('''
-					ERRORES <span class="label label-default" style="font-size: 16px">{}</span>
-					'''.format(str(len(errores_diccionario)))+ ' VERIFIQUE SU MANUAL'))
-					for llave in errores_diccionario:
+					try:
+						if (((errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
+								guardar(respuesta, dato_factura, tiempo_enviado)
+
+								frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
+
+								with open('respuesta.xml', 'w') as recibidoxml:
+									recibidoxml.write(respuesta)
+									recibidoxml.close()	
+					except:
 						frappe.msgprint(_('''
-						<span class="label label-warning" style="font-size: 14px">{}</span>
-						'''.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
-					#Si no hay ningun error se procedera a guardar los datos de factura electronica en la base de datos
-					#guardar(respuesta, dato_factura, tiempo_enviado)	
-			else:
-					frappe.msgprint(_('Guardando...'))	
-					#La funcion se encarga de guardar la respuesta de Infile en la base de datos de ERPNEXT	
-					guardar(respuesta, dato_factura, tiempo_enviado)
+						AVISO <span class="label label-default" style="font-size: 16px">{}</span>
+						'''.format(str(len(errores_diccionario)))+ ' VERIFIQUE SU MANUAL'))
+						for llave in errores_diccionario:
+							frappe.msgprint(_('''
+							<span class="label label-warning" style="font-size: 14px">{}</span>
+							'''.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
 
-					# Crea y Guarda la respuesta en XML que envia INFILE
-					with open('respuesta.xml', 'w') as recibidoxml:
-						recibidoxml.write(respuesta)
-						recibidoxml.close() 
-
-	return frappe.msgprint(_('''FACTURA GENERADA CON EXITO'''))
+						frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
+						guardar(respuesta, dato_factura, tiempo_enviado)
