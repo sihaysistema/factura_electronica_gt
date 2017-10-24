@@ -1,4 +1,10 @@
-//cur_frm.add_fetch("customer", "nit", "nit");
+frappe.ui.form.on("Sales Invoice", {
+    refresh: function(frm) {
+        cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
+    }
+});
+
+
 frappe.ui.form.on("Sales Invoice", {
     refresh: function(frm) {
 

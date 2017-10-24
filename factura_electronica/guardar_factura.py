@@ -3,7 +3,7 @@
 import frappe
 from frappe import _
 import xmltodict
-import time 
+from datetime import datetime, date, time
 import os
 # Resuelve el problema de codificacion
 import sys
@@ -25,42 +25,39 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 		# Obtiene y Guarda la serie de factura
 		tabFacturaElectronica.serie_factura_original = serie_fact
 
-		# Obtiene y Guarda el CAE
-		#tabFacturaElectronica.cae = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['cae'])
+		 	# Obtiene y Guarda el CAE
+		tabFacturaElectronica.cae = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['cae'])
 		
 		# Obtiene y Guarda el Numero de Documento
 		tabFacturaElectronica.numero_documento = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['numeroDocumento'])
 		
-		# Obtiene y Guarda el Estado
-		#tabFacturaElectronica.estado = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['estado'])
+		 	# Obtiene y Guarda el Estado
+		tabFacturaElectronica.estado = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['estado'])
 		
 		# Obtiene y Guarda las Anotaciones
 		tabFacturaElectronica.anotaciones = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['anotaciones'])
 
-#FIXME:
-		# Obtiene y Guarda la Descripcion
+		# Obtiene y Guarda la Descripcion: En este campo estan todas las descripciones de errores y mensaje de generacion correcta
+		# Se mantiene comentada ya que puede contener cadenas de tamaño que sobrepasan los campos de la DB
 		#descripciones = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
 
-		#tabFacturaElectronica.descripcion = json.loads(descripciones)
-		#frappe.msgprint(_((json.loads(descripciones))))
-		
 		# Obtiene y Guarda la Validez
 		tabFacturaElectronica.valido = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['valido'])
 		
-		# Obtiene y Guarda el Numero DTE
-	#tabFacturaElectronica.numero_dte = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['numeroDte'])
+			# Obtiene y Guarda el Numero DTE
+		tabFacturaElectronica.numero_dte = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['numeroDte'])
 		
-		# Obtiene y Guarda el Rango Final Autorizado
-		#tabFacturaElectronica.rango_final_autorizado = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['rangoFinalAutorizado'])
+			# Obtiene y Guarda el Rango Final Autorizado
+		tabFacturaElectronica.rango_final_autorizado = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['rangoFinalAutorizado'])
 		
-		# Obtiene y Guarda el Rango Inicial Autorizado
-		#tabFacturaElectronica.rango_inicio_autorizado = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['rangoInicialAutorizado'])
+			# Obtiene y Guarda el Rango Inicial Autorizado
+		tabFacturaElectronica.rango_inicio_autorizado = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['rangoInicialAutorizado'])
 		
-		# Obtiene y Guarda el Regimen
-		#tabFacturaElectronica.regimen = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['regimen'])
+			# Obtiene y Guarda el Regimen
+		tabFacturaElectronica.regimen = (documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['regimen'])
 		
 		# Obtiene y Guarda el tiempo en que se recibieron los datos de INFILE
-		tabFacturaElectronica.recibido = time.strftime("%c")
+		tabFacturaElectronica.recibido = datetime.now()
 		
 		# Obtiene y Guarda el tiempo en que se enviaron los datos a INFILE
 		tabFacturaElectronica.enviado = tiempo_envio

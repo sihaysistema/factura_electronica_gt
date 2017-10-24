@@ -5,6 +5,8 @@ from frappe import _
 
 @frappe.whitelist()
 def obtenerDatoSales(factura):
+    '''Obtiene el cae de la factura electronica generada, segun la serie de la factura original,
+       en caso no exista el cae, se retornara un valor en blanco.'''
     try:
         cae_dato = frappe.db.sql("""
                 select cae

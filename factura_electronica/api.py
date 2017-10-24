@@ -20,14 +20,21 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 	dato_factura = serie_factura
 	dato_cliente = nombre_cliente
 
+	#AGREGAR LA VERIFICACION DE QUE CONFIGURACION SE ESTA UTLIZANDO!!! por default esta utlizando la configuracion
+	# CONFIG-FAC00001
+
+	#Verifica si ya existe una factura electronica con la serie del documento, si encuentra la serie retorna un mensaje.
+	#esto para evitar que se generen facturas electronicas duplicadas. Si no encuentra la serie, el try capturara el error
+	#procediendo con el except.
 	try:
 		factura_electronica = frappe.db.get_values('Envios Facturas Electronicas', filters = {'serie_factura_original': dato_factura},
 	fieldname = 'serie_factura_original')
 		frappe.msgprint(_('<b>ERROR:</b> La Factura ya fue generada Anteriormente <b>{}</b>'.format(str(factura_electronica[0][0]))))
 
 	except:
+		# Si ocurre un error en la obtencion de datos de la base de datos, retornara un error
 		try:
-		# Obteniendo datos necesarios para INFILE
+		# Obteniendo datos de la Base de Datos, necesarios para INFILE
 			sales_invoice = frappe.db.get_values('Sales Invoice', filters = {'name': dato_factura},
 		fieldname = ['name', 'idx', 'territory','total','grand_total', 'customer_name', 'company',
 		'naming_series', 'creation', 'status', 'discount_amount', 'docstatus', 'modified', 'conversion_rate',
@@ -37,14 +44,14 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		fieldname = ['item_name', 'qty', 'item_code', 'description', 'net_amount', 'base_net_amount', 
 		'discount_percentage', 'net_rate', 'stock_uom', 'serial_no', 'item_group', 'rate', 'amount'], as_dict = 1)			
 
-			datos_compania = frappe.db.get_values('Company', filters = {'name': 'CODEX'},
-		fieldname = ['company_name', 'default_currency', 'country', 'nit'], as_dict = 1)
+			datos_compania = frappe.db.get_values('Company', filters = {'name': str(sales_invoice[0]['company'])},
+		fieldname = ['company_name', 'default_currency', 'country', 'nit_face_company'], as_dict = 1)
 
 			datos_cliente = frappe.db.get_values('Address', filters = {'address_title': dato_cliente},
 		fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone', 'address_title'], as_dict = 1)
 
 			nit_cliente = frappe.db.get_values('Customer', filters = {'name': dato_cliente},
-		fieldname = 'nit')
+		fieldname = 'nit_face_customer')
 
 			datos_configuracion = frappe.db.get_values('Configuracion Factura Electronica', filters = {'name': 'CONFIG-FAC00001'},
 		fieldname = ['descripcion_otro_impuesto', 'importe_exento', 'id_dispositivo', 'validador', 'clave', 'fecha_resolucion',
@@ -57,7 +64,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 	# CONSTRUYENDO PRIMERA PARTE DEL CUERPO XML
 		try:
-			# Si no encuentra datos sobre el cliente, pondra los campos con valor 'N/A'.
+			# Si no encuentra datos sobre el cliente, el try capturara el error y pondra los campos con valor 'N/A'.
 			if ((datos_cliente[0]['address_title']) is None): fallo = True
 		except:
 			correoCompradorTag_Value = 'N/A'
@@ -67,8 +74,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			telefonoCompradorTag_Value = 'N/A'
 			municipioCompradorTag_Value = 'N/A'
 		else:
-    		# Si, si encuentra datos de cliente, verificara uno a uno para que quede con el 
-			# valor correspondiente.
+    		# Si encuentra datos de cliente, verificara uno a uno para que quede con el valor correspondiente.
 			if ((datos_cliente[0]['email_id']) is None): 
 					correoCompradorTag_Value = 'N/A'
 			else:
@@ -254,9 +260,9 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		importeOtrosImpuestosTag_Value = float(datos_configuracion[0]['importe_otros_impuestos'])
 		importeTotalExentoTag_Value = float(datos_configuracion[0]['importe_total_exento'])
 		montoTotalOperacionTag_Value = float(sales_invoice[0]['total'])
-		nitCompradorTag_Value = str(nit_cliente[0][0]) 	# Tomar en cuenta este campo para otras implementaciones		
+		nitCompradorTag_Value = str(nit_cliente[0][0]) 		
 		nitGFACETag_Value = str(datos_configuracion[0]['nit_gface'])
-		nitVendedorTag_Value = str(datos_compania[0]['nit'])
+		nitVendedorTag_Value = str(datos_compania[0]['nit_face_company'])
 	
 		nombreComercialRazonSocialVendedorTag_Value = str(datos_compania[0]['company_name'])
 		
@@ -348,14 +354,17 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		except:
 			frappe.msgprint(_('Error en la Comunicacion, Verifique su conexion a Internet o intente mas tarde!'))
 		else:
-    		# Proceso para la obtencion de los errores generados, en caso exista mas de uno.
 			documento_descripcion = xmltodict.parse(respuesta)
-    		#Los errores, se describen el descripcion del response.xml que envia de vuelva INFILE
+    		#Los errores, se describen en descripcion del response.xml que envia de vuelta INFILE
 			descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
+			
+			#en la variable se guarda un diccionario con los errores o mensaje de OK, retornados por la funcion 'errores'.
 			errores_diccionario = errores(descripciones)
 			
 			# Tomar en cuenta que cuando la factura electronica se genera correctamente, infile retorna un mensaje
 			# indicando la generacion correcta.
+
+			# Proceso para la obtencion de los errores generados o mensaje de OK, en caso exista mas de uno.
 			if (len(errores_diccionario)>0): 
 					try:
 						if (((errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
@@ -368,7 +377,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 									recibidoxml.close()	
 					except:
 						frappe.msgprint(_('''
-						AVISO <span class="label label-default" style="font-size: 16px">{}</span>
+						AVISOS <span class="label label-default" style="font-size: 16px">{}</span>
 						'''.format(str(len(errores_diccionario)))+ ' VERIFIQUE SU MANUAL'))
 						for llave in errores_diccionario:
 							frappe.msgprint(_('''
