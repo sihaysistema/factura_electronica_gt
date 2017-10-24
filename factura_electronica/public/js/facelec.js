@@ -1,12 +1,7 @@
 frappe.ui.form.on("Sales Invoice", {
     refresh: function(frm) {
+
         cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
-    }
-});
-
-
-frappe.ui.form.on("Sales Invoice", {
-    refresh: function(frm) {
 
         frappe.call({
             method: "factura_electronica.obtener_cae.obtenerDatoSales",
@@ -19,12 +14,6 @@ frappe.ui.form.on("Sales Invoice", {
                 frm.doc.cae_factura_electronica = r.message
             }
         })
-    }
-});
-
-frappe.ui.form.on("Sales Invoice", {
-
-    refresh: function(frm) {
 
         if ((frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted")) {
             if (frm.doc.cae_factura_electronica != " ") {
@@ -48,6 +37,5 @@ frappe.ui.form.on("Sales Invoice", {
                 }).addClass("btn-primary");
             }
         }
-
     }
 });
