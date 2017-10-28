@@ -19,7 +19,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 	"""Obtencion de datos requeridos y construccion de request"""
 	dato_factura = serie_factura
 	dato_cliente = nombre_cliente
-
 	#AGREGAR LA VERIFICACION DE QUE CONFIGURACION SE ESTA UTLIZANDO!!! por default esta utlizando la configuracion
 	# CONFIG-FAC00001
 
@@ -28,15 +27,18 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 	#procediendo con el except.
 	try:
 		factura_electronica = frappe.db.get_values('Envios Facturas Electronicas', filters = {'serie_factura_original': dato_factura},
-	fieldname = 'serie_factura_original')
-		frappe.msgprint(_('<b>ERROR:</b> La Factura ya fue generada Anteriormente <b>{}</b>'.format(str(factura_electronica[0][0]))))
+	fieldname = ['serie_factura_original', 'cae'], as_dict = 1)
+		frappe.msgprint(_('<b>AVISO:</b> La Factura ya fue generada Anteriormente <b>{}</b>'.format(str(factura_electronica[0]['serie_factura_original']))))
 
+		cae_Fac = str(factura_electronica[0]['cae'])
+
+		return cae_Fac
 	except:
 		# Si ocurre un error en la obtencion de datos de la base de datos, retornara un error
 		try:
 		# Obteniendo datos de la Base de Datos, necesarios para INFILE
 			sales_invoice = frappe.db.get_values('Sales Invoice', filters = {'name': dato_factura},
-		fieldname = ['name', 'idx', 'territory','total','grand_total', 'customer_name', 'company',
+		fieldname = ['name', 'idx', 'territory','grand_total', 'customer_name', 'company',
 		'naming_series', 'creation', 'status', 'discount_amount', 'docstatus', 'modified', 'conversion_rate',
 		'total_taxes_and_charges', 'net_total'], as_dict = 1)
 
@@ -259,7 +261,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		importeNetoGravadoTag_Value = float(sales_invoice[0]['grand_total'])
 		importeOtrosImpuestosTag_Value = float(datos_configuracion[0]['importe_otros_impuestos'])
 		importeTotalExentoTag_Value = float(datos_configuracion[0]['importe_total_exento'])
-		montoTotalOperacionTag_Value = float(sales_invoice[0]['total'])
+		montoTotalOperacionTag_Value = float(sales_invoice[0]['grand_total']) 
 		nitCompradorTag_Value = str(nit_cliente[0][0]) 		
 		nitGFACETag_Value = str(datos_configuracion[0]['nit_gface'])
 		nitVendedorTag_Value = str(datos_compania[0]['nit_face_company'])
@@ -329,7 +331,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 </S:Envelope>""".format(detalleImpuestosIvaTag_Value, direccionComercialCompradorTag_Value, direccionComercialVendedorTag_Value, 
 		estadoDocumentoTag_Value, fechaAnulacionTag_Value, fechaDocumentoTag_Value, fechaResolucionTag_Value, idDispositivoTag_Value,
 		importeBrutoTag_Value, importeDescuentoTag_Value, importeNetoGravadoTag_Value, importeOtrosImpuestosTag_Value, importeTotalExentoTag_Value,
-		importeTotalOperacionTag_Value, municipioCompradorTag_Value, municipioVendedorTag_Value, nitCompradorTag_Value, nitGFACETag_Value,
+		montoTotalOperacionTag_Value, municipioCompradorTag_Value, municipioVendedorTag_Value, nitCompradorTag_Value, nitGFACETag_Value,
 		nitVendedorTag_Value, nombreComercialCompradorTag_Value, nombreComercialRazonSocialVendedorTag_Value, nombreCompletoVendedorTag_Value,
 		numeroDocumentoTag_Value, numeroResolucionTag_Value, regimen2989Tag_Value, regimenISRTag_Value, serieAutorizadaTag_Value,
 		serieDocumentoTag_Value, telefonoCompradorTag_Value, tipoCambioTag_Value, tipoDocumentoTag_Value, usuarioTag_Value, validadorTag_Value)
@@ -368,13 +370,15 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			if (len(errores_diccionario)>0): 
 					try:
 						if (((errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
-								guardar(respuesta, dato_factura, tiempo_enviado)
+								datoCAEF = guardar(respuesta, dato_factura, tiempo_enviado)
 
 								frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
-
+								
 								with open('respuesta.xml', 'w') as recibidoxml:
 									recibidoxml.write(respuesta)
 									recibidoxml.close()	
+								
+								return datoCAEF
 					except:
 						frappe.msgprint(_('''
 						AVISOS <span class="label label-default" style="font-size: 16px">{}</span>
@@ -384,5 +388,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 							<span class="label label-warning" style="font-size: 14px">{}</span>
 							'''.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
 
-						frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
-						guardar(respuesta, dato_factura, tiempo_enviado)
+						frappe.msgprint(_('NO GENERADA'))
+						#frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
+						#guardar(respuesta, dato_factura, tiempo_enviado)
