@@ -8,13 +8,15 @@ import os
 from datetime import datetime, date, time
 from guardar_factura import guardar_factura_electronica as guardar
 from valida_errores import encuentra_errores as errores
-# Resuelve el problema de codificacion
+# es-GT: Resuelve el problema de codificacion
+# en-US: Solve the coding problem
 import sys
 reload(sys)  
 sys.setdefaultencoding('utf-8')
 
 @frappe.whitelist()
-#Conexion y Consumo del Web Service Infile
+# es-GT: Solicitud Factura Electronica del proveedor: Infile
+# en-US: Supplier Electronic Invoice Request: Infile
 def generar_factura_electronica(serie_factura, nombre_cliente):
 	"""Obtencion de datos requeridos y construccion de request"""
 	dato_factura = serie_factura
@@ -22,9 +24,13 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 	#AGREGAR LA VERIFICACION DE QUE CONFIGURACION SE ESTA UTLIZANDO!!! por default esta utlizando la configuracion
 	# CONFIG-FAC00001
 
-	#Verifica si ya existe una factura electronica con la serie del documento, si encuentra la serie retorna un mensaje.
-	#esto para evitar que se generen facturas electronicas duplicadas. Si no encuentra la serie, el try capturara el error
-	#procediendo con el except.
+	#es-GT: Verifica si ya existe una factura electronica con la serie del documento, si encuentra la serie retorna un mensaje.
+	#esto para evitar que se generen facturas electronicas duplicadas. Si no encuentra la serie, el "try" capturara el error
+	#procediendo con el "except".
+
+	#en-US: Check if there is already an electronic invoice with the series of the document, if it finds the series returns a message.
+	#this to avoid duplicate electronic invoices being generated. If you can not find the series, the "try" will capture the error
+	#proceding with the "except".
 	try:
 		factura_electronica = frappe.db.get_values('Envios Facturas Electronicas', filters = {'serie_factura_original': dato_factura},
 	fieldname = ['serie_factura_original', 'cae'], as_dict = 1)
@@ -34,9 +40,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 		return cae_Fac
 	except:
-		# Si ocurre un error en la obtencion de datos de la base de datos, retornara un error
+		# es-GT: Si ocurre un error en la obtencion de datos de la base de datos, retornara un error.
+		# en-US: If an error occurs in obtaining data from the database, an error will return.
 		try:
-		# Obteniendo datos de la Base de Datos, necesarios para INFILE
+		# es-GT: Obteniendo datos de la Base de Datos, necesarios para INFILE.
+		# en-US: Obtaining data from the Database, necessary for INFILE.
+
 			sales_invoice = frappe.db.get_values('Sales Invoice', filters = {'name': dato_factura},
 		fieldname = ['name', 'idx', 'territory','grand_total', 'customer_name', 'company',
 		'naming_series', 'creation', 'status', 'discount_amount', 'docstatus', 'modified', 'conversion_rate',
@@ -64,9 +73,11 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		except:
 			frappe.msgprint(_('Error: Problemas con la Base de Datos!'))
 
-	# CONSTRUYENDO PRIMERA PARTE DEL CUERPO XML
+		# es-GT: Construyendo la primera parte del cuerpo XML.
+		# en-US: Building the first part of the XML body.
 		try:
-			# Si no encuentra datos sobre el cliente, el try capturara el error y pondra los campos con valor 'N/A'.
+			# es-GT: Si no encuentra datos sobre el cliente, el "try" capturara el error y pondra los campos con valor 'N/A'.
+			# en-US: If it does not find data about the client, the "try" will capture the error and put the fields with value 'N/A'.
 			if ((datos_cliente[0]['address_title']) is None): fallo = True
 		except:
 			correoCompradorTag_Value = 'N/A'
@@ -76,7 +87,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			telefonoCompradorTag_Value = 'N/A'
 			municipioCompradorTag_Value = 'N/A'
 		else:
-    		# Si encuentra datos de cliente, verificara uno a uno para que quede con el valor correspondiente.
+    		# es-GT: Si se encuentran los datos del cliente, verificara uno a uno para que quede con el valor correspondiente.
+			# en-US: If the client's data is found, it will verify one by one so that it remains with the corresponding value.
 			if ((datos_cliente[0]['email_id']) is None): 
 					correoCompradorTag_Value = 'N/A'
 			else:
@@ -114,7 +126,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		departamentoVendedorTag_Value = str(datos_compania[0]['country']) 
 		descripcionOtroImpuestoTag_Value = str(datos_configuracion[0]['descripcion_otro_impuesto'])
 
-	# Formatenado la Primera parte del cuerpo de request XML
+		# es-GT: Formateando la Primera parte del cuerpo de request XML.
+		# en-US: Formatting the first part of the request XML body.
 		body_parte1 = """<?xml version="1.0" ?>
 <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
 <S:Body>
@@ -133,13 +146,17 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		codigoMonedaTag_Value, correoCompradorTag_Value, departamentoCompradorTag_Value, departamentoVendedorTag_Value,
 		descripcionOtroImpuestoTag_Value)
 
-		# Crear un archivo 'envio_request.xml' y luego escribe y guarda en el la primera parte del cuerpo XML
+		# es-GT: Crear un archivo 'envio_request.xml' y luego escribe y guarda en el la primera parte del cuerpo XML.
+		# en-US: Create a file 'envio_request.xml' and then write and save in the first part of the XML body.
 		with open('envio_request.xml', 'w') as salida:
 			salida.write(body_parte1)
 			salida.close()
 
-		# CONSTRUYENDO LA SEGUNDA PARTE DEL CUERPO XML
-		# SI hay mas de un producto en la Factura, genera los 'detalleDte' necesarios, agregandolos al archivo 'envio_request.xml'
+		# es-GT: CONSTRUYENDO LA SEGUNDA PARTE DEL CUERPO XML.
+		# SI hay mas de un producto en la Factura, genera los 'detalleDte' necesarios, agregandolos al archivo 'envio_request.xml'.
+
+		# en-US: BUILDING THE SECOND PART OF THE XML BODY.
+		# If there is more than one product in the Invoice, generate the necessary 'detalleDte', adding them to the file 'envio_request.xml'.
 		if (len(sales_invoice_item)>1):
 			n_productos = (len(sales_invoice_item))
 			with open('envio_request.xml', 'a') as salida:
@@ -151,7 +168,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 					importeNetoGravadoTag_Value = float((sales_invoice_item[i]['amount']))
 					montoBrutoTag_Value =  float(sales_invoice_item[i]['net_amount'])
 
-					# Calculo IVA segun requiere infile
+					# es-GT: Calculo de IVA segun requiere infile.
+					# en-US: IVA calculation as required by infile.
 					detalleImpuestosIvaTag_Value = '{0:.2f}'.format(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12))
 
 					importeOtrosImpuestosTag_Value = float((datos_configuracion[0]['importe_otros_impuestos']))
@@ -160,7 +178,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 					precioUnitarioTag_Value = float(sales_invoice_item[i]['rate'])
 					unidadMedidaTag_Value = str(sales_invoice_item[i]['stock_uom'])
 
-					# Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien
+					# es-GT: Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien.
+					# en-US: Obtains directly from the db the stock field to be later verified as Service or Good.
 					detalle_stock = frappe.db.get_values('Item', filters = {'item_code': codigoProductoTag_Value},	fieldname = ['is_stock_item'])
 
 					if (int((detalle_stock[0][0])) == 0):
@@ -190,7 +209,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 					salida.write(body_parte2)	
 				salida.close()
 
-	# SI hay un solo producto en la factura, se creara directamente la segunda parte del cuerpo XML
+		# es-GT: SI hay un solo producto en la factura, se creara directamente la segunda parte del cuerpo XML
+		# en-US: If there is only one product in the invoice, the second part of the XML body will be created directly
 		else:
 			cantidadTag_Value = float(sales_invoice_item[0]['qty'])
 			codigoProductoTag_Value = str(sales_invoice_item[0]['item_code'])
@@ -199,7 +219,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			importeNetoGravadoTag_Value = float((sales_invoice_item[0]['amount']))
 			montoBrutoTag_Value =  float(sales_invoice_item[0]['net_amount'])
 
-			# Calculo IVA segun requiere infile
+			# es-GT: Calculo de IVA segun requiere infile.
+			# en-US: IVA calculation as required by infile.
 			detalleImpuestosIvaTag_Value = '{0:.2f}'.format(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12))
 
 			importeOtrosImpuestosTag_Value = float((datos_configuracion[0]['importe_otros_impuestos']))
@@ -208,7 +229,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			precioUnitarioTag_Value = float(sales_invoice_item[0]['rate'])
 			unidadMedidaTag_Value = str(sales_invoice_item[0]['stock_uom'])
 
-			# Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien
+			# es-GT: Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien.
+			# en-US: Obtains directly from the db the stock field to be later verified as Service or Good.
 			detalle_stock = frappe.db.get_values('Item', filters = {'item_code': codigoProductoTag_Value},	fieldname = ['is_stock_item'])
 
 			if (int((detalle_stock[0][0])) == 0):
@@ -240,18 +262,26 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 				salida.write(body_parte2)	
 				salida.close()
 
-		# CREANDO LA TERCERA PARTE DEL CUERPO XML
-		#Asigna a cada variable su valor correspondiente	
+		# es-GT: CONSTRUYENDO LA TERCERA PARTE DEL CUERPO XML
+		# Asigna a cada variable su valor correspondiente	
+
+		# en-US: BUILDING THE THIRD PART OF THE XML BODY
+		# Assign each variable its corresponding value
 		direccionComercialVendedorTag_Value = str(datos_compania[0]['country'])
 
-		# Depende si una factura esta cancelada o es valida, **MODIFICAR PARA FUTURAS IMPLEMENTACIONES**
+		# es-GT: Depende si una factura esta cancelada o es valida, **MODIFICAR PARA FUTURAS IMPLEMENTACIONES**
+		# en-US: Depends if an invoice is canceled or is valid, ** MODIFY FOR FUTURE IMPLEMENTATIONS **
 		estadoDocumentoTag_Value = str(datos_configuracion[0]['estado_documento']) 
 
-		#Usa el mismo formato que Fecha Documento, en caso el estado del documento
+		# es-GT: Usa el mismo formato que Fecha Documento, en caso el estado del documento
 		#sea activo este campo no se tomara en cuenta, ya que va de la mano con estado documento porque puede ser Anulado
+
+		# en-US: Use the same format as Date Document, in case the document status
+		#is active this field will not be taken into account, since it goes hand in hand with document status because it can be canceled
 		fechaAnulacionTag_Value = str((sales_invoice[0]['creation']).isoformat()) 
 
-		#Formato de fechas = "2013-10-10T00:00:00.000-06:00"
+		# es-GT: Formato de fechas = "2013-10-10T00:00:00.000-06:00"
+		# en-US: Format of dates = "2013-10-10T00: 00: 00.000-06: 00"
 		fechaDocumentoTag_Value = str((sales_invoice[0]['creation']).isoformat())  
 
 		fechaResolucionTag_Value = (datos_configuracion[0]['fecha_resolucion'])
@@ -277,7 +307,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		serieDocumentoTag_Value = str(datos_configuracion[0]['serie_documento'])
 		municipioVendedorTag_Value = str(datos_compania[0]['country'])
 
-		#Cuando es moneda local, obligatoriamente debe llevar 1.00
+		# es-GT: Cuando es moneda local, obligatoriamente debe llevar 1.00
+		# en-US: When it is local currency, it must necessarily carry 1.00
 		tipoCambioTag_Value = float(sales_invoice[0]['conversion_rate']) 
 
 		tipoDocumentoTag_Value = str(datos_configuracion[0]['tipo_documento'])
@@ -336,20 +367,25 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		numeroDocumentoTag_Value, numeroResolucionTag_Value, regimen2989Tag_Value, regimenISRTag_Value, serieAutorizadaTag_Value,
 		serieDocumentoTag_Value, telefonoCompradorTag_Value, tipoCambioTag_Value, tipoDocumentoTag_Value, usuarioTag_Value, validadorTag_Value)
 
-	# Crear y Guarda la tercera parte del cuerpo XML
+		# es-GT: Crear y Guarda la tercera parte del cuerpo XML.
+		# en-US: Create and Save the third part of the XML body.
 		with open('envio_request.xml', 'a') as salida: 
 			salida.write(body_parte3)	
 			salida.close()
 
 		try:
-			# lee el archivo request.xml generado anteriormente para luego ser enviado a INFILE
+			# es-GT: lee el archivo request.xml generado anteriormente para luego ser enviado a INFILE.
+			# en-US: read the previously generated request.xml file and then send it to INFILE.
 			envio_datos = open('envio_request.xml', 'r').read()#.splitlines()
 
 			url="https://www.ingface.net/listener/ingface?wsdl" #URL de listener de INFILE
 			headers = {'content-type': 'text/xml'} #CABECERAS: Indican el tipo de datos
 
-			#Obtiene la respuesta por medio del metodo post, con los argumentos data, headers y time out
+			# es-GT: Obtiene la respuesta por medio del metodo post, con los argumentos data, headers y time out
 			#timeout: cumple la funcion de tiempo de espera, despues del tiempo asignado deja de esperar respuestas
+
+			# en-US: Get the answer through the post method, with the data, headers and time out arguments
+			#timeout: fulfills the function of waiting time, after the assigned time stops waiting for answers
 			tiempo_enviado = datetime.now()
 			response = requests.post(url, data=envio_datos, headers=headers, timeout=5)
 			respuesta = response.content
@@ -357,16 +393,22 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			frappe.msgprint(_('Error en la Comunicacion, Verifique su conexion a Internet o intente mas tarde!'))
 		else:
 			documento_descripcion = xmltodict.parse(respuesta)
-    		#Los errores, se describen en descripcion del response.xml que envia de vuelta INFILE
+    		# es-GT: Los errores, se describen en descripcion del response.xml que envia de vuelta INFILE.
+			# en-US: The errors are described in the response.xml description that you send back INFILE.
 			descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
 			
-			#en la variable se guarda un diccionario con los errores o mensaje de OK, retornados por la funcion 'errores'.
+			# es-GT: en la variable se guarda un diccionario con los errores o mensaje de OK, retornados por la funcion 'errores'.
+			# en-US: in the variable a dictionary is saved with the errors or OK message, returned by the 'errors' function.
 			errores_diccionario = errores(descripciones)
 			
-			# Tomar en cuenta que cuando la factura electronica se genera correctamente, infile retorna un mensaje
+			# es-GT: Tomar en cuenta que cuando la factura electronica se genera correctamente, infile retorna un mensaje
 			# indicando la generacion correcta.
 
-			# Proceso para la obtencion de los errores generados o mensaje de OK, en caso exista mas de uno.
+			# en-US: Take into account that when the electronic invoice is generated correctly, infile returns a message
+			# indicating the correct generation.
+
+			# es-GT: Proceso para la obtencion de los errores generados o mensaje de OK, en caso exista mas de uno.
+			# en-US: Process for obtaining the generated errors or OK message, if there is more than one.
 			if (len(errores_diccionario)>0): 
 					try:
 						if (((errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
