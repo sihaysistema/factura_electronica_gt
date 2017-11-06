@@ -1,6 +1,6 @@
 [
  {
-  "allow_on_submit": 0, 
+  "allow_on_submit": 1, 
   "bold": 0, 
   "collapsible": 0, 
   "collapsible_depends_on": null, 
@@ -12,7 +12,7 @@
   "doctype": "Custom Field", 
   "dt": "Sales Invoice", 
   "fieldname": "cae_factura_electronica", 
-  "fieldtype": "Read Only", 
+  "fieldtype": "Data", 
   "hidden": 0, 
   "ignore_user_permissions": 0, 
   "ignore_xss_filter": 0, 
@@ -21,7 +21,7 @@
   "in_standard_filter": 0, 
   "insert_after": "due_date", 
   "label": "CAE Factura Electronica", 
-  "modified": "2017-10-16 22:06:23.555415", 
+  "modified": "2017-11-05 20:14:52.597107", 
   "name": "Sales Invoice-cae_factura_electronica", 
   "no_copy": 0, 
   "options": null, 

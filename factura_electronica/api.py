@@ -37,9 +37,9 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		
 		frappe.msgprint(_('<b>AVISO:</b> La Factura ya fue generada Anteriormente <b>{}</b>'.format(str(factura_electronica[0]['serie_factura_original']))))
 
-		cae_Fac = str(factura_electronica[0]['cae'])
+		cae_factura = str(factura_electronica[0]['cae'])
 
-		return cae_Fac
+		return cae_factura
 	except:
 		# es-GT: Si ocurre un error en la obtencion de datos de la base de datos, retornara un error.
 		# en-US: If an error occurs in obtaining data from the database, an error will return.
@@ -50,7 +50,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			sales_invoice = frappe.db.get_values('Sales Invoice', filters = {'name': dato_factura},
 			fieldname = ['name', 'idx', 'territory','grand_total', 'customer_name', 'company',
 			'naming_series', 'creation', 'status', 'discount_amount', 'docstatus', 'modified', 'conversion_rate',
-			'total_taxes_and_charges', 'net_total'], as_dict = 1)
+			'total_taxes_and_charges', 'net_total', 'shipping_address_name'], as_dict = 1)
+
+			direccion_cliente = str(sales_invoice[0]['shipping_address_name'])
+
+			datos_cliente = frappe.db.get_values('Address', filters = {'name': direccion_cliente},
+			fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone', 'address_title', 'name'], as_dict = 1)
 
 			sales_invoice_item = frappe.db.get_values('Sales Invoice Item', filters = {'parent': dato_factura}, 
 			fieldname = ['item_name', 'qty', 'item_code', 'description', 'net_amount', 'base_net_amount', 
@@ -58,9 +63,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 			datos_compania = frappe.db.get_values('Company', filters = {'name': str(sales_invoice[0]['company'])},
 			fieldname = ['company_name', 'default_currency', 'country', 'nit_face_company'], as_dict = 1)
-
-			datos_cliente = frappe.db.get_values('Address', filters = {'address_title': dato_cliente},
-			fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone', 'address_title'], as_dict = 1)
 
 			nit_cliente = frappe.db.get_values('Customer', filters = {'name': dato_cliente},
 			fieldname = 'nit_face_customer')
@@ -79,7 +81,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		try:
 			# es-GT: Si no encuentra datos sobre el cliente, el "try" capturara el error y pondra los campos con valor 'N/A'.
 			# en-US: If it does not find data about the client, the "try" will capture the error and put the fields with value 'N/A'.
-			if ((datos_cliente[0]['address_title']) is None): fallo = True
+			if ((datos_cliente[0]['name']) is None): fallo = True
 		except:
 			correoCompradorTag_Value = 'N/A'
 			departamentoCompradorTag_Value = 'N/A'
@@ -95,12 +97,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			else:
 				correoCompradorTag_Value = str(datos_cliente[0]['email_id'])
 
-			if ((datos_cliente[0]['state']) is None): 
+			if ((datos_cliente[0]['state']) == ''): 
 				departamentoCompradorTag_Value = 'N/A'
 			else: 
 				departamentoCompradorTag_Value = str(datos_cliente[0]['state'])
 
-			if ((datos_cliente[0]['address_line1']) is None): 
+			if ((datos_cliente[0]['address_line1']) == ''): 
 				direccionComercialCompradorTag_Value = 'N/A'
 			else:
 				direccionComercialCompradorTag_Value = str((datos_cliente[0]['address_line1']).encode('utf-8'))
@@ -110,12 +112,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			else:    		
 				nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
 
-			if ((datos_cliente[0]['phone']) is None):
+			if ((datos_cliente[0]['phone']) == ''):
 				telefonoCompradorTag_Value = 'N/A'
 			else:
 				telefonoCompradorTag_Value = str(datos_cliente[0]['phone'])
 
-			if ((datos_cliente[0]['state']) is None):
+			if ((datos_cliente[0]['state']) == ''):
 				municipioCompradorTag_Value = 'N/A'
 			else:
 				municipioCompradorTag_Value = str(datos_cliente[0]['state'])

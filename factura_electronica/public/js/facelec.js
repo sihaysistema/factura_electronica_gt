@@ -25,11 +25,12 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
                         serie_factura: frm.doc.name,
                         nombre_cliente: frm.doc.customer
                     },
-                    callback: function(r) {
-
-                        frm.set_value('cae_factura_electronica', r.message);
-                        //console.log(frm.doc.cae_factura_electronica);
-                        //frm.reload_doc();
+                    callback: function(data) {
+                        //frm.cae_factura_electronica = r.message;
+                        //cur_frm.set_value("cae_factura_electronica", data.message);
+                        //cur_frm.refresh_field('cae_factura_electronica');
+                        cur_frm.set_value("cae_factura_electronica", data.message);
+                        //frm.save();
                         if (frm.doc.cae_factura_electronica) {
                             cur_frm.clear_custom_buttons();
                             pdf_button();
