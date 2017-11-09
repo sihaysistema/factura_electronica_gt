@@ -4,12 +4,11 @@ import frappe
 from frappe import _
 import requests
 import xmltodict
-import os
+
 from datetime import datetime, date, time
 from guardar_factura import guardar_factura_electronica as guardar
 from valida_errores import encuentra_errores as errores
-# es-GT: Resuelve el problema de codificacion
-# en-US: Solve the coding problem
+
 import sys
 reload(sys)  
 sys.setdefaultencoding('utf-8')
@@ -21,6 +20,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 	"""Obtencion de datos requeridos y construccion de request"""
 	dato_factura = serie_factura
 	dato_cliente = nombre_cliente
+
 	#AGREGAR LA VERIFICACION DE QUE CONFIGURACION SE ESTA UTLIZANDO!!! por default esta utlizando la configuracion
 	# CONFIG-FAC00001
 
@@ -31,6 +31,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 	#en-US: Check if there is already an electronic invoice with the series of the document, if it finds the series returns a message.
 	#this to avoid duplicate electronic invoices being generated. If you can not find the series, the "try" will capture the error
 	#proceding with the "except".
+	
 	try:
 		factura_electronica = frappe.db.get_values('Envios Facturas Electronicas', filters = {'serie_factura_original': dato_factura},
 		fieldname = ['serie_factura_original', 'cae'], as_dict = 1)
@@ -46,13 +47,13 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		try:
 		# es-GT: Obteniendo datos de la Base de Datos, necesarios para INFILE.
 		# en-US: Obtaining data from the Database, necessary for INFILE.
-
 			sales_invoice = frappe.db.get_values('Sales Invoice', filters = {'name': dato_factura},
 			fieldname = ['name', 'idx', 'territory','grand_total', 'customer_name', 'company',
 			'naming_series', 'creation', 'status', 'discount_amount', 'docstatus', 'modified', 'conversion_rate',
-			'total_taxes_and_charges', 'net_total', 'shipping_address_name'], as_dict = 1)
+			'total_taxes_and_charges', 'net_total', 'shipping_address_name', 'customer_address'], as_dict = 1)
 
-			direccion_cliente = str(sales_invoice[0]['shipping_address_name'])
+			direccion_cliente = str(sales_invoice[0]['customer_address'])
+			nombre_serie = str(sales_invoice[0]['naming_series'])
 
 			datos_cliente = frappe.db.get_values('Address', filters = {'name': direccion_cliente},
 			fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone', 'address_title', 'name'], as_dict = 1)
@@ -68,13 +69,21 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 			fieldname = 'nit_face_customer')
 
 			datos_configuracion = frappe.db.get_values('Configuracion Factura Electronica', filters = {'name': 'CONFIG-FAC00001'},
-			fieldname = ['descripcion_otro_impuesto', 'importe_exento', 'id_dispositivo', 'validador', 'clave', 'fecha_resolucion',
-			'codigo_establecimiento', 'estado_documento', 'importe_otros_impuestos', 'regimen_2989', 'tipo_documento',
-			'serie_documento', 'usuario', 'serie_autorizada', 'numero_resolucion', 'regimen_isr', 'nit_gface', 'importe_total_exento']
+			fieldname = ['descripcion_otro_impuesto', 'importe_exento', 'id_dispositivo', 'validador', 'clave',
+			'codigo_establecimiento',  'importe_otros_impuestos', 'regimen_2989', 'usuario', 'regimen_isr', 'nit_gface', 'importe_total_exento']
 			, as_dict = 1)
-
+			
 		except:
 			frappe.msgprint(_('Error: Problemas con la Base de Datos!'))
+
+		try:
+			series_configuradas = frappe.db.get_values('Configuracion Series', filters = {'parent': 'CONFIG-FAC00001', 'serie': nombre_serie},
+			fieldname = ['fecha_resolucion', 'estado_documento', 'tipo_documento', 'serie', 'secuencia_infile',	'numero_resolucion',
+			'codigo_sat'], as_dict = 1)
+
+			#frappe.msgprint(_(len(series_configuradas)))
+		except: 
+			frappe.msgprint(_('No se encontraron series configuraciones'))
 
 		# es-GT: Construyendo la primera parte del cuerpo XML.
 		# en-US: Building the first part of the XML body.
@@ -274,7 +283,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
 		# es-GT: Depende si una factura esta cancelada o es valida, **MODIFICAR PARA FUTURAS IMPLEMENTACIONES**
 		# en-US: Depends if an invoice is canceled or is valid, ** MODIFY FOR FUTURE IMPLEMENTATIONS **
-		estadoDocumentoTag_Value = str(datos_configuracion[0]['estado_documento']) 
+		estadoDocumentoTag_Value = str(series_configuradas[0]['estado_documento']) 
 
 		# es-GT: Usa el mismo formato que Fecha Documento, en caso el estado del documento
 		#sea activo este campo no se tomara en cuenta, ya que va de la mano con estado documento porque puede ser Anulado
@@ -287,7 +296,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		# en-US: Format of dates = "2013-10-10T00: 00: 00.000-06: 00"
 		fechaDocumentoTag_Value = str((sales_invoice[0]['creation']).isoformat())  
 
-		fechaResolucionTag_Value = (datos_configuracion[0]['fecha_resolucion'])
+		fechaResolucionTag_Value = (series_configuradas[0]['fecha_resolucion'])
 		idDispositivoTag_Value = str(datos_configuracion[0]['id_dispositivo']) 
 		importeBrutoTag_Value = float(sales_invoice[0]['net_total'])
 		importeDescuentoTag_Value = float(sales_invoice[0]['discount_amount'])
@@ -303,18 +312,18 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 		
 		nombreCompletoVendedorTag_Value = str(datos_compania[0]['company_name'])
 		numeroDocumentoTag_Value = str(dato_factura)
-		numeroResolucionTag_Value = str(datos_configuracion[0]['numero_resolucion'])
+		numeroResolucionTag_Value = str(series_configuradas[0]['numero_resolucion'])
 		regimen2989Tag_Value = str(datos_configuracion[0]['regimen_2989'])
 		regimenISRTag_Value = str(datos_configuracion[0]['regimen_isr'])
-		serieAutorizadaTag_Value = str(datos_configuracion[0]['serie_autorizada'])
-		serieDocumentoTag_Value = str(datos_configuracion[0]['serie_documento'])
+		serieAutorizadaTag_Value = str(series_configuradas[0]['secuencia_infile'])
+		serieDocumentoTag_Value = str(series_configuradas[0]['codigo_sat'])
 		municipioVendedorTag_Value = str(datos_compania[0]['country'])
 
 		# es-GT: Cuando es moneda local, obligatoriamente debe llevar 1.00
 		# en-US: When it is local currency, it must necessarily carry 1.00
 		tipoCambioTag_Value = float(sales_invoice[0]['conversion_rate']) 
 
-		tipoDocumentoTag_Value = str(datos_configuracion[0]['tipo_documento'])
+		tipoDocumentoTag_Value = str(series_configuradas[0]['tipo_documento'])
 		usuarioTag_Value = str(datos_configuracion[0]['usuario'])
 		validadorTag_Value = str(datos_configuracion[0]['validador'])
 		detalleImpuestosIvaTag_Value = float(sales_invoice[0]['total_taxes_and_charges'])
