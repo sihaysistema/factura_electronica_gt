@@ -1,5 +1,6 @@
 frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
-
+   // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
+   // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
     cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
 
     function pdf_button() {
