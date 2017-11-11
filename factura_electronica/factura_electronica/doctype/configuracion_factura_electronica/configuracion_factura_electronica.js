@@ -15,7 +15,7 @@ frappe.ui.form.on('Configuracion Factura Electronica', {
 			// es-GT # Obtiene el campo 'serie' del DocType "Configuracion Series"
 			callback: function(r) {
                 frappe.meta.get_docfield('Configuracion Series', 'serie', cur_frm.doc.name).options = r.message
-    			// en-US # Updates the current form fiel 'serie' with the previously obtained data
+    			// en-US # Updates the current form field 'serie' with the previously obtained data
 				// es-GT # Actualiza el campo 'serie' del formulario actual, con la data obtenida anteriormente
                 cur_frm.refresh_field('serie');
             }
