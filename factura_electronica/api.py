@@ -21,9 +21,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
     dato_factura = serie_factura
     dato_cliente = nombre_cliente
 
-    #AGREGAR LA VERIFICACION DE QUE CONFIGURACION SE ESTA UTLIZANDO!!! por default esta utlizando la configuracion
-    # CONFIG-FAC00001
-
     #es-GT: Verifica si ya existe una factura electronica con la serie del documento, si encuentra la serie retorna un mensaje.
     #esto para evitar que se generen facturas electronicas duplicadas. Si no encuentra la serie, el "try" capturara el error
     #procediendo con el "except".
@@ -76,13 +73,17 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
         except:
             frappe.msgprint(_('Error: Problemas con la Base de Datos!'))
 
+        # es-GT: Verifica que la configuracion CONFIG-FAC00001 exista, en caso si exista procede con la generacion de la peticion.
+        #        para la generacion de Factura Electronica
+        # en-US: 
         try:
-            # Por default se usa la configuracion 'CONFIG-FAC00001'
+            # es-GT: Por default se utiliza la configuracion CONFIG-FAC00001.
+            # en-US: 
             series_configuradas = frappe.db.get_values('Configuracion Series', filters = {'parent': 'CONFIG-FAC00001', 'serie': nombre_serie},
             fieldname = ['fecha_resolucion', 'estado_documento', 'tipo_documento', 'serie', 'secuencia_infile',	'numero_resolucion',
             'codigo_sat'], as_dict = 1)
         except: 
-            frappe.msgprint(_('No se encontraron series configuraciones'))
+            frappe.msgprint(_('No se encontraron series configuradas'))
         else:
         # es-GT: Construyendo la primera parte del cuerpo XML.
         # en-US: Building the first part of the XML body.
@@ -447,5 +448,3 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                             '''.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
 
                         frappe.msgprint(_('NO GENERADA'))
-                            #frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
-                            #guardar(respuesta, dato_factura, tiempo_enviado)
