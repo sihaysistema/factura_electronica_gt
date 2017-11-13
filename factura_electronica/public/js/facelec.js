@@ -1,6 +1,6 @@
 frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
-   // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
-   // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
+    // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
+    // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
     cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
 
     function pdf_button() {
@@ -28,8 +28,6 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
                     },
                     callback: function(data) {
                         //frm.cae_factura_electronica = r.message;
-                        //cur_frm.set_value("cae_factura_electronica", data.message);
-                        //cur_frm.refresh_field('cae_factura_electronica');
                         cur_frm.set_value("cae_factura_electronica", data.message);
                         //frm.save();
                         if (frm.doc.cae_factura_electronica) {

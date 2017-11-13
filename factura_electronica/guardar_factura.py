@@ -85,9 +85,6 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 		# en-US: Obtains and Saves the timestamp the data was sent to INFILE
         # en-US: These timestamps are obtained to keep track of transaction time
 		tabFacturaElectronica.enviado = tiempo_envio
-
-		# Guarda el Link para obtener el PDF de la factura electronica
-		#tabFacturaElectronica.link_pdf_factura_electronica = ("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_dato)
 		
 		# es-GT: Guarda todos los datos en la tabla llamada 'FACTURAS ELECTRONICAS' de la base de datos de ERPNext
 		# en-US: Saves all the data in the table called 'ELECTRONIC INVOICES' of the ERPNext database
