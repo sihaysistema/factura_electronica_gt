@@ -6,7 +6,7 @@ import requests
 import xmltodict
 
 from request_xml import construir_xml
-from datetime import datetime, date, time
+from datetime import datetime, date
 from guardar_factura import guardar_factura_electronica as guardar
 from valida_errores import encuentra_errores as errores
 
@@ -20,8 +20,9 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
     dato_factura = serie_factura
     dato_cliente = nombre_cliente
  
-    # Verifica en la tabla 'Envios Facturas Electronicas' si hay una factura electronica generada con la misma serie.
-    # esto para evitar duplicadas
+    # es-GT: Verifica la existencia de facturas generadas con la misma serie, esto para evitar duplicadas. En caso no se encuentre, 
+    #        se procede a la generacion del documento.
+    # en-US: Verify the existence of invoices generated with the same series, this to avoid duplicates. If it is not found, the document is generated.
     if frappe.db.exists('Envios Facturas Electronicas', {'serie_factura_original': dato_factura}): 
 
         factura_electronica = frappe.db.get_values('Envios Facturas Electronicas', filters = {'serie_factura_original': dato_factura},
@@ -31,11 +32,13 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
         cae_factura = str(factura_electronica[0]['cae'])
 
-        # retorna el cae de la factura electronica, que es obtenida por js del lado del cliente, para colocarla en el campo 
+        # es-GT: retorna el cae de la factura electronica, que es obtenida por js del lado del cliente, para colocarla en 'Sales Invoice'.
+        # en-US: returns the fall of the electronic invoice, which is obtained by js from the client's side, to place it in 'Sales Invoice'.
         return cae_factura
 
     else:
-        # Obtiene los datos necesarios de la base de datos de ERPNEXT, si ocurre un error, retornara un mensaje con el mensaje de error.
+        # es-GT: Obtiene los datos necesarios de la base de datos de ERPNEXT, si ocurre un error, retornara un mensaje de error.
+        # en-US: Obtain the necessary data from the ERPNEXT database, if an error occurs, it will return an error message.
         try:
             sales_invoice = frappe.db.get_values('Sales Invoice', filters = {'name': dato_factura},
             fieldname = ['name', 'idx', 'territory','grand_total', 'customer_name', 'company',
@@ -66,21 +69,26 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
         except:
             frappe.msgprint(_('Error: Problemas con la Base de Datos!'))
 
-        # Verifica que existan las series configuradas, para generar documentos: FACE, CFACE, NCE, NDE
-        # En caso no existan una serie valida configurada no procede a generar el documento solicitado.
+        # es-GT: Verifica que existan las series configuradas, para generar documentos: FACE, CFACE, NCE, NDE
+        #        En caso no existan una serie valida configurada no procede a generar el documento solicitado.
+        # en-US: Verify that the configured series exist, to generate documents: FACE, CFACE, NCE, NDE
+        #        In case there is not a valid configured series, it does not proceed to generate the requested document.
         if frappe.db.exists('Configuracion Series', {'parent': 'CONFIG-FAC00001', 'serie': nombre_serie}):
             
             series_configuradas = frappe.db.get_values('Configuracion Series', filters = {'parent': 'CONFIG-FAC00001', 'serie': nombre_serie},
             fieldname = ['fecha_resolucion', 'estado_documento', 'tipo_documento', 'serie', 'secuencia_infile',	'numero_resolucion',
             'codigo_sat'], as_dict = 1)
 
-            # Llama al metodo 'contruir_xml' del script 'request_xml.py' para generar la peticion en XML.
+            # es-GT: Llama al metodo 'contruir_xml' del script 'request_xml.py' para generar la peticion en XML.
+            # en-US: Call the 'contruir_xml' method of the 'request_xml.py' script to generate the request in XML.
             construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice_item, datos_compania, nit_cliente, datos_configuracion, series_configuradas, dato_factura)
 
-            # Si ocurre un error en la comunicacion con el servidor de INFILE, retornara el mensaje de conexion a internet.
-            # En caso no exista error en comunicacion, procede con la obtencion de los datos, del documento solicitado.
+            # es-GT: Si ocurre un error en la comunicacion con el servidor de INFILE, retornara el mensaje de advertencia.
+            #        En caso no exista error en comunicacion, procede con la obtencion de los datos, del documento solicitado.
+            # en-US: If an error occurs in the communication with the INFILE server, the warning message will return. In case there is no error 
+            #        in communication, proceed with the obtaining of the data, of the requested document.
             try:
-                envio_datos = open('envio_request.xml', 'r').read()#.splitlines()
+                envio_datos = open('envio_request.xml', 'r').read()
 
                 url="https://www.ingface.net/listener/ingface?wsdl" #URL de listener de INFILE
                 headers = {'content-type': 'text/xml'} #CABECERAS: Indican el tipo de datos
@@ -95,9 +103,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
                 descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
                 
-                # en la variable 'errores_diccionario' se almacena un diccionario retornado por el metodo errores del script
-                # valida_errores.py con los errores encontrados, en caso existe errores los muestra.
-                # en caso no existan errores, se procede a guardar en la base de datos, en la tabla 'Envios Facturas Electronicas'.
+                # es-GT: en la variable 'errores_diccionario' se almacena un diccionario retornado por el metodo errores del script
+                #        valida_errores.py con los errores encontrados, en caso existan errores los muestra.
+                #        en caso no existan errores, se procede a guardar en la base de datos, en la tabla 'Envios Facturas Electronicas'.
+                # en-US: In the variable 'errors_dictionary' a dictionary returned by the error method of the valida_errors.py script is 
+                #        stored with the errors found, if there are errors, it shows them. In case there are no errors, we proceed to save in 
+                #        the database, in the 'Shipping Electronic Invoices' table.
                 errores_diccionario = errores(descripciones)
                 
                 if (len(errores_diccionario)>0): 

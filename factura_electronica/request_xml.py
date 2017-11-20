@@ -3,7 +3,7 @@
 import frappe
 from frappe import _
 
-from datetime import datetime, date, time
+from datetime import datetime
 import sys
 reload(sys)  
 sys.setdefaultencoding('utf-8')
@@ -13,8 +13,9 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     
     direccion_cliente = str(sales_invoice[0]['customer_address'])
 
-    # Verifica si existe la direccion del cliente, en caso si exista la direccion, verificara uno a uno para que los datos 
-    # sean correctos.
+    # es-GT: Verifica si existe la direccion del cliente, en caso si exista la direccion, verificara uno a uno para que los datos 
+    #        sean correctos.
+    # en-US: Verify if the customer's address exists, in case the address exists, verify one by one so that the data is correct.
     if frappe.db.exists('Address', {'name': direccion_cliente}): 
 
         if ((datos_cliente[0]['email_id']) is None): 
@@ -47,7 +48,8 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
         else:
             municipioCompradorTag_Value = str(datos_cliente[0]['state'])
 
-# En caso no exista la direccion del cliente, los valores se establecen a 'N/A' o a 'Consumidor Final'
+    # es-GT: En caso no exista la direccion del cliente, los valores se establecen a 'N/A' y a 'Consumidor Final'.
+    # en-US: In case there is no customer address, the values are set to 'N / A' and 'Final Consumer'.
     else:
         correoCompradorTag_Value = 'N/A'
         departamentoCompradorTag_Value = 'N/A'
@@ -66,20 +68,20 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     # es-GT: Formateando la Primera parte del cuerpo de request XML.
     # en-US: Formatting the first part of the request XML body.
     body_parte1 = """<?xml version="1.0" ?>
-    <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
-    <S:Body>
-    <ns2:registrarDte xmlns:ns2="http://listener.ingface.com/">
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
+<S:Body>
+<ns2:registrarDte xmlns:ns2="http://listener.ingface.com/">
+
+<dte>
+<clave>{0}</clave>
 
     <dte>
-    <clave>{0}</clave>
-
-        <dte>
-            <codigoEstablecimiento>{1}</codigoEstablecimiento>
-            <codigoMoneda>{2}</codigoMoneda>
-            <correoComprador>{3}</correoComprador>
-            <departamentoComprador>{4}</departamentoComprador>
-            <departamentoVendedor>{5}</departamentoVendedor>
-            <descripcionOtroImpuesto>{6}</descripcionOtroImpuesto>""".format(claveTag_Value, codigoEstablecimientoTag_Value,
+        <codigoEstablecimiento>{1}</codigoEstablecimiento>
+        <codigoMoneda>{2}</codigoMoneda>
+        <correoComprador>{3}</correoComprador>
+        <departamentoComprador>{4}</departamentoComprador>
+        <departamentoVendedor>{5}</departamentoVendedor>
+        <descripcionOtroImpuesto>{6}</descripcionOtroImpuesto>""".format(claveTag_Value, codigoEstablecimientoTag_Value,
     codigoMonedaTag_Value, correoCompradorTag_Value, departamentoCompradorTag_Value, departamentoVendedorTag_Value,
     descripcionOtroImpuestoTag_Value)
 
@@ -126,21 +128,21 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 
                 body_parte2 = """
 
-        <detalleDte>
-            <cantidad>{0}</cantidad>
-            <codigoProducto>{1}</codigoProducto>
-            <descripcionProducto>{2}</descripcionProducto>
-            <detalleImpuestosIva>{3}</detalleImpuestosIva>
-            <importeExento>{4}</importeExento>
-            <importeNetoGravado>{5}</importeNetoGravado>
-            <importeOtrosImpuestos>{6}</importeOtrosImpuestos>
-            <importeTotalOperacion>{7}</importeTotalOperacion>
-            <montoBruto>{8}</montoBruto>
-            <montoDescuento>{9}</montoDescuento>
-            <precioUnitario>{10}</precioUnitario>
-            <tipoProducto>{11}</tipoProducto>
-            <unidadMedida>{12}</unidadMedida>
-        </detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
+    <detalleDte>
+        <cantidad>{0}</cantidad>
+        <codigoProducto>{1}</codigoProducto>
+        <descripcionProducto>{2}</descripcionProducto>
+        <detalleImpuestosIva>{3}</detalleImpuestosIva>
+        <importeExento>{4}</importeExento>
+        <importeNetoGravado>{5}</importeNetoGravado>
+        <importeOtrosImpuestos>{6}</importeOtrosImpuestos>
+        <importeTotalOperacion>{7}</importeTotalOperacion>
+        <montoBruto>{8}</montoBruto>
+        <montoDescuento>{9}</montoDescuento>
+        <precioUnitario>{10}</precioUnitario>
+        <tipoProducto>{11}</tipoProducto>
+        <unidadMedida>{12}</unidadMedida>
+    </detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
                 importeExentoTag_Value, importeNetoGravadoTag_Value, importeOtrosImpuestosTag_Value, importeTotalOperacionTag_Value,
                 montoBrutoTag_Value, montoDescuentoTag_Value, precioUnitarioTag_Value, tipoProductoTag_Value, unidadMedidaTag_Value) 
                 salida.write(body_parte2)	
@@ -177,21 +179,21 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 
         body_parte2 = """
 
-        <detalleDte>
-            <cantidad>{0}</cantidad>
-            <codigoProducto>{1}</codigoProducto>
-            <descripcionProducto>{2}</descripcionProducto>
-            <detalleImpuestosIva>{3}</detalleImpuestosIva>
-            <importeExento>{4}</importeExento>
-            <importeNetoGravado>{5}</importeNetoGravado>
-            <importeOtrosImpuestos>{6}</importeOtrosImpuestos>
-            <importeTotalOperacion>{7}</importeTotalOperacion>
-            <montoBruto>{8}</montoBruto>
-            <montoDescuento>{9}</montoDescuento>
-            <precioUnitario>{10}</precioUnitario>
-            <tipoProducto>{11}</tipoProducto>
-            <unidadMedida>{12}</unidadMedida>
-        </detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
+    <detalleDte>
+        <cantidad>{0}</cantidad>
+        <codigoProducto>{1}</codigoProducto>
+        <descripcionProducto>{2}</descripcionProducto>
+        <detalleImpuestosIva>{3}</detalleImpuestosIva>
+        <importeExento>{4}</importeExento>
+        <importeNetoGravado>{5}</importeNetoGravado>
+        <importeOtrosImpuestos>{6}</importeOtrosImpuestos>
+        <importeTotalOperacion>{7}</importeTotalOperacion>
+        <montoBruto>{8}</montoBruto>
+        <montoDescuento>{9}</montoDescuento>
+        <precioUnitario>{10}</precioUnitario>
+        <tipoProducto>{11}</tipoProducto>
+        <unidadMedida>{12}</unidadMedida>
+    </detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value, detalleImpuestosIvaTag_Value,
         importeExentoTag_Value, importeNetoGravadoTag_Value, importeOtrosImpuestosTag_Value, importeTotalOperacionTag_Value,
         montoBrutoTag_Value, montoDescuentoTag_Value, precioUnitarioTag_Value, tipoProductoTag_Value, unidadMedidaTag_Value)
 
@@ -211,10 +213,10 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     estadoDocumentoTag_Value = str(series_configuradas[0]['estado_documento']) 
 
     # es-GT: Usa el mismo formato que Fecha Documento, en caso el estado del documento
-    #sea activo este campo no se tomara en cuenta, ya que va de la mano con estado documento porque puede ser Anulado
+    # sea activo este campo no se tomara en cuenta, ya que va de la mano con estado documento porque puede ser Anulado
 
     # en-US: Use the same format as Date Document, in case the document status
-    #is active this field will not be taken into account, since it goes hand in hand with document status because it can be canceled
+    # is active this field will not be taken into account, since it goes hand in hand with document status because it can be canceled
     fechaAnulacionTag_Value = str((sales_invoice[0]['creation']).isoformat()) 
 
     # es-GT: Formato de fechas = "2013-10-10T00:00:00.000-06:00"
@@ -260,48 +262,48 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 
     body_parte3 = """
 
-            <detalleImpuestosIva>{0}</detalleImpuestosIva>
-            <direccionComercialComprador>{1}</direccionComercialComprador>
-            <direccionComercialVendedor>{2}</direccionComercialVendedor>
-            <estadoDocumento>{3}</estadoDocumento>
-            <fechaAnulacion>{4}</fechaAnulacion>
-            <fechaDocumento>{5}</fechaDocumento>
-            <fechaResolucion>{6}</fechaResolucion>
-            <idDispositivo>{7}</idDispositivo>
-            <importeBruto>{8}</importeBruto>
-            <importeDescuento>{9}</importeDescuento>
-            <importeNetoGravado>{10}</importeNetoGravado>
-            <importeOtrosImpuestos>{11}</importeOtrosImpuestos>
-            <importeTotalExento>{12}</importeTotalExento>
-            <montoTotalOperacion>{13}</montoTotalOperacion>
-            <municipioComprador>{14}</municipioComprador>
-            <municipioVendedor>{15}</municipioVendedor>
-            <nitComprador>{16}</nitComprador>
-            <nitGFACE>{17}</nitGFACE>
-            <nitVendedor>{18}</nitVendedor>
-            <nombreComercialComprador>{19}</nombreComercialComprador>
-            <nombreComercialRazonSocialVendedor>{20}</nombreComercialRazonSocialVendedor>
-            <nombreCompletoVendedor>{21}</nombreCompletoVendedor>
-            <numeroDocumento>{22}</numeroDocumento>
-            <numeroResolucion>{23}</numeroResolucion>
-            <regimen2989>{24}</regimen2989>
-            <regimenISR>{25}</regimenISR>
-            <serieAutorizada>{26}</serieAutorizada>
-            <serieDocumento>{27}</serieDocumento>
-            <telefonoComprador>{28}</telefonoComprador>
-            <tipoCambio>{29}</tipoCambio>
-            <tipoDocumento>{30}</tipoDocumento>
-
-        </dte>
-
-        <usuario>{31}</usuario>
-        <validador>{32}</validador>
+        <detalleImpuestosIva>{0}</detalleImpuestosIva>
+        <direccionComercialComprador>{1}</direccionComercialComprador>
+        <direccionComercialVendedor>{2}</direccionComercialVendedor>
+        <estadoDocumento>{3}</estadoDocumento>
+        <fechaAnulacion>{4}</fechaAnulacion>
+        <fechaDocumento>{5}</fechaDocumento>
+        <fechaResolucion>{6}</fechaResolucion>
+        <idDispositivo>{7}</idDispositivo>
+        <importeBruto>{8}</importeBruto>
+        <importeDescuento>{9}</importeDescuento>
+        <importeNetoGravado>{10}</importeNetoGravado>
+        <importeOtrosImpuestos>{11}</importeOtrosImpuestos>
+        <importeTotalExento>{12}</importeTotalExento>
+        <montoTotalOperacion>{13}</montoTotalOperacion>
+        <municipioComprador>{14}</municipioComprador>
+        <municipioVendedor>{15}</municipioVendedor>
+        <nitComprador>{16}</nitComprador>
+        <nitGFACE>{17}</nitGFACE>
+        <nitVendedor>{18}</nitVendedor>
+        <nombreComercialComprador>{19}</nombreComercialComprador>
+        <nombreComercialRazonSocialVendedor>{20}</nombreComercialRazonSocialVendedor>
+        <nombreCompletoVendedor>{21}</nombreCompletoVendedor>
+        <numeroDocumento>{22}</numeroDocumento>
+        <numeroResolucion>{23}</numeroResolucion>
+        <regimen2989>{24}</regimen2989>
+        <regimenISR>{25}</regimenISR>
+        <serieAutorizada>{26}</serieAutorizada>
+        <serieDocumento>{27}</serieDocumento>
+        <telefonoComprador>{28}</telefonoComprador>
+        <tipoCambio>{29}</tipoCambio>
+        <tipoDocumento>{30}</tipoDocumento>
 
     </dte>
+
+    <usuario>{31}</usuario>
+    <validador>{32}</validador>
+
+</dte>
             
-    </ns2:registrarDte>
-    </S:Body>
-    </S:Envelope>""".format(detalleImpuestosIvaTag_Value, direccionComercialCompradorTag_Value, direccionComercialVendedorTag_Value, 
+</ns2:registrarDte>
+</S:Body>
+</S:Envelope>""".format(detalleImpuestosIvaTag_Value, direccionComercialCompradorTag_Value, direccionComercialVendedorTag_Value, 
     estadoDocumentoTag_Value, fechaAnulacionTag_Value, fechaDocumentoTag_Value, fechaResolucionTag_Value, idDispositivoTag_Value,
     importeBrutoTag_Value, importeDescuentoTag_Value, importeNetoGravadoTag_Value, importeOtrosImpuestosTag_Value, importeTotalExentoTag_Value,
     montoTotalOperacionTag_Value, municipioCompradorTag_Value, municipioVendedorTag_Value, nitCompradorTag_Value, nitGFACETag_Value,
