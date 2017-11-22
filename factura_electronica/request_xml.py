@@ -12,6 +12,8 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     """Genera el archivo xml, peticion para generar la factura electronica"""
     
     direccion_cliente = str(sales_invoice[0]['customer_address'])
+    serie_doc = str(sales_invoice[0]['naming_series'])
+    tipo_doc = str(series_configuradas[0]['tipo_documento'])
 
     # es-GT: Verifica si existe la direccion del cliente, en caso si exista la direccion, verificara uno a uno para que los datos 
     #        sean correctos.
@@ -238,7 +240,17 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     nombreComercialRazonSocialVendedorTag_Value = str(datos_compania[0]['company_name'])
             
     nombreCompletoVendedorTag_Value = str(datos_compania[0]['company_name'])
-    numeroDocumentoTag_Value = str(dato_factura)
+
+    # es-GT: Las Facturas CFACE necesitan el correlativo de la factura, excluyendo la serie, por lo que se hace un slice
+    #        para que tome solo el correlativo, si no es CFACE tomara la serie completa.
+    # en-US: CFACE Invoices need the correlation of the invoice, excluding the series, so a slice is made so that it 
+    #        takes only the correlative, if it is not CFACE it will take the complete series.
+    if (tipo_doc == 'CFACE'):
+        nlong = len(serie_doc)
+        numeroDocumentoTag_Value = str(dato_factura[nlong:])
+    else:
+        numeroDocumentoTag_Value = str(dato_factura)
+
     numeroResolucionTag_Value = str(series_configuradas[0]['numero_resolucion'])
             
     regimenISRTag_Value = str(datos_configuracion[0]['regimen_isr'])
