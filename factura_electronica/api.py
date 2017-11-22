@@ -68,73 +68,78 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
             
         except:
             frappe.msgprint(_('Error: Problemas con la Base de Datos!'))
-
-        # es-GT: Verifica que existan las series configuradas, para generar documentos: FACE, CFACE, NCE, NDE
-        #        En caso no existan una serie valida configurada no procede a generar el documento solicitado.
-        # en-US: Verify that the configured series exist, to generate documents: FACE, CFACE, NCE, NDE
-        #        In case there is not a valid configured series, it does not proceed to generate the requested document.
-        if frappe.db.exists('Configuracion Series', {'parent': 'CONFIG-FAC00001', 'serie': nombre_serie}):
             
-            series_configuradas = frappe.db.get_values('Configuracion Series', filters = {'parent': 'CONFIG-FAC00001', 'serie': nombre_serie},
-            fieldname = ['fecha_resolucion', 'estado_documento', 'tipo_documento', 'serie', 'secuencia_infile',	'numero_resolucion',
-            'codigo_sat'], as_dict = 1)
-
-            # es-GT: Llama al metodo 'contruir_xml' del script 'request_xml.py' para generar la peticion en XML.
-            # en-US: Call the 'contruir_xml' method of the 'request_xml.py' script to generate the request in XML.
-            construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice_item, datos_compania, nit_cliente, datos_configuracion, series_configuradas, dato_factura)
-
-            # es-GT: Si ocurre un error en la comunicacion con el servidor de INFILE, retornara el mensaje de advertencia.
-            #        En caso no exista error en comunicacion, procede con la obtencion de los datos, del documento solicitado.
-            # en-US: If an error occurs in the communication with the INFILE server, the warning message will return. In case there is no error 
-            #        in communication, proceed with the obtaining of the data, of the requested document.
-            try:
-                envio_datos = open('envio_request.xml', 'r').read()
-
-                url="https://www.ingface.net/listener/ingface?wsdl" #URL de listener de INFILE
-                headers = {'content-type': 'text/xml'} #CABECERAS: Indican el tipo de datos
-
-                tiempo_enviado = datetime.now()
-                response = requests.post(url, data=envio_datos, headers=headers, timeout=5)
-                respuesta = response.content
-            except:
-                frappe.msgprint(_('Error en la Comunicacion, Verifique su conexion a Internet o intente mas tarde!'))
-            else:
-                documento_descripcion = xmltodict.parse(respuesta)
-
-                descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
-                
-                # es-GT: en la variable 'errores_diccionario' se almacena un diccionario retornado por el metodo errores del script
-                #        valida_errores.py con los errores encontrados, en caso existan errores los muestra.
-                #        en caso no existan errores, se procede a guardar en la base de datos, en la tabla 'Envios Facturas Electronicas'.
-                # en-US: In the variable 'errors_dictionary' a dictionary returned by the error method of the valida_errors.py script is 
-                #        stored with the errors found, if there are errors, it shows them. In case there are no errors, we proceed to save in 
-                #        the database, in the 'Shipping Electronic Invoices' table.
-                errores_diccionario = errores(descripciones)
-                
-                if (len(errores_diccionario)>0): 
-                    try:
-                        if (((errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
-                            datoCAEF = guardar(respuesta, dato_factura, tiempo_enviado)
-
-                            frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
-                                    
-                            with open('respuesta.xml', 'w') as recibidoxml:
-                                recibidoxml.write(respuesta)
-                                recibidoxml.close()	
-                                    
-                            return datoCAEF
-                    except:
-                        frappe.msgprint(_('''
-                        AVISOS <span class="label label-default" style="font-size: 16px">{}</span>
-                        '''.format(str(len(errores_diccionario)))+ ' VERIFIQUE SU MANUAL'))
-                        for llave in errores_diccionario:
-                            frappe.msgprint(_('''
-                            <span class="label label-warning" style="font-size: 14px">{}</span>
-                            '''.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
-
-                        frappe.msgprint(_('NO GENERADA'))
+        # es-GT: Si la obtencion de los datos de la base de datos es exitosa, se procede a la generacion del documento solicitado.
+        #        de lo contrario solo mostrara el error de 'Problemas con la base de datos'
+        # en-US: If the obtaining of the data of the database is successful, it proceeds to the generation of the requested document.
+        #        Otherwise, it will only show the error of 'Problems with the database'   
         else:
-            frappe.msgprint(_('No existen series configuradas'))
+            # es-GT: Verifica que existan las series configuradas, para generar documentos: FACE, CFACE, NCE, NDE
+            #        En caso no existan una serie valida configurada no procede a generar el documento solicitado.
+            # en-US: Verify that the configured series exist, to generate documents: FACE, CFACE, NCE, NDE
+            #        In case there is not a valid configured series, it does not proceed to generate the requested document.
+            if frappe.db.exists('Configuracion Series', {'parent': 'CONFIG-FAC00001', 'serie': nombre_serie}):
+                
+                series_configuradas = frappe.db.get_values('Configuracion Series', filters = {'parent': 'CONFIG-FAC00001', 'serie': nombre_serie},
+                fieldname = ['fecha_resolucion', 'estado_documento', 'tipo_documento', 'serie', 'secuencia_infile',	'numero_resolucion',
+                'codigo_sat'], as_dict = 1)
+
+                # es-GT: Llama al metodo 'contruir_xml' del script 'request_xml.py' para generar la peticion en XML.
+                # en-US: Call the 'contruir_xml' method of the 'request_xml.py' script to generate the request in XML.
+                construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice_item, datos_compania, nit_cliente, datos_configuracion, series_configuradas, dato_factura)
+
+                # es-GT: Si ocurre un error en la comunicacion con el servidor de INFILE, retornara el mensaje de advertencia.
+                #        En caso no exista error en comunicacion, procede con la obtencion de los datos, del documento solicitado.
+                # en-US: If an error occurs in the communication with the INFILE server, the warning message will return. In case there is no error 
+                #        in communication, proceed with the obtaining of the data, of the requested document.
+                try:
+                    envio_datos = open('envio_request.xml', 'r').read()
+
+                    url="https://www.ingface.net/listener/ingface?wsdl" #URL de listener de INFILE
+                    headers = {'content-type': 'text/xml'} #CABECERAS: Indican el tipo de datos
+
+                    tiempo_enviado = datetime.now()
+                    response = requests.post(url, data=envio_datos, headers=headers, timeout=5)
+                    respuesta = response.content
+                except:
+                    frappe.msgprint(_('Error en la Comunicacion, Verifique su conexion a Internet o intente mas tarde!'))
+                else:
+                    documento_descripcion = xmltodict.parse(respuesta)
+
+                    descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
+                    
+                    # es-GT: en la variable 'errores_diccionario' se almacena un diccionario retornado por el metodo errores del script
+                    #        valida_errores.py con los errores encontrados, en caso existan errores los muestra.
+                    #        en caso no existan errores, se procede a guardar en la base de datos, en la tabla 'Envios Facturas Electronicas'.
+                    # en-US: In the variable 'errors_dictionary' a dictionary returned by the error method of the valida_errors.py script is 
+                    #        stored with the errors found, if there are errors, it shows them. In case there are no errors, we proceed to save in 
+                    #        the database, in the 'Shipping Electronic Invoices' table.
+                    errores_diccionario = errores(descripciones)
+                    
+                    if (len(errores_diccionario)>0): 
+                        try:
+                            if (((errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
+                                datoCAEF = guardar(respuesta, dato_factura, tiempo_enviado)
+
+                                frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
+                                        
+                                with open('respuesta.xml', 'w') as recibidoxml:
+                                    recibidoxml.write(respuesta)
+                                    recibidoxml.close()	
+                                        
+                                return datoCAEF
+                        except:
+                            frappe.msgprint(_('''
+                            AVISOS <span class="label label-default" style="font-size: 16px">{}</span>
+                            '''.format(str(len(errores_diccionario)))+ ' VERIFIQUE SU MANUAL'))
+                            for llave in errores_diccionario:
+                                frappe.msgprint(_('''
+                                <span class="label label-warning" style="font-size: 14px">{}</span>
+                                '''.format(str(llave)) + ' = '+ str(errores_diccionario[llave])))
+
+                            frappe.msgprint(_('NO GENERADA'))
+            else:
+                frappe.msgprint(_('No existen series configuradas'))
             
 
 @frappe.whitelist()
