@@ -47,6 +47,7 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
         });
     }
 
+    // Codigo para Factura Electronica FACE, CFACE
     if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
@@ -74,28 +75,31 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
         }
     }
 
+    // Codigo para Notas de Credito NCE
     if (frm.doc.status === "Return") {
-        var nombre = 'Nota Credito';
-        frm.add_custom_button(__(nombre), function() {
-            frappe.call({
-                method: "factura_electronica.api.generar_factura_electronica",
-                args: {
-                    serie_factura: frm.doc.name,
-                    nombre_cliente: frm.doc.customer
-                },
-                callback: function(data) {
-
-                    cur_frm.set_value("cae_factura_electronica", data.message);
-                    //FIXME
-                    if (frm.doc.cae_factura_electronica != '') {
-                        cur_frm.clear_custom_buttons();
-                        pdf_button();
+        //var nombre = 'Nota Credito';
+        if (frm.doc.cae_nota_de_credito) {
+            cur_frm.clear_custom_buttons();
+            pdf_button();
+        } else {
+            frm.add_custom_button(__('Nota Credito'), function() {
+                frappe.call({
+                    method: "factura_electronica.api.generar_factura_electronica",
+                    args: {
+                        serie_factura: frm.doc.name,
+                        nombre_cliente: frm.doc.customer
+                    },
+                    callback: function(data) {
+                        cur_frm.set_value("cae_nota_de_credito", data.message);
+                        if (frm.doc.cae_nota_de_credito) {
+                            cur_frm.clear_custom_buttons();
+                            pdf_button();
+                        }
                     }
-                }
-            });
-        }).addClass("btn-primary");
+                });
+            }).addClass("btn-primary");
+        }
     }
-
 });
 
 
