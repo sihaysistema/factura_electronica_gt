@@ -87,7 +87,7 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
 
                     cur_frm.set_value("cae_factura_electronica", data.message);
                     //FIXME
-                    if (frm.doc.cae_factura_electronica) {
+                    if (frm.doc.cae_factura_electronica != '') {
                         cur_frm.clear_custom_buttons();
                         pdf_button();
                     }
@@ -97,3 +97,27 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     }
 
 });
+
+
+// es-GT: Obtiene un valor para un campo que pertenece a la Tabla Hija "Sales Invoice Item" o "Producto de la Factura de Venta"
+// en-US: Code for fetching a value for a field within the Child Table "Sales Invoice Item"
+frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
+    frappe.ui.form.on("Sales Invoice Item", {
+        "item_code": function item_code(frm, cdt, cdn) {
+            frm.add_fetch("item_code", "tax_rate_per_uom", "tasa_otro_impuesto");
+
+            var d = locals[cdt][cdn];
+            //var total = 0;
+            //frappe.model.set_value(d.doctype, d.name, "importe_otros_impuestos", (d.amount * 2));
+            //frm.doc.table.forEach(function(d) { total += d.area; });
+            //frm.set_value('valor_otro_impuesto', (d.amount * 2));
+            //cur_frm.refresh();
+        }
+    });
+});
+
+/*
+frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
+    frm.add_fetch("item_code", "tax_rate_per_uom", "tasa_otro_impuesto");
+});
+*/

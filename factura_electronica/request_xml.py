@@ -8,7 +8,7 @@ import sys
 reload(sys)  
 sys.setdefaultencoding('utf-8')
 
-def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice_item, datos_compania, nit_cliente, datos_configuracion, series_configuradas, dato_factura):
+def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice_item, datos_compania, nit_cliente, datos_configuracion, series_configuradas, dato_factura,direccion_compania):
     """Genera el archivo xml, peticion para generar la factura electronica"""
     
     direccion_cliente = str(sales_invoice[0]['customer_address'])
@@ -45,10 +45,10 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
         else:
             telefonoCompradorTag_Value = str(datos_cliente[0]['phone'])
 
-        if ((datos_cliente[0]['state']) == ''):
+        if ((datos_cliente[0]['city']) == ''):
             municipioCompradorTag_Value = 'N/A'
         else:
-            municipioCompradorTag_Value = str(datos_cliente[0]['state'])
+            municipioCompradorTag_Value = str(datos_cliente[0]['city'])
 
     # es-GT: En caso no exista la direccion del cliente, los valores se establecen a 'N/A' y a 'Consumidor Final'.
     # en-US: In case there is no customer address, the values are set to 'N / A' and 'Final Consumer'.
@@ -64,7 +64,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     codigoEstablecimientoTag_Value = str(datos_configuracion[0]['codigo_establecimiento'])
     codigoMonedaTag_Value = str(datos_compania[0]['default_currency'])
 
-    departamentoVendedorTag_Value = str(datos_compania[0]['country']) 
+    departamentoVendedorTag_Value = str(direccion_compania[0]['state']) 
     descripcionOtroImpuestoTag_Value = str(datos_configuracion[0]['descripcion_otro_impuesto'])
 
     # es-GT: Formateando la Primera parte del cuerpo de request XML.
@@ -208,7 +208,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 
     # en-US: BUILDING THE THIRD PART OF THE XML BODY
     # Assign each variable its corresponding value
-    direccionComercialVendedorTag_Value = str(datos_compania[0]['country'])
+    direccionComercialVendedorTag_Value = str(direccion_compania[0]['address_line1'])
 
     # es-GT: Depende si una factura esta cancelada o es valida, **MODIFICAR PARA FUTURAS IMPLEMENTACIONES**
     # en-US: Depends if an invoice is canceled or is valid, ** MODIFY FOR FUTURE IMPLEMENTATIONS **
@@ -256,7 +256,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     regimenISRTag_Value = str(datos_configuracion[0]['regimen_isr'])
     serieAutorizadaTag_Value = str(series_configuradas[0]['secuencia_infile'])
     serieDocumentoTag_Value = str(series_configuradas[0]['codigo_sat'])
-    municipioVendedorTag_Value = str(datos_compania[0]['country'])
+    municipioVendedorTag_Value = str(direccion_compania[0]['city'])
 
     # es-GT: Cuando es moneda local, obligatoriamente debe llevar 1.00
     # en-US: When it is local currency, it must necessarily carry 1.00

@@ -41,19 +41,23 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
         # en-US: Obtain the necessary data from the ERPNEXT database, if an error occurs, it will return an error message.
         try:
             sales_invoice = frappe.db.get_values('Sales Invoice', filters = {'name': dato_factura},
-            fieldname = ['name', 'idx', 'territory','grand_total', 'customer_name', 'company',
+            fieldname = ['name', 'idx', 'territory','grand_total', 'customer_name', 'company', 'company_address',
             'naming_series', 'creation', 'status', 'discount_amount', 'docstatus', 'modified', 'conversion_rate',
             'total_taxes_and_charges', 'net_total', 'shipping_address_name', 'customer_address'], as_dict = 1)
 
-            direccion_cliente = str(sales_invoice[0]['customer_address'])
-            nombre_serie = str(sales_invoice[0]['naming_series'])
-
-            datos_cliente = frappe.db.get_values('Address', filters = {'name': direccion_cliente},
-            fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone', 'address_title', 'name'], as_dict = 1)
-
             sales_invoice_item = frappe.db.get_values('Sales Invoice Item', filters = {'parent': dato_factura}, 
             fieldname = ['item_name', 'qty', 'item_code', 'description', 'net_amount', 'base_net_amount', 
-            'discount_percentage', 'net_rate', 'stock_uom', 'serial_no', 'item_group', 'rate', 'amount'], as_dict = 1)			
+            'discount_percentage', 'net_rate', 'stock_uom', 'serial_no', 'item_group', 'rate', 'amount'], as_dict = 1)	
+
+            direccion_cliente = str(sales_invoice[0]['customer_address'])
+            nombre_serie = str(sales_invoice[0]['naming_series'])
+            dir_compania = str(sales_invoice[0]['company_address'])
+
+            datos_cliente = frappe.db.get_values('Address', filters = {'name': direccion_cliente},
+            fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone', 'address_title', 'name'], as_dict = 1) 
+
+            direccion_compania = frappe.db.get_values('Address', filters = {'name': dir_compania},
+            fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone', 'address_title'], as_dict = 1)		
 
             datos_compania = frappe.db.get_values('Company', filters = {'name': str(sales_invoice[0]['company'])},
             fieldname = ['company_name', 'default_currency', 'country', 'nit_face_company'], as_dict = 1)
@@ -86,7 +90,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
                 # es-GT: Llama al metodo 'contruir_xml' del script 'request_xml.py' para generar la peticion en XML.
                 # en-US: Call the 'contruir_xml' method of the 'request_xml.py' script to generate the request in XML.
-                construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice_item, datos_compania, nit_cliente, datos_configuracion, series_configuradas, dato_factura)
+                construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice_item, datos_compania, nit_cliente, datos_configuracion, series_configuradas, dato_factura, direccion_compania)
 
                 # es-GT: Si ocurre un error en la comunicacion con el servidor de INFILE, retornara el mensaje de advertencia.
                 #        En caso no exista error en comunicacion, procede con la obtencion de los datos, del documento solicitado.
