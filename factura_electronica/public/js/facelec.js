@@ -3,6 +3,7 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
     cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
 
+    // Funcion para la obtencion del PDF, segun el documento generado.
     function pdf_button() {
         frappe.call({
             // Este metodo verifica, el modo de generacion de PDF para la factura electronica
@@ -48,7 +49,10 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     }
 
     // Codigo para Factura Electronica FACE, CFACE
+    // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
     if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+        // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
             pdf_button();
@@ -61,10 +65,11 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
                         serie_factura: frm.doc.name,
                         nombre_cliente: frm.doc.customer
                     },
+                    // El callback recibe como parametro el dato retornado por script python del lado del servidor
                     callback: function(data) {
-
+                        // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                        // 'cae_factura_electronica' para ser mostrado del lado del cliente y luego guardado en la DB
                         cur_frm.set_value("cae_factura_electronica", data.message);
-
                         if (frm.doc.cae_factura_electronica) {
                             cur_frm.clear_custom_buttons();
                             pdf_button();
@@ -76,8 +81,11 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     }
 
     // Codigo para Notas de Credito NCE
+    // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
     if (frm.doc.status === "Return") {
         //var nombre = 'Nota Credito';
+        // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
         if (frm.doc.cae_nota_de_credito) {
             cur_frm.clear_custom_buttons();
             pdf_button();
@@ -89,7 +97,10 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
                         serie_factura: frm.doc.name,
                         nombre_cliente: frm.doc.customer
                     },
+                    // El callback recibe como parametro el dato retornado por script python del lado del servidor
                     callback: function(data) {
+                        // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                        // 'cae_nota_de_credito' para ser mostrado del lado del cliente y luego guardado en la DB
                         cur_frm.set_value("cae_nota_de_credito", data.message);
                         if (frm.doc.cae_nota_de_credito) {
                             cur_frm.clear_custom_buttons();
@@ -105,7 +116,7 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
 
 // es-GT: Obtiene un valor para un campo que pertenece a la Tabla Hija "Sales Invoice Item" o "Producto de la Factura de Venta"
 // en-US: Code for fetching a value for a field within the Child Table "Sales Invoice Item"
-frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
+/*frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     frappe.ui.form.on("Sales Invoice Item", {
         "item_code": function item_code(frm, cdt, cdn) {
             frm.add_fetch("item_code", "tax_rate_per_uom", "tasa_otro_impuesto");
@@ -120,7 +131,6 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     });
 });
 
-/*
 frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     frm.add_fetch("item_code", "tax_rate_per_uom", "tasa_otro_impuesto");
 });
