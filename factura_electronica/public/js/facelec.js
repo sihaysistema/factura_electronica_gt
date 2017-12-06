@@ -113,24 +113,75 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     }
 });
 
+frappe.ui.form.on("Sales Invoice Item", {
+    // Cuando exista un cambio en la seleccion de codigo de producto, se ejecutara la funcion que recibe como parametros
+    // frm = El Formulario, cdt = Current Doctype, cdn = Current docname
+    item_code: function(frm, cdt, cdn) {
+        // A la variable d se cargan todos los datos disponibles en el formulario
+        let d = locals[cdt][cdn];
+
+        //Para acceder a un campo en especifico, se colola:
+        // d.valor_de_campo_que_se_desea_saber
+        var monto = d.amount;
+        var cantidad = d.qty;
+        //frappe.msgprint(d);
+        console.log(d);
+        // Agregar logica para realizar calculos
+
+        // frappe.model.set_value, establece un valor al campo que se desee
+        // recibe como parametros; frappe.model.set_value('doctype', 'docname', 'campo_a_asignar_valor', valor);
+        frappe.model.set_value(cdt, cdn, 'campo_de_prueba', flt(monto) * flt(cantidad));
+        cur_frm.refresh_fields();
+    },
+    qty: function(frm, cdt, cdn) {
+        let d = locals[cdt][cdn];
+
+        var monto = d.amount;
+        var cantidad = d.qty;
+        //frappe.msgprint(d);
+        console.log(d);
+
+        // Agregar logica para realizar calculos
+        frappe.model.set_value(cdt, cdn, 'campo_de_prueba', flt(monto) * flt(cantidad));
+        cur_frm.refresh_fields();
+    }
+
+});
+
+
 
 // es-GT: Obtiene un valor para un campo que pertenece a la Tabla Hija "Sales Invoice Item" o "Producto de la Factura de Venta"
 // en-US: Code for fetching a value for a field within the Child Table "Sales Invoice Item"
-/*frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
-    frappe.ui.form.on("Sales Invoice Item", {
-        "item_code": function item_code(frm, cdt, cdn) {
-            frm.add_fetch("item_code", "tax_rate_per_uom", "tasa_otro_impuesto");
+/*
+    frappe.ui.form.on("Sales Invoice Item", "item_code", function(frm, cdt, cdn) {
+        var resultado = locals[cdt][cdn];
+        resultado = locals[cdt][cdn];
+        var monto = resultado.amount;
+        console.log(resultado);
+        console.log(frm.doc.amount);
+        frappe.model.set_value(cdt, cdn, 'campo_de_prueba', (flt(resultado.amount) * flt(2)))
 
-            var d = locals[cdt][cdn];
-            //var total = 0;
-            //frappe.model.set_value(d.doctype, d.name, "importe_otros_impuestos", (d.amount * 2));
-            //frm.doc.table.forEach(function(d) { total += d.area; });
-            //frm.set_value('valor_otro_impuesto', (d.amount * 2));
-            //cur_frm.refresh();
-        }
     });
-});
+    */
+/*
+        item_code: function(frm, cdt, cdn) {
+            var row = locals[cdt][cdn];
+            console.log(row);
+            console.log(row.item_code);
+            console.log(row.item_name);
+            console.log(row.amount);
+            console.log(row.qty);
+        }
+ */
 
+
+
+/*'item_code': function(frm) {
+        var resultado = frm.doc.amount * 2;
+        console.log(resultado);
+        //cur_frm.set_value("campo_de_prueba", resultado);
+        */
+/*
 frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     frm.add_fetch("item_code", "tax_rate_per_uom", "tasa_otro_impuesto");
 });
