@@ -163,7 +163,6 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
 	        //frappe.msgprint(d);
 	        console.log(d);
 			console.log("Usando trigger de conversion_factor");
-
 	        // Agregar logica para realizar calculos
 	        frappe.model.set_value(cdt, cdn, 'campo_de_prueba', flt(monto) * flt(cantidad));
 	        cur_frm.refresh_fields();
@@ -172,8 +171,6 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
 	});
 
 });
-
-
 
 
 // es-GT: Obtiene un valor para un campo que pertenece a la Tabla Hija "Sales Invoice Item" o "Producto de la Factura de Venta"
