@@ -111,42 +111,68 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
             }).addClass("btn-primary");
         }
     }
+	frappe.ui.form.on("Sales Invoice Item", {
+	    // Cuando exista un cambio en la seleccion de codigo de producto, se ejecutara la funcion que recibe como parametros
+	    // frm = El Formulario, cdt = Current Doctype, cdn = Current docname
+		/*FIXME:  Por el momento, el usuario TIENE QUE Refrescar el campo de item_code, 
+		desde la ventanita de Sales invoice Item para que funcione. Si lo refresca usando el
+		grid edtiable de Sales Invoice Item mostrado en Sales invoice, no jala la data.
+		Para arreglarlo el objetivo es como hacer trigger de tal forma, que sea irrelevante en donde
+		actualiza, coloca, o simplemente LEE el Sales Invoice.
+		*/
+	    item_code: function(frm, cdt, cdn) {
+			frm.add_fetch("item_code", "tax_rate_per_uom", "tax_rate_per_uom");
+	        // A la variable d se cargan todos los datos disponibles en el formulario
+			// # Locals es un array, y los parametros [cdt][cdn] sirven para ubicar, los campos de este documento cargado en pantalla
+	        // # Locals se refiere a los campos del documento actual en pantalla, o "local".
+	        // # let es lo mismo que var
+	        let d = locals[cdt][cdn];
+	        //Para acceder a un campo en especifico, se colola:
+	        // d.valor_de_campo_que_se_desea_saber
+	        var monto = d.amount;
+	        var cantidad = d.stock_qty;
+			var prueba_impuesto = d.tax_rate_per_uom;
+	        //frappe.msgprint(d);
+	        console.log(d);
+			//console.log("Usando trigger de Item code");
+			console.log("El valor de impuesto es:" + prueba_impuesto);
+	        // Agregar logica para realizar calculos
+	        // frappe.model.set_value, establece un valor al campo que se desee
+	        // recibe como parametros; frappe.model.set_value('doctype', 'docname', 'campo_a_asignar_valor', valor);
+	        frappe.model.set_value(cdt, cdn, 'campo_de_prueba', flt(monto) * flt(cantidad));
+	        cur_frm.refresh_fields();
+	    },
+	    uom: function(frm, cdt, cdn) {
+	        let d = locals[cdt][cdn];
+
+	        var monto = d.amount;
+	        var cantidad = d.stock_qty;
+	        //frappe.msgprint(d);
+	        console.log(d);
+			console.log("Usando trigger de UOM");
+
+	        // Agregar logica para realizar calculos
+	        frappe.model.set_value(cdt, cdn, 'campo_de_prueba', flt(monto) * flt(cantidad));
+	        cur_frm.refresh_fields();
+	    },
+	    conversion_factor: function(frm, cdt, cdn) {
+	        let d = locals[cdt][cdn];
+
+	        var monto = d.amount;
+	        var cantidad = d.stock_qty;
+	        //frappe.msgprint(d);
+	        console.log(d);
+			console.log("Usando trigger de conversion_factor");
+
+	        // Agregar logica para realizar calculos
+	        frappe.model.set_value(cdt, cdn, 'campo_de_prueba', flt(monto) * flt(cantidad));
+	        cur_frm.refresh_fields();
+	    }
+
+	});
+
 });
 
-frappe.ui.form.on("Sales Invoice Item", {
-    // Cuando exista un cambio en la seleccion de codigo de producto, se ejecutara la funcion que recibe como parametros
-    // frm = El Formulario, cdt = Current Doctype, cdn = Current docname
-    item_code: function(frm, cdt, cdn) {
-        // A la variable d se cargan todos los datos disponibles en el formulario
-        let d = locals[cdt][cdn];
-
-        //Para acceder a un campo en especifico, se colola:
-        // d.valor_de_campo_que_se_desea_saber
-        var monto = d.amount;
-        var cantidad = d.qty;
-        //frappe.msgprint(d);
-        console.log(d);
-        // Agregar logica para realizar calculos
-
-        // frappe.model.set_value, establece un valor al campo que se desee
-        // recibe como parametros; frappe.model.set_value('doctype', 'docname', 'campo_a_asignar_valor', valor);
-        frappe.model.set_value(cdt, cdn, 'campo_de_prueba', flt(monto) * flt(cantidad));
-        cur_frm.refresh_fields();
-    },
-    qty: function(frm, cdt, cdn) {
-        let d = locals[cdt][cdn];
-
-        var monto = d.amount;
-        var cantidad = d.qty;
-        //frappe.msgprint(d);
-        console.log(d);
-
-        // Agregar logica para realizar calculos
-        frappe.model.set_value(cdt, cdn, 'campo_de_prueba', flt(monto) * flt(cantidad));
-        cur_frm.refresh_fields();
-    }
-
-});
 
 
 
@@ -186,3 +212,6 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     frm.add_fetch("item_code", "tax_rate_per_uom", "tasa_otro_impuesto");
 });
 */
+
+
+
