@@ -14,6 +14,27 @@ frappe.ui.form.on("Sales Invoice", {
 });
 
 frappe.ui.form.on("Sales Invoice Item", {
+	// Add a trigger for when you ADD a new row. In this particular case, the user did NOT touch the qty field, meaning that the default value of "1" was left, so we estimate with "1" as the qty, stock qty, etc.
+	// es-GT: Disparadores especifico para 
+	// en-US: Child Table triggers
+	fieldname_add: function(frm, cdt, cdn) {
+		// es-GT: Este disparador corre al agregar una nueva fila
+		// en-US: This trigger runs when adding a new row.
+		//AB: Solo asegurarse que el indice de la fila se refiera a la correcta (la anterior, no la actual!??) FIXME
+	},
+
+	fieldname_move: function(frm, cdt, cdn) {
+		// es-GT: Este disparador corre al mover una nueva fila
+		// en-US: This trigger runs when moving a new row.
+	},
+	fieldname_before_remove: function(frm, cdt, cdn) {
+		// es-GT: Este disparador corre antes de eliminar una fila (FIXME:  Averiguar????)  
+		// en-US: This trigger runs before eliminating a row (not sure exactly how!!?)
+	},
+	fieldname_remove: function(frm, cdt, cdn) {
+		// es-GT: Este disparador corre al momento de eliminar una nueva fila.
+		// en-US: This trigger runs when removing a row.
+	},
 	// When loading the Sales Invoice Items
 	onload: function(frm, cdt, cdn) {
 		// Fetch the tax rate per unit of measure using item_code as primary key
@@ -93,6 +114,8 @@ frappe.ui.form.on("Sales Invoice Item", {
 				console.log("El campo tax_rate de esta fila contiene: " + this_row_tax_rate);
 				console.log("El campo tax_amount de esta fila contiene: " + this_row_tax_amount);
 				console.log("El campo taxable_amount de esta fila contiene: " + this_row_taxable_amount);
+				frm.doc.items[index].other_tax_amount = Number(this_row_tax_rate * this_row_stock_qty);
+				frm.doc.items[index].amount_minus_excise_tax = Number(this_row_amount - this_row_tax_amount);
 			};	
 		});
 		console.log("Justo afuera de la funcion de la tabla hija, los valores ahora son: ");
@@ -130,10 +153,10 @@ frappe.ui.form.on("Sales Invoice Item", {
 						// es-GT: ¡Aquí es donde sucede la MAGIA! Esta línea establece el valor del campo "other_tax_amount" como el producto de stock_qty (cantidad de artículos en stock vendidos) y la tasa de impuestos por unidad de medida en stock.
 						// en-US: This is where the MAGIC happens! This line of code sets the value of the field "other_tax_amount" as the product of stock_qty (number of stock quantity items being sold) and the tax rate per stock unit of measure.
 						// This was a test that worked when running directly on the console: setting the value of a field  THIS WORKS! (cur_frm.doc.items[4].tax_rate_per_uom * cur_frm.doc.items[4].stock_qty)
-						frm.doc.items[index].other_tax_amount = Number(item_row.tax_rate_per_uom * frm.doc.items[index].stock_qty);
+						//frm.doc.items[index].other_tax_amount = Number(item_row.tax_rate_per_uom * frm.doc.items[index].stock_qty);
 						// es-GT: Ahora calculamos la cantidad de la fila, sin el total de impuestos estimado, puesto que esta cantidad estará afecta al impuesto al valor agregado (IVA)
 						// en-US: Now we calculate the amount for the row, minus the excise taxes for the row, because this quantity will be subject for application of Sales Tax
-						frm.doc.items[index].amount_minus_excise_tax = Number(frm.doc.items[index].amount - (Number(item_row.tax_rate_per_uom * frm.doc.items[index].stock_qty)));
+						//frm.doc.items[index].amount_minus_excise_tax = Number(frm.doc.items[index].amount - (Number(item_row.tax_rate_per_uom * frm.doc.items[index].stock_qty)));
 						// es-GT: Refrescamos todos los campos adentro de la tabla hija
 						// en-US: Refresh all the fields within the child table
 						frm.refresh_fields('items');
@@ -159,6 +182,9 @@ frappe.ui.form.on("Sales Invoice Item", {
 	},
 	uom: function(frm, cdt, cdn) {
 		console.log("The unit of measure field was changed and the code from the trigger was run");
+	},
+	conversion_factor: function(frm, cdt, cdn) {
+		console.log("El disparador de factor de conversión se corrió.");
 	},
 });
 
