@@ -72,6 +72,37 @@ frappe.ui.form.on("Sales Invoice Item", {
 	// en-US: The trigger to calculate the amount of item tax to be added is when the quantity field is changed. Logically, as soon as the user enters the quantity of items on that line, the calculation is made (or updated) 
 	qty: function(frm, cdt, cdn) {
 		console.log("The quantity field was changed and the code from the trigger was run");
+		// es-GT: Previo a correr en serie, tomamos los valores recien actualizados en los campos qty y conversion_factor.
+		// en-US: Prior to running anything serially, we take the recently updated values in the qty and conversion_factor fields.
+		// it seems to pull qty and conversion factor OK.  But stock_qty is not properly pulled, because it is calculated post reload.  Thus we will try to calculate it separately.
+		var this_row_qty, this_row_rate, this_row_amount, this_row_conversion_factor, this_row_stock_qty, this_row_tax_rate, this_row_tax_amount;
+		frm.doc.items.forEach((item_row,index) => {
+			if (item_row.name == cdn){
+				this_row_qty = item_row.qty;
+				this_row_rate = item_row.rate;
+				this_row_amount = (item_row.qty *item_row.rate);
+				this_row_conversion_factor = item_row.conversion_factor;
+				this_row_stock_qty = (item_row.qty * item_row.conversion_factor);
+				this_row_tax_rate = (item_row.tax_rate_per_uom);
+				this_row_tax_amount = (this_row_stock_qty * this_row_tax_rate);
+				this_row_taxable_amount = (this_row_amount - this_row_tax_amount);
+				console.log("El campo qty es ahora de esta fila contiene: " + this_row_qty);
+				console.log("El campo rate es ahora de esta fila contiene: " + this_row_rate);
+				console.log("El campo conversion_factor de esta fila contiene: " + this_row_conversion_factor);
+				console.log("El campo stock_qty de esta fila contiene: " + this_row_stock_qty);
+				console.log("El campo tax_rate de esta fila contiene: " + this_row_tax_rate);
+				console.log("El campo tax_amount de esta fila contiene: " + this_row_tax_amount);
+				console.log("El campo taxable_amount de esta fila contiene: " + this_row_taxable_amount);
+			};	
+		});
+		console.log("Justo afuera de la funcion de la tabla hija, los valores ahora son: ");
+		console.log("AFUERA: El campo qty es ahora de esta fila contiene: " + this_row_qty);
+		console.log("AFUERA: El campo rate es ahora de esta fila contiene: " + this_row_rate);
+		console.log("AFUERA: El campo conversion_factor de esta fila contiene: " + this_row_conversion_factor);
+		console.log("AFUERA: El campo stock_qty de esta fila contiene: " + this_row_stock_qty);
+		console.log("AFUERA: El campo tax_rate de esta fila contiene: " + this_row_tax_rate);
+		console.log("AFUERA: El campo tax_amount de esta fila contiene: " + this_row_tax_amount);
+		console.log("AFUERA: El campo taxable_amount de esta fila contiene: " + this_row_taxable_amount);
 		// es-GT: Como JavaScript es asincrónico, es necesario correr en serie lo siguiente
 		// en-US: Since JavaScript is asynchronous, it is necessary to run the following serially
 		frappe.run_serially([
@@ -88,7 +119,7 @@ frappe.ui.form.on("Sales Invoice Item", {
 					if (item_row.name == cdn){
 						// es-GT: Asignamos el contenido del campo "tax_rate_per_uom" de esa fila, a una variable "this_row_tax_rate".
 						// en-US: We assign the contents of the field "tax_rate_per_uom" from this row, to a variable called "this_row_tax_rate".
-						var this_row_tax_rate = item_row.tax_rate_per_uom;
+						// #####     var this_row_tax_rate = item_row.tax_rate_per_uom;
 						// es-GT: Mostramos en la consola el contenido de la variable "this_row_tax_rate"
 						// en-US: We log on the console the contents of the variable "this_row_tax_rate"
 						console.log("Serially: The tax rate for this row " + this_row_tax_rate);
