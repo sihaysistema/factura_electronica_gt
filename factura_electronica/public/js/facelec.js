@@ -30,32 +30,28 @@ frappe.ui.form.on("Sales Invoice Item", {
 		//var formulario = locals[cdt][cdn];
 		//var cantidad = formulario.stock_qty;
 	},
-	
-	refresh: function(frm, cdt, cdn) {
-		// Esta funcion se llama cuando se refresca el sales invoice item line
-		console.log("Item tax pulled upon refresh trigger");
 
-		// Since javascript is asynchronous, we cannot add to a variable before fetching
+	refresh: function(frm, cdt, cdn) {
+		// Esta funcion se llama cuando se refresca la linea de sales invoice item line
+		console.log("Fields were refreshed");
 		//frm.add_fetch("item_code", "tax_rate_per_uom", "tax_rate_per_uom");
 		// Since we have  the field with data, we can pull it onto a variable
 		//var test_variable = frm.doc.tax_rate_per_uom;
 		//console.log(" the variable now contains: " + test_variable);
-		
+
 	},
 	item_code: function(frm, cdt, cdn) {
-		
+		frappe.run_serially([
+			// es-GT: Usando la pseudo funcion para serializar: () =>, en este caso, obteniendo el valor de el campo tax_rate_per_uom del artículo, usando item_code como llave primaria para enlace.
+			// en-US: Using the pseudo function to run serially: () =>, in this case fetching the value of the tax_rate_per_uom from the Item, using Item code as primary key for linking.
+			// Testing asynchronicity, remove the code comment lines below.
+			() => console.log("item_code field triggered the running of this code, without using frm.add_fetch"),
+		]);
+
+		/*iffy code, not sure it runs...*/
 		//frappe.model.add_child(cur_frm.doc, "Sales Invoice Item", "importe_otro_impuesto");
+		/*OLD CODE, IT worked, but the problem is that it was being run asynchronously and not serially*/
 		//frm.set_value('item_row.importe_otros_impuestos', test2 * item_row.stock_qty)
-		
-		/*On each change of field, we have to iterate over the cur_frm.doc.items list.  Find the row in the list, that refers to the currently created item.
-		ideally:  find if "New Sales invoice Item #, or find another parameter that identifies as the bran new line being added. then refer to it, with the field name that you desire, assigned to the variable.  Do the calculation, then set the reulsting field value accordingly and then it's done.*/
-		
-		
-		
-		// () =>  a pseudo function, whatever is inside the curly braces, is getting executed one after the other...
-		//  frm.doc.items.length
-		
-		
 		// Esta funcion se llama cuando se cambia el sales invoice item code 
 		//console.log("Item tax pulled upon change of ITEM CODE field");
 		//frm.add_fetch("item_code", "tax_rate_per_uom", "tax_rate_per_uom");
@@ -63,36 +59,75 @@ frappe.ui.form.on("Sales Invoice Item", {
 		//var test_variable = frm.doc.tax_rate_per_uom;
 		//console.log("the variable now contains: " + test_variable);
 	},
+
+		/*On each change of field, we have to iterate over the cur_frm.doc.items list.  Find the row in the list, that refers to the currently created item.
+		ideally:  find if "New Sales invoice Item #, or find another parameter that identifies as the bran new line being added. then refer to it, with the field name that you desire, assigned to the variable.  Do the calculation, then set the reulsting field value accordingly and then it's done.*/
+		// () =>  a pseudo function, whatever is inside the curly braces, is getting executed one after the other...
+		//  frm.doc.items.length
+
+	// es-GT: Para que funcione adecuadamente, es importante que el se le agregue la opción de item_code.tax_rate_per_uom en "Customize Form" al campo tax_rate_per_uom
+	// en-US: For this to work properly, make sure that in the "Customize form" doctype, the field for tax_rate_per_uom has this text in the options dialog: item_code.tax_rate_per_uom
+	
+	// es-GT: El disparador para calcular el importe del impuesto por articulo es al modificar la cantidad. Logicamente, al instante que el usuario ingresa la cantidad de articulos en la linea, el calculo es realizado (o actualizado)
+	// en-US: The trigger to calculate the amount of item tax to be added is when the quantity field is changed. Logically, as soon as the user enters the quantity of items on that line, the calculation is made (or updated) 
 	qty: function(frm, cdt, cdn) {
+		console.log("The quantity field was changed and the code from the trigger was run");
+		// es-GT: Como JavaScript es asincrónico, es necesario correr en serie lo siguiente
+		// en-US: Since JavaScript is asynchronous, it is necessary to run the following serially
 		frappe.run_serially([
-			() => frm.add_fetch("item_code", "tax_rate_per_uom", "tax_rate_per_uom"),
+			// es-GT: Usando la pseudo funcion para serializar: () =>, en este caso, obteniendo el valor de el campo tax_rate_per_uom del artículo, usando item_code como llave primaria para enlace.
+			// en-US: Using the pseudo function to run serially: () =>, in this case fetching the value of the tax_rate_per_uom from the Item, using Item code as primary key for linking.
+			// testing asynchronicity, remove the code comment lines below.
+			//() => frm.add_fetch("item_code", "tax_rate_per_uom", "tax_rate_per_uom"),
+			// es-GT: Ahora iteramos por cada fila de la tabla hija, usando dos argumentos: item_row, declarado alli, que representa cada fila, e index, también declarado aqui, que representa el numero de fila
+			// en-US: Now, we iterate through each row in the child table, using two arguments: item_row, delcared here, which represents each row, and index, also declared here, which represents the row number.
 			() => {
 				frm.doc.items.forEach((item_row, index) => {
+					// es-GT: Si la fila cuyo campo "name" es igual al "cdn" o current docname, entonces corra el codigo fuente adentro. Esto apunta al nuevo articulo que se esta agregando en esa fila.
+					// en-US: If the row whose field "name" is equal to "cdn" or current docname, then run the code inside. This points to the new item being added to the row in the child table.
 					if (item_row.name == cdn){
-						var test2 = item_row.tax_rate_per_uom;
-						console.log("Now the variable in the new line equals" + test2);
-						// will evaluate to undefined we need to run it after it has loaded somehow, or force it to load at this point.
-						console.log("The stock quantity is now: " + frm.doc.items[index].stock_qty);
-						// setting the value of a field  THIS WORKS! (cur_frm.doc.items[4].tax_rate_per_uom * cur_frm.doc.items[4].stock_qty)
-						frm.doc.items[index].importe_otros_impuestos = Number(item_row.tax_rate_per_uom * frm.doc.items[index].stock_qty);
-						//frm.refresh_fields("items");
-						console.log("The index value is: " + index);
-						console.log(test2 * frm.doc.items[index].stock_qty);
+						// es-GT: Asignamos el contenido del campo "tax_rate_per_uom" de esa fila, a una variable "this_row_tax_rate".
+						// en-US: We assign the contents of the field "tax_rate_per_uom" from this row, to a variable called "this_row_tax_rate".
+						var this_row_tax_rate = item_row.tax_rate_per_uom;
+						// es-GT: Mostramos en la consola el contenido de la variable "this_row_tax_rate"
+						// en-US: We log on the console the contents of the variable "this_row_tax_rate"
+						console.log("Serially: The tax rate for this row " + this_row_tax_rate);
+						// es-GT: Mostramos en la consola el contenido del campo "stock_qty". OJO: si se corre con otro trigger antes de que haya terminado de cargar al cambiar item_code, evaluara a undefined, por eso se corre la funcion AQUI al cambiar la cantidad. Si corre est alinea de codigo en otro lugar, no cargara.
+						// en-US: We log on the console the contents of the field "stock_qty". NOTE: if this code is run with another trigger before the form has finished loading when changin item_code, it will evaluate to undefined, this is why the function is run here when changing the quantity. if you run this line of code elsewhere, it will not load.
+						// FIXME:  The data being gathered is "lagging" the previous update.  Must find way to make it get THIS data NOW.
+						console.log("Serially: The stock quantity for this row is now: " + frm.doc.items[index].stock_qty);
+						// es-GT: ¡Aquí es donde sucede la MAGIA! Esta línea establece el valor del campo "other_tax_amount" como el producto de stock_qty (cantidad de artículos en stock vendidos) y la tasa de impuestos por unidad de medida en stock.
+						// en-US: This is where the MAGIC happens! This line of code sets the value of the field "other_tax_amount" as the product of stock_qty (number of stock quantity items being sold) and the tax rate per stock unit of measure.
+						// This was a test that worked when running directly on the console: setting the value of a field  THIS WORKS! (cur_frm.doc.items[4].tax_rate_per_uom * cur_frm.doc.items[4].stock_qty)
+						frm.doc.items[index].other_tax_amount = Number(item_row.tax_rate_per_uom * frm.doc.items[index].stock_qty);
+						// es-GT: Ahora calculamos la cantidad de la fila, sin el total de impuestos estimado, puesto que esta cantidad estará afecta al impuesto al valor agregado (IVA)
+						// en-US: Now we calculate the amount for the row, minus the excise taxes for the row, because this quantity will be subject for application of Sales Tax
+						frm.doc.items[index].amount_minus_excise_tax = Number(frm.doc.items[index].amount - (Number(item_row.tax_rate_per_uom * frm.doc.items[index].stock_qty)));
+						// es-GT: Refrescamos todos los campos adentro de la tabla hija
+						// en-US: Refresh all the fields within the child table
+						frm.refresh_fields('items');
+						// es-GT: Pruebas para mostrar valores en la consola
+						// en-US: Tests to show values on the console
+						console.log("The index value (representing the actual row being iterated or worked upon) is: " + index);
+						console.log(this_row_tax_rate * frm.doc.items[index].stock_qty);
 					}
 				})
-				var test_variable = frm.doc.items[frm.doc.items.length-1].tax_rate_per_uom;
-				console.log("The variable after item_code update now contains: " + test_variable);
-				console.log(" cdt and cdn are " + cdn + " " +cdt)
-			}
-		]);
+				// en-US:  This test code logs to the console the variable amounts. It works OK.
+				//var test_variable = frm.doc.items[frm.doc.items.length-1].tax_rate_per_uom;
+				//console.log("The variable after item_code update now contains: " + test_variable);
+				//console.log(" cdt and cdn are " + cdn + " " +cdt)
+			},
+		]); // en-US: Ending the run serially brackets es-GT: Terminan los brackets de correr en serie.
 		
-		// Esta funcion se llama cuando se cambia el sales invoice item quantity
+		// es-GT: Esta funcion se llama cuando se cambia el sales invoice item quantity
 		//var cantidad = formulario.stock_qty;
-		//console.log("Item tax pulled upon change of QUANTITY field");
+		// console.log("Item tax pulled upon change of QUANTITY field");
 		// Since we have  the field with data, we can pull it onto a variable
 		//var test_variable = frm.doc.tax_rate_per_uom;
 		//console.log("the variable now contains: " + test_variable);
-		
+	},
+	uom: function(frm, cdt, cdn) {
+		console.log("The unit of measure field was changed and the code from the trigger was run");
 	},
 });
 
