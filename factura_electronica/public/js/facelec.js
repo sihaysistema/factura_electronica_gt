@@ -1,5 +1,4 @@
 /* frappe.ui.form.on("Sales Invoice", "refresh", function(frm){});*/
-// test4
 var net_fuel_tally = 0;
 var net_goods_tally = 0;
 var net_services_tally = 0;
@@ -48,7 +47,6 @@ frappe.ui.form.on("Sales Invoice Item", {
 		// en-US: This trigger runs when adding a new row.
 		//AB: Solo asegurarse que el indice de la fila se refiera a la correcta (la anterior, no la actual!??) FIXME
 	},
-
 	fieldname_move: function(frm, cdt, cdn) {
 		// es-GT: Este disparador corre al mover una nueva fila
 		// en-US: This trigger runs when moving a new row.
@@ -141,16 +139,44 @@ frappe.ui.form.on("Sales Invoice Item", {
 				if (item_row.is_fuel == 1) {
 					//console.log("The item you added is FUEL!" + item_row.is_good);// WORKS OK!
 					frm.doc.items[index].gt_tax_net_fuel_amt = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) / (1 + (this_company_sales_tax_var/100))).toFixed(2));
+					// Sumatoria de todos los que tengan el check combustibles
+					total_fuel = 0;
+					$.each(frm.doc.items || [], function(i, d) {
+						// total_qty += flt(d.qty);
+						if (d.is_fuel == true) {
+							total_fuel += flt(d.gt_tax_net_fuel_amt);
+						};
+					});
+					console.log("El total de fuel es:" + total_fuel);
+					frm.doc.gt_tax_fuel = total_fuel;
 				};
 				if (item_row.is_good == 1) {
 					//console.log("The item you added is a GOOD!" + item_row.is_good);// WORKS OK!
 					//console.log("El valor en bienes para el libro de compras es: " + net_goods_tally);// WORKS OK!
 					frm.doc.items[index].gt_tax_net_goods_amt = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) / (1 + (this_company_sales_tax_var/100))).toFixed(2));
+					// Sumatoria de todos los que tengan el check bienes
+					total_goods = 0;
+					$.each(frm.doc.items || [], function(i, d) {
+						// total_qty += flt(d.qty);
+						if (d.is_good == true) {
+							total_goods += flt(d.gt_tax_net_goods_amt);
+						};
+					});
+					console.log("El total de bienes es:" + total_goods);
+					frm.doc.gt_tax_goods = total_goods;
 				};
 				if (item_row.is_service == 1) {
 					//console.log("The item you added is a SERVICE!" + item_row.is_service);// WORKS OK!
 					//console.log("El valor en servicios para el libro de compras es: " + net_services_tally);// WORKS OK!
 					frm.doc.items[index].gt_tax_net_services_amt = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) / (1 + (this_company_sales_tax_var/100))).toFixed(2));
+					total_servi = 0;
+					$.each(frm.doc.items || [], function(i, d) {
+						if (d.is_service == true) {
+							total_servi += flt(d.gt_tax_net_services_amt);
+						};
+					});
+					console.log("El total de servicios es:" + total_servi);
+					frm.doc.gt_tax_services = total_servi;
 				};
 				//console.log("FUEL Item evaluates to:" + item_row.is_fuel);//WORKS OK!
 				//console.log("GOODS Item evaluates to:" + item_row.is_goods);//WORKS OK!
