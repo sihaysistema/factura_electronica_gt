@@ -2,29 +2,35 @@
 var net_fuel_tally = 0;
 var net_goods_tally = 0;
 var net_services_tally = 0;
-var sales_tax_temp;
-console.log("The sales tax temp is :" + sales_tax_temp);
+var sales_tax_temp = 12;
+
+frappe.ui.form.on("Sales Invoice", "onload_post_render", function(frm){
+	// console.log("Post Render has been triggered"); // WORKS OK
+});
 
 frappe.ui.form.on("Sales Invoice", {
-    onload: function(frm) {
-        // Esta funcion se llama cuando se carga el sales invoice item.  FUNCIONA OK
-        //console.log("AFUERA: Se acaba de correr onload de Sales Invoice");
+    customer: function(frm) {
+		//console.log("Customer has been triggered");// WORKS OK!
+		// DO NOT TRY TO FETCH TAXES AT THIS POINT, THEY HAVE NOT LOADED.
     },
-    onload_post_render: function(frm) {
+	onload: function(frm) {
+        //console.log("Onload has been triggered");// WORKS OK!
+    },
+   /* onload_post_render: function(frm) {
         // Esta funcion se llama cuando se carga el sales invoice item, despues de hacer render FUNCIONA OK
         //console.log("AFUERA: Se acaba de correr onload_post_render de Sales Invoice");
         //frm.add_fetch("item_code", "tax_rate_per_uom", "tax_rate_per_uom");
-		//sales_tax_temp = frm.doc.taxes[0].rate;
-		console.log("Setting the tax rate to a variable");
-    },
+		//console.log("Setting the tax rate to a variable:" + sales_tax_var);
+		if(frm.doc.taxes[0].rate <= 0 || frm.doc.taxes[0].rate === undefined || frm.doc.taxes[0].rate < 0 || isNaN(frm.doc.taxes[0].rate)){
+			sales_tax_var = 0;
+			} else {
+				sales_tax_var = frm.doc.taxes[0].rate;
+			};
+    },*/
 	items: function(frm) {
 		console.log("Items have been updated, showing this!");
 	},
-
 });
-
-
-
 
 // Tres formas de obtener la tasa de impuestos:
 // 1. Obtener tasa de impuestos de la hoja actual
@@ -78,16 +84,17 @@ frappe.ui.form.on("Sales Invoice Item", {
         // Since we have  the field with data, we can pull it onto a variable
         //var test_variable = frm.doc.tax_rate_per_uom;
         //console.log(" the variable now contains: " + test_variable);
-
     },
-    item_code: function(frm, cdt, cdn) {
-        frappe.run_serially([
+	item_code: function(frm, cdt, cdn) {
+		//console.log("item_code was triggered");
+		sales_tax_var = cur_frm.doc.taxes[0].rate;
+		console.log("If you can see this, tax rate variable now exists, and its set to: " + sales_tax_var);
+		frappe.run_serially([
             // es-GT: Usando la pseudo funcion para serializar: () =>, en este caso, obteniendo el valor de el campo tax_rate_per_uom del artículo, usando item_code como llave primaria para enlace.
             // en-US: Using the pseudo function to run serially: () =>, in this case fetching the value of the tax_rate_per_uom from the Item, using Item code as primary key for linking.
             // Testing asynchronicity, remove the code comment lines below.
-            () => console.log("item_code field triggered the running of this code, without using frm.add_fetch"),
+            () => console.log("item_code was triggered, running serially."),
         ]);
-
         /*iffy code, not sure it runs...*/
         //frappe.model.add_child(cur_frm.doc, "Sales Invoice Item", "importe_otro_impuesto");
         /*OLD CODE, IT worked, but the problem is that it was being run asynchronously and not serially*/
@@ -116,7 +123,8 @@ frappe.ui.form.on("Sales Invoice Item", {
         // en-US: Prior to running anything serially, we take the recently updated values in the qty and conversion_factor fields.
         // it seems to pull qty and conversion factor OK.  But stock_qty is not properly pulled, because it is calculated post reload.  Thus we will try to calculate it separately.
 		
-        var this_row_qty, this_row_rate, this_row_amount, this_row_conversion_factor, this_row_stock_qty, this_row_tax_rate, this_row_tax_amount;
+        var this_row_qty, this_row_rate, this_row_amount, this_row_conversion_factor, this_row_stock_qty, this_row_tax_rate, this_row_tax_amount, this_row_taxable_amount;
+		
 		frm.doc.items.forEach((item_row, index) => {
             if (item_row.name == cdn) {
                 this_row_qty = item_row.qty;
@@ -124,57 +132,51 @@ frappe.ui.form.on("Sales Invoice Item", {
                 this_row_amount = (item_row.qty * item_row.rate);
                 this_row_conversion_factor = item_row.conversion_factor;
                 this_row_stock_qty = (item_row.qty * item_row.conversion_factor);
-                this_row_tax_rate = (item_row.tax_rate_per_uom);
-                this_row_tax_amount = (this_row_stock_qty * this_row_tax_rate);
-                this_row_taxable_amount = (this_row_amount - this_row_tax_amount);
-				//console.log("FUEL Item evaluates to:" + item_row.is_fuel);
-				//console.log("GOODS Item evaluates to:" + item_row.is_goods);
-				//console.log("SERVICES Item evaluates to:" + item_row.is_service);
-                //console.log("El campo qty es ahora de esta fila contiene: " + this_row_qty);
-                //console.log("El campo rate es ahora de esta fila contiene: " + this_row_rate);
-                //console.log("El campo conversion_factor de esta fila contiene: " + this_row_conversion_factor);
-                //console.log("El campo stock_qty de esta fila contiene: " + this_row_stock_qty);
-                //console.log("El campo tax_rate de esta fila contiene: " + this_row_tax_rate);
-                //console.log("El campo tax_amount de esta fila contiene: " + this_row_tax_amount);
-                //console.log("El campo taxable_amount de esta fila contiene: " + this_row_taxable_amount);
-                //frm.doc.items[index].other_tax_amount = Number(this_row_tax_rate * this_row_stock_qty);
-                //frm.doc.items[index].amount_minus_excise_tax = Number(this_row_amount - this_row_tax_amount);
-                // Convert a number into a string, keeping only two decimals:
-                frm.doc.items[index].other_tax_amount = ((this_row_tax_rate * this_row_stock_qty).toFixed(2));
-                frm.doc.items[index].amount_minus_excise_tax = ((this_row_amount - this_row_tax_amount).toFixed(2));
-            };
+				this_row_tax_rate = (item_row.tax_rate_per_uom);
+				this_row_tax_amount = (this_row_stock_qty * this_row_tax_rate);
+				this_row_taxable_amount = (this_row_amount - this_row_tax_amount);
+				//console.log("FUEL Item evaluates to:" + item_row.is_fuel);//WORKS OK!
+				//console.log("GOODS Item evaluates to:" + item_row.is_goods);//WORKS OK!
+				//console.log("SERVICES Item evaluates to:" + item_row.is_service);//WORKS OK!
+				//console.log("El campo qty es ahora de esta fila contiene: " + this_row_qty);//WORKS OK!
+				//console.log("El campo rate es ahora de esta fila contiene: " + this_row_rate);//WORKS OK!
+				//console.log("El campo conversion_factor de esta fila contiene: " + this_row_conversion_factor);//WORKS OK!
+				//console.log("El campo stock_qty de esta fila contiene: " + this_row_stock_qty);//WORKS OK!
+				//console.log("El campo tax_rate de esta fila contiene: " + this_row_tax_rate);//WORKS OK!
+				//console.log("El campo tax_amount de esta fila contiene: " + this_row_tax_amount);//WORKS OK!
+				//console.log("El campo taxable_amount de esta fila contiene: " + this_row_taxable_amount);//WORKS OK!
+				//frm.doc.items[index].other_tax_amount = Number(this_row_tax_rate * this_row_stock_qty);
+				//frm.doc.items[index].amount_minus_excise_tax = Number(this_row_amount - this_row_tax_amount);
+				// Convert a number into a string, keeping only two decimals:
+				frm.doc.items[index].other_tax_amount = ((this_row_tax_rate * this_row_stock_qty).toFixed(2));
+				frm.doc.items[index].amount_minus_excise_tax = ((this_row_amount - this_row_tax_amount).toFixed(2));
+			};
 			if (item_row.is_fuel == 1) {
-				console.log("The item you added is FUEL!" + item_row.is_fuel);
-				// FIXME:  Extract sales tax properly from the default sales tax table
-				net_fuel_tally = ((this_row_taxable_amount / (1 + (sales_tax_temp/100))).toFixed(2));
-				console.log("El valor en combustibles para el libro de compras es: " + net_fuel_tally);
-				frm.doc.gt_tax_fuel = net_fuel_tally;
+				//console.log("The item you added is FUEL!" + item_row.is_good);// WORKS OK!
+				frm.doc.items[index].gt_tax_net_fuel_amt = ((this_row_taxable_amount / (1 + (sales_tax_var/100))).toFixed(2));
 			};
 			if (item_row.is_good == 1) {
-				console.log("The item you added is a GOOD!" + item_row.is_good);
-				// FIXME:  Extract sales tax properly from the default sales tax table
-				net_goods_tally = ((this_row_taxable_amount / (1 + (sales_tax_temp/100))).toFixed(2));
-				frm.doc.gt_tax_goods = net_goods_tally;
-				
+				//console.log("The item you added is a GOOD!" + item_row.is_good);// WORKS OK!
+				console.log("El valor en bienes para el libro de compras es: " + net_goods_tally);
+				frm.doc.items[index].gt_tax_net_goods_amt = ((this_row_taxable_amount / (1 + (sales_tax_var/100))).toFixed(2));
 			};
 			if (item_row.is_service == 1) {
-				console.log("The item you added is a SERVICE!" + item_row.is_service);
-				// FIXME:  Extract sales tax properly from the default sales tax table
-				net_services_tally = ((this_row_taxable_amount / (1 + (sales_tax_temp/100))).toFixed(2));
-				frm.doc.gt_tax_services = net_goods_tally;
+				//console.log("The item you added is a SERVICE!" + item_row.is_service);// WORKS OK!
+				//console.log("El valor en servicios para el libro de compras es: " + net_services_tally);// WORKS OK!
+				frm.doc.items[index].gt_tax_net_services_amt = ((this_row_taxable_amount / (1 + (sales_tax_var/100))).toFixed(2));
 			};
-        });
-        //console.log("Justo afuera de la funcion de la tabla hija, los valores ahora son: ");
-        //console.log("AFUERA: El campo qty es ahora de esta fila contiene: " + this_row_qty);
-        //console.log("AFUERA: El campo rate es ahora de esta fila contiene: " + this_row_rate);
-        //console.log("AFUERA: El campo conversion_factor de esta fila contiene: " + this_row_conversion_factor);
-        //console.log("AFUERA: El campo stock_qty de esta fila contiene: " + this_row_stock_qty);
-        //console.log("AFUERA: El campo tax_rate de esta fila contiene: " + this_row_tax_rate);
-        //console.log("AFUERA: El campo tax_amount de esta fila contiene: " + this_row_tax_amount);
-        //console.log("AFUERA: El campo taxable_amount de esta fila contiene: " + this_row_taxable_amount);
-        // es-GT: Como JavaScript es asincrónico, es necesario correr en serie lo siguiente
-        // en-US: Since JavaScript is asynchronous, it is necessary to run the following serially
-        frappe.run_serially([
+		});
+		//console.log("Justo afuera de la funcion de la tabla hija, los valores ahora son: ");//WORKS OK!
+		//console.log("AFUERA: El campo qty es ahora de esta fila contiene: " + this_row_qty);//WORKS OK!
+		//console.log("AFUERA: El campo rate es ahora de esta fila contiene: " + this_row_rate);//WORKS OK!
+		//console.log("AFUERA: El campo conversion_factor de esta fila contiene: " + this_row_conversion_factor);//WORKS OK!
+		//console.log("AFUERA: El campo stock_qty de esta fila contiene: " + this_row_stock_qty);//WORKS OK!
+		//console.log("AFUERA: El campo tax_rate de esta fila contiene: " + this_row_tax_rate);//WORKS OK!
+		//console.log("AFUERA: El campo tax_amount de esta fila contiene: " + this_row_tax_amount);//WORKS OK!
+		//console.log("AFUERA: El campo taxable_amount de esta fila contiene: " + this_row_taxable_amount);//WORKS OK!
+		// es-GT: Como JavaScript es asincrónico, es necesario correr en serie lo siguiente
+		// en-US: Since JavaScript is asynchronous, it is necessary to run the following serially
+		frappe.run_serially([
             // es-GT: Usando la pseudo funcion para serializar: () =>, en este caso, obteniendo el valor de el campo tax_rate_per_uom del artículo, usando item_code como llave primaria para enlace.
             // en-US: Using the pseudo function to run serially: () =>, in this case fetching the value of the tax_rate_per_uom from the Item, using Item code as primary key for linking.
             // testing asynchronicity, remove the code comment lines below.
@@ -191,11 +193,11 @@ frappe.ui.form.on("Sales Invoice Item", {
                             // #####     var this_row_tax_rate = item_row.tax_rate_per_uom;
                             // es-GT: Mostramos en la consola el contenido de la variable "this_row_tax_rate"
                             // en-US: We log on the console the contents of the variable "this_row_tax_rate"
-                            console.log("Serially: The tax rate for this row " + this_row_tax_rate);
+                            //console.log("Serially: The tax rate for this row " + this_row_tax_rate);
                             // es-GT: Mostramos en la consola el contenido del campo "stock_qty". OJO: si se corre con otro trigger antes de que haya terminado de cargar al cambiar item_code, evaluara a undefined, por eso se corre la funcion AQUI al cambiar la cantidad. Si corre est alinea de codigo en otro lugar, no cargara.
                             // en-US: We log on the console the contents of the field "stock_qty". NOTE: if this code is run with another trigger before the form has finished loading when changin item_code, it will evaluate to undefined, this is why the function is run here when changing the quantity. if you run this line of code elsewhere, it will not load.
-                            // FIXME:  The data being gathered is "lagging" the previous update.  Must find way to make it get THIS data NOW.
-                            console.log("Serially: The stock quantity for this row is now: " + frm.doc.items[index].stock_qty);
+                            // FIXED:  The data being gathered is "lagging" the previous update.  Must find way to make it get THIS data NOW.  Data is best obtained upon updating quantity field.
+                            //console.log("Serially: The stock quantity for this row is now: " + frm.doc.items[index].stock_qty);
                             // es-GT: ¡Aquí es donde sucede la MAGIA! Esta línea establece el valor del campo "other_tax_amount" como el producto de stock_qty (cantidad de artículos en stock vendidos) y la tasa de impuestos por unidad de medida en stock.
                             // en-US: This is where the MAGIC happens! This line of code sets the value of the field "other_tax_amount" as the product of stock_qty (number of stock quantity items being sold) and the tax rate per stock unit of measure.
                             // This was a test that worked when running directly on the console: setting the value of a field  THIS WORKS! (cur_frm.doc.items[4].tax_rate_per_uom * cur_frm.doc.items[4].stock_qty)
@@ -208,8 +210,8 @@ frappe.ui.form.on("Sales Invoice Item", {
                             frm.refresh_fields('items');
                             // es-GT: Pruebas para mostrar valores en la consola
                             // en-US: Tests to show values on the console
-                            console.log("The index value (representing the actual row being iterated or worked upon) is: " + index);
-                            console.log(this_row_tax_rate * frm.doc.items[index].stock_qty);
+                            console.log("The index value (representing the actual row being iterated or worked upon) is: " + index);// WORKS OK!
+                            //console.log(this_row_tax_rate * frm.doc.items[index].stock_qty);// WORKS OK!
                         }
                     })
                     // en-US:  This test code logs to the console the variable amounts. It works OK.
@@ -233,6 +235,15 @@ frappe.ui.form.on("Sales Invoice Item", {
         console.log("El disparador de factor de conversión se corrió.");
     },
 });
+
+
+// SUM CHILD TABLE CONDITIONALLY AND SET THE FIELD VALUES FOR SALES INVOICE
+//net_fuel_tally = ((this_row_taxable_amount / (1 + (sales_tax_var/100))).toFixed(2));
+//console.log("El valor en combustibles para el libro de compras es: " + net_fuel_tally);// WORKS OK!
+
+// ADD TAX ACCOUNT INFORMATION TO THE SALES TAXES AND CHARGES TABLE
+
+
 
 /*cambiar valor en el campo del formulario
 frm.set_value(fieldname, value);*/
