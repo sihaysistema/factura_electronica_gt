@@ -1,5 +1,6 @@
 /* frappe.ui.form.on("Sales Invoice", "refresh", function(frm){});*/
 //test6
+//test 7
 var net_fuel_tally = 0;
 var net_goods_tally = 0;
 var net_services_tally = 0;
