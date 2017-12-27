@@ -80,7 +80,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
             #        En caso no existan una serie valida configurada no procede a generar el documento solicitado.
             # en-US: Verify that the configured series exist, to generate documents: FACE, CFACE, NCE, NDE
             #        In case there is not a valid configured series, it does not proceed to generate the requested document.
-            if (frappe.db.exists('Configuracion Series', {'parent': 'CONFIG-FAC00001', 'serie': nombre_serie}) is True):
+            if frappe.db.exists('Configuracion Series', {'parent': 'CONFIG-FAC00001', 'serie': nombre_serie}):
                 series_configuradas = frappe.db.get_values('Configuracion Series', filters = {'parent': 'CONFIG-FAC00001', 'serie': nombre_serie},
                 fieldname = ['fecha_resolucion', 'estado_documento', 'tipo_documento', 'serie', 'secuencia_infile',	'numero_resolucion',
                 'codigo_sat'], as_dict = 1)
