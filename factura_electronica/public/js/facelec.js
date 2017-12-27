@@ -1,10 +1,3 @@
-/* frappe.ui.form.on("Sales Invoice", "refresh", function(frm){});*/
-var net_fuel_tally = 0;
-var net_goods_tally = 0;
-var net_services_tally = 0;
-var sales_tax_temp = 12;
-
-
 frappe.ui.form.on("Sales Invoice Item", {
 
     items_add: function(frm, cdt, cdn) {
@@ -119,63 +112,10 @@ frappe.ui.form.on("Sales Invoice Item", {
     }
 });
 
-// SUM CHILD TABLE CONDITIONALLY AND SET THE FIELD VALUES FOR SALES INVOICE
-//net_fuel_tally = ((this_row_taxable_amount / (1 + (sales_tax_var/100))).toFixed(2));
-//console.log("El valor en combustibles para el libro de compras es: " + net_fuel_tally);// WORKS OK!
-
-// ADD TAX ACCOUNT INFORMATION TO THE SALES TAXES AND CHARGES TABLE
-
-
-/*cambiar valor en el campo del formulario
-frm.set_value(fieldname, value);*/
-
 frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
     // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
     cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
-
-    // Funcion para la obtencion del PDF, segun el documento generado.
-    pdf_button = function() {
-        frappe.call({
-            // Este metodo verifica, el modo de generacion de PDF para la factura electronica
-            // retornara 'Manul' o 'Automatico'
-            method: "factura_electronica.api.save_url_pdf",
-            callback: function(data) {
-                if (data.message === 'Manual') {
-                    // Si en la configuracion se encuentra que la generacion de PDF debe ser manual
-                    // Se realizara lo siguiente
-                    //cur_frm.clear_custom_buttons();
-                    // console.log(data.message);
-                    frm.add_custom_button(__("Obtener PDF"),
-                        function() {
-                            var cae_fac = frm.doc.cae_factura_electronica;
-                            var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
-                            //console.log(cae_fac)
-                            window.open(link_cae_pdf + cae_fac);
-                        }).addClass("btn-primary");
-                } else {
-                    // Si en la configuracion se encuentra que la generacion de PDF debe ser Automatico
-                    // Se realizara lo siguiente
-                    //console.log(data.message);
-                    /*var cae_fac = frm.doc.cae_factura_electronica;
-                    var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
-
-                    frappe.call({
-                        method: "factura_electronica.api.save_pdf_server",
-                        args: {
-                            file_url: link_cae_pdf + cae_fac,
-                            filename: frm.doc.name,
-                            dt: 'Sales Invoice',
-                            dn: frm.doc.name,
-                            folder: 'Home/Facturas Electronicas',
-                            is_private: 1
-                        }
-                    });*/
-
-                }
-            }
-        });
-    }
 
     // Codigo para Factura Electronica FACE, CFACE
     // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
@@ -208,7 +148,50 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
             }).addClass("btn-primary");
         }
     }
+    // Funcion para la obtencion del PDF, segun el documento generado.
+    function pdf_button() {
+        console.log('Se ejecuto la funcion demas');
+        frappe.call({
+            // Este metodo verifica, el modo de generacion de PDF para la factura electronica
+            // retornara 'Manul' o 'Automatico'
+            method: "factura_electronica.api.save_url_pdf",
+            callback: function(data) {
+                console.log(data.message);
+                if (data.message === 'Manual') {
+                    // Si en la configuracion se encuentra que la generacion de PDF debe ser manual
+                    // Se realizara lo siguiente
+                    //cur_frm.clear_custom_buttons();
 
+                    frm.add_custom_button(__("Obtener PDF"),
+                        function() {
+                            var cae_fac = frm.doc.cae_factura_electronica;
+                            var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
+                            //console.log(cae_fac)
+                            window.open(link_cae_pdf + cae_fac);
+                        }).addClass("btn-primary");
+                } else {
+                    // Si en la configuracion se encuentra que la generacion de PDF debe ser Automatico
+                    // Se realizara lo siguiente
+                    //console.log(data.message);
+                    /*var cae_fac = frm.doc.cae_factura_electronica;
+                    var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
+
+                    frappe.call({
+                        method: "factura_electronica.api.save_pdf_server",
+                        args: {
+                            file_url: link_cae_pdf + cae_fac,
+                            filename: frm.doc.name,
+                            dt: 'Sales Invoice',
+                            dn: frm.doc.name,
+                            folder: 'Home/Facturas Electronicas',
+                            is_private: 1
+                        }
+                    });*/
+
+                }
+            }
+        });
+    }
     // Codigo para Notas de Credito NCE
     // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
     if (frm.doc.status === "Return") {
