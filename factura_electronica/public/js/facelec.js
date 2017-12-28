@@ -27,7 +27,7 @@ frappe.ui.form.on("Sales Invoice Item", {
         // FIXME :  Obtener el valor del IVA desde la base datos.
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
-		//cur_frm.add_fetch("Item", "three_digit_uom", "three_digit_uom");
+        //cur_frm.add_fetch("Item", "three_digit_uom", "three_digit_uom");
     },
     qty: function(frm, cdt, cdn) {
         //console.log("The quantity field was changed");// WORKS OK!
@@ -36,7 +36,7 @@ frappe.ui.form.on("Sales Invoice Item", {
         // it seems to pull qty and conversion factor OK.  But stock_qty is not properly pulled, because it is calculated post reload.  Thus we will try to calculate it separately.
 
         var this_row_qty, this_row_rate, this_row_amount, this_row_conversion_factor, this_row_stock_qty, this_row_tax_rate, this_row_tax_amount, this_row_taxable_amount;
-		
+
         frm.doc.items.forEach((item_row, index) => {
             if (item_row.name == cdn) {
                 this_row_amount = (item_row.qty * item_row.rate);
@@ -47,8 +47,8 @@ frappe.ui.form.on("Sales Invoice Item", {
                 // Convert a number into a string, keeping only two decimals:
                 frm.doc.items[index].other_tax_amount = ((item_row.tax_rate_per_uom * (item_row.qty * item_row.conversion_factor)).toFixed(2));
                 frm.doc.items[index].amount_minus_excise_tax = (((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)).toFixed(2));
-				frm.doc.items[index].sales_tax_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) * (this_company_sales_tax_var)).toFixed(2));
-				
+                frm.doc.items[index].sales_tax_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) * (this_company_sales_tax_var)).toFixed(2));
+
                 if (item_row.is_fuel == 1) {
                     //console.log("The item you added is FUEL!" + item_row.is_good);// WORKS OK!
                     frm.doc.items[index].gt_tax_net_fuel_amt = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100))).toFixed(2));

@@ -41,11 +41,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
             sales_invoice = frappe.db.get_values('Sales Invoice', filters = {'name': dato_factura},
             fieldname = ['name', 'idx', 'territory','grand_total', 'customer_name', 'company', 'company_address',
             'naming_series', 'creation', 'status', 'discount_amount', 'docstatus', 'modified', 'conversion_rate',
-            'total_taxes_and_charges', 'net_total', 'shipping_address_name', 'customer_address'], as_dict = 1)
+            'total_taxes_and_charges', 'net_total', 'shipping_address_name', 'customer_address', 'total'], as_dict = 1)
 
             sales_invoice_item = frappe.db.get_values('Sales Invoice Item', filters = {'parent': dato_factura}, 
             fieldname = ['item_name', 'qty', 'item_code', 'description', 'net_amount', 'base_net_amount', 
-            'discount_percentage', 'net_rate', 'stock_uom', 'serial_no', 'item_group', 'rate', 'amount'], as_dict = 1)	
+            'discount_percentage', 'net_rate', 'stock_uom', 'serial_no', 'item_group', 'rate', 'amount', 'sales_tax_this_row',
+            'amount_minus_excise_tax', 'other_tax_amount', 'three_digit_uom'], as_dict = 1)	
 
             direccion_cliente = str(sales_invoice[0]['customer_address'])
             nombre_serie = str(sales_invoice[0]['naming_series'])
@@ -55,7 +56,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
             fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone', 'address_title', 'name'], as_dict = 1) 
 
             direccion_compania = frappe.db.get_values('Address', filters = {'name': dir_compania},
-            fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone', 'address_title'], as_dict = 1)		
+            fieldname = ['email_id', 'country', 'city', 'address_line1', 'state', 'phone', 'address_title', 'county'], as_dict = 1)		
 
             datos_compania = frappe.db.get_values('Company', filters = {'name': (sales_invoice[0]['company'])},
             fieldname = ['company_name', 'default_currency', 'country', 'nit_face_company'], as_dict = 1)

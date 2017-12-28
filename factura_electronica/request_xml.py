@@ -24,10 +24,10 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 		else:
 			correoCompradorTag_Value = str(datos_cliente[0]['email_id'])
 
-		if ((datos_cliente[0]['state']) == ''): 
+		if ((datos_cliente[0]['city']) == ''): 
 			departamentoCompradorTag_Value = 'N/A'
 		else: 
-			departamentoCompradorTag_Value = str(datos_cliente[0]['state'])
+			departamentoCompradorTag_Value = str(datos_cliente[0]['city'])
 
 		if ((datos_cliente[0]['address_line1']) == ''): 
 			direccionComercialCompradorTag_Value = 'N/A'
@@ -44,10 +44,10 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 		else:
 			telefonoCompradorTag_Value = str(datos_cliente[0]['phone'])
 
-		if ((datos_cliente[0]['city']) == ''):
+		if ((datos_cliente[0]['state']) == ''):
 			municipioCompradorTag_Value = 'N/A'
 		else:
-			municipioCompradorTag_Value = str(datos_cliente[0]['city'])
+			municipioCompradorTag_Value = str(datos_cliente[0]['state'])
 
 	# es-GT: En caso no exista la direccion del cliente, los valores se establecen a 'N/A' y a 'Consumidor Final'.
 	# en-US: In case there is no customer address, the values are set to 'N / A' and 'Final Consumer'.
@@ -63,7 +63,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 	codigoEstablecimientoTag_Value = str(datos_configuracion[0]['codigo_establecimiento'])
 	codigoMonedaTag_Value = str(datos_compania[0]['default_currency'])
 
-	departamentoVendedorTag_Value = str(direccion_compania[0]['state']) 
+	departamentoVendedorTag_Value = str(direccion_compania[0]['city']) 
 	descripcionOtroImpuestoTag_Value = str(datos_configuracion[0]['descripcion_otro_impuesto'])
 
 	# es-GT: Formateando la Primera parte del cuerpo de request XML.
@@ -105,18 +105,18 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 				codigoProductoTag_Value = str(sales_invoice_item[i]['item_code'])
 				descripcionProductoTag_Value = str((sales_invoice_item[i]['description']))
 				importeExentoTag_Value = float((datos_configuracion[0]['importe_exento'])) 
-				importeNetoGravadoTag_Value = abs(float((sales_invoice_item[i]['amount'])))
+				importeNetoGravadoTag_Value = abs(float((sales_invoice_item[i]['amount_minus_excise_tax'])))
 				montoBrutoTag_Value =  float(sales_invoice_item[i]['net_amount'])
 
 				# es-GT: Calculo de IVA segun requiere infile.
 				# en-US: IVA calculation as required by infile.
 				detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12)))
 
-				importeOtrosImpuestosTag_Value = float((datos_configuracion[0]['importe_otros_impuestos']))
+				importeOtrosImpuestosTag_Value = float((sales_invoice_item[0]['other_tax_amount']))
 				importeTotalOperacionTag_Value = abs(float((sales_invoice_item[i]['amount'])))
 				montoDescuentoTag_Value = float(sales_invoice_item[i]['discount_percentage'])
 				precioUnitarioTag_Value = float(sales_invoice_item[i]['rate'])
-				unidadMedidaTag_Value = str(sales_invoice_item[i]['stock_uom'])
+				unidadMedidaTag_Value = str(sales_invoice_item[i]['three_digit_uom'])
 
 				# es-GT: Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien.
 				# en-US: Obtains directly from the db the stock field to be later verified as Service or Good.
@@ -156,18 +156,18 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 		codigoProductoTag_Value = str(sales_invoice_item[0]['item_code'])
 		descripcionProductoTag_Value = str((sales_invoice_item[0]['description']))
 		importeExentoTag_Value = float((datos_configuracion[0]['importe_exento']))
-		importeNetoGravadoTag_Value = abs(float((sales_invoice_item[0]['amount'])))
+		importeNetoGravadoTag_Value = abs(float((sales_invoice_item[0]['amount_minus_excise_tax'])))
 		montoBrutoTag_Value =  float(sales_invoice_item[0]['net_amount'])
 
 		# es-GT: Calculo de IVA segun requiere infile.
 		# en-US: IVA calculation as required by infile.
 		detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12)))
 
-		importeOtrosImpuestosTag_Value = float((datos_configuracion[0]['importe_otros_impuestos']))
+		importeOtrosImpuestosTag_Value = float((sales_invoice_item[0]['other_tax_amount']))
 		importeTotalOperacionTag_Value = abs(float((sales_invoice_item[0]['amount'])))
 		montoDescuentoTag_Value = float(sales_invoice_item[0]['discount_percentage'])
 		precioUnitarioTag_Value = float(sales_invoice_item[0]['rate'])
-		unidadMedidaTag_Value = str(sales_invoice_item[0]['stock_uom'])
+		unidadMedidaTag_Value = str(sales_invoice_item[0]['three_digit_uom'])
 
 		# es-GT: Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien.
 		# en-US: Obtains directly from the db the stock field to be later verified as Service or Good.
@@ -255,7 +255,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 	regimenISRTag_Value = str(datos_configuracion[0]['regimen_isr'])
 	serieAutorizadaTag_Value = str(series_configuradas[0]['secuencia_infile'])
 	serieDocumentoTag_Value = str(series_configuradas[0]['codigo_sat'])
-	municipioVendedorTag_Value = str(direccion_compania[0]['city'])
+	municipioVendedorTag_Value = str(direccion_compania[0]['state'])
 
 	# es-GT: Cuando es moneda local, obligatoriamente debe llevar 1.00
 	# en-US: When it is local currency, it must necessarily carry 1.00
@@ -264,6 +264,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 	tipoDocumentoTag_Value = str(series_configuradas[0]['tipo_documento'])
 	usuarioTag_Value = str(datos_configuracion[0]['usuario'])
 	validadorTag_Value = str(datos_configuracion[0]['validador'])
+	# detalle impuesto de IVA, el total de iva en la operacion 
 	detalleImpuestosIvaTag_Value = abs(float(sales_invoice[0]['total_taxes_and_charges']))
 
 	if (datos_configuracion[0]['regimen_2989']) == 0: 
