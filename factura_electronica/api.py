@@ -46,7 +46,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
             sales_invoice_item = frappe.db.get_values('Sales Invoice Item', filters = {'parent': dato_factura}, 
             fieldname = ['item_name', 'qty', 'item_code', 'description', 'net_amount', 'base_net_amount', 
             'discount_percentage', 'net_rate', 'stock_uom', 'serial_no', 'item_group', 'rate', 'amount', 'sales_tax_this_row',
-            'amount_minus_excise_tax', 'other_tax_amount', 'three_digit_uom'], as_dict = 1)	
+            'amount_minus_excise_tax', 'other_tax_amount', 'three_digit_uom', 'gt_tax_net_fuel_amt', 'gt_tax_net_goods_amt',
+            'gt_tax_net_services_amt'], as_dict = 1)	
 
             direccion_cliente = str(sales_invoice[0]['customer_address'])
             nombre_serie = str(sales_invoice[0]['naming_series'])
