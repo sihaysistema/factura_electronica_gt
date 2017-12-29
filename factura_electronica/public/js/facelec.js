@@ -47,6 +47,8 @@ frappe.ui.form.on("Sales Invoice Item", {
                 // Convert a number into a string, keeping only two decimals:
                 frm.doc.items[index].other_tax_amount = ((item_row.tax_rate_per_uom * (item_row.qty * item_row.conversion_factor)).toFixed(2));
                 frm.doc.items[index].amount_minus_excise_tax = (((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)).toFixed(2));
+
+                // FIXME: EL RESULTADO DEL CALCULO ES DEMASIADO ELEVADO
                 frm.doc.items[index].sales_tax_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) * (this_company_sales_tax_var)).toFixed(2));
 
                 if (item_row.is_fuel == 1) {
@@ -103,6 +105,14 @@ frappe.ui.form.on("Sales Invoice Item", {
                 //console.log("El campo taxable_amount de esta fila contiene: " + this_row_taxable_amount);//WORKS OK!
                 //frm.doc.items[index].other_tax_amount = Number(this_row_tax_rate * this_row_stock_qty);
                 //frm.doc.items[index].amount_minus_excise_tax = Number(this_row_amount - this_row_tax_amount);
+
+                // Para el calculo total de IVA, basado en la sumatoria de sales_tax_this_row de cada item
+                full_tax_iva = 0;
+                $.each(frm.doc.items || [], function(i, d) {
+                    full_tax_iva += flt(d.sales_tax_this_row);
+                });
+                console.log("El total de fuel es:" + full_tax_iva);
+                frm.doc.total_iva = full_tax_iva;
             };
         });
     },

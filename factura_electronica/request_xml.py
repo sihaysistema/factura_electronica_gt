@@ -107,15 +107,20 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 				importeExentoTag_Value = float((datos_configuracion[0]['importe_exento'])) 
 				importeNetoGravadoTag_Value = abs(float((sales_invoice_item[i]['amount_minus_excise_tax'])))
 
-				# montoBrutoTag_Value =  float(sales_invoice_item[i]['net_amount']) ((Valor /(1+Tasa_IVA))
+				# FORMA 1
+				# montoBrutoTag_Value =  float(sales_invoice_item[i]['net_amount']) 
+				# FORMA 2
 				# FIXME: Mejor opcion, obtener el valor del iva directo de la tabla de DB
 				montoBrutoTag_Value =  '{0:.2f}'.format(float(((sales_invoice_item[i]['gt_tax_net_fuel_amt'])+(sales_invoice_item[i]['gt_tax_net_goods_amt'])+ (sales_invoice_item[i]['gt_tax_net_services_amt']))/1.12))
 
 				# es-GT: Calculo de IVA segun requiere infile.
 				# en-US: IVA calculation as required by infile.
-				detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12)))
+				# FORMA 1
+				#detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12)))
+				# FORMA 2
+				detalleImpuestosIvaTag_Value = float((sales_invoice_item[i]['sales_tax_this_row']))
 
-				importeOtrosImpuestosTag_Value = float((sales_invoice_item[0]['other_tax_amount']))
+				importeOtrosImpuestosTag_Value = float((sales_invoice_item[i]['other_tax_amount']))
 				importeTotalOperacionTag_Value = abs(float((sales_invoice_item[i]['amount'])))
 				montoDescuentoTag_Value = float(sales_invoice_item[i]['discount_percentage'])
 				precioUnitarioTag_Value = float(sales_invoice_item[i]['rate'])
@@ -167,7 +172,10 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 
 		# es-GT: Calculo de IVA segun requiere infile.
 		# en-US: IVA calculation as required by infile.
-		detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12)))
+		# FORMA 1
+		#detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12)))
+		# FORMA 2
+		detalleImpuestosIvaTag_Value = float((sales_invoice_item[0]['sales_tax_this_row']))
 
 		importeOtrosImpuestosTag_Value = float((sales_invoice_item[0]['other_tax_amount']))
 		importeTotalOperacionTag_Value = abs(float((sales_invoice_item[0]['amount'])))
@@ -270,8 +278,10 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 	tipoDocumentoTag_Value = str(series_configuradas[0]['tipo_documento'])
 	usuarioTag_Value = str(datos_configuracion[0]['usuario'])
 	validadorTag_Value = str(datos_configuracion[0]['validador'])
+
 	# detalle impuesto de IVA, el total de iva en la operacion 
-	detalleImpuestosIvaTag_Value = abs(float(sales_invoice[0]['total_taxes_and_charges']))
+	# detalleImpuestosIvaTag_Value = abs(float(sales_invoice[0]['total_taxes_and_charges'])) 
+	detalleImpuestosIvaTag_Value = abs(float(sales_invoice[0]['total_iva']))
 
 	if (datos_configuracion[0]['regimen_2989']) == 0: 
 		regimen2989Tag_Value = 'false'

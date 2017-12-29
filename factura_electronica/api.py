@@ -41,7 +41,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
             sales_invoice = frappe.db.get_values('Sales Invoice', filters = {'name': dato_factura},
             fieldname = ['name', 'idx', 'territory','grand_total', 'customer_name', 'company', 'company_address',
             'naming_series', 'creation', 'status', 'discount_amount', 'docstatus', 'modified', 'conversion_rate',
-            'total_taxes_and_charges', 'net_total', 'shipping_address_name', 'customer_address', 'total'], as_dict = 1)
+            'total_taxes_and_charges', 'net_total', 'shipping_address_name', 'customer_address', 'total', 'total_iva'], as_dict = 1)
 
             sales_invoice_item = frappe.db.get_values('Sales Invoice Item', filters = {'parent': dato_factura}, 
             fieldname = ['item_name', 'qty', 'item_code', 'description', 'net_amount', 'base_net_amount', 
