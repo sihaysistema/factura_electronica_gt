@@ -49,12 +49,14 @@ frappe.ui.form.on("Sales Invoice Item", {
                 frm.doc.items[index].amount_minus_excise_tax = (((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)).toFixed(2));
 
                 // FIXME: EL RESULTADO DEL CALCULO ES DEMASIADO ELEVADO
-                frm.doc.items[index].sales_tax_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) * (this_company_sales_tax_var)).toFixed(2));
-
+				//frm.doc.items[index].sales_tax_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom))) - ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100)))));
+                
                 if (item_row.is_fuel == 1) {
                     //console.log("The item you added is FUEL!" + item_row.is_good);// WORKS OK!
                     frm.doc.items[index].gt_tax_net_fuel_amt = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100))).toFixed(2));
-                    // Sumatoria de todos los que tengan el check combustibles
+	                // Estimamos el valor del IVA para esta linea
+					frm.doc.items[index].sales_tax_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom))) - ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100)))));
+					// Sumatoria de todos los que tengan el check combustibles
                     total_fuel = 0;
                     $.each(frm.doc.items || [], function(i, d) {
                         // total_qty += flt(d.qty);
@@ -69,7 +71,9 @@ frappe.ui.form.on("Sales Invoice Item", {
                     //console.log("The item you added is a GOOD!" + item_row.is_good);// WORKS OK!
                     //console.log("El valor en bienes para el libro de compras es: " + net_goods_tally);// WORKS OK!
                     frm.doc.items[index].gt_tax_net_goods_amt = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100))).toFixed(2));
-                    // Sumatoria de todos los que tengan el check bienes
+	                // Estimamos el valor del IVA para esta linea
+					frm.doc.items[index].sales_tax_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom))) - ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100)))));
+					// Sumatoria de todos los que tengan el check bienes
                     total_goods = 0;
                     $.each(frm.doc.items || [], function(i, d) {
                         // total_qty += flt(d.qty);
@@ -84,7 +88,9 @@ frappe.ui.form.on("Sales Invoice Item", {
                     //console.log("The item you added is a SERVICE!" + item_row.is_service);// WORKS OK!
                     //console.log("El valor en servicios para el libro de compras es: " + net_services_tally);// WORKS OK!
                     frm.doc.items[index].gt_tax_net_services_amt = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100))).toFixed(2));
-                    total_servi = 0;
+	                // Estimamos el valor del IVA para esta linea
+					frm.doc.items[index].sales_tax_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom))) - ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100)))));
+				    total_servi = 0;
                     $.each(frm.doc.items || [], function(i, d) {
                         if (d.is_service == true) {
                             total_servi += flt(d.gt_tax_net_services_amt);
@@ -111,7 +117,7 @@ frappe.ui.form.on("Sales Invoice Item", {
                 $.each(frm.doc.items || [], function(i, d) {
                     full_tax_iva += flt(d.sales_tax_this_row);
                 });
-                console.log("El total de fuel es:" + full_tax_iva);
+                console.log("El total de IVA" + full_tax_iva);
                 frm.doc.total_iva = full_tax_iva;
             };
         });
