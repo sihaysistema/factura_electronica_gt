@@ -105,26 +105,26 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 				codigoProductoTag_Value = str(sales_invoice_item[i]['item_code'])
 				descripcionProductoTag_Value = str((sales_invoice_item[i]['description']))
 				importeExentoTag_Value = float((datos_configuracion[0]['importe_exento'])) 
-				importeNetoGravadoTag_Value = abs(float((sales_invoice_item[i]['amount_minus_excise_tax'])))
+				importeNetoGravadoTag_Value = abs(float((sales_invoice_item[i]['facelec_amount_minus_excise_tax'])))
 
 				# FORMA 1
 				# montoBrutoTag_Value =  float(sales_invoice_item[i]['net_amount']) 
 				# FORMA 2
-				# FIXME: Mejor opcion, obtener el valor del iva directo de la tabla de DB
-				montoBrutoTag_Value =  '{0:.2f}'.format(float(((sales_invoice_item[i]['gt_tax_net_fuel_amt'])+(sales_invoice_item[i]['gt_tax_net_goods_amt'])+ (sales_invoice_item[i]['gt_tax_net_services_amt']))/1.12))
+				
+				montoBrutoTag_Value =  '{0:.2f}'.format(float(((sales_invoice_item[i]['facelec_gt_tax_net_fuel_amt'])+(sales_invoice_item[i]['facelec_gt_tax_net_goods_amt'])+ (sales_invoice_item[i]['facelec_gt_tax_net_services_amt']))/1.12))
 
 				# es-GT: Calculo de IVA segun requiere infile.
 				# en-US: IVA calculation as required by infile.
 				# FORMA 1
 				#detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12)))
 				# FORMA 2
-				detalleImpuestosIvaTag_Value = float((sales_invoice_item[i]['sales_tax_this_row']))
+				detalleImpuestosIvaTag_Value = float((sales_invoice_item[i]['facelec_sales_tax_for_this_row']))
 
-				importeOtrosImpuestosTag_Value = float((sales_invoice_item[i]['other_tax_amount']))
+				importeOtrosImpuestosTag_Value = float((sales_invoice_item[i]['facelec_other_tax_amount']))
 				importeTotalOperacionTag_Value = abs(float((sales_invoice_item[i]['amount'])))
 				montoDescuentoTag_Value = float(sales_invoice_item[i]['discount_percentage'])
 				precioUnitarioTag_Value = float(sales_invoice_item[i]['rate'])
-				unidadMedidaTag_Value = str(sales_invoice_item[i]['three_digit_uom'])
+				unidadMedidaTag_Value = str(sales_invoice_item[i]['facelec_three_digit_uom_code'])
 
 				# es-GT: Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien.
 				# en-US: Obtains directly from the db the stock field to be later verified as Service or Good.
@@ -164,24 +164,24 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 		codigoProductoTag_Value = str(sales_invoice_item[0]['item_code'])
 		descripcionProductoTag_Value = str((sales_invoice_item[0]['description']))
 		importeExentoTag_Value = float((datos_configuracion[0]['importe_exento']))
-		importeNetoGravadoTag_Value = abs(float((sales_invoice_item[0]['amount_minus_excise_tax'])))
+		importeNetoGravadoTag_Value = abs(float((sales_invoice_item[0]['facelec_amount_minus_excise_tax'])))
 		
 		# montoBrutoTag_Value =  float(sales_invoice_item[0]['net_amount'])
 		# FIXME: Mejor opcion, obtener el valor del iva directo de la tabla de DB
-		montoBrutoTag_Value =  '{0:.2f}'.format(float(((sales_invoice_item[0]['gt_tax_net_fuel_amt'])+(sales_invoice_item[0]['gt_tax_net_goods_amt'])+ (sales_invoice_item[0]['gt_tax_net_services_amt']))/1.12))
+		montoBrutoTag_Value =  '{0:.2f}'.format(float(((sales_invoice_item[0]['facelec_gt_tax_net_fuel_amt'])+(sales_invoice_item[0]['facelec_gt_tax_net_goods_amt'])+ (sales_invoice_item[0]['facelec_gt_tax_net_services_amt']))/1.12))
 
 		# es-GT: Calculo de IVA segun requiere infile.
 		# en-US: IVA calculation as required by infile.
 		# FORMA 1
 		#detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12)))
 		# FORMA 2
-		detalleImpuestosIvaTag_Value = float((sales_invoice_item[0]['sales_tax_this_row']))
+		detalleImpuestosIvaTag_Value = float((sales_invoice_item[0]['facelec_sales_tax_for_this_row']))
 
-		importeOtrosImpuestosTag_Value = float((sales_invoice_item[0]['other_tax_amount']))
+		importeOtrosImpuestosTag_Value = float((sales_invoice_item[0]['facelec_other_tax_amount']))
 		importeTotalOperacionTag_Value = abs(float((sales_invoice_item[0]['amount'])))
 		montoDescuentoTag_Value = float(sales_invoice_item[0]['discount_percentage'])
 		precioUnitarioTag_Value = float(sales_invoice_item[0]['rate'])
-		unidadMedidaTag_Value = str(sales_invoice_item[0]['three_digit_uom'])
+		unidadMedidaTag_Value = str(sales_invoice_item[0]['facelec_three_digit_uom_code'])
 
 		# es-GT: Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien.
 		# en-US: Obtains directly from the db the stock field to be later verified as Service or Good.
@@ -281,7 +281,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 
 	# detalle impuesto de IVA, el total de iva en la operacion 
 	# detalleImpuestosIvaTag_Value = abs(float(sales_invoice[0]['total_taxes_and_charges'])) 
-	detalleImpuestosIvaTag_Value = abs(float(sales_invoice[0]['total_iva']))
+	detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(float(sales_invoice[0]['facelec_total_iva'])))
 
 	if (datos_configuracion[0]['regimen_2989']) == 0: 
 		regimen2989Tag_Value = 'false'
