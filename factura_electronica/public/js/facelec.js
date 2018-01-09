@@ -5,6 +5,8 @@ frappe.ui.form.on("Sales Invoice Item", {
         // en-US: This trigger runs when adding a new row.
         //AB: Solo asegurarse que el indice de la fila se refiera a la correcta (la anterior, no la actual!??) FIXME
         console.log('Trigger add en tabla hija');
+
+        // Agregando comentario de prueba para la rama de caracteristicas
     },
     items_move: function(frm, cdt, cdn) {
         // es-GT: Este disparador corre al mover una nueva fila
