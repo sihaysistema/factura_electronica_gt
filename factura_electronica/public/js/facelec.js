@@ -6,7 +6,6 @@ frappe.ui.form.on("Sales Invoice Item", {
         //AB: Solo asegurarse que el indice de la fila se refiera a la correcta (la anterior, no la actual!??) FIXME
         console.log('Trigger add en tabla hija');
 
-
     },
     items_move: function(frm, cdt, cdn) {
         // es-GT: Este disparador corre al mover una nueva fila
