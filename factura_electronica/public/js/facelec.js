@@ -1,4 +1,5 @@
 facelec_tax_calculation = function(frm, cdt, cdn) {
+    refresh_field('items');
     var this_row_qty, this_row_rate, this_row_amount, this_row_conversion_factor, this_row_stock_qty, this_row_tax_rate, this_row_tax_amount, this_row_taxable_amount;
 
     frm.doc.items.forEach((item_row, index) => {
