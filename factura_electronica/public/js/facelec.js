@@ -1,5 +1,7 @@
 facelec_tax_calculation = function(frm, cdt, cdn) {
+
     refresh_field('items');
+
     var this_row_qty, this_row_rate, this_row_amount, this_row_conversion_factor, this_row_stock_qty, this_row_tax_rate, this_row_tax_amount, this_row_taxable_amount;
 
     frm.doc.items.forEach((item_row, index) => {
@@ -80,7 +82,6 @@ frappe.ui.form.on("Sales Invoice Item", {
     items_add: function(frm, cdt, cdn) {
         // es-GT: Este disparador corre al agregar una nueva fila
         // en-US: This trigger runs when adding a new row.
-        //AB: Solo asegurarse que el indice de la fila se refiera a la correcta (la anterior, no la actual!??) FIXME
         console.log('Trigger add en tabla hija');
 
     },
@@ -89,16 +90,42 @@ frappe.ui.form.on("Sales Invoice Item", {
         // en-US: This trigger runs when moving a new row.
         console.log('Trigger move en tabla hija');
     },
-    items_before_remove: function(frm, cdt, cdn) {
-        // es-GT: Este disparador corre antes de eliminar una fila (FIXME:  Averiguar????)  
-        // en-US: This trigger runs before eliminating a row (not sure exactly how!!?)
-
+    before_items_remove: function(frm, cdt, cdn) {
+        //facelec_tax_calculation(frm, cdt, cdn);
         // Este trigger no funciona en la tabla hija, buscar funcionamiento correcto!
+        /*
+        fix_prueba = 0;
+        $.each(frm.doc.items || [], function(i, d) {
+            fix_prueba += flt(d.facelec_gt_tax_net_fuel_amt);
+        });
+        console.log("Recalculo en before remove row" + fix_prueba);
+        frm.doc.facelec_gt_tax_fuel = fix_prueba;
+        */
     },
     items_remove: function(frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         console.log('Trigger remove en tabla hija');
+
+        // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
+
+        $.each(frm.doc.items || [], function(i, d) {
+
+            fix_gt_tax_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
+            fix_gt_tax_goods += flt(d.facelec_gt_tax_net_goods_amt);
+            fix_gt_tax_services += flt(d.facelec_gt_tax_net_services_amt);
+            fix_gt_tax_iva += flt(d.facelec_sales_tax_for_this_row);
+
+        });
+
+        cur_frm.set_value("facelec_gt_tax_fuel", fix_gt_tax_fuel);
+        cur_frm.set_value("facelec_gt_tax_goods", fix_gt_tax_goods);
+        cur_frm.set_value("facelec_gt_tax_services", fix_gt_tax_services);
+        cur_frm.set_value("facelec_total_iva", fix_gt_tax_iva);
     },
     item_code: function(frm, cdt, cdn) {
         //console.log("item_code was triggered");
@@ -121,13 +148,13 @@ frappe.ui.form.on("Sales Invoice Item", {
     facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
 
-        frm.doc.items.forEach((item_row, index) => {
-            if (item_row.name == cdn) {
-                if (item_row.facelec_tax_rate_per_uom_account == 1) {
+        // frm.doc.items.forEach((item_row, index) => {
+        //if (item_row.name == cdn) {
+        //   if (item_row.facelec_tax_rate_per_uom_account == 1) {
 
-                }
-            }
-        });
+        //   }
+        // }
+        // });
     },
     rate: function(frm, cdt, cdn) {
         facelec_tax_calculation(frm, cdt, cdn);
