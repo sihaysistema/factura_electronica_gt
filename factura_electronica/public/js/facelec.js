@@ -132,7 +132,20 @@ frappe.ui.form.on("Sales Invoice Item", {
         // FIXME :  Obtener el valor del IVA desde la base datos.
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
-        //cur_frm.add_fetch("Item", "three_digit_uom", "three_digit_uom");
+        // FIXME: Codigo de prueba para realizar calculos con los valores default al cargar item_code
+        // frappe.run_serially([
+        //  () => { console.log('item code activado') },
+        //  () => { console.log('muestra 2') },
+        //  () => {
+        //      frm.doc.items.forEach((item_row, index) => {
+        //          if (item_row.name == cdn) {
+        //              console.log(item_row.qty);
+        //              console.log(item_row.rate);
+        //              console.log(frm.doc.items.qty);
+        //          }
+        //      })
+        //  }
+        // ])
     },
     qty: function(frm, cdt, cdn) {
         facelec_tax_calculation(frm, cdt, cdn);
@@ -147,14 +160,23 @@ frappe.ui.form.on("Sales Invoice Item", {
     },
     facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
-
-        // frm.doc.items.forEach((item_row, index) => {
-        //if (item_row.name == cdn) {
-        //   if (item_row.facelec_tax_rate_per_uom_account == 1) {
-
-        //   }
-        // }
-        // });
+        frm.doc.items.forEach((item_row, index) => {
+            if (item_row.name == cdn) {
+                frappe.call({
+                    // Este metodo verifica, el modo de generacion de PDF para la factura electronica
+                    // retornara 'Manul' o 'Automatico'
+                    method: "factura_electronica.api.save_url_pdf",
+                    args: {
+                        name_account_tax_gt: item_row.facelec_tax_rate_per_uom_account
+                    },
+                    callback: function(data) {
+                        // Declara una nueva fila en la tabla hija taxes en Sales Invoice
+                        var child_tax = cur_frm.add_child('taxes');
+                        cur_frm.refresh_field('taxes');
+                    }
+                })
+            }
+        });
     },
     rate: function(frm, cdt, cdn) {
         facelec_tax_calculation(frm, cdt, cdn);

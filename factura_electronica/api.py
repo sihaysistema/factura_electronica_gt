@@ -180,3 +180,8 @@ def save_pdf_server(file_url, filename, dt, dn, folder, is_private):
     #    frappe.msgprint(_('Archivo no guardado'))
     #else:
     #    frappe.msgprint(_('Guardado'))
+
+@frappe.whitelist()
+def get_data_tax_account(name_account_tax_gt):
+    '''Funcion para obtener los datos de impuestos dependiendo el tipo de cuenta recibido'''
+    pass
