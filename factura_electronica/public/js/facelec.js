@@ -77,6 +77,104 @@ facelec_tax_calculation = function(frm, cdt, cdn) {
     });
 }
 
+facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
+
+    refresh_field('items');
+	//cur_frm.refresh();
+		
+	this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+	
+	console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
+
+    var this_row_qty, this_row_rate, this_row_amount, this_row_conversion_factor, this_row_stock_qty, this_row_tax_rate, this_row_tax_amount, this_row_taxable_amount;
+
+    frm.doc.items.forEach((item_row, index) => {
+        if (item_row.name == cdn) {
+            this_row_amount = (item_row.qty * item_row.rate);
+            this_row_stock_qty = (item_row.qty * item_row.conversion_factor);
+            this_row_tax_rate = (item_row.facelec_tax_rate_per_uom);
+            this_row_tax_amount = (this_row_stock_qty * this_row_tax_rate);
+            this_row_taxable_amount = (this_row_amount - this_row_tax_amount);
+            // Convert a number into a string, keeping only two decimals:
+            frm.doc.items[index].facelec_other_tax_amount = ((item_row.facelec_tax_rate_per_uom * (item_row.qty * item_row.conversion_factor)).toFixed(2));
+			//OJO!  No s epuede utilizar stock_qty en los calculos, debe de ser qty a puro tubo!
+			frm.doc.items[index].facelec_amount_minus_excise_tax = ((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom)).toFixed(2);
+			console.log("uom that just changed is: " + item_row.uom);
+			console.log("stock qty is: " + item_row.stock_qty);  // se queda con el numero anterior.  multiplicar por conversion factor (si existiera!)
+			console.log("conversion_factor is: " + item_row.conversion_factor);
+            if (item_row.factelecis_fuel == 1) {
+                //console.log("The item you added is FUEL!" + item_row.facelec_is_good);// WORKS OK!
+                // Estimamos el valor del IVA para esta linea
+				frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var/100)).toFixed(2);
+				frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
+				// Sumatoria de todos los que tengan el check combustibles
+				total_fuel = 0;
+				$.each(frm.doc.items || [], function(i, d) {
+					// total_qty += flt(d.qty);
+					if (d.factelecis_fuel == true) {
+                        total_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
+                    };
+                });
+                //console.log("El total neto de fuel es:" + total_fuel); // WORKS OK!
+                frm.doc.facelec_gt_tax_fuel = total_fuel;
+				frm.refresh_field("factelecis_fuel");
+            };
+            if (item_row.facelec_is_good == 1) {
+                //console.log("The item you added is a GOOD!" + item_row.facelec_is_good);// WORKS OK!
+                //console.log("El valor en bienes para el libro de compras es: " + net_goods_tally);// WORKS OK!
+                // Estimamos el valor del IVA para esta linea
+				frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var/100)).toFixed(2);
+                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
+                // Sumatoria de todos los que tengan el check bienes
+                total_goods = 0;
+                $.each(frm.doc.items || [], function(i, d) {
+                    // total_qty += flt(d.qty);
+                    if (d.facelec_is_good == true) {
+                        total_goods += flt(d.facelec_gt_tax_net_goods_amt);
+                    };
+                });
+                //console.log("El total neto de bienes es:" + total_goods);// WORKS OK!
+                frm.doc.facelec_gt_tax_goods = total_goods;
+            };
+            if (item_row.facelec_is_service == 1) {
+                //console.log("The item you added is a SERVICE!" + item_row.facelec_is_service);// WORKS OK!
+                //console.log("El valor en servicios para el libro de compras es: " + net_services_tally);// WORKS OK!
+                // Estimamos el valor del IVA para esta linea
+				frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var/100)).toFixed(2);
+                frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
+                total_servi = 0;
+                $.each(frm.doc.items || [], function(i, d) {
+                    if (d.facelec_is_service == true) {
+                        total_servi += flt(d.facelec_gt_tax_net_services_amt);
+                    };
+                });
+                // console.log("El total neto de servicios es:" + total_servi); // WORKS OK!
+                frm.doc.facelec_gt_tax_services = total_servi;
+            };
+
+            // Para el calculo total de IVA, basado en la sumatoria de facelec_sales_tax_for_this_row de cada item
+            full_tax_iva = 0;
+            $.each(frm.doc.items || [], function(i, d) {
+                full_tax_iva += flt(d.facelec_sales_tax_for_this_row);
+            });
+            console.log("El total de IVA" + full_tax_iva);
+            frm.doc.facelec_total_iva = full_tax_iva;
+        };
+	});
+}
+
+frappe.ui.form.on("Sales Invoice", "customer", function(frm) {
+		this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+		console.log('Corrio customer trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
+		facelec_tax_calculation_conversion();
+});
+/*
+frappe.ui.form.on("Sales Invoice Item", "uom", function(frm, cdt, cdn) {
+		this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+		console.log('Corrio trigger en funcion externa para campo UOM ');
+		facelec_tax_calculation_conversion(frm, cdt, cdn);
+});*/
+
 frappe.ui.form.on("Sales Invoice Item", {
 
     items_add: function(frm, cdt, cdn) {
@@ -130,41 +228,101 @@ frappe.ui.form.on("Sales Invoice Item", {
     item_code: function(frm, cdt, cdn) {
         //console.log("item_code was triggered");
         // FIXME :  Obtener el valor del IVA desde la base datos.
-        this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
-        console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
+        //this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+        //console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         //cur_frm.add_fetch("Item", "three_digit_uom", "three_digit_uom");
+		//facelec_tax_calculation_conversion(frm, cdt, cdn);
+		// IVA se carga aqui, para aquellas facturas que ya tengan articulos y no se les vaya a agregar.  (aunque puede cargarse justo a tiempo en la funcion, lo cargamos aqui por redundancia y seguridad.)
+		this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+		console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
+		refresh_field('qty');
     },
     qty: function(frm, cdt, cdn) {
-        facelec_tax_calculation(frm, cdt, cdn);
+        //facelec_tax_calculation(frm, cdt, cdn);
+		facelec_tax_calculation_conversion(frm, cdt, cdn);
+		console.log("cdt contains: " + cdt);
+		console.log("cdn contains: " + cdn);
     },
     uom: function(frm, cdt, cdn) {
         console.log("The unit of measure field was changed and the code from the trigger was run");
-        facelec_tax_calculation(frm, cdt, cdn);
+        // agarras el valor del precio o rate existente hasta este momento.
+		// lo multiplicas por el factor de conversion
+		//facelec_tax_calculation_conversion(frm, cdt, cdn);
+		//facelec_tax_calculation(frm, cdt, cdn);
     },
     conversion_factor: function(frm, cdt, cdn) {
         console.log("El disparador de factor de conversión se corrió.");
-        facelec_tax_calculation(frm, cdt, cdn);
+		facelec_tax_calculation_conversion(frm, cdt, cdn);
+        //facelec_tax_calculation(frm, cdt, cdn);
     },
     facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
+        //var d = frappe.get_doc('Account', 'Account');
+        //var nombre_cuenta = d.name;
+        //console.log(nombre_cuenta);
 
-        // frm.doc.items.forEach((item_row, index) => {
-        //if (item_row.name == cdn) {
-        //   if (item_row.facelec_tax_rate_per_uom_account == 1) {
+        frm.doc.items.forEach((item_row_i, index_i) => {
+            if (item_row_i.name == cdn) {
 
-        //   }
-        // }
-        // });
+                // Forma 1
+                var tabla_hija = cur_frm.add_child('taxes');
+
+                // Forma 2
+                //frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes")
+                var nombre_dt = 'Sales Taxes and Charges'
+                    //frappe.model.set_value(child_tax.doct, child_tax.doct, 'charge_type', 'Actual');
+                    //frappe.model.set_value(child_tax.doct, child_tax.doct, 'account_head', item_row.facelec_tax_rate_per_uom_account);
+                    //cur_frm.set_value("account_head", item_row.facelec_tax_rate_per_uom_account);
+                    //cur_frm.add_fetch("taxes", "facelec_tax_rate_per_uom_account", "account_head");
+                    //console.log(item_row.facelec_tax_rate_per_uom_account)
+                    //frappe.model.set_value(tabla_hija.cdt, tabla_hija.cdn, 'description', 'prueba');
+                    // cur_frm.refresh_field('taxes');
+                    //$.each(frm.doc.taxes || [], function(i, d) {
+                    //console.log(item_row_i.facelec_tax_rate_per_uom_account)
+                frm.doc.taxes.forEach((item_row, index) => {
+                    console.log(item_row);
+                    console.log(index)
+                    if (item_row.account_head == undefined) {
+                        frm.doc.taxes[index].charge_type = 'On Net Total' // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
+                        frm.doc.taxes[index].account_head = item_row_i.facelec_tax_rate_per_uom_account
+                        frm.doc.taxes[index].description = 'IDP' // HACER UN FRAPPE CALL?
+                        frm.doc.taxes[index].rate = 4.60;
+                    }
+                    console.log(item_row.description)
+                });
+                // });
+            }
+        });
+
     },
     rate: function(frm, cdt, cdn) {
         facelec_tax_calculation(frm, cdt, cdn);
     }
 });
 
+frappe.ui.form.on("Sales Invoice", "before_save", function(frm) {
+	frm.doc.items.forEach((item) => {
+		// for each button press each line is being processed.
+		console.log("item contains: " + item);
+		//Importante
+		facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
+	});
+});
+
 frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
     // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
     cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
+
+	// WORKS OK!
+	frm.add_custom_button("UOM Recalculation", function() {
+		frm.doc.items.forEach((item) => {
+			// for each button press each line is being processed.
+			console.log("item contains: " + item);
+			//Importante
+			facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
+		});
+	});
 
     // Codigo para Factura Electronica FACE, CFACE
     // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
