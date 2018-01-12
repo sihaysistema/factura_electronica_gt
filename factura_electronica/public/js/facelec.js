@@ -76,6 +76,7 @@ facelec_tax_calculation = function(frm, cdt, cdn) {
         };
     });
 }
+var indice_tabla = 0;
 
 frappe.ui.form.on("Sales Invoice Item", {
 
@@ -160,28 +161,52 @@ frappe.ui.form.on("Sales Invoice Item", {
     },
     facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
-        frm.doc.items.forEach((item_row, index) => {
-            if (item_row.name == cdn) {
-                frappe.call({
-                    // Este metodo verifica, el modo de generacion de PDF para la factura electronica
-                    // retornara 'Manul' o 'Automatico'
-                    method: "factura_electronica.api.save_url_pdf",
-                    args: {
-                        name_account_tax_gt: item_row.facelec_tax_rate_per_uom_account
-                    },
-                    callback: function(data) {
-                        // Declara una nueva fila en la tabla hija taxes en Sales Invoice
-                        var child_tax = cur_frm.add_child('taxes');
-                        cur_frm.refresh_field('taxes');
+
+        frm.doc.items.forEach((item_row_i, index_i) => {
+            if (item_row_i.name == cdn) {
+
+                // Forma 1
+                var tabla_hija = cur_frm.add_child('taxes');
+
+                // Forma 2
+                //frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes")
+                var nombre_dt = 'Sales Taxes and Charges'
+                    //frappe.model.set_value(child_tax.doct, child_tax.doct, 'charge_type', 'Actual');
+                    //frappe.model.set_value(child_tax.doct, child_tax.doct, 'account_head', item_row.facelec_tax_rate_per_uom_account);
+                    //cur_frm.set_value("account_head", item_row.facelec_tax_rate_per_uom_account);
+                    //cur_frm.add_fetch("taxes", "facelec_tax_rate_per_uom_account", "account_head");
+                    //console.log(item_row.facelec_tax_rate_per_uom_account)
+                    //frappe.model.set_value(tabla_hija.cdt, tabla_hija.cdn, 'description', 'prueba');
+                    // cur_frm.refresh_field('taxes');
+
+                //console.log(item_row_i.facelec_tax_rate_per_uom_account)
+                frm.doc.taxes.forEach((item_row, index) => {
+                    console.log(item_row);
+                    console.log(index)
+                    if (item_row.account_head == undefined) {
+                        frm.doc.taxes[index].charge_type = 'On Net Total' // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
+                        frm.doc.taxes[index].account_head = item_row_i.facelec_tax_rate_per_uom_account
+                        frm.doc.taxes[index].description = 'IDP' // HACER UN FRAPPE CALL?
+
                     }
+
+                    console.log(item_row.description)
                 })
+
             }
         });
+
     },
     rate: function(frm, cdt, cdn) {
         facelec_tax_calculation(frm, cdt, cdn);
     }
 });
+
+// frappe.ui.form.on("Sales Taxes and Charges", {
+//     taxes_add: function(frm, cdt, cdn) {
+//         console.log('Ejecutado')
+//     }
+// })
 
 frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
     // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
