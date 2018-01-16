@@ -184,4 +184,11 @@ def save_pdf_server(file_url, filename, dt, dn, folder, is_private):
 @frappe.whitelist()
 def get_data_tax_account(name_account_tax_gt):
     '''Funcion para obtener los datos de impuestos dependiendo el tipo de cuenta recibido'''
-    pass
+    if frappe.db.exists('Account', {'name': name_account_tax_gt}):
+        
+        datos_cuenta = frappe.db.get_values('Account', filters = {'name': name_account_tax_gt},
+        fieldname = ['tax_rate', 'name'], as_dict = 1)
+
+        return str(datos_cuenta[0]['tax_rate'])
+    else:
+        frappe.msgprint(_('No existe cuenta relacionada con el producto'))
