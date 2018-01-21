@@ -187,7 +187,7 @@ buscar_account = function(frm, cuenta_b) {
 frappe.ui.form.on("Sales Invoice", "customer", function(frm) {
     this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
     console.log('Corrio customer trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
-    facelec_tax_calculation_conversion();
+    // facelec_tax_calculation_conversion(); // Provoca que no se cargue la fecha ni la cuenta
 });
 /*
 frappe.ui.form.on("Sales Invoice Item", "uom", function(frm, cdt, cdn) {
