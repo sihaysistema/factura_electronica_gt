@@ -98,10 +98,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                 try:
                     # Si existe problemas al abrir archivo XML, mostrara un error.
                     envio_datos = open('envio_request.xml', 'r').read()
-
-                    url="https://www.ingface.net/listener/ingface?wsdl" #URL de listener de INFILE
-                    headers = {'content-type': 'text/xml'} #CABECERAS: Indican el tipo de datos
-
                 except:
                     frappe.msgprint(_('Error al abrir los datos XML. Comuniquese al No.'))
                 else:
@@ -114,6 +110,9 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                         try:
                             # Si existe un problema con la comunicacion a INFILE o se sobrepasa el tiempo de espera
                             # Mostrara un error
+                            url="https://www.ingface.net/listener/ingface?wsdl" #URL de listener de INFILE
+                            headers = {"content-type": "text/xml"} #CABECERAS: Indican el tipo de datos
+                            
                             response = requests.post(url, data=envio_datos, headers=headers)
                             respuesta = response.content
                         except:
