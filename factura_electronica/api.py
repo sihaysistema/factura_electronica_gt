@@ -103,18 +103,18 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                     headers = {'content-type': 'text/xml'} #CABECERAS: Indican el tipo de datos
 
                 except:
-                    frappe.msgprint(_('Error al abrir los datos XML. Comuniquese a #### '))
+                    frappe.msgprint(_('Error al abrir los datos XML. Comuniquese al No.'))
                 else:
                     try:
                         # Si existe un error en la captura de tiempo del momento de envio mostrara un error
                         tiempo_enviado = datetime.now()
                     except:
-                        frappe.msgprint(_('Error: No se puede capturar el momento de envio. Comuniquese a ####'))
+                        frappe.msgprint(_('Error: No se puede capturar el momento de envio. Comuniquese al No.'))
                     else:
                         try:
                             # Si existe un problema con la comunicacion a INFILE o se sobrepasa el tiempo de espera
                             # Mostrara un error
-                            response = requests.post(url, data=envio_datos, headers=headers, timeout=30)
+                            response = requests.post(url, data=envio_datos, headers=headers)
                             respuesta = response.content
                         except:
                             frappe.msgprint(_('Error en la Comunicacion al servidor de INFILE. Verifique al PBX: +502 2208-2208'))
