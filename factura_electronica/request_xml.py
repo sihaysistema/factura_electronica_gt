@@ -103,7 +103,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 			for i in range(0, n_productos):
 				cantidadTag_Value = float(sales_invoice_item[i]['qty'])
 				codigoProductoTag_Value = str(sales_invoice_item[i]['item_code'])
-				descripcionProductoTag_Value = str((sales_invoice_item[i]['description']))
+				descripcionProductoTag_Value = str((sales_invoice_item[i]['item_name']))
 				importeExentoTag_Value = float((datos_configuracion[0]['importe_exento'])) 
 				importeNetoGravadoTag_Value = abs(float((sales_invoice_item[i]['facelec_amount_minus_excise_tax'])))
 
@@ -162,7 +162,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 	else:
 		cantidadTag_Value = float(sales_invoice_item[0]['qty'])
 		codigoProductoTag_Value = str(sales_invoice_item[0]['item_code'])
-		descripcionProductoTag_Value = str((sales_invoice_item[0]['description']))
+		descripcionProductoTag_Value = str((sales_invoice_item[0]['item_name']))
 		importeExentoTag_Value = float((datos_configuracion[0]['importe_exento']))
 		importeNetoGravadoTag_Value = abs(float((sales_invoice_item[0]['facelec_amount_minus_excise_tax'])))
 		
