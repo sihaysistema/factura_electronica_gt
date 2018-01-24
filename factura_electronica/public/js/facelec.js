@@ -1,82 +1,3 @@
-facelec_tax_calculation = function(frm, cdt, cdn) {
-
-    refresh_field('items');
-
-    var this_row_qty, this_row_rate, this_row_amount, this_row_conversion_factor, this_row_stock_qty, this_row_tax_rate, this_row_tax_amount, this_row_taxable_amount;
-
-    frm.doc.items.forEach((item_row, index) => {
-        if (item_row.name == cdn) {
-            this_row_amount = (item_row.qty * item_row.rate);
-            this_row_stock_qty = (item_row.qty * item_row.conversion_factor);
-            this_row_tax_rate = (item_row.facelec_tax_rate_per_uom);
-            this_row_tax_amount = (this_row_stock_qty * this_row_tax_rate);
-            this_row_taxable_amount = (this_row_amount - this_row_tax_amount);
-            // Convert a number into a string, keeping only two decimals:
-            frm.doc.items[index].facelec_other_tax_amount = ((item_row.facelec_tax_rate_per_uom * (item_row.qty * item_row.conversion_factor)).toFixed(2));
-            frm.doc.items[index].facelec_amount_minus_excise_tax = (((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom)).toFixed(2));
-
-            //frm.doc.items[index].facelec_sales_tax_for_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom))) - ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100)))));
-
-            if (item_row.factelecis_fuel == 1) {
-                //console.log("The item you added is FUEL!" + item_row.facelec_is_good);// WORKS OK!
-                frm.doc.items[index].facelec_gt_tax_net_fuel_amt = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100))).toFixed(2));
-                // Estimamos el valor del IVA para esta linea
-                frm.doc.items[index].facelec_sales_tax_for_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom))) - ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100)))));
-                // Sumatoria de todos los que tengan el check combustibles
-                total_fuel = 0;
-                $.each(frm.doc.items || [], function(i, d) {
-                    // total_qty += flt(d.qty);
-                    if (d.factelecis_fuel == true) {
-                        total_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
-                    };
-                });
-                console.log("El total de fuel es:" + total_fuel);
-                frm.doc.facelec_gt_tax_fuel = total_fuel;
-            };
-            if (item_row.facelec_is_good == 1) {
-                //console.log("The item you added is a GOOD!" + item_row.facelec_is_good);// WORKS OK!
-                //console.log("El valor en bienes para el libro de compras es: " + net_goods_tally);// WORKS OK!
-                frm.doc.items[index].facelec_gt_tax_net_goods_amt = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100))).toFixed(2));
-                // Estimamos el valor del IVA para esta linea
-                frm.doc.items[index].facelec_sales_tax_for_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom))) - ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100)))));
-                // Sumatoria de todos los que tengan el check bienes
-                total_goods = 0;
-                $.each(frm.doc.items || [], function(i, d) {
-                    // total_qty += flt(d.qty);
-                    if (d.facelec_is_good == true) {
-                        total_goods += flt(d.facelec_gt_tax_net_goods_amt);
-                    };
-                });
-                console.log("El total de bienes es:" + total_goods);
-                frm.doc.facelec_gt_tax_goods = total_goods;
-            };
-            if (item_row.facelec_is_service == 1) {
-                //console.log("The item you added is a SERVICE!" + item_row.facelec_is_service);// WORKS OK!
-                //console.log("El valor en servicios para el libro de compras es: " + net_services_tally);// WORKS OK!
-                frm.doc.items[index].facelec_gt_tax_net_services_amt = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100))).toFixed(2));
-                // Estimamos el valor del IVA para esta linea
-                frm.doc.items[index].facelec_sales_tax_for_this_row = ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom))) - ((((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom)) / (1 + (this_company_sales_tax_var / 100)))));
-                total_servi = 0;
-                $.each(frm.doc.items || [], function(i, d) {
-                    if (d.facelec_is_service == true) {
-                        total_servi += flt(d.facelec_gt_tax_net_services_amt);
-                    };
-                });
-                console.log("El total de servicios es:" + total_servi);
-                frm.doc.facelec_gt_tax_services = total_servi;
-            };
-
-            // Para el calculo total de IVA, basado en la sumatoria de facelec_sales_tax_for_this_row de cada item
-            full_tax_iva = 0;
-            $.each(frm.doc.items || [], function(i, d) {
-                full_tax_iva += flt(d.facelec_sales_tax_for_this_row);
-            });
-            console.log("El total de IVA" + full_tax_iva);
-            frm.doc.facelec_total_iva = full_tax_iva;
-        };
-    });
-}
-
 facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
 
     refresh_field('items');
@@ -105,9 +26,11 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
             if (item_row.factelecis_fuel == 1) {
                 //console.log("The item you added is FUEL!" + item_row.facelec_is_good);// WORKS OK!
                 // Estimamos el valor del IVA para esta linea
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
-                frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-                // Sumatoria de todos los que tengan el check combustibles
+                //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (1 + (this_company_sales_tax_var / 100))).toFixed(2);
+                //frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
+				frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
+				frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
+				// Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
                 $.each(frm.doc.items || [], function(i, d) {
                     // total_qty += flt(d.qty);
@@ -123,8 +46,10 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 //console.log("The item you added is a GOOD!" + item_row.facelec_is_good);// WORKS OK!
                 //console.log("El valor en bienes para el libro de compras es: " + net_goods_tally);// WORKS OK!
                 // Estimamos el valor del IVA para esta linea
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
-                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
+                //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
+                //frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
+				frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
+				frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
                 // Sumatoria de todos los que tengan el check bienes
                 total_goods = 0;
                 $.each(frm.doc.items || [], function(i, d) {
@@ -140,9 +65,11 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 //console.log("The item you added is a SERVICE!" + item_row.facelec_is_service);// WORKS OK!
                 //console.log("El valor en servicios para el libro de compras es: " + net_services_tally);// WORKS OK!
                 // Estimamos el valor del IVA para esta linea
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
-                frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-                total_servi = 0;
+                //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
+                //frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
+				frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
+				frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
+				total_servi = 0;
                 $.each(frm.doc.items || [], function(i, d) {
                     if (d.facelec_is_service == true) {
                         total_servi += flt(d.facelec_gt_tax_net_services_amt);
