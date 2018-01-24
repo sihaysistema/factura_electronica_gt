@@ -115,6 +115,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                             headers = {"content-type": "text/xml"} #CABECERAS: Indican el tipo de datos  # FUNCIONA OK!!!
 
                             response = requests.post(url, data = envio_datos, headers = headers) #FUNCIONA OK!!!
+                            respuesta = response.content
+                            frappe.msgprint(_(str(respuesta)))
                         except:
                             frappe.msgprint(_('Error en la Comunicacion al servidor de INFILE. Verifique al PBX: +502 2208-2208'))
                         else:
