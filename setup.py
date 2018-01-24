@@ -16,7 +16,7 @@ setup(
 	name='factura_electronica',
 	version=version,
 	description='Aplicacion para la generacion de facturas electronicas.',
-	author='Frappe',
+	author='SHS',
 	author_email='m.monroy123ap@gmail.com',
 	packages=find_packages(),
 	zip_safe=False,
