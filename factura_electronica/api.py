@@ -110,10 +110,11 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                         try:
                             # Si existe un problema con la comunicacion a INFILE o se sobrepasa el tiempo de espera
                             # Mostrara un error
-                            url="https://www.ingface.net/listener/ingface?wsdl" #URL de listener de INFILE
-                            headers = {"content-type": "text/xml"} #CABECERAS: Indican el tipo de datos
+                            # 2018-01-23 Se valido claramente que funciona el envío al servidor de INFILE
+                            url="https://www.ingface.net/listener/ingface?wsdl" #URL de listener de INFILE # FUNCIONA OK!!!
+                            headers = {"content-type": "text/xml"} #CABECERAS: Indican el tipo de datos  # FUNCIONA OK!!!
 
-                            response = requests.post(url, data=envio_datos, headers=headers)
+                            response = requests.post(url, data = envio_datos, headers = headers) #FUNCIONA OK!!!
                         except:
                             frappe.msgprint(_('Error en la Comunicacion al servidor de INFILE. Verifique al PBX: +502 2208-2208'))
                         else:
