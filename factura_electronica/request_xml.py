@@ -61,7 +61,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 	
 	claveTag_Value = str(datos_configuracion[0]['clave'])
 	codigoEstablecimientoTag_Value = str(datos_configuracion[0]['codigo_establecimiento'])
-	codigoMonedaTag_Value = str(datos_compania[0]['default_currency'])
+	codigoMonedaTag_Value = str(sales_invoice[0]['currency'])
 
 	departamentoVendedorTag_Value = str(direccion_compania[0]['city']) 
 	descripcionOtroImpuestoTag_Value = str(datos_configuracion[0]['descripcion_otro_impuesto'])
