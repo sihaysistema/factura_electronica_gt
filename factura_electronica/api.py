@@ -116,9 +116,9 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
                             response = requests.post(url, data = envio_datos, headers = headers) #FUNCIONA OK!!!
                             respuesta = response.content
-                            frappe.msgprint(_(str(respuesta)))
+                            # frappe.msgprint(_(str(respuesta)))
                         except:
-                            frappe.msgprint(_(str(respuesta) + 'Error en la Comunicacion al servidor de INFILE. Verifique al PBX: +502 2208-2208'))
+                            frappe.msgprint(_('Error en la Comunicacion al servidor de INFILE. Verifique al PBX: +502 2208-2208'))
                         else:
                             try:
                                 # Si no se recibe ningun dato del servidor de INFILE mostrara el error
