@@ -17,9 +17,9 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
             this_row_tax_amount = (this_row_stock_qty * this_row_tax_rate);
             this_row_taxable_amount = (this_row_amount - this_row_tax_amount);
             // Convert a number into a string, keeping only two decimals:
-            frm.doc.items[index].facelec_other_tax_amount = ((item_row.facelec_tax_rate_per_uom * (item_row.qty * item_row.conversion_factor)).toFixed(2));
+            frm.doc.items[index].facelec_other_tax_amount = ((item_row.facelec_tax_rate_per_uom * (item_row.qty * item_row.conversion_factor)));
             //OJO!  No s epuede utilizar stock_qty en los calculos, debe de ser qty a puro tubo!
-            frm.doc.items[index].facelec_amount_minus_excise_tax = ((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom)).toFixed(2);
+            frm.doc.items[index].facelec_amount_minus_excise_tax = ((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_tax_rate_per_uom));
             console.log("uom that just changed is: " + item_row.uom);
             console.log("stock qty is: " + item_row.stock_qty); // se queda con el numero anterior.  multiplicar por conversion factor (si existiera!)
             console.log("conversion_factor is: " + item_row.conversion_factor);
@@ -28,8 +28,8 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 // Estimamos el valor del IVA para esta linea
                 //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (1 + (this_company_sales_tax_var / 100))).toFixed(2);
                 //frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
+                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
                 $.each(frm.doc.items || [], function(i, d) {
@@ -48,8 +48,8 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 // Estimamos el valor del IVA para esta linea
                 //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
                 //frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
+                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
                 total_goods = 0;
                 $.each(frm.doc.items || [], function(i, d) {
@@ -67,8 +67,8 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 // Estimamos el valor del IVA para esta linea
                 //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
                 //frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
+                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 total_servi = 0;
                 $.each(frm.doc.items || [], function(i, d) {
                     if (d.facelec_is_service == true) {
@@ -86,6 +86,8 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
             });
             console.log("El total de IVA" + full_tax_iva);
             frm.doc.facelec_total_iva = full_tax_iva;
+			/*Para redondeo se puede agregar esto a full_tax_iva, pero crea mucho error de redondeo. .toFixed(2)*/
+
         };
     });
 }
@@ -142,6 +144,20 @@ frappe.ui.form.on("Sales Invoice", "nit_face_customer", function(frm) {
             frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
         }
     }
+});
+
+
+frappe.ui.form.on("Sales Invoice", "discount_amount", function(frm) {
+	tax_before_calc = frm.doc.facelec_total_iva;
+	console.log("El descuento total es:" + frm.doc.discount_amount);
+	console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
+	discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+	console.log("El neto sin iva del descuento es" + discount_amount_net_value);
+	discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+	console.log("El IVA del descuento es:" + discount_amount_tax_value);
+	frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
+	console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
+	
 });
 
 frappe.ui.form.on("Sales Invoice", "customer", function(frm) {
