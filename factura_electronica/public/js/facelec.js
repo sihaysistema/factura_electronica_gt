@@ -28,8 +28,8 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 // Estimamos el valor del IVA para esta linea
                 //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (1 + (this_company_sales_tax_var / 100))).toFixed(2);
                 //frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
+                frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
                 $.each(frm.doc.items || [], function(i, d) {
@@ -67,8 +67,8 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 // Estimamos el valor del IVA para esta linea
                 //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
                 //frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
+                frm.doc.items[index].facelec_gt_tax_net_service_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_service_amt * (this_company_sales_tax_var / 100));
                 total_servi = 0;
                 $.each(frm.doc.items || [], function(i, d) {
                     if (d.facelec_is_service == true) {
