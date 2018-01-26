@@ -3,9 +3,9 @@
   "docstatus": 0, 
   "doctype": "Custom Script", 
   "dt": "Customer", 
-  "modified": "2017-11-13 16:39:33.284348", 
+  "modified": "2018-01-25 23:05:27.835907", 
   "name": "Customer-Client", 
-  "script": "function valNit(nit) {\n    var nd, add = 0;\n    if (nd = /^(\\d+)\\-?([\\dk])$/i.exec(nit)) {\n        nd[2] = (nd[2].toLowerCase() == 'k') ? 10 : parseInt(nd[2]);\n        for (var i = 0; i < nd[1].length; i++) {\n            add += ((((i - nd[1].length) * -1) + 1) * nd[1][i]);\n        }\n        return ((11 - (add % 11)) % 11) == nd[2];\n    } else {\n        return false;\n    }\n}\nfrappe.ui.form.on(\"Customer\", {\n    nit_face_customer: function(frm) {\n\n        if (frm.doc.nit_face_customer === \"C/F\" || frm.doc.nit_face_customer === \"c/f\") {\n            frm.enable_save();\n        } else {\n            nit_validado = (valNit(frm.doc.nit_face_customer));\n            if (nit_validado === false) {\n                msgprint('NIT ingresado no es correcto, si no tiene disponible el NIT escriba C/F');\n                frm.disable_save();\n            }\n            if (nit_validado === true) {\n                frm.enable_save();\n            }\n        }\n\n    }\n});", 
+  "script": "function valNit(nit) {\n    var nd, add = 0;\n    if (nd = /^(\\d+)\\-?([\\dk])$/i.exec(nit)) {\n        nd[2] = (nd[2].toLowerCase() == 'k') ? 10 : parseInt(nd[2]);\n        for (var i = 0; i < nd[1].length; i++) {\n            add += ((((i - nd[1].length) * -1) + 1) * nd[1][i]);\n        }\n        return ((11 - (add % 11)) % 11) == nd[2];\n    } else {\n        return false;\n    }\n}\n\nfrappe.ui.form.on(\"Customer\", \"nit_face_customer\", function(frm) {\n\n        if (frm.doc.nit_face_customer === \"C/F\" || frm.doc.nit_face_customer === \"c/f\") {\n            frm.enable_save();\n        } else {\n            nit_validado = (valNit(frm.doc.nit_face_customer));\n            if (nit_validado === false) {\n                msgprint('NIT ingresado no es correcto, si no tiene disponible el NIT escriba C/F');\n                frm.disable_save();\n            }\n            if (nit_validado === true) {\n                frm.enable_save();\n            }\n        }\n        \n});", 
   "script_type": "Client"
  }
 ]

@@ -393,6 +393,51 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
             }
         });
     }
+
+    // Funcion para la obtencion del PDF, segun el documento generado.
+    function pdf_button_NDE() {
+        //console.log('Se ejecuto la funcion demas');
+        frappe.call({
+            // Este metodo verifica, el modo de generacion de PDF para la factura electronica
+            // retornara 'Manul' o 'Automatico'
+            method: "factura_electronica.api.save_url_pdf",
+            callback: function(data) {
+                console.log(data.message);
+                if (data.message === 'Manual') {
+                    // Si en la configuracion se encuentra que la generacion de PDF debe ser manual
+                    // Se realizara lo siguiente
+                    //cur_frm.clear_custom_buttons();
+
+                    frm.add_custom_button(__("Obtener PDF"),
+                        function() {
+                            var cae_fac = frm.doc.cae_nota_de_debito;
+                            var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
+                            //console.log(cae_fac)
+                            window.open(link_cae_pdf + cae_fac);
+                        }).addClass("btn-primary");
+                } else {
+                    // Si en la configuracion se encuentra que la generacion de PDF debe ser Automatico
+                    // Se realizara lo siguiente
+                    //console.log(data.message);
+                    /*var cae_fac = frm.doc.cae_factura_electronica;
+                    var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
+                    frappe.call({
+                        method: "factura_electronica.api.save_pdf_server",
+                        args: {
+                            file_url: link_cae_pdf + cae_fac,
+                            filename: frm.doc.name,
+                            dt: 'Sales Invoice',
+                            dn: frm.doc.name,
+                            folder: 'Home/Facturas Electronicas',
+                            is_private: 1
+                        }
+                    });*/
+
+                }
+            }
+        });
+    }
+
     // Codigo para Notas de Credito NCE
     // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
     if (frm.doc.status === "Return") {
@@ -422,6 +467,39 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
                     }
                 });
             }).addClass("btn-primary");
+        }
+    }
+
+    // Codigo para notas de debito
+    // Codigo para Notas de Credito NDE
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+
+        //var nombre = 'Nota Debito';
+        if (frm.doc.es_nota_de_debito == 1) {
+            cur_frm.clear_custom_buttons('Factura Electronica');
+            if (frm.doc.cae_nota_de_debito) {
+                cur_frm.clear_custom_buttons();
+                pdf_button_NDE();
+            } else {
+                frm.add_custom_button(__('Nota Debito'), function() {
+                    frappe.call({
+                        method: "factura_electronica.api.generar_factura_electronica",
+                        args: {
+                            serie_factura: frm.doc.name,
+                            nombre_cliente: frm.doc.customer
+                        },
+                        // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                        callback: function(data) {
+
+                            cur_frm.set_value("cae_nota_de_debito", data.message);
+                            if (frm.doc.cae_nota_de_debito) {
+                                cur_frm.clear_custom_buttons();
+                                pdf_button_NDE();
+                            }
+                        }
+                    });
+                }).addClass("btn-primary");
+            }
         }
     }
 });
