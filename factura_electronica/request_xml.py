@@ -168,7 +168,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 		
 		# montoBrutoTag_Value =  float(sales_invoice_item[0]['net_amount'])
 		# FIXME: Mejor opcion, obtener el valor del iva directo de la tabla de DB
-		montoBrutoTag_Value =  '{0:.2f}'.format(float(((sales_invoice_item[0]['facelec_gt_tax_net_fuel_amt'])+(sales_invoice_item[0]['facelec_gt_tax_net_goods_amt'])+ (sales_invoice_item[0]['facelec_gt_tax_net_services_amt']))/1.12))
+		montoBrutoTag_Value =  '{0:.2f}'.format(float(((sales_invoice_item[0]['facelec_gt_tax_net_fuel_amt'])+(sales_invoice_item[0]['facelec_gt_tax_net_goods_amt'])+(sales_invoice_item[0]['facelec_gt_tax_net_services_amt']))/1.12))
 
 		# es-GT: Calculo de IVA segun requiere infile.
 		# en-US: IVA calculation as required by infile.
