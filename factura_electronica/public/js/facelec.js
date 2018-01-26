@@ -84,19 +84,7 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
             $.each(frm.doc.items || [], function(i, d) {
                 full_tax_iva += flt(d.facelec_sales_tax_for_this_row);
             });
-            console.log("El total de IVA" + full_tax_iva);
-			tax_before_calc = full_tax_iva;
-			console.log("El descuento total es:" + frm.doc.discount_amount);
-			console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
-			discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
-			console.log("El neto sin iva del descuento es" + discount_amount_net_value);
-			discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
-			console.log("El IVA del descuento es:" + discount_amount_tax_value);
-			frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
-			console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
-            /*frm.doc.facelec_total_iva = full_tax_iva;*/
-			/*Para redondeo se puede agregar esto a full_tax_iva, pero crea mucho error de redondeo. .toFixed(2)*/
-
+			frm.doc.facelec_total_iva = full_tax_iva;
         };
     });
 }
@@ -165,8 +153,7 @@ frappe.ui.form.on("Sales Invoice", "discount_amount", function(frm) {
 	discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
 	console.log("El IVA del descuento es:" + discount_amount_tax_value);
 	frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
-	console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
-	
+	console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);	
 });
 
 frappe.ui.form.on("Sales Invoice", "customer", function(frm) {
@@ -326,6 +313,15 @@ frappe.ui.form.on("Sales Invoice", "before_save", function(frm) {
         console.log("item contains: " + item);
         //Importante
         facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
+		tax_before_calc = frm.doc.facelec_total_iva;
+		console.log("El descuento total es:" + frm.doc.discount_amount);
+		console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
+		discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+		console.log("El neto sin iva del descuento es" + discount_amount_net_value);
+		discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+		console.log("El IVA del descuento es:" + discount_amount_tax_value);
+		frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
+		console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);			
     });
 });
 
