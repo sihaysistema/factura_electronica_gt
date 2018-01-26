@@ -28,9 +28,9 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 // Estimamos el valor del IVA para esta linea
                 //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (1 + (this_company_sales_tax_var / 100))).toFixed(2);
                 //frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-				frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
-				frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
-				// Sumatoria de todos los que tengan el check combustibles
+                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
+                // Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
                 $.each(frm.doc.items || [], function(i, d) {
                     // total_qty += flt(d.qty);
@@ -48,8 +48,8 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 // Estimamos el valor del IVA para esta linea
                 //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
                 //frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-				frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
-				frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
+                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
                 // Sumatoria de todos los que tengan el check bienes
                 total_goods = 0;
                 $.each(frm.doc.items || [], function(i, d) {
@@ -67,9 +67,9 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 // Estimamos el valor del IVA para esta linea
                 //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
                 //frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-				frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
-				frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
-				total_servi = 0;
+                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100))).toFixed(2);
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100)).toFixed(2);
+                total_servi = 0;
                 $.each(frm.doc.items || [], function(i, d) {
                     if (d.facelec_is_service == true) {
                         total_servi += flt(d.facelec_gt_tax_net_services_amt);
@@ -110,6 +110,39 @@ buscar_account = function(frm, cuenta_b) {
     });
     return estado;
 }
+
+// Funcion para validar el NIT
+function valNit(nit) {
+    var nd, add = 0;
+    if (nd = /^(\d+)\-?([\dk])$/i.exec(nit)) {
+        nd[2] = (nd[2].toLowerCase() == 'k') ? 10 : parseInt(nd[2]);
+        for (var i = 0; i < nd[1].length; i++) {
+            add += ((((i - nd[1].length) * -1) + 1) * nd[1][i]);
+        }
+        return ((11 - (add % 11)) % 11) == nd[2];
+    } else {
+        return false;
+    }
+}
+
+frappe.ui.form.on("Sales Invoice", "nit_face_customer", function(frm) {
+    //console.log('NIT de cliente ' + frm.doc.nit_face_customer);
+    // Validacion de NIT: Cuando se carga el NIT en el campo nit_face_customer, realiza la comprobacion
+    // En caso de que el NIT sea incorrecto, no le permitira guardar la factura. Se habilitara la opcion guardar
+    // Hasta que exista un nit valido o sea C/F (Consumidor FInal)
+    if (frm.doc.nit_face_customer === "C/F" || frm.doc.nit_face_customer === "c/f") {
+        frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
+    } else {
+        nit_validado = (valNit(frm.doc.nit_face_customer));
+        if (nit_validado === false) {
+            msgprint('NIT de cliente: <b>' + frm.doc.customer + '</b>, no es correcto. Si no tiene disponible el NIT modifiquelo a <b>C/F</b>');
+            frm.disable_save(); // Desactiva y Oculta el boton de guardar en Sales Invoice
+        }
+        if (nit_validado === true) {
+            frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
+        }
+    }
+});
 
 frappe.ui.form.on("Sales Invoice", "customer", function(frm) {
     this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
