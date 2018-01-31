@@ -1,3 +1,4 @@
+// Funcion para los calculos necesarios.
 facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
 
     refresh_field('items');
@@ -89,6 +90,7 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
     });
 }
 
+// Funcion para evitar realizar calculos con cuentas duplicadas
 buscar_account = function(frm, cuenta_b) {
     /* Funcionamiento: recibe como parametro frm, y cuenta_b, lo que hace es, buscar en todas las filas de taxes
        si existe ya una cuenta con el nombre de la cuenta recibida por parametro, en caso ya exista esa cuenta en
