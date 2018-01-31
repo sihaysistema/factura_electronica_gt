@@ -84,7 +84,7 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
             $.each(frm.doc.items || [], function(i, d) {
                 full_tax_iva += flt(d.facelec_sales_tax_for_this_row);
             });
-			frm.doc.facelec_total_iva = full_tax_iva;
+            frm.doc.facelec_total_iva = full_tax_iva;
         };
     });
 }
@@ -102,10 +102,6 @@ buscar_account = function(frm, cuenta_b) {
             console.log('Si Existe en el indice ' + i)
             estado = true
         }
-        /*if (d.account_head !== cuenta_b) {
-            console.log('No Existe en el indice ' + i)
-            estado = 'FAIL'
-        }*/
     });
     return estado;
 }
@@ -145,15 +141,15 @@ frappe.ui.form.on("Sales Invoice", "nit_face_customer", function(frm) {
 
 
 frappe.ui.form.on("Sales Invoice", "discount_amount", function(frm) {
-	tax_before_calc = frm.doc.facelec_total_iva;
-	console.log("El descuento total es:" + frm.doc.discount_amount);
-	console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
-	discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
-	console.log("El neto sin iva del descuento es" + discount_amount_net_value);
-	discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
-	console.log("El IVA del descuento es:" + discount_amount_tax_value);
-	frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
-	console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);	
+    tax_before_calc = frm.doc.facelec_total_iva;
+    console.log("El descuento total es:" + frm.doc.discount_amount);
+    console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
+    discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+    console.log("El neto sin iva del descuento es" + discount_amount_net_value);
+    discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+    console.log("El IVA del descuento es:" + discount_amount_tax_value);
+    frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
+    console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
 });
 
 frappe.ui.form.on("Sales Invoice", "customer", function(frm) {
@@ -173,13 +169,13 @@ frappe.ui.form.on("Sales Invoice Item", {
     items_add: function(frm, cdt, cdn) {
         // es-GT: Este disparador corre al agregar una nueva fila
         // en-US: This trigger runs when adding a new row.
-        console.log('Trigger add en tabla hija');
+        // console.log('Trigger add en tabla hija');
 
     },
     items_move: function(frm, cdt, cdn) {
         // es-GT: Este disparador corre al mover una nueva fila
         // en-US: This trigger runs when moving a new row.
-        console.log('Trigger move en tabla hija');
+        // console.log('Trigger move en tabla hija');
     },
     before_items_remove: function(frm, cdt, cdn) {
         //facelec_tax_calculation(frm, cdt, cdn);
@@ -196,7 +192,7 @@ frappe.ui.form.on("Sales Invoice Item", {
     items_remove: function(frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
-        console.log('Trigger remove en tabla hija');
+        // console.log('Trigger remove en tabla hija');
 
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
         fix_gt_tax_fuel = 0;
@@ -313,15 +309,15 @@ frappe.ui.form.on("Sales Invoice", "before_save", function(frm) {
         console.log("item contains: " + item);
         //Importante
         facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
-		tax_before_calc = frm.doc.facelec_total_iva;
-		console.log("El descuento total es:" + frm.doc.discount_amount);
-		console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
-		discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
-		console.log("El neto sin iva del descuento es" + discount_amount_net_value);
-		discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
-		console.log("El IVA del descuento es:" + discount_amount_tax_value);
-		frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
-		console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);			
+        tax_before_calc = frm.doc.facelec_total_iva;
+        console.log("El descuento total es:" + frm.doc.discount_amount);
+        console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
+        discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+        console.log("El neto sin iva del descuento es" + discount_amount_net_value);
+        discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+        console.log("El IVA del descuento es:" + discount_amount_tax_value);
+        frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
+        console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
     });
 });
 
@@ -347,7 +343,7 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
         // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
-            pdf_button();
+            pdf_button(frm.doc.cae_factura_electronica);
         } else {
             var nombre = 'Factura Electronica';
             frm.add_custom_button(__(nombre), function() {
@@ -364,63 +360,20 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
                         cur_frm.set_value("cae_factura_electronica", data.message);
                         if (frm.doc.cae_factura_electronica) {
                             cur_frm.clear_custom_buttons();
-                            pdf_button();
+                            pdf_button(frm.doc.cae_factura_electronica);
                         }
                     }
                 });
             }).addClass("btn-primary");
         }
     }
-    // Funcion para la obtencion del PDF, segun el documento generado.
-    function pdf_button() {
-        console.log('Se ejecuto la funcion demas');
-        frappe.call({
-            // Este metodo verifica, el modo de generacion de PDF para la factura electronica
-            // retornara 'Manul' o 'Automatico'
-            method: "factura_electronica.api.save_url_pdf",
-            callback: function(data) {
-                console.log(data.message);
-                if (data.message === 'Manual') {
-                    // Si en la configuracion se encuentra que la generacion de PDF debe ser manual
-                    // Se realizara lo siguiente
-                    //cur_frm.clear_custom_buttons();
-
-                    frm.add_custom_button(__("Obtener PDF"),
-                        function() {
-                            var cae_fac = frm.doc.cae_factura_electronica;
-                            var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
-                            //console.log(cae_fac)
-                            window.open(link_cae_pdf + cae_fac);
-                        }).addClass("btn-primary");
-                } else {
-                    // Si en la configuracion se encuentra que la generacion de PDF debe ser Automatico
-                    // Se realizara lo siguiente
-                    //console.log(data.message);
-                    /*var cae_fac = frm.doc.cae_factura_electronica;
-                    var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
-                    frappe.call({
-                        method: "factura_electronica.api.save_pdf_server",
-                        args: {
-                            file_url: link_cae_pdf + cae_fac,
-                            filename: frm.doc.name,
-                            dt: 'Sales Invoice',
-                            dn: frm.doc.name,
-                            folder: 'Home/Facturas Electronicas',
-                            is_private: 1
-                        }
-                    });*/
-
-                }
-            }
-        });
-    }
 
     // Funcion para la obtencion del PDF, segun el documento generado.
-    function pdf_button_NDE() {
+    function pdf_button(cae_documento) {
         //console.log('Se ejecuto la funcion demas');
         frappe.call({
             // Este metodo verifica, el modo de generacion de PDF para la factura electronica
-            // retornara 'Manul' o 'Automatico'
+            // retornara 'Manual' o 'Automatico' segun lo que encuentre en la configuracion de factura electronica
             method: "factura_electronica.api.save_url_pdf",
             callback: function(data) {
                 console.log(data.message);
@@ -428,13 +381,10 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
                     // Si en la configuracion se encuentra que la generacion de PDF debe ser manual
                     // Se realizara lo siguiente
                     //cur_frm.clear_custom_buttons();
-
                     frm.add_custom_button(__("Obtener PDF"),
                         function() {
-                            var cae_fac = frm.doc.cae_nota_de_debito;
-                            var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
                             //console.log(cae_fac)
-                            window.open(link_cae_pdf + cae_fac);
+                            window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
                         }).addClass("btn-primary");
                 } else {
                     // Si en la configuracion se encuentra que la generacion de PDF debe ser Automatico
@@ -467,7 +417,7 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
         // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
         if (frm.doc.cae_nota_de_credito) {
             cur_frm.clear_custom_buttons();
-            pdf_button();
+            pdf_button(frm.doc.cae_nota_de_credito);
         } else {
             frm.add_custom_button(__('Nota Credito'), function() {
                 frappe.call({
@@ -483,7 +433,7 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
                         cur_frm.set_value("cae_nota_de_credito", data.message);
                         if (frm.doc.cae_nota_de_credito) {
                             cur_frm.clear_custom_buttons();
-                            pdf_button();
+                            pdf_button(frm.doc.cae_nota_de_credito);
                         }
                     }
                 });
@@ -500,7 +450,7 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
             cur_frm.clear_custom_buttons('Factura Electronica');
             if (frm.doc.cae_nota_de_debito) {
                 cur_frm.clear_custom_buttons();
-                pdf_button_NDE();
+                pdf_button(frm.doc.cae_nota_de_debito);
             } else {
                 frm.add_custom_button(__('Nota Debito'), function() {
                     frappe.call({
@@ -515,7 +465,7 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
                             cur_frm.set_value("cae_nota_de_debito", data.message);
                             if (frm.doc.cae_nota_de_debito) {
                                 cur_frm.clear_custom_buttons();
-                                pdf_button_NDE();
+                                pdf_button(frm.doc.cae_nota_de_debito);
                             }
                         }
                     });
