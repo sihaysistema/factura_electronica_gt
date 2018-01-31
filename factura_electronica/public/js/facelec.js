@@ -476,3 +476,30 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
         }
     }
 });
+
+// Codigo Adaptado para Purchase Invoice (Factura de Compra) 
+
+frappe.ui.form.on("Purchase Invoice", {
+
+    refresh: function(frm, cdt, cdn) {
+        console.log('Exito Script In Purchase Invoice');
+    },
+    facelec_nit_fproveedor: function(frm, cdt, cdn) {
+        // Validacion de NIT: Cuando se carga el NIT en el campo facelec_nit_fproveedor, realiza la comprobacion
+        // En caso de que el NIT sea incorrecto, no le permitira guardar la factura. Se habilitara la opcion guardar
+        // Hasta que exista un nit valido o sea C/F (Consumidor FInal)
+        if (frm.doc.facelec_nit_fproveedor === "C/F" || frm.doc.facelec_nit_fproveedor === "c/f") {
+            frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
+        } else {
+            nit_validado = (valNit(frm.doc.facelec_nit_fproveedor));
+            if (nit_validado === false) {
+                msgprint('NIT de proveedor: <b>' + frm.doc.supplier + '</b>, no es correcto. Si no tiene disponible el NIT modifiquelo a <b>C/F</b>');
+                frm.disable_save(); // Desactiva y Oculta el boton de guardar en Sales Invoice
+            }
+            if (nit_validado === true) {
+                frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
+            }
+        }
+    }
+
+});
