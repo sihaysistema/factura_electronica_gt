@@ -540,4 +540,69 @@ frappe.ui.form.on("Purchase Invoice Item", {
     rate: function(frm, cdt, cdn) {
 
     }
-})
+});
+
+// Codigo Adaptado para Purchase Quotation (Cotizacion de Compra) 
+
+frappe.ui.form.on("Quotation", {
+
+    refresh: function(frm, cdt, cdn) {
+        console.log('Exito Script In Quotation');
+    },
+    facelec_qt_nit: function(frm, cdt, cdn) {
+        // Validacion de NIT: Cuando se carga el NIT en el campo facelec_qt_nit, realiza la comprobacion
+        // En caso de que el NIT sea incorrecto, no le permitira guardar la factura. Se habilitara la opcion guardar
+        // Hasta que exista un nit valido o sea C/F (Consumidor FInal)
+        if (frm.doc.facelec_qt_nit === "C/F" || frm.doc.facelec_qt_nit === "c/f") {
+            frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
+        } else {
+            nit_validado = (valNit(frm.doc.facelec_qt_nit));
+            if (nit_validado === false) {
+                msgprint('NIT de cliente: <b>' + frm.doc.customer + '</b>, no es correcto. Si no tiene disponible el NIT modifiquelo a <b>C/F</b>');
+                frm.disable_save(); // Desactiva y Oculta el boton de guardar en Sales Invoice
+            }
+            if (nit_validado === true) {
+                frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
+            }
+        }
+    },
+    discount_amount: function(frm, cdt, cdn) {
+
+    },
+    customer: function(frm, cdt, cdn) {
+
+    }
+});
+
+frappe.ui.form.on("Quotation Item", {
+    items_add: function(frm, cdt, cdn) {
+        console.log('Added item');
+    },
+    items_move: function(frm, cdt, cdn) {
+
+    },
+    before_items_remove: function(frm, cdt, cdn) {
+
+    },
+    items_remove: function(frm, cdt, cdn) {
+
+    },
+    item_code: function(frm, cdt, cdn) {
+
+    },
+    qty: function(frm, cdt, cdn) {
+
+    },
+    uom: function(frm, cdt, cdn) {
+
+    },
+    conversion_factor: function(frm, cdt, cdn) {
+
+    },
+    facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+
+    },
+    rate: function(frm, cdt, cdn) {
+
+    }
+});
