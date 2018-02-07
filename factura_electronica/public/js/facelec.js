@@ -109,36 +109,33 @@ buscar_account = function(frm, cuenta_b) {
 }
 
 // Funcion para validar el NIT
-function valNit(nit) {
-    var nd, add = 0;
-    if (nd = /^(\d+)\-?([\dk])$/i.exec(nit)) {
-        nd[2] = (nd[2].toLowerCase() == 'k') ? 10 : parseInt(nd[2]);
-        for (var i = 0; i < nd[1].length; i++) {
-            add += ((((i - nd[1].length) * -1) + 1) * nd[1][i]);
-        }
-        return ((11 - (add % 11)) % 11) == nd[2];
-    } else {
-        return false;
-    }
-}
-
-frappe.ui.form.on("Sales Invoice", "nit_face_customer", function(frm) {
-    //console.log('NIT de cliente ' + frm.doc.nit_face_customer);
-    // Validacion de NIT: Cuando se carga el NIT en el campo nit_face_customer, realiza la comprobacion
-    // En caso de que el NIT sea incorrecto, no le permitira guardar la factura. Se habilitara la opcion guardar
-    // Hasta que exista un nit valido o sea C/F (Consumidor FInal)
-    if (frm.doc.nit_face_customer === "C/F" || frm.doc.nit_face_customer === "c/f") {
+function valNit(nit, cus_supp, frm) { // cus_supp = customer or supplier
+    if (nit === "C/F" || nit === "c/f") {
         frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
     } else {
-        nit_validado = (valNit(frm.doc.nit_face_customer));
+        var nd, add = 0;
+        if (nd = /^(\d+)\-?([\dk])$/i.exec(nit)) {
+            nd[2] = (nd[2].toLowerCase() == 'k') ? 10 : parseInt(nd[2]);
+            for (var i = 0; i < nd[1].length; i++) {
+                add += ((((i - nd[1].length) * -1) + 1) * nd[1][i]);
+            }
+            nit_validado = ((11 - (add % 11)) % 11) == nd[2];
+        } else {
+            nit_validado = false;
+        }
+
         if (nit_validado === false) {
-            msgprint('NIT de cliente: <b>' + frm.doc.customer + '</b>, no es correcto. Si no tiene disponible el NIT modifiquelo a <b>C/F</b>');
+            msgprint('NIT de: <b>' + cus_supp + '</b>, no es correcto. Si no tiene disponible el NIT modifiquelo a <b>C/F</b>');
             frm.disable_save(); // Desactiva y Oculta el boton de guardar en Sales Invoice
         }
         if (nit_validado === true) {
             frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
         }
     }
+}
+
+frappe.ui.form.on("Sales Invoice", "nit_face_customer", function(frm) {
+    valNit(frm.doc.nit_face_customer, frm.doc.customer, frm)
 });
 
 
@@ -474,5 +471,209 @@ frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
                 }).addClass("btn-primary");
             }
         }
+    }
+});
+
+// Codigo Adaptado para Purchase Invoice (Factura de Compra) 
+
+frappe.ui.form.on("Purchase Invoice", {
+
+    refresh: function(frm, cdt, cdn) {
+        console.log('Exito Script In Purchase Invoice');
+    },
+    facelec_nit_fproveedor: function(frm, cdt, cdn) {
+        valNit(frm.doc.facelec_nit_fproveedor, frm.doc.supplier, frm);
+    },
+    discount_amount: function(frm, cdt, cdn) {
+
+    },
+    supplier: function(frm, cdt, cdn) {
+
+    }
+});
+
+frappe.ui.form.on("Purchase Invoice Item", {
+    items_add: function(frm, cdt, cdn) {
+
+    },
+    items_move: function(frm, cdt, cdn) {
+
+    },
+    before_items_remove: function(frm, cdt, cdn) {
+
+    },
+    items_remove: function(frm, cdt, cdn) {
+
+    },
+    item_code: function(frm, cdt, cdn) {
+
+    },
+    qty: function(frm, cdt, cdn) {
+
+    },
+    uom: function(frm, cdt, cdn) {
+
+    },
+    conversion_factor: function(frm, cdt, cdn) {
+
+    },
+    facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+
+    },
+    rate: function(frm, cdt, cdn) {
+
+    }
+});
+
+// Codigo Adaptado para Purchase Quotation (Cotizacion de Compra) 
+
+frappe.ui.form.on("Quotation", {
+
+    refresh: function(frm, cdt, cdn) {
+        console.log('Exito Script In Quotation');
+    },
+    facelec_qt_nit: function(frm, cdt, cdn) {
+        valNit(frm.doc.facelec_qt_nit, frm.doc.customer, frm);
+    },
+    discount_amount: function(frm, cdt, cdn) {
+
+    },
+    customer: function(frm, cdt, cdn) {
+
+    }
+});
+
+frappe.ui.form.on("Quotation Item", {
+    items_add: function(frm, cdt, cdn) {
+        console.log('Added item');
+    },
+    items_move: function(frm, cdt, cdn) {
+
+    },
+    before_items_remove: function(frm, cdt, cdn) {
+
+    },
+    items_remove: function(frm, cdt, cdn) {
+
+    },
+    item_code: function(frm, cdt, cdn) {
+
+    },
+    qty: function(frm, cdt, cdn) {
+
+    },
+    uom: function(frm, cdt, cdn) {
+
+    },
+    conversion_factor: function(frm, cdt, cdn) {
+
+    },
+    facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+
+    },
+    rate: function(frm, cdt, cdn) {
+
+    }
+});
+
+// Codigo Adaptado para Purchase Quotation (Cotizacion de Compra) 
+
+frappe.ui.form.on("Purchase Order", {
+
+    refresh: function(frm, cdt, cdn) {
+        console.log('Exito Script In Purchase Order');
+    },
+    facelec_po_nit: function(frm, cdt, cdn) {
+        valNit(frm.doc.facelec_po_nit, frm.doc.supplier, frm);
+    },
+    discount_amount: function(frm, cdt, cdn) {
+
+    },
+    supplier: function(frm, cdt, cdn) {
+
+    }
+});
+
+frappe.ui.form.on("Purchase Order Item", {
+    items_add: function(frm, cdt, cdn) {
+        console.log('Added item');
+    },
+    items_move: function(frm, cdt, cdn) {
+
+    },
+    before_items_remove: function(frm, cdt, cdn) {
+
+    },
+    items_remove: function(frm, cdt, cdn) {
+
+    },
+    item_code: function(frm, cdt, cdn) {
+
+    },
+    qty: function(frm, cdt, cdn) {
+
+    },
+    uom: function(frm, cdt, cdn) {
+
+    },
+    conversion_factor: function(frm, cdt, cdn) {
+
+    },
+    facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+
+    },
+    rate: function(frm, cdt, cdn) {
+
+    }
+});
+
+// Codigo Adaptado para Purchase Receipt (Recibo de Compra) 
+
+frappe.ui.form.on("Purchase Receipt", {
+
+    refresh: function(frm, cdt, cdn) {
+        console.log('Exito Script In Purchase Order');
+    },
+    facelec_po_nit: function(frm, cdt, cdn) {
+        valNit(frm.doc.facelec_po_nit, frm.doc.supplier, frm);
+    },
+    discount_amount: function(frm, cdt, cdn) {
+
+    },
+    supplier: function(frm, cdt, cdn) {
+
+    }
+});
+
+frappe.ui.form.on("Purchase Receipt Item", {
+    items_add: function(frm, cdt, cdn) {
+        console.log('Added item');
+    },
+    items_move: function(frm, cdt, cdn) {
+
+    },
+    before_items_remove: function(frm, cdt, cdn) {
+
+    },
+    items_remove: function(frm, cdt, cdn) {
+
+    },
+    item_code: function(frm, cdt, cdn) {
+
+    },
+    qty: function(frm, cdt, cdn) {
+
+    },
+    uom: function(frm, cdt, cdn) {
+
+    },
+    conversion_factor: function(frm, cdt, cdn) {
+
+    },
+    facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+
+    },
+    rate: function(frm, cdt, cdn) {
+
     }
 });
