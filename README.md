@@ -1,11 +1,11 @@
-**es-GT:**
+**es-GT: **
 ## App Factura Electronica
 
 Aplicacion para la generacion de facturas electronicas en Guatemala, basado en el modulo de Cuentas y Almacén de ERPNext y el DocType de Factura de Ventas.
 
 Requiere de un servicio contratado por separado para conectar a su API.
 
-**en-US:**
+**en-US: **
 ## Electronic Invoice App
 Electronic invoice generator for Guatemala, based on the Accounts and Stock modules, plus the Sales Invoice DocType.
 
@@ -42,3 +42,5 @@ LGPL V3
 # factura_electronica_gt
 
 Electronic Invoice support for Guatemala - Factura Electronica de Guatemala
+
+
