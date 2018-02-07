@@ -626,3 +626,54 @@ frappe.ui.form.on("Purchase Order Item", {
 
     }
 });
+
+// Codigo Adaptado para Purchase Receipt (Recibo de Compra) 
+
+frappe.ui.form.on("Purchase Receipt", {
+
+    refresh: function(frm, cdt, cdn) {
+        console.log('Exito Script In Purchase Order');
+    },
+    facelec_po_nit: function(frm, cdt, cdn) {
+        valNit(frm.doc.facelec_po_nit, frm.doc.supplier, frm);
+    },
+    discount_amount: function(frm, cdt, cdn) {
+
+    },
+    supplier: function(frm, cdt, cdn) {
+
+    }
+});
+
+frappe.ui.form.on("Purchase Receipt Item", {
+    items_add: function(frm, cdt, cdn) {
+        console.log('Added item');
+    },
+    items_move: function(frm, cdt, cdn) {
+
+    },
+    before_items_remove: function(frm, cdt, cdn) {
+
+    },
+    items_remove: function(frm, cdt, cdn) {
+
+    },
+    item_code: function(frm, cdt, cdn) {
+
+    },
+    qty: function(frm, cdt, cdn) {
+
+    },
+    uom: function(frm, cdt, cdn) {
+
+    },
+    conversion_factor: function(frm, cdt, cdn) {
+
+    },
+    facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+
+    },
+    rate: function(frm, cdt, cdn) {
+
+    }
+});
