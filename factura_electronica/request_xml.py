@@ -35,7 +35,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 			direccionComercialCompradorTag_Value = str((datos_cliente[0]['address_line1']).encode('utf-8'))
 
 		if (str(nit_cliente[0][0]) == 'C/F' or str(nit_cliente[0][0]) == 'c/f'):
-			nombreComercialCompradorTag_Value = 'Consumidor Final'
+			nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
 		else:    		
 			nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
 
