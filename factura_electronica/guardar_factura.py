@@ -8,7 +8,7 @@ import os
 # es-GT: Resuelve el problema de codificacion
 # en-US: Solve the coding problem
 import sys
-reload(sys)  
+reload(sys)
 #sys.setdefaultencoding('Cp1252')
 sys.setdefaultencoding('utf-8')
 
@@ -18,7 +18,7 @@ sys.setdefaultencoding('utf-8')
 # en-US: Saves the data received from infile in the 'Electronic Invoices' Table.
 # en-US: For every succesfully generated electronic invoice, a record is added to keep as confirmation.
 def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
-    	'''Guarda los datos recibidos de infile en la tabla Envios Facturas Electronicas de la base de datos ERPNext'''
+    '''Guarda los datos recibidos de infile en la tabla Envios Facturas Electronicas de la base de datos ERPNext'''
 	try:
 		# es-GT: documento: con la libreria xmltodict, se convierte de XML a Diccionario, para acceder a los datos atraves de sus llaves.
         # es-GT: Se asigna a la variable 'documento'
@@ -29,7 +29,7 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 
 		# es-GT: Crea un nuevo record de Envios Facturas Electronica en la base de datos.
 		# en-US: Creates a new Electronic Invoice Sent record in the database
-		tabFacturaElectronica = frappe.new_doc("Envios Facturas Electronicas") 
+		tabFacturaElectronica = frappe.new_doc("Envios Facturas Electronicas")
 
 		# es-GT: Obtiene y Guarda la serie de factura.
 		# en-US: Obtains and Saves the invoice series.
@@ -43,11 +43,11 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 		# es-GT: Obtiene y Guarda el Numero de Documento que quedo registrada ante el Generador de Factura Electronica y la SAT
 		# en-US: Obtains and Saves the Document Number that was registered with the Electronic Invoice Generator and SAT
 		tabFacturaElectronica.numero_documento = str(documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['numeroDocumento'])
-		
+
 		# es-GT: Obtiene y Guarda el Estado según GFACE (GFACE = Generador de Factura Electronica)
 		# en-US: Obtains and Saves the current State of the document as per GFACE (Electronic Invoice Generator)
 		tabFacturaElectronica.estado = str(documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['estado'])
-		
+
 		# es-GT: Obtiene y Guarda las Anotaciones segun GFACE
 		# en-US: Obtains and Saves the Annotations as per GFACE
 		tabFacturaElectronica.anotaciones = str(documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['anotaciones'])
@@ -59,33 +59,33 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 		# es-GT: Obtiene y Guarda la Validez del documento
 		# en-US: Obtains and Saves the Validity state of the document
 		tabFacturaElectronica.valido = str(documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['valido'])
-		
+
 		# es-GT: Obtiene y Guarda el Numero DTE
 		# en-US: Obtains and Saves the DTE Number
 		tabFacturaElectronica.numero_dte = str(documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['numeroDte'])
-		
+
 		# es-GT: Obtiene y Guarda el Rango Final Autorizado
 		# en-US: Obtains and Saves the Authorized Final Range
 		tabFacturaElectronica.rango_final_autorizado = str(documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['rangoFinalAutorizado'])
-		
+
 		# es-GT: Obtiene y Guarda el Rango Inicial Autorizado
 		# en-US: Obtains and Saves the Initial Authorized Range
 		tabFacturaElectronica.rango_inicial_autorizado = str(documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['rangoInicialAutorizado'])
-		
+
 		# es-GT: Obtiene y Guarda el Regimen de impuestos
 		# en-US: Obtains and Saves the Legal Tax Structure, aka 'Regimen'
 		tabFacturaElectronica.regimen = str(documento['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['regimen'])
-		
+
 		# es-GT: Obtiene y Guarda el tiempo en que se recibieron los datos de INFILE
 		# en-US: Obtains and Saves the timestamp of data reception from INFILE
 		tabFacturaElectronica.recibido = datetime.now()
-		
+
 		# es-GT: Obtiene y Guarda el tiempo en que se enviaron los datos a INFILE
         # es-GT: Estos datos de tiempo se obtienen para poder monitorear el tiempo de transacción
 		# en-US: Obtains and Saves the timestamp the data was sent to INFILE
         # en-US: These timestamps are obtained to keep track of transaction time
 		tabFacturaElectronica.enviado = tiempo_envio
-		
+
 		# es-GT: Guarda todos los datos en la tabla llamada 'FACTURAS ELECTRONICAS' de la base de datos de ERPNext
 		# en-US: Saves all the data in the table called 'ELECTRONIC INVOICES' of the ERPNext database
 		tabFacturaElectronica.save()

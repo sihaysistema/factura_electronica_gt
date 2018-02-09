@@ -4,10 +4,10 @@ import frappe
 from frappe import _
 import os
 import sys
-reload(sys)  
+reload(sys)
 sys.setdefaultencoding('utf-8')
 
-def encuentra_errores(cadena):    
+def encuentra_errores(cadena):
     """Reemplazo múltiple de cadenas, para finalmente retornarlo como diccionario
        y acceder a la descripcion de cada error."""
     try:
