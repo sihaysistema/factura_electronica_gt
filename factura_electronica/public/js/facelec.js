@@ -678,7 +678,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
     }
 });
 
-// Codigo Adaptado para Purchase Receipt (Recibo de Compra) 
+// Codigo Adaptado para Sales Order (Orden de Venta) 
 
 frappe.ui.form.on("Sales Order", {
 
@@ -697,6 +697,57 @@ frappe.ui.form.on("Sales Order", {
 });
 
 frappe.ui.form.on("Sales Order Item", {
+    items_add: function(frm, cdt, cdn) {
+        console.log('Added item');
+    },
+    items_move: function(frm, cdt, cdn) {
+
+    },
+    before_items_remove: function(frm, cdt, cdn) {
+
+    },
+    items_remove: function(frm, cdt, cdn) {
+
+    },
+    item_code: function(frm, cdt, cdn) {
+
+    },
+    qty: function(frm, cdt, cdn) {
+
+    },
+    uom: function(frm, cdt, cdn) {
+
+    },
+    conversion_factor: function(frm, cdt, cdn) {
+
+    },
+    facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+
+    },
+    rate: function(frm, cdt, cdn) {
+
+    }
+});
+
+// Codigo Adaptado para Delivery Note (Nota de entrega) 
+
+frappe.ui.form.on("Delivery Note", {
+
+    refresh: function(frm, cdt, cdn) {
+        console.log('Exito Script In Delivery Note');
+    },
+    facelec_po_nit: function(frm, cdt, cdn) {
+        valNit(frm.doc.shs_dn_nit, frm.doc.customer, frm);
+    },
+    discount_amount: function(frm, cdt, cdn) {
+
+    },
+    customer: function(frm, cdt, cdn) {
+
+    }
+});
+
+frappe.ui.form.on("Delivery Note Item", {
     items_add: function(frm, cdt, cdn) {
         console.log('Added item');
     },
