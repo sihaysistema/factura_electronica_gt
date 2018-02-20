@@ -71,8 +71,9 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 // Estimamos el valor del IVA para esta linea
                 //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
                 //frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-                frm.doc.items[index].facelec_gt_tax_net_service_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_service_amt * (this_company_sales_tax_var / 100));
+                frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
+
                 total_servi = 0;
                 $.each(frm.doc.items || [], function(i, d) {
                     if (d.facelec_is_service == true) {
@@ -137,60 +138,211 @@ function valNit(nit, cus_supp, frm) { // cus_supp = customer or supplier
     }
 }
 
-frappe.ui.form.on("Sales Invoice", "nit_face_customer", function(frm) {
-    valNit(frm.doc.nit_face_customer, frm.doc.customer, frm)
-});
+frappe.ui.form.on("Sales Invoice", {
+    refresh: function(frm, cdt, cdn) {
+        // Trigger refresh de pagina
+        console.log('Exito Script In Sales Invoice');
+        // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
+        // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
+        cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
 
+        // WORKS OK!
+        frm.add_custom_button("UOM Recalculation", function() {
+            frm.doc.items.forEach((item) => {
+                // for each button press each line is being processed.
+                console.log("item contains: " + item);
+                //Importante
+                facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
+            });
+        });
 
-frappe.ui.form.on("Sales Invoice", "discount_amount", function(frm) {
-    tax_before_calc = frm.doc.facelec_total_iva;
-    console.log("El descuento total es:" + frm.doc.discount_amount);
-    console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
-    discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
-    console.log("El neto sin iva del descuento es" + discount_amount_net_value);
-    discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
-    console.log("El IVA del descuento es:" + discount_amount_tax_value);
-    frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
-    console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
-});
+        // Codigo para Factura Electronica FACE, CFACE
+        // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
+        if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+            // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
+            // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+            if (frm.doc.cae_factura_electronica) {
+                cur_frm.clear_custom_buttons();
+                pdf_button(frm.doc.cae_factura_electronica);
+            } else {
+                var nombre = 'Factura Electronica';
+                frm.add_custom_button(__(nombre), function() {
+                    frappe.call({
+                        method: "factura_electronica.api.generar_factura_electronica",
+                        args: {
+                            serie_factura: frm.doc.name,
+                            nombre_cliente: frm.doc.customer
+                        },
+                        // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                        callback: function(data) {
+                            // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                            // 'cae_factura_electronica' para ser mostrado del lado del cliente y luego guardado en la DB
+                            cur_frm.set_value("cae_factura_electronica", data.message);
+                            if (frm.doc.cae_factura_electronica) {
+                                cur_frm.clear_custom_buttons();
+                                pdf_button(frm.doc.cae_factura_electronica);
+                            }
+                        }
+                    });
+                }).addClass("btn-primary");
+            }
+        }
 
-frappe.ui.form.on("Sales Invoice", "customer", function(frm) {
-    this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
-    console.log('Corrio customer trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
-    // facelec_tax_calculation_conversion(); // Provoca que no se cargue la fecha ni la cuenta
+        // Funcion para la obtencion del PDF, segun el documento generado.
+        function pdf_button(cae_documento) {
+            //console.log('Se ejecuto la funcion demas');
+            frappe.call({
+                // Este metodo verifica, el modo de generacion de PDF para la factura electronica
+                // retornara 'Manual' o 'Automatico' segun lo que encuentre en la configuracion de factura electronica
+                method: "factura_electronica.api.save_url_pdf",
+                callback: function(data) {
+                    console.log(data.message);
+                    if (data.message === 'Manual') {
+                        // Si en la configuracion se encuentra que la generacion de PDF debe ser manual
+                        // Se realizara lo siguiente
+                        //cur_frm.clear_custom_buttons();
+                        frm.add_custom_button(__("Obtener PDF"),
+                            function() {
+                                //console.log(cae_fac)
+                                window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
+                            }).addClass("btn-primary");
+                    } else {
+                        // Si en la configuracion se encuentra que la generacion de PDF debe ser Automatico
+                        // Se realizara lo siguiente
+                        //console.log(data.message);
+                        /*var cae_fac = frm.doc.cae_factura_electronica;
+                        var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
+                        frappe.call({
+                            method: "factura_electronica.api.save_pdf_server",
+                            args: {
+                                file_url: link_cae_pdf + cae_fac,
+                                filename: frm.doc.name,
+                                dt: 'Sales Invoice',
+                                dn: frm.doc.name,
+                                folder: 'Home/Facturas Electronicas',
+                                is_private: 1
+                            }
+                        });*/
+
+                    }
+                }
+            });
+        }
+
+        // Codigo para Notas de Credito NCE
+        // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
+        if (frm.doc.status === "Return") {
+            //var nombre = 'Nota Credito';
+            // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
+            // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+            if (frm.doc.cae_nota_de_credito) {
+                cur_frm.clear_custom_buttons();
+                pdf_button(frm.doc.cae_nota_de_credito);
+            } else {
+                frm.add_custom_button(__('Nota Credito'), function() {
+                    frappe.call({
+                        method: "factura_electronica.api.generar_factura_electronica",
+                        args: {
+                            serie_factura: frm.doc.name,
+                            nombre_cliente: frm.doc.customer
+                        },
+                        // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                        callback: function(data) {
+                            // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                            // 'cae_nota_de_credito' para ser mostrado del lado del cliente y luego guardado en la DB
+                            cur_frm.set_value("cae_nota_de_credito", data.message);
+                            if (frm.doc.cae_nota_de_credito) {
+                                cur_frm.clear_custom_buttons();
+                                pdf_button(frm.doc.cae_nota_de_credito);
+                            }
+                        }
+                    });
+                }).addClass("btn-primary");
+            }
+        }
+
+        // Codigo para notas de debito
+        // Codigo para Notas de Credito NDE
+        if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+
+            //var nombre = 'Nota Debito';
+            if (frm.doc.es_nota_de_debito == 1) {
+                cur_frm.clear_custom_buttons('Factura Electronica');
+                if (frm.doc.cae_nota_de_debito) {
+                    cur_frm.clear_custom_buttons();
+                    pdf_button(frm.doc.cae_nota_de_debito);
+                } else {
+                    frm.add_custom_button(__('Nota Debito'), function() {
+                        frappe.call({
+                            method: "factura_electronica.api.generar_factura_electronica",
+                            args: {
+                                serie_factura: frm.doc.name,
+                                nombre_cliente: frm.doc.customer
+                            },
+                            // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                            callback: function(data) {
+
+                                cur_frm.set_value("cae_nota_de_debito", data.message);
+                                if (frm.doc.cae_nota_de_debito) {
+                                    cur_frm.clear_custom_buttons();
+                                    pdf_button(frm.doc.cae_nota_de_debito);
+                                }
+                            }
+                        });
+                    }).addClass("btn-primary");
+                }
+            }
+        }
+    },
+    nit_face_customer: function(frm, cdt, cdn) {
+        // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
+        valNit(frm.doc.nit_face_customer, frm.doc.customer, frm)
+    },
+    discount_amount: function(frm, cdt, cdn) {
+        // Trigger Monto de descuento
+        tax_before_calc = frm.doc.facelec_total_iva;
+        console.log("El descuento total es:" + frm.doc.discount_amount);
+        console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
+        discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+        console.log("El neto sin iva del descuento es" + discount_amount_net_value);
+        discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+        console.log("El IVA del descuento es:" + discount_amount_tax_value);
+        frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
+        console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
+    },
+    customer: function(frm, cdt, cdn) {
+        // Trigger Proveedor
+        this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+        console.log('Corrio customer trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
+    },
+    before_save: function(frm, cdt, cdn) {
+        // Trigger antes de guardar
+        frm.doc.items.forEach((item) => {
+            // for each button press each line is being processed.
+            console.log("item contains: " + item);
+            //Importante
+            facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
+            tax_before_calc = frm.doc.facelec_total_iva;
+            console.log("El descuento total es:" + frm.doc.discount_amount);
+            console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
+            discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+            console.log("El neto sin iva del descuento es" + discount_amount_net_value);
+            discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+            console.log("El IVA del descuento es:" + discount_amount_tax_value);
+            frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
+            console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
+        });
+    },
+    onload: function(frm, cdt, cdn) {
+        // console.log('Funcionando Onload Trigger'); SI FUNCIONA EL TRIGGER
+        // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
+    },
 });
-/*
-frappe.ui.form.on("Sales Invoice Item", "uom", function(frm, cdt, cdn) {
-		this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
-		console.log('Corrio trigger en funcion externa para campo UOM ');
-		facelec_tax_calculation_conversion(frm, cdt, cdn);
-});*/
 
 frappe.ui.form.on("Sales Invoice Item", {
-
-    items_add: function(frm, cdt, cdn) {
-        // es-GT: Este disparador corre al agregar una nueva fila
-        // en-US: This trigger runs when adding a new row.
-        // console.log('Trigger add en tabla hija');
-
-    },
-    items_move: function(frm, cdt, cdn) {
-        // es-GT: Este disparador corre al mover una nueva fila
-        // en-US: This trigger runs when moving a new row.
-        // console.log('Trigger move en tabla hija');
-    },
-    before_items_remove: function(frm, cdt, cdn) {
-        //facelec_tax_calculation(frm, cdt, cdn);
-        // Este trigger no funciona en la tabla hija, buscar funcionamiento correcto!
-        /*
-        fix_prueba = 0;
-        $.each(frm.doc.items || [], function(i, d) {
-            fix_prueba += flt(d.facelec_gt_tax_net_fuel_amt);
-        });
-        console.log("Recalculo en before remove row" + fix_prueba);
-        frm.doc.facelec_gt_tax_fuel = fix_prueba;
-        */
-    },
+    items_add: function(frm, cdt, cdn) {},
+    items_move: function(frm, cdt, cdn) {},
+    before_items_remove: function(frm, cdt, cdn) {},
     items_remove: function(frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -217,16 +369,12 @@ frappe.ui.form.on("Sales Invoice Item", {
         cur_frm.set_value("facelec_total_iva", fix_gt_tax_iva);
     },
     item_code: function(frm, cdt, cdn) {
-        //console.log("item_code was triggered");
-        // FIXME :  Obtener el valor del IVA desde la base datos.
-        //this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
-        //console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
-        //cur_frm.add_fetch("Item", "three_digit_uom", "three_digit_uom");
-        //facelec_tax_calculation_conversion(frm, cdt, cdn);
-        // IVA se carga aqui, para aquellas facturas que ya tengan articulos y no se les vaya a agregar.  (aunque puede cargarse justo a tiempo en la funcion, lo cargamos aqui por redundancia y seguridad.)
+
+        // Trigger codigo de producto
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
+
     },
     qty: function(frm, cdt, cdn) {
         //facelec_tax_calculation(frm, cdt, cdn);
@@ -235,46 +383,25 @@ frappe.ui.form.on("Sales Invoice Item", {
         console.log("cdn contains: " + cdn);
     },
     uom: function(frm, cdt, cdn) {
+        // Trigger UOM
         console.log("The unit of measure field was changed and the code from the trigger was run");
-        // agarras el valor del precio o rate existente hasta este momento.
-        // lo multiplicas por el factor de conversion
-        //facelec_tax_calculation_conversion(frm, cdt, cdn);
-        //facelec_tax_calculation(frm, cdt, cdn);
     },
     conversion_factor: function(frm, cdt, cdn) {
+        // Trigger factor de conversion
         console.log("El disparador de factor de conversión se corrió.");
         facelec_tax_calculation_conversion(frm, cdt, cdn);
-        //facelec_tax_calculation(frm, cdt, cdn);
     },
     facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
-
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
-
         frm.doc.items.forEach((item_row_i, index_i) => {
             if (item_row_i.name == cdn) {
-                // Forma 1: Para agregar filas
-                // var tabla_hija = cur_frm.add_child('taxes');
-
-                // Forma 2: Para agregar filas
-                //frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes")
-
                 var cuenta = item_row_i.facelec_tax_rate_per_uom_account;
-                //console.log(item_row_i.facelec_tax_rate_per_uom_account);
-                //xx = (frappe.db.get_value("Account", { "name": cuenta }, "account_number", "tax_rate"));
-                //console.log(xx["account_number"])
-
-                // Si el valor del campo cuenta es null realizara lo siguiente
                 if (cuenta !== null) {
-                    // Si la funcion resulta ser true significa que la cuenta ya existe y ya ha sido agregada anteriormente
                     if (buscar_account(frm, cuenta)) {
                         console.log('La cuenta ya existe');
                     } else {
-                        // En caso no exista la cuenta se agregara una nueva fila con los datos correspondientes
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
-                        // Agrega una nueva fila en la tabla taxes con campos vacios
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
-                        // Se posiciona en el indice correcto de la fila anteriormente agregada para asignar
-                        // los valores correspondientes correctamente
                         frm.doc.taxes.forEach((item_row, index) => {
                             if (item_row.account_head == undefined) {
                                 frappe.call({
@@ -297,186 +424,13 @@ frappe.ui.form.on("Sales Invoice Item", {
                         });
                     }
                 } else {
-                    console.log('El producto seleccionado no tiene una cuenta asociada')
+                    console.log('El producto seleccionado no tiene una cuenta asociada');
                 }
             }
         });
-
     },
     rate: function(frm, cdt, cdn) {
         facelec_tax_calculation(frm, cdt, cdn);
-    }
-});
-
-frappe.ui.form.on("Sales Invoice", "before_save", function(frm) {
-    frm.doc.items.forEach((item) => {
-        // for each button press each line is being processed.
-        console.log("item contains: " + item);
-        //Importante
-        facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
-        tax_before_calc = frm.doc.facelec_total_iva;
-        console.log("El descuento total es:" + frm.doc.discount_amount);
-        console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
-        discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
-        console.log("El neto sin iva del descuento es" + discount_amount_net_value);
-        discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
-        console.log("El IVA del descuento es:" + discount_amount_tax_value);
-        frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
-        console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
-    });
-});
-
-frappe.ui.form.on("Sales Invoice", "refresh", function(frm) {
-    // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
-    // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
-    cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
-
-    // WORKS OK!
-    frm.add_custom_button("UOM Recalculation", function() {
-        frm.doc.items.forEach((item) => {
-            // for each button press each line is being processed.
-            console.log("item contains: " + item);
-            //Importante
-            facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
-        });
-    });
-
-    // Codigo para Factura Electronica FACE, CFACE
-    // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
-    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
-        // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
-        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
-        if (frm.doc.cae_factura_electronica) {
-            cur_frm.clear_custom_buttons();
-            pdf_button(frm.doc.cae_factura_electronica);
-        } else {
-            var nombre = 'Factura Electronica';
-            frm.add_custom_button(__(nombre), function() {
-                frappe.call({
-                    method: "factura_electronica.api.generar_factura_electronica",
-                    args: {
-                        serie_factura: frm.doc.name,
-                        nombre_cliente: frm.doc.customer
-                    },
-                    // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                    callback: function(data) {
-                        // Asignacion del valor retornado por el script python del lado del servidor en el campo
-                        // 'cae_factura_electronica' para ser mostrado del lado del cliente y luego guardado en la DB
-                        cur_frm.set_value("cae_factura_electronica", data.message);
-                        if (frm.doc.cae_factura_electronica) {
-                            cur_frm.clear_custom_buttons();
-                            pdf_button(frm.doc.cae_factura_electronica);
-                        }
-                    }
-                });
-            }).addClass("btn-primary");
-        }
-    }
-
-    // Funcion para la obtencion del PDF, segun el documento generado.
-    function pdf_button(cae_documento) {
-        //console.log('Se ejecuto la funcion demas');
-        frappe.call({
-            // Este metodo verifica, el modo de generacion de PDF para la factura electronica
-            // retornara 'Manual' o 'Automatico' segun lo que encuentre en la configuracion de factura electronica
-            method: "factura_electronica.api.save_url_pdf",
-            callback: function(data) {
-                console.log(data.message);
-                if (data.message === 'Manual') {
-                    // Si en la configuracion se encuentra que la generacion de PDF debe ser manual
-                    // Se realizara lo siguiente
-                    //cur_frm.clear_custom_buttons();
-                    frm.add_custom_button(__("Obtener PDF"),
-                        function() {
-                            //console.log(cae_fac)
-                            window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
-                        }).addClass("btn-primary");
-                } else {
-                    // Si en la configuracion se encuentra que la generacion de PDF debe ser Automatico
-                    // Se realizara lo siguiente
-                    //console.log(data.message);
-                    /*var cae_fac = frm.doc.cae_factura_electronica;
-                    var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
-                    frappe.call({
-                        method: "factura_electronica.api.save_pdf_server",
-                        args: {
-                            file_url: link_cae_pdf + cae_fac,
-                            filename: frm.doc.name,
-                            dt: 'Sales Invoice',
-                            dn: frm.doc.name,
-                            folder: 'Home/Facturas Electronicas',
-                            is_private: 1
-                        }
-                    });*/
-
-                }
-            }
-        });
-    }
-
-    // Codigo para Notas de Credito NCE
-    // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
-    if (frm.doc.status === "Return") {
-        //var nombre = 'Nota Credito';
-        // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
-        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
-        if (frm.doc.cae_nota_de_credito) {
-            cur_frm.clear_custom_buttons();
-            pdf_button(frm.doc.cae_nota_de_credito);
-        } else {
-            frm.add_custom_button(__('Nota Credito'), function() {
-                frappe.call({
-                    method: "factura_electronica.api.generar_factura_electronica",
-                    args: {
-                        serie_factura: frm.doc.name,
-                        nombre_cliente: frm.doc.customer
-                    },
-                    // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                    callback: function(data) {
-                        // Asignacion del valor retornado por el script python del lado del servidor en el campo
-                        // 'cae_nota_de_credito' para ser mostrado del lado del cliente y luego guardado en la DB
-                        cur_frm.set_value("cae_nota_de_credito", data.message);
-                        if (frm.doc.cae_nota_de_credito) {
-                            cur_frm.clear_custom_buttons();
-                            pdf_button(frm.doc.cae_nota_de_credito);
-                        }
-                    }
-                });
-            }).addClass("btn-primary");
-        }
-    }
-
-    // Codigo para notas de debito
-    // Codigo para Notas de Credito NDE
-    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
-
-        //var nombre = 'Nota Debito';
-        if (frm.doc.es_nota_de_debito == 1) {
-            cur_frm.clear_custom_buttons('Factura Electronica');
-            if (frm.doc.cae_nota_de_debito) {
-                cur_frm.clear_custom_buttons();
-                pdf_button(frm.doc.cae_nota_de_debito);
-            } else {
-                frm.add_custom_button(__('Nota Debito'), function() {
-                    frappe.call({
-                        method: "factura_electronica.api.generar_factura_electronica",
-                        args: {
-                            serie_factura: frm.doc.name,
-                            nombre_cliente: frm.doc.customer
-                        },
-                        // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                        callback: function(data) {
-
-                            cur_frm.set_value("cae_nota_de_debito", data.message);
-                            if (frm.doc.cae_nota_de_debito) {
-                                cur_frm.clear_custom_buttons();
-                                pdf_button(frm.doc.cae_nota_de_debito);
-                            }
-                        }
-                    });
-                }).addClass("btn-primary");
-            }
-        }
     }
 });
 
@@ -1886,7 +1840,7 @@ frappe.ui.form.on("Supplier Quotation", {
             // for each button press each line is being processed.
             console.log("item contains: " + item);
             //Importante
-            shs_delivery_note_calculation(frm, "Supplier Quotation Item", item.name);
+            shs_supplier_quotation_calculation(frm, "Supplier Quotation Item", item.name);
             tax_before_calc = frm.doc.shs_spq_total_iva;
             console.log("El descuento total es:" + frm.doc.discount_amount);
             console.log("El IVA calculado anteriormente:" + frm.doc.shs_spq_total_iva);
@@ -1897,6 +1851,10 @@ frappe.ui.form.on("Supplier Quotation", {
             frm.doc.shs_spq_total_iva = (frm.doc.shs_spq_total_iva - discount_amount_tax_value);
             console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.shs_spq_total_iva);
         });
+    },
+    onload: function(frm, cdt, cdn) {
+        // console.log('Funcionando Onload Trigger'); SI FUNCIONA EL TRIGGER
+        // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
     },
 });
 
@@ -1926,10 +1884,12 @@ frappe.ui.form.on("Supplier Quotation Item", {
         cur_frm.set_value("shs_spq_total_iva", fix_gt_tax_iva);
     },
     item_code: function(frm, cdt, cdn) {
+
         // Trigger codigo de producto
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
+
     },
     qty: function(frm, cdt, cdn) {
         // Trigger cantidad
