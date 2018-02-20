@@ -1,14 +1,16 @@
 // Funcion para los calculos necesarios.
 facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
-
+    // es-GT: Actualiza los datos en los campos de la tabla hija 'items'
     refresh_field('items');
 
+    // es-GT: Se asigna a la variable el valor que encuentre en la fila 0 de la tabla hija taxes
     this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
 
     console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
 
     var this_row_qty, this_row_rate, this_row_amount, this_row_conversion_factor, this_row_stock_qty, this_row_tax_rate, this_row_tax_amount, this_row_taxable_amount;
 
+    // es-GT: Esta funcion permite trabajar linea por linea de la tabla hija items
     frm.doc.items.forEach((item_row, index) => {
         if (item_row.name == cdn) {
             this_row_amount = (item_row.qty * item_row.rate);
@@ -23,6 +25,8 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
             console.log("uom that just changed is: " + item_row.uom);
             console.log("stock qty is: " + item_row.stock_qty); // se queda con el numero anterior.  multiplicar por conversion factor (si existiera!)
             console.log("conversion_factor is: " + item_row.conversion_factor);
+
+            // Verificacion Individual para verificar si es Fuel, Good o Service
             if (item_row.factelecis_fuel == 1) {
                 //console.log("The item you added is FUEL!" + item_row.facelec_is_good);// WORKS OK!
                 // Estimamos el valor del IVA para esta linea
@@ -259,10 +263,13 @@ frappe.ui.form.on("Sales Invoice Item", {
                 //xx = (frappe.db.get_value("Account", { "name": cuenta }, "account_number", "tax_rate"));
                 //console.log(xx["account_number"])
 
+                // Si el valor del campo cuenta es null realizara lo siguiente
                 if (cuenta !== null) {
+                    // Si la funcion resulta ser true significa que la cuenta ya existe y ya ha sido agregada anteriormente
                     if (buscar_account(frm, cuenta)) {
                         console.log('La cuenta ya existe');
                     } else {
+                        // En caso no exista la cuenta se agregara una nueva fila con los datos correspondientes
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         // Agrega una nueva fila en la tabla taxes con campos vacios
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -906,13 +913,13 @@ frappe.ui.form.on("Quotation Item", {
 // Codigo Adaptado para Purchase Order (Orden de compra)
 // Funcion para calculo de impuestos
 shs_purchase_order_calculation = function(frm, cdt, cdn) {
-
+    // es-GT: Actualiza los campos de la tabla hija 'items'
     refresh_field('items');
-
+    // es-GT: Asigna a la variable el valor rate de la tabla hija 'taxes' en la posicion 0
     this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
 
     var this_row_qty, this_row_rate, this_row_amount, this_row_conversion_factor, this_row_stock_qty, this_row_tax_rate, this_row_tax_amount, this_row_taxable_amount;
-
+    // es-GT: Funcion que permite realizar los calculos necesarios dependiendo de la linea en la que se este trabajando
     frm.doc.items.forEach((item_row, index) => {
         if (item_row.name == cdn) {
             this_row_amount = (item_row.qty * item_row.rate);
@@ -927,6 +934,7 @@ shs_purchase_order_calculation = function(frm, cdt, cdn) {
             console.log("uom that just changed is: " + item_row.uom);
             console.log("stock qty is: " + item_row.stock_qty); // se queda con el numero anterior.  multiplicar por conversion factor (si existiera!)
             console.log("conversion_factor is: " + item_row.conversion_factor);
+            // es-GT: Verificacion de si esta seleccionado el check Combustible
             if (item_row.facelec_po_is_fuel == 1) {
                 frm.doc.items[index].facelec_po_gt_tax_net_fuel_amt = (item_row.facelec_po_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_po_sales_tax_for_this_row = (item_row.facelec_po_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
@@ -941,6 +949,7 @@ shs_purchase_order_calculation = function(frm, cdt, cdn) {
                 frm.doc.facelec_po_gt_tax_fuel = total_fuel;
                 //frm.refresh_field("factelec_p_is_fuel");
             };
+            // es-GT: Verificacion de si esta seleccionado el check Bienes
             if (item_row.facelec_po_is_good == 1) {
                 frm.doc.items[index].facelec_po_gt_tax_net_goods_amt = (item_row.facelec_po_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_po_sales_tax_for_this_row = (item_row.facelec_po_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
@@ -953,6 +962,7 @@ shs_purchase_order_calculation = function(frm, cdt, cdn) {
                 });
                 frm.doc.facelec_po_gt_tax_goods = total_goods;
             };
+            // es-GT: Verificacion de si esta seleccionado el check Servicios
             if (item_row.facelec_po_is_service == 1) {
                 frm.doc.items[index].facelec_po_gt_tax_net_services_amt = (item_row.facelec_po_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_po_sales_tax_for_this_row = (item_row.facelec_po_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
@@ -965,6 +975,7 @@ shs_purchase_order_calculation = function(frm, cdt, cdn) {
                 });
                 frm.doc.facelec_po_gt_tax_services = total_servi;
             };
+            // es-GT: Sumatoria para obtener el IVA total
             full_tax_iva = 0;
             $.each(frm.doc.items || [], function(i, d) {
                 full_tax_iva += flt(d.facelec_po_sales_tax_for_this_row);
