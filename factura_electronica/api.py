@@ -105,7 +105,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                                        fieldname=['descripcion_otro_impuesto', 'importe_exento',
                                                                   'id_dispositivo', 'validador', 'clave', 'codigo_establecimiento',
                                                                   'importe_otros_impuestos', 'regimen_2989', 'usuario', 'regimen_isr',
-                                                                  'nit_gface', 'importe_total_exento'], as_dict=1)
+                                                                  'nit_gface', 'importe_total_exento', 'url_listener'], as_dict=1)
 
         except:
             frappe.msgprint(_('Error: Problemas con la Base de Datos!'))
@@ -152,7 +152,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                             # Mostrara un error
                             # 2018-01-23 Se valido claramente que funciona el envío al servidor de INFILE
                             # URL de listener de INFILE FUNCIONA OK!!!
-                            url = "https://www.ingface.net/listener/ingface?wsdl"
+                            url = str(datos_configuracion[0]['url_listener'])
                             # CABECERAS: Indican el tipo de datos FUNCIONA OK!!!
                             headers = {"content-type": "text/xml"}
                             # FUNCIONA OK!!!
