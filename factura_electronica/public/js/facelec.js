@@ -1,5 +1,5 @@
 // Funcion para los calculos necesarios.
-facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
+facelec_tax_calculation_conversion = function (frm, cdt, cdn) {
     // es-GT: Actualiza los datos en los campos de la tabla hija 'items'
     refresh_field('items');
 
@@ -36,7 +36,7 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.factelecis_fuel == true) {
                         total_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
@@ -56,7 +56,7 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
                 total_goods = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.facelec_is_good == true) {
                         total_goods += flt(d.facelec_gt_tax_net_goods_amt);
@@ -75,7 +75,7 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
 
                 total_servi = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_is_service == true) {
                         total_servi += flt(d.facelec_gt_tax_net_services_amt);
                     };
@@ -86,7 +86,7 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
 
             // Para el calculo total de IVA, basado en la sumatoria de facelec_sales_tax_for_this_row de cada item
             full_tax_iva = 0;
-            $.each(frm.doc.items || [], function(i, d) {
+            $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_sales_tax_for_this_row);
             });
             frm.doc.facelec_total_iva = full_tax_iva;
@@ -95,7 +95,7 @@ facelec_tax_calculation_conversion = function(frm, cdt, cdn) {
 }
 
 // Funcion para evitar realizar calculos con cuentas duplicadas
-buscar_account = function(frm, cuenta_b) {
+buscar_account = function (frm, cuenta_b) {
     /* Funcionamiento: recibe como parametro frm, y cuenta_b, lo que hace es, buscar en todas las filas de taxes
        si existe ya una cuenta con el nombre de la cuenta recibida por parametro, en caso ya exista esa cuenta en
        la tabla no hace nada, pero si encuentra que no hay una cuenta igual a la recibida en el parametro, entonces
@@ -103,7 +103,7 @@ buscar_account = function(frm, cuenta_b) {
        en caso si encuentre una cuenta existente
     */
     var estado = ''
-    $.each(frm.doc.taxes || [], function(i, d) {
+    $.each(frm.doc.taxes || [], function (i, d) {
         if (d.account_head === cuenta_b) {
             console.log('Si Existe en el indice ' + i)
             estado = true
@@ -139,7 +139,7 @@ function valNit(nit, cus_supp, frm) { // cus_supp = customer or supplier
 }
 
 frappe.ui.form.on("Sales Invoice", {
-    refresh: function(frm, cdt, cdn) {
+    refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         console.log('Exito Script In Sales Invoice');
         // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
@@ -147,7 +147,7 @@ frappe.ui.form.on("Sales Invoice", {
         cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
 
         // WORKS OK!
-        frm.add_custom_button("UOM Recalculation", function() {
+        frm.add_custom_button("UOM Recalculation", function () {
             frm.doc.items.forEach((item) => {
                 // for each button press each line is being processed.
                 console.log("item contains: " + item);
@@ -165,8 +165,8 @@ frappe.ui.form.on("Sales Invoice", {
                 cur_frm.clear_custom_buttons();
                 pdf_button(frm.doc.cae_factura_electronica);
             } else {
-                var nombre = 'Factura Electronica';
-                frm.add_custom_button(__(nombre), function() {
+
+                frm.add_custom_button(__('Factura Electronica'), function () {
                     frappe.call({
                         method: "factura_electronica.api.generar_factura_electronica",
                         args: {
@@ -174,7 +174,7 @@ frappe.ui.form.on("Sales Invoice", {
                             nombre_cliente: frm.doc.customer
                         },
                         // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                        callback: function(data) {
+                        callback: function (data) {
                             // Asignacion del valor retornado por el script python del lado del servidor en el campo
                             // 'cae_factura_electronica' para ser mostrado del lado del cliente y luego guardado en la DB
                             cur_frm.set_value("cae_factura_electronica", data.message);
@@ -185,48 +185,17 @@ frappe.ui.form.on("Sales Invoice", {
                         }
                     });
                 }).addClass("btn-primary");
+
             }
         }
 
         // Funcion para la obtencion del PDF, segun el documento generado.
         function pdf_button(cae_documento) {
-            //console.log('Se ejecuto la funcion demas');
-            frappe.call({
-                // Este metodo verifica, el modo de generacion de PDF para la factura electronica
-                // retornara 'Manual' o 'Automatico' segun lo que encuentre en la configuracion de factura electronica
-                method: "factura_electronica.api.save_url_pdf",
-                callback: function(data) {
-                    console.log(data.message);
-                    if (data.message === 'Manual') {
-                        // Si en la configuracion se encuentra que la generacion de PDF debe ser manual
-                        // Se realizara lo siguiente
-                        //cur_frm.clear_custom_buttons();
-                        frm.add_custom_button(__("Obtener PDF"),
-                            function() {
-                                //console.log(cae_fac)
-                                window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
-                            }).addClass("btn-primary");
-                    } else {
-                        // Si en la configuracion se encuentra que la generacion de PDF debe ser Automatico
-                        // Se realizara lo siguiente
-                        //console.log(data.message);
-                        /*var cae_fac = frm.doc.cae_factura_electronica;
-                        var link_cae_pdf = "https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=";
-                        frappe.call({
-                            method: "factura_electronica.api.save_pdf_server",
-                            args: {
-                                file_url: link_cae_pdf + cae_fac,
-                                filename: frm.doc.name,
-                                dt: 'Sales Invoice',
-                                dn: frm.doc.name,
-                                folder: 'Home/Facturas Electronicas',
-                                is_private: 1
-                            }
-                        });*/
-
-                    }
-                }
-            });
+            // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
+            frm.add_custom_button(__("Obtener PDF"),
+                function () {
+                    window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
+                }).addClass("btn-primary");
         }
 
         // Codigo para Notas de Credito NCE
@@ -239,7 +208,7 @@ frappe.ui.form.on("Sales Invoice", {
                 cur_frm.clear_custom_buttons();
                 pdf_button(frm.doc.cae_nota_de_credito);
             } else {
-                frm.add_custom_button(__('Nota Credito'), function() {
+                frm.add_custom_button(__('Nota Credito'), function () {
                     frappe.call({
                         method: "factura_electronica.api.generar_factura_electronica",
                         args: {
@@ -247,7 +216,7 @@ frappe.ui.form.on("Sales Invoice", {
                             nombre_cliente: frm.doc.customer
                         },
                         // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                        callback: function(data) {
+                        callback: function (data) {
                             // Asignacion del valor retornado por el script python del lado del servidor en el campo
                             // 'cae_nota_de_credito' para ser mostrado del lado del cliente y luego guardado en la DB
                             cur_frm.set_value("cae_nota_de_credito", data.message);
@@ -272,7 +241,7 @@ frappe.ui.form.on("Sales Invoice", {
                     cur_frm.clear_custom_buttons();
                     pdf_button(frm.doc.cae_nota_de_debito);
                 } else {
-                    frm.add_custom_button(__('Nota Debito'), function() {
+                    frm.add_custom_button(__('Nota Debito'), function () {
                         frappe.call({
                             method: "factura_electronica.api.generar_factura_electronica",
                             args: {
@@ -280,7 +249,7 @@ frappe.ui.form.on("Sales Invoice", {
                                 nombre_cliente: frm.doc.customer
                             },
                             // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                            callback: function(data) {
+                            callback: function (data) {
 
                                 cur_frm.set_value("cae_nota_de_debito", data.message);
                                 if (frm.doc.cae_nota_de_debito) {
@@ -294,11 +263,11 @@ frappe.ui.form.on("Sales Invoice", {
             }
         }
     },
-    nit_face_customer: function(frm, cdt, cdn) {
+    nit_face_customer: function (frm, cdt, cdn) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
         valNit(frm.doc.nit_face_customer, frm.doc.customer, frm)
     },
-    discount_amount: function(frm, cdt, cdn) {
+    discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
         tax_before_calc = frm.doc.facelec_total_iva;
         console.log("El descuento total es:" + frm.doc.discount_amount);
@@ -310,12 +279,12 @@ frappe.ui.form.on("Sales Invoice", {
         frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
         console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
     },
-    customer: function(frm, cdt, cdn) {
+    customer: function (frm, cdt, cdn) {
         // Trigger Proveedor
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log('Corrio customer trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
     },
-    before_save: function(frm, cdt, cdn) {
+    before_save: function (frm, cdt, cdn) {
         // Trigger antes de guardar
         frm.doc.items.forEach((item) => {
             // for each button press each line is being processed.
@@ -333,17 +302,17 @@ frappe.ui.form.on("Sales Invoice", {
             console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
         });
     },
-    onload: function(frm, cdt, cdn) {
+    onload: function (frm, cdt, cdn) {
         // console.log('Funcionando Onload Trigger'); SI FUNCIONA EL TRIGGER
         // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
     },
 });
 
 frappe.ui.form.on("Sales Invoice Item", {
-    items_add: function(frm, cdt, cdn) {},
-    items_move: function(frm, cdt, cdn) {},
-    before_items_remove: function(frm, cdt, cdn) {},
-    items_remove: function(frm, cdt, cdn) {
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
+    items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // console.log('Trigger remove en tabla hija');
@@ -354,7 +323,7 @@ frappe.ui.form.on("Sales Invoice Item", {
         fix_gt_tax_services = 0;
         fix_gt_tax_iva = 0;
 
-        $.each(frm.doc.items || [], function(i, d) {
+        $.each(frm.doc.items || [], function (i, d) {
 
             fix_gt_tax_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.facelec_gt_tax_net_goods_amt);
@@ -368,7 +337,7 @@ frappe.ui.form.on("Sales Invoice Item", {
         cur_frm.set_value("facelec_gt_tax_services", fix_gt_tax_services);
         cur_frm.set_value("facelec_total_iva", fix_gt_tax_iva);
     },
-    item_code: function(frm, cdt, cdn) {
+    item_code: function (frm, cdt, cdn) {
 
         // Trigger codigo de producto
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
@@ -376,22 +345,22 @@ frappe.ui.form.on("Sales Invoice Item", {
         refresh_field('qty');
 
     },
-    qty: function(frm, cdt, cdn) {
+    qty: function (frm, cdt, cdn) {
         //facelec_tax_calculation(frm, cdt, cdn);
         facelec_tax_calculation_conversion(frm, cdt, cdn);
         console.log("cdt contains: " + cdt);
         console.log("cdn contains: " + cdn);
     },
-    uom: function(frm, cdt, cdn) {
+    uom: function (frm, cdt, cdn) {
         // Trigger UOM
         console.log("The unit of measure field was changed and the code from the trigger was run");
     },
-    conversion_factor: function(frm, cdt, cdn) {
+    conversion_factor: function (frm, cdt, cdn) {
         // Trigger factor de conversion
         console.log("El disparador de factor de conversión se corrió.");
         facelec_tax_calculation_conversion(frm, cdt, cdn);
     },
-    facelec_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+    facelec_tax_rate_per_uom_account: function (frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
         frm.doc.items.forEach((item_row_i, index_i) => {
             if (item_row_i.name == cdn) {
@@ -410,7 +379,7 @@ frappe.ui.form.on("Sales Invoice Item", {
                                         name_account_tax_gt: cuenta
                                     },
                                     // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                                    callback: function(data) {
+                                    callback: function (data) {
                                         // Asigna los valores retornados del servidor
                                         frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
                                         frm.doc.taxes[index].account_head = cuenta;
@@ -429,14 +398,14 @@ frappe.ui.form.on("Sales Invoice Item", {
             }
         });
     },
-    rate: function(frm, cdt, cdn) {
+    rate: function (frm, cdt, cdn) {
         facelec_tax_calculation(frm, cdt, cdn);
     }
 });
 
 // Codigo Adaptado para Purchase Invoice (Factura de Compra) 
 // Funcion para calculo de impuestos
-shs_purchase_invoice_calculation = function(frm, cdt, cdn) {
+shs_purchase_invoice_calculation = function (frm, cdt, cdn) {
 
     refresh_field('items');
 
@@ -463,7 +432,7 @@ shs_purchase_invoice_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_p_sales_tax_for_this_row = (item_row.facelec_p_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.facelec_p_is_fuel == true) {
                         total_fuel += flt(d.facelec_p_gt_tax_net_fuel_amt);
@@ -477,7 +446,7 @@ shs_purchase_invoice_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_p_sales_tax_for_this_row = (item_row.facelec_p_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
                 total_goods = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_p_is_good == true) {
                         total_goods += flt(d.facelec_p_gt_tax_net_goods_amt);
                     };
@@ -489,7 +458,7 @@ shs_purchase_invoice_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_p_sales_tax_for_this_row = (item_row.facelec_p_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
                 total_servi = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_p_is_service == true) {
                         total_servi += flt(d.facelec_p_gt_tax_net_services_amt);
                     };
@@ -497,7 +466,7 @@ shs_purchase_invoice_calculation = function(frm, cdt, cdn) {
                 frm.doc.facelec_p_gt_tax_services = total_servi;
             };
             full_tax_iva = 0;
-            $.each(frm.doc.items || [], function(i, d) {
+            $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_p_sales_tax_for_this_row);
             });
             frm.doc.facelec_p_total_iva = full_tax_iva;
@@ -506,11 +475,11 @@ shs_purchase_invoice_calculation = function(frm, cdt, cdn) {
 }
 
 frappe.ui.form.on("Purchase Invoice", {
-    refresh: function(frm, cdt, cdn) {
+    refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         console.log('Exito Script In Purchase Invoice');
         // Boton para recalcular
-        frm.add_custom_button("UOM Recalculation", function() {
+        frm.add_custom_button("UOM Recalculation", function () {
             frm.doc.items.forEach((item) => {
                 // for each button press each line is being processed.
                 console.log("item contains: " + item);
@@ -519,11 +488,11 @@ frappe.ui.form.on("Purchase Invoice", {
             });
         });
     },
-    facelec_nit_fproveedor: function(frm, cdt, cdn) {
+    facelec_nit_fproveedor: function (frm, cdt, cdn) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
         valNit(frm.doc.facelec_nit_fproveedor, frm.doc.supplier, frm);
     },
-    discount_amount: function(frm, cdt, cdn) {
+    discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
         tax_before_calc = frm.doc.facelec_p_total_iva;
         console.log("El descuento total es:" + frm.doc.discount_amount);
@@ -535,12 +504,12 @@ frappe.ui.form.on("Purchase Invoice", {
         frm.doc.facelec_p_total_iva = (frm.doc.facelec_p_total_iva - discount_amount_tax_value);
         console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_p_total_iva);
     },
-    supplier: function(frm, cdt, cdn) {
+    supplier: function (frm, cdt, cdn) {
         // Trigger Proveedor
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log('Corrio supplier trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
     },
-    before_save: function(frm, cdt, cdn) {
+    before_save: function (frm, cdt, cdn) {
         // Trigger antes de guardar
         frm.doc.items.forEach((item) => {
             // for each button press each line is being processed.
@@ -561,10 +530,10 @@ frappe.ui.form.on("Purchase Invoice", {
 });
 
 frappe.ui.form.on("Purchase Invoice Item", {
-    items_add: function(frm, cdt, cdn) {},
-    items_move: function(frm, cdt, cdn) {},
-    before_items_remove: function(frm, cdt, cdn) {},
-    items_remove: function(frm, cdt, cdn) {
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
+    items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
@@ -573,7 +542,7 @@ frappe.ui.form.on("Purchase Invoice Item", {
         fix_gt_tax_services = 0;
         fix_gt_tax_iva = 0;
 
-        $.each(frm.doc.items || [], function(i, d) {
+        $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_p_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.facelec_p_gt_tax_net_goods_amt);
             fix_gt_tax_services += flt(d.facelec_p_gt_tax_net_services_amt);
@@ -585,28 +554,28 @@ frappe.ui.form.on("Purchase Invoice Item", {
         cur_frm.set_value("facelec_p_gt_tax_services", fix_gt_tax_services);
         cur_frm.set_value("facelec_p_total_iva", fix_gt_tax_iva);
     },
-    item_code: function(frm, cdt, cdn) {
+    item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
     },
-    qty: function(frm, cdt, cdn) {
+    qty: function (frm, cdt, cdn) {
         // Trigger cantidad
         shs_purchase_invoice_calculation(frm, cdt, cdn);
         console.log("cdt contains: " + cdt);
         console.log("cdn contains: " + cdn);
     },
-    uom: function(frm, cdt, cdn) {
+    uom: function (frm, cdt, cdn) {
         // Trigger UOM
         console.log("The unit of measure field was changed and the code from the trigger was run");
     },
-    conversion_factor: function(frm, cdt, cdn) {
+    conversion_factor: function (frm, cdt, cdn) {
         // Trigger factor de conversion
         console.log("El disparador de factor de conversión se corrió.");
         shs_purchase_invoice_calculation(frm, cdt, cdn);
     },
-    facelec_p_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+    facelec_p_tax_rate_per_uom_account: function (frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
         frm.doc.items.forEach((item_row_i, index_i) => {
             if (item_row_i.name == cdn) {
@@ -625,7 +594,7 @@ frappe.ui.form.on("Purchase Invoice Item", {
                                         name_account_tax_gt: cuenta
                                     },
                                     // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                                    callback: function(data) {
+                                    callback: function (data) {
                                         // Asigna los valores retornados del servidor
                                         frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
                                         frm.doc.taxes[index].account_head = cuenta;
@@ -644,14 +613,14 @@ frappe.ui.form.on("Purchase Invoice Item", {
             }
         });
     },
-    rate: function(frm, cdt, cdn) {
+    rate: function (frm, cdt, cdn) {
         shs_purchase_invoice_calculation(frm, cdt, cdn);
     }
 });
 
 // Codigo Adaptado para Purchase Quotation (Cotizacion de compra)
 // Funcion para calculo de impuestos
-shs_quotation_calculation = function(frm, cdt, cdn) {
+shs_quotation_calculation = function (frm, cdt, cdn) {
 
     refresh_field('items');
 
@@ -678,7 +647,7 @@ shs_quotation_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_qt_sales_tax_for_this_row = (item_row.facelec_qt_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.facelec_qt_is_fuel == true) {
                         total_fuel += flt(d.facelec_qt_gt_tax_net_fuel_amt);
@@ -692,7 +661,7 @@ shs_quotation_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_qt_sales_tax_for_this_row = (item_row.facelec_qt_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
                 total_goods = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_qt_is_good == true) {
                         total_goods += flt(d.facelec_qt_gt_tax_net_goods_amt);
                     };
@@ -704,7 +673,7 @@ shs_quotation_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_qt_sales_tax_for_this_row = (item_row.facelec_qt_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
                 total_servi = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_qt_is_service == true) {
                         total_servi += flt(d.facelec_qt_gt_tax_net_services_amt);
                     };
@@ -712,7 +681,7 @@ shs_quotation_calculation = function(frm, cdt, cdn) {
                 frm.doc.facelec_qt_gt_tax_services = total_servi;
             };
             full_tax_iva = 0;
-            $.each(frm.doc.items || [], function(i, d) {
+            $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_qt_sales_tax_for_this_row);
             });
             frm.doc.facelec_qt_total_iva = full_tax_iva;
@@ -721,11 +690,11 @@ shs_quotation_calculation = function(frm, cdt, cdn) {
 }
 
 frappe.ui.form.on("Quotation", {
-    refresh: function(frm, cdt, cdn) {
+    refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         console.log('Exito Script In Quotation');
         // Boton para recalcular
-        frm.add_custom_button("UOM Recalculation", function() {
+        frm.add_custom_button("UOM Recalculation", function () {
             frm.doc.items.forEach((item) => {
                 // for each button press each line is being processed.
                 console.log("item contains: " + item);
@@ -734,11 +703,11 @@ frappe.ui.form.on("Quotation", {
             });
         });
     },
-    facelec_qt_nit: function(frm, cdt, cdn) {
+    facelec_qt_nit: function (frm, cdt, cdn) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
         valNit(frm.doc.facelec_qt_nit, frm.doc.customer, frm);
     },
-    discount_amount: function(frm, cdt, cdn) {
+    discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
         tax_before_calc = frm.doc.facelec_qt_total_iva;
         console.log("El descuento total es:" + frm.doc.discount_amount);
@@ -750,12 +719,12 @@ frappe.ui.form.on("Quotation", {
         frm.doc.facelec_qt_total_iva = (frm.doc.facelec_qt_total_iva - discount_amount_tax_value);
         console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_qt_total_iva);
     },
-    customer: function(frm, cdt, cdn) {
+    customer: function (frm, cdt, cdn) {
         // Trigger Proveedor
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log('Corrio customer trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
     },
-    before_save: function(frm, cdt, cdn) {
+    before_save: function (frm, cdt, cdn) {
         // Trigger antes de guardar
         frm.doc.items.forEach((item) => {
             // for each button press each line is being processed.
@@ -776,10 +745,10 @@ frappe.ui.form.on("Quotation", {
 });
 
 frappe.ui.form.on("Quotation Item", {
-    items_add: function(frm, cdt, cdn) {},
-    items_move: function(frm, cdt, cdn) {},
-    before_items_remove: function(frm, cdt, cdn) {},
-    items_remove: function(frm, cdt, cdn) {
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
+    items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
@@ -788,7 +757,7 @@ frappe.ui.form.on("Quotation Item", {
         fix_gt_tax_services = 0;
         fix_gt_tax_iva = 0;
 
-        $.each(frm.doc.items || [], function(i, d) {
+        $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_qt_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.facelec_qt_gt_tax_net_goods_amt);
             fix_gt_tax_services += flt(d.facelec_qt_gt_tax_net_services_amt);
@@ -800,28 +769,28 @@ frappe.ui.form.on("Quotation Item", {
         cur_frm.set_value("facelec_qt_gt_tax_services", fix_gt_tax_services);
         cur_frm.set_value("facelec_qt_total_iva", fix_gt_tax_iva);
     },
-    item_code: function(frm, cdt, cdn) {
+    item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
     },
-    qty: function(frm, cdt, cdn) {
+    qty: function (frm, cdt, cdn) {
         // Trigger cantidad
         shs_quotation_calculation(frm, cdt, cdn);
         console.log("cdt contains: " + cdt);
         console.log("cdn contains: " + cdn);
     },
-    uom: function(frm, cdt, cdn) {
+    uom: function (frm, cdt, cdn) {
         // Trigger UOM
         console.log("The unit of measure field was changed and the code from the trigger was run");
     },
-    conversion_factor: function(frm, cdt, cdn) {
+    conversion_factor: function (frm, cdt, cdn) {
         // Trigger factor de conversion
         console.log("El disparador de factor de conversión se corrió.");
         shs_quotation_calculation(frm, cdt, cdn);
     },
-    facelec_qt_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+    facelec_qt_tax_rate_per_uom_account: function (frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
         frm.doc.items.forEach((item_row_i, index_i) => {
             if (item_row_i.name == cdn) {
@@ -840,7 +809,7 @@ frappe.ui.form.on("Quotation Item", {
                                         name_account_tax_gt: cuenta
                                     },
                                     // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                                    callback: function(data) {
+                                    callback: function (data) {
                                         // Asigna los valores retornados del servidor
                                         frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
                                         frm.doc.taxes[index].account_head = cuenta;
@@ -859,14 +828,14 @@ frappe.ui.form.on("Quotation Item", {
             }
         });
     },
-    rate: function(frm, cdt, cdn) {
+    rate: function (frm, cdt, cdn) {
         shs_quotation_calculation(frm, cdt, cdn);
     }
 });
 
 // Codigo Adaptado para Purchase Order (Orden de compra)
 // Funcion para calculo de impuestos
-shs_purchase_order_calculation = function(frm, cdt, cdn) {
+shs_purchase_order_calculation = function (frm, cdt, cdn) {
     // es-GT: Actualiza los campos de la tabla hija 'items'
     refresh_field('items');
     // es-GT: Asigna a la variable el valor rate de la tabla hija 'taxes' en la posicion 0
@@ -894,7 +863,7 @@ shs_purchase_order_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_po_sales_tax_for_this_row = (item_row.facelec_po_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.facelec_po_is_fuel == true) {
                         total_fuel += flt(d.facelec_po_gt_tax_net_fuel_amt);
@@ -909,7 +878,7 @@ shs_purchase_order_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_po_sales_tax_for_this_row = (item_row.facelec_po_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
                 total_goods = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_po_is_good == true) {
                         total_goods += flt(d.facelec_po_gt_tax_net_goods_amt);
                     };
@@ -922,7 +891,7 @@ shs_purchase_order_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_po_sales_tax_for_this_row = (item_row.facelec_po_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
                 total_servi = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_po_is_service == true) {
                         total_servi += flt(d.facelec_po_gt_tax_net_services_amt);
                     };
@@ -931,7 +900,7 @@ shs_purchase_order_calculation = function(frm, cdt, cdn) {
             };
             // es-GT: Sumatoria para obtener el IVA total
             full_tax_iva = 0;
-            $.each(frm.doc.items || [], function(i, d) {
+            $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_po_sales_tax_for_this_row);
             });
             frm.doc.facelec_po_total_iva = full_tax_iva;
@@ -940,11 +909,11 @@ shs_purchase_order_calculation = function(frm, cdt, cdn) {
 }
 
 frappe.ui.form.on("Purchase Order", {
-    refresh: function(frm, cdt, cdn) {
+    refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         console.log('Exito Script In Purchase Order');
         // Boton para recalcular
-        frm.add_custom_button("UOM Recalculation", function() {
+        frm.add_custom_button("UOM Recalculation", function () {
             frm.doc.items.forEach((item) => {
                 // for each button press each line is being processed.
                 console.log("item contains: " + item);
@@ -953,11 +922,11 @@ frappe.ui.form.on("Purchase Order", {
             });
         });
     },
-    facelec_po_nit: function(frm, cdt, cdn) {
+    facelec_po_nit: function (frm, cdt, cdn) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
         valNit(frm.doc.facelec_po_nit, frm.doc.supplier, frm);
     },
-    discount_amount: function(frm, cdt, cdn) {
+    discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
         tax_before_calc = frm.doc.facelec_po_total_iva;
         console.log("El descuento total es:" + frm.doc.discount_amount);
@@ -969,12 +938,12 @@ frappe.ui.form.on("Purchase Order", {
         frm.doc.facelec_po_total_iva = (frm.doc.facelec_po_total_iva - discount_amount_tax_value);
         console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_po_total_iva);
     },
-    supplier: function(frm, cdt, cdn) {
+    supplier: function (frm, cdt, cdn) {
         // Trigger Proveedor
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log('Corrio supplier trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
     },
-    before_save: function(frm, cdt, cdn) {
+    before_save: function (frm, cdt, cdn) {
         // Trigger antes de guardar
         frm.doc.items.forEach((item) => {
             // for each button press each line is being processed.
@@ -995,10 +964,10 @@ frappe.ui.form.on("Purchase Order", {
 });
 
 frappe.ui.form.on("Purchase Order Item", {
-    items_add: function(frm, cdt, cdn) {},
-    items_move: function(frm, cdt, cdn) {},
-    before_items_remove: function(frm, cdt, cdn) {},
-    items_remove: function(frm, cdt, cdn) {
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
+    items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
@@ -1007,7 +976,7 @@ frappe.ui.form.on("Purchase Order Item", {
         fix_gt_tax_services = 0;
         fix_gt_tax_iva = 0;
 
-        $.each(frm.doc.items || [], function(i, d) {
+        $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_po_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.facelec_po_gt_tax_net_goods_amt);
             fix_gt_tax_services += flt(d.facelec_po_gt_tax_net_services_amt);
@@ -1019,28 +988,28 @@ frappe.ui.form.on("Purchase Order Item", {
         cur_frm.set_value("facelec_po_gt_tax_services", fix_gt_tax_services);
         cur_frm.set_value("facelec_po_total_iva", fix_gt_tax_iva);
     },
-    item_code: function(frm, cdt, cdn) {
+    item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
     },
-    qty: function(frm, cdt, cdn) {
+    qty: function (frm, cdt, cdn) {
         // Trigger cantidad
         shs_purchase_order_calculation(frm, cdt, cdn);
         console.log("cdt contains: " + cdt);
         console.log("cdn contains: " + cdn);
     },
-    uom: function(frm, cdt, cdn) {
+    uom: function (frm, cdt, cdn) {
         // Trigger UOM
         console.log("The unit of measure field was changed and the code from the trigger was run");
     },
-    conversion_factor: function(frm, cdt, cdn) {
+    conversion_factor: function (frm, cdt, cdn) {
         // Trigger factor de conversion
         console.log("El disparador de factor de conversión se corrió.");
         shs_purchase_order_calculation(frm, cdt, cdn);
     },
-    facelec_po_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+    facelec_po_tax_rate_per_uom_account: function (frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
         frm.doc.items.forEach((item_row_i, index_i) => {
             if (item_row_i.name == cdn) {
@@ -1059,7 +1028,7 @@ frappe.ui.form.on("Purchase Order Item", {
                                         name_account_tax_gt: cuenta
                                     },
                                     // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                                    callback: function(data) {
+                                    callback: function (data) {
                                         // Asigna los valores retornados del servidor
                                         frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
                                         frm.doc.taxes[index].account_head = cuenta;
@@ -1078,14 +1047,14 @@ frappe.ui.form.on("Purchase Order Item", {
             }
         });
     },
-    rate: function(frm, cdt, cdn) {
+    rate: function (frm, cdt, cdn) {
         shs_purchase_order_calculation(frm, cdt, cdn);
     }
 });
 
 // Codigo Adaptado para Purchase Receipt (Recibo de Compra) 
 // Funcion para calculo de impuestos
-shs_purchase_receipt_calculation = function(frm, cdt, cdn) {
+shs_purchase_receipt_calculation = function (frm, cdt, cdn) {
 
     refresh_field('items');
 
@@ -1112,7 +1081,7 @@ shs_purchase_receipt_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_pr_sales_tax_for_this_row = (item_row.facelec_pr_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.facelec_pr_is_fuel == true) {
                         total_fuel += flt(d.facelec_pr_gt_tax_net_fuel_amt);
@@ -1126,7 +1095,7 @@ shs_purchase_receipt_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_pr_sales_tax_for_this_row = (item_row.facelec_pr_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
                 total_goods = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_pr_is_good == true) {
                         total_goods += flt(d.facelec_pr_gt_tax_net_goods_amt);
                     };
@@ -1138,7 +1107,7 @@ shs_purchase_receipt_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_pr_sales_tax_for_this_row = (item_row.facelec_pr_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
                 total_servi = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_pr_is_service == true) {
                         total_servi += flt(d.facelec_pr_gt_tax_net_services_amt);
                     };
@@ -1146,7 +1115,7 @@ shs_purchase_receipt_calculation = function(frm, cdt, cdn) {
                 frm.doc.facelec_pr_gt_tax_services = total_servi;
             };
             full_tax_iva = 0;
-            $.each(frm.doc.items || [], function(i, d) {
+            $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_pr_sales_tax_for_this_row);
             });
             frm.doc.facelec_pr_total_iva = full_tax_iva;
@@ -1155,11 +1124,11 @@ shs_purchase_receipt_calculation = function(frm, cdt, cdn) {
 }
 
 frappe.ui.form.on("Purchase Receipt", {
-    refresh: function(frm, cdt, cdn) {
+    refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         console.log('Exito Script In Purchase Receipt');
         // Boton para recalcular
-        frm.add_custom_button("UOM Recalculation", function() {
+        frm.add_custom_button("UOM Recalculation", function () {
             frm.doc.items.forEach((item) => {
                 // for each button press each line is being processed.
                 console.log("item contains: " + item);
@@ -1168,11 +1137,11 @@ frappe.ui.form.on("Purchase Receipt", {
             });
         });
     },
-    facelec_nit_prproveedor: function(frm, cdt, cdn) {
+    facelec_nit_prproveedor: function (frm, cdt, cdn) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
         valNit(frm.doc.facelec_nit_prproveedor, frm.doc.supplier, frm);
     },
-    discount_amount: function(frm, cdt, cdn) {
+    discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
         tax_before_calc = frm.doc.facelec_pr_total_iva;
         console.log("El descuento total es:" + frm.doc.discount_amount);
@@ -1184,12 +1153,12 @@ frappe.ui.form.on("Purchase Receipt", {
         frm.doc.facelec_pr_total_iva = (frm.doc.facelec_pr_total_iva - discount_amount_tax_value);
         console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_pr_total_iva);
     },
-    supplier: function(frm, cdt, cdn) {
+    supplier: function (frm, cdt, cdn) {
         // Trigger Proveedor
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log('Corrio supplier trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
     },
-    before_save: function(frm, cdt, cdn) {
+    before_save: function (frm, cdt, cdn) {
         // Trigger antes de guardar
         frm.doc.items.forEach((item) => {
             // for each button press each line is being processed.
@@ -1210,10 +1179,10 @@ frappe.ui.form.on("Purchase Receipt", {
 });
 
 frappe.ui.form.on("Purchase Receipt Item", {
-    items_add: function(frm, cdt, cdn) {},
-    items_move: function(frm, cdt, cdn) {},
-    before_items_remove: function(frm, cdt, cdn) {},
-    items_remove: function(frm, cdt, cdn) {
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
+    items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
@@ -1222,7 +1191,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
         fix_gt_tax_services = 0;
         fix_gt_tax_iva = 0;
 
-        $.each(frm.doc.items || [], function(i, d) {
+        $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_pr_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.facelec_pr_gt_tax_net_goods_amt);
             fix_gt_tax_services += flt(d.facelec_pr_gt_tax_net_services_amt);
@@ -1234,28 +1203,28 @@ frappe.ui.form.on("Purchase Receipt Item", {
         cur_frm.set_value("facelec_pr_gt_tax_services", fix_gt_tax_services);
         cur_frm.set_value("facelec_pr_total_iva", fix_gt_tax_iva);
     },
-    item_code: function(frm, cdt, cdn) {
+    item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
     },
-    qty: function(frm, cdt, cdn) {
+    qty: function (frm, cdt, cdn) {
         // Trigger cantidad
         shs_purchase_receipt_calculation(frm, cdt, cdn);
         console.log("cdt contains: " + cdt);
         console.log("cdn contains: " + cdn);
     },
-    uom: function(frm, cdt, cdn) {
+    uom: function (frm, cdt, cdn) {
         // Trigger UOM
         console.log("The unit of measure field was changed and the code from the trigger was run");
     },
-    conversion_factor: function(frm, cdt, cdn) {
+    conversion_factor: function (frm, cdt, cdn) {
         // Trigger factor de conversion
         console.log("El disparador de factor de conversión se corrió.");
         shs_purchase_order_calculation(frm, cdt, cdn);
     },
-    facelec_pr_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+    facelec_pr_tax_rate_per_uom_account: function (frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
         frm.doc.items.forEach((item_row_i, index_i) => {
             if (item_row_i.name == cdn) {
@@ -1274,7 +1243,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
                                         name_account_tax_gt: cuenta
                                     },
                                     // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                                    callback: function(data) {
+                                    callback: function (data) {
                                         // Asigna los valores retornados del servidor
                                         frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
                                         frm.doc.taxes[index].account_head = cuenta;
@@ -1293,14 +1262,14 @@ frappe.ui.form.on("Purchase Receipt Item", {
             }
         });
     },
-    rate: function(frm, cdt, cdn) {
+    rate: function (frm, cdt, cdn) {
         shs_purchase_receipt_calculation(frm, cdt, cdn);
     }
 });
 
 // Codigo Adaptado para Sales Order (Orden de Venta) 
 // Funcion para calculo de impuestos
-shs_sales_order_calculation = function(frm, cdt, cdn) {
+shs_sales_order_calculation = function (frm, cdt, cdn) {
 
     refresh_field('items');
 
@@ -1327,7 +1296,7 @@ shs_sales_order_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].shs_so_sales_tax_for_this_row = (item_row.shs_so_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.shs_so_is_fuel == true) {
                         total_fuel += flt(d.shs_so_gt_tax_net_fuel_amt);
@@ -1341,7 +1310,7 @@ shs_sales_order_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].shs_so_sales_tax_for_this_row = (item_row.shs_so_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
                 total_goods = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.shs_so_is_good == true) {
                         total_goods += flt(d.shs_so_gt_tax_net_goods_amt);
                     };
@@ -1353,7 +1322,7 @@ shs_sales_order_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].shs_so_sales_tax_for_this_row = (item_row.shs_so_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
                 total_servi = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.shs_so_is_service == true) {
                         total_servi += flt(d.shs_so_gt_tax_net_services_amt);
                     };
@@ -1361,7 +1330,7 @@ shs_sales_order_calculation = function(frm, cdt, cdn) {
                 frm.doc.shs_so_gt_tax_services = total_servi;
             };
             full_tax_iva = 0;
-            $.each(frm.doc.items || [], function(i, d) {
+            $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.shs_so_sales_tax_for_this_row);
             });
             frm.doc.shs_so_total_iva = full_tax_iva;
@@ -1370,11 +1339,11 @@ shs_sales_order_calculation = function(frm, cdt, cdn) {
 }
 
 frappe.ui.form.on("Sales Order", {
-    refresh: function(frm, cdt, cdn) {
+    refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         console.log('Exito Script In Sales Order');
         // Boton para recalcular
-        frm.add_custom_button("UOM Recalculation", function() {
+        frm.add_custom_button("UOM Recalculation", function () {
             frm.doc.items.forEach((item) => {
                 // for each button press each line is being processed.
                 console.log("item contains: " + item);
@@ -1383,11 +1352,11 @@ frappe.ui.form.on("Sales Order", {
             });
         });
     },
-    shs_so_nit: function(frm, cdt, cdn) {
+    shs_so_nit: function (frm, cdt, cdn) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
         valNit(frm.doc.shs_so_nit, frm.doc.customer, frm);
     },
-    discount_amount: function(frm, cdt, cdn) {
+    discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
         tax_before_calc = frm.doc.shs_so_total_iva;
         console.log("El descuento total es:" + frm.doc.discount_amount);
@@ -1399,12 +1368,12 @@ frappe.ui.form.on("Sales Order", {
         frm.doc.shs_so_total_iva = (frm.doc.shs_so_total_iva - discount_amount_tax_value);
         console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.shs_so_total_iva);
     },
-    customer: function(frm, cdt, cdn) {
+    customer: function (frm, cdt, cdn) {
         // Trigger Proveedor
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log('Corrio supplier trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
     },
-    before_save: function(frm, cdt, cdn) {
+    before_save: function (frm, cdt, cdn) {
         // Trigger antes de guardar
         frm.doc.items.forEach((item) => {
             // for each button press each line is being processed.
@@ -1425,10 +1394,10 @@ frappe.ui.form.on("Sales Order", {
 });
 
 frappe.ui.form.on("Sales Order Item", {
-    items_add: function(frm, cdt, cdn) {},
-    items_move: function(frm, cdt, cdn) {},
-    before_items_remove: function(frm, cdt, cdn) {},
-    items_remove: function(frm, cdt, cdn) {
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
+    items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
@@ -1437,7 +1406,7 @@ frappe.ui.form.on("Sales Order Item", {
         fix_gt_tax_services = 0;
         fix_gt_tax_iva = 0;
 
-        $.each(frm.doc.items || [], function(i, d) {
+        $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_so_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.shs_so_gt_tax_net_goods_amt);
             fix_gt_tax_services += flt(d.shs_so_gt_tax_net_services_amt);
@@ -1449,28 +1418,28 @@ frappe.ui.form.on("Sales Order Item", {
         cur_frm.set_value("shs_so_gt_tax_services", fix_gt_tax_services);
         cur_frm.set_value("shs_so_total_iva", fix_gt_tax_iva);
     },
-    item_code: function(frm, cdt, cdn) {
+    item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
     },
-    qty: function(frm, cdt, cdn) {
+    qty: function (frm, cdt, cdn) {
         // Trigger cantidad
         shs_sales_order_calculation(frm, cdt, cdn);
         console.log("cdt contains: " + cdt);
         console.log("cdn contains: " + cdn);
     },
-    uom: function(frm, cdt, cdn) {
+    uom: function (frm, cdt, cdn) {
         // Trigger UOM
         console.log("The unit of measure field was changed and the code from the trigger was run");
     },
-    conversion_factor: function(frm, cdt, cdn) {
+    conversion_factor: function (frm, cdt, cdn) {
         // Trigger factor de conversion
         console.log("El disparador de factor de conversión se corrió.");
         shs_sales_order_calculation(frm, cdt, cdn);
     },
-    shs_so_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+    shs_so_tax_rate_per_uom_account: function (frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
         frm.doc.items.forEach((item_row_i, index_i) => {
             if (item_row_i.name == cdn) {
@@ -1489,7 +1458,7 @@ frappe.ui.form.on("Sales Order Item", {
                                         name_account_tax_gt: cuenta
                                     },
                                     // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                                    callback: function(data) {
+                                    callback: function (data) {
                                         // Asigna los valores retornados del servidor
                                         frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
                                         frm.doc.taxes[index].account_head = cuenta;
@@ -1508,14 +1477,14 @@ frappe.ui.form.on("Sales Order Item", {
             }
         });
     },
-    rate: function(frm, cdt, cdn) {
+    rate: function (frm, cdt, cdn) {
         shs_sales_order_calculation(frm, cdt, cdn);
     }
 });
 
 // Codigo Adaptado para Delivery Note (Nota de entrega)
 // Funcion para calculo de impuestos
-shs_delivery_note_calculation = function(frm, cdt, cdn) {
+shs_delivery_note_calculation = function (frm, cdt, cdn) {
 
     refresh_field('items');
 
@@ -1542,7 +1511,7 @@ shs_delivery_note_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].shs_dn_sales_tax_for_this_row = (item_row.shs_dn_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.shs_dn_is_fuel == true) {
                         total_fuel += flt(d.shs_dn_gt_tax_net_fuel_amt);
@@ -1556,7 +1525,7 @@ shs_delivery_note_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].shs_dn_sales_tax_for_this_row = (item_row.shs_dn_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
                 total_goods = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.shs_dn_is_good == true) {
                         total_goods += flt(d.shs_dn_gt_tax_net_goods_amt);
                     };
@@ -1568,7 +1537,7 @@ shs_delivery_note_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].shs_dn_sales_tax_for_this_row = (item_row.shs_dn_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
                 total_servi = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.shs_dn_is_service == true) {
                         total_servi += flt(d.shs_dn_gt_tax_net_services_amt);
                     };
@@ -1576,7 +1545,7 @@ shs_delivery_note_calculation = function(frm, cdt, cdn) {
                 frm.doc.shs_dn_gt_tax_services = total_servi;
             };
             full_tax_iva = 0;
-            $.each(frm.doc.items || [], function(i, d) {
+            $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.shs_dn_sales_tax_for_this_row);
             });
             frm.doc.shs_dn_total_iva = full_tax_iva;
@@ -1585,11 +1554,11 @@ shs_delivery_note_calculation = function(frm, cdt, cdn) {
 }
 
 frappe.ui.form.on("Delivery Note", {
-    refresh: function(frm, cdt, cdn) {
+    refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         console.log('Exito Script In Delivery Note');
         // Boton para recalcular
-        frm.add_custom_button("UOM Recalculation", function() {
+        frm.add_custom_button("UOM Recalculation", function () {
             frm.doc.items.forEach((item) => {
                 // for each button press each line is being processed.
                 console.log("item contains: " + item);
@@ -1598,11 +1567,11 @@ frappe.ui.form.on("Delivery Note", {
             });
         });
     },
-    shs_dn_nit: function(frm, cdt, cdn) {
+    shs_dn_nit: function (frm, cdt, cdn) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
         valNit(frm.doc.shs_dn_nit, frm.doc.customer, frm);
     },
-    discount_amount: function(frm, cdt, cdn) {
+    discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
         tax_before_calc = frm.doc.shs_dn_total_iva;
         console.log("El descuento total es:" + frm.doc.discount_amount);
@@ -1614,12 +1583,12 @@ frappe.ui.form.on("Delivery Note", {
         frm.doc.shs_dn_total_iva = (frm.doc.shs_dn_total_iva - discount_amount_tax_value);
         console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.shs_dn_total_iva);
     },
-    customer: function(frm, cdt, cdn) {
+    customer: function (frm, cdt, cdn) {
         // Trigger Proveedor
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log('Corrio customer trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
     },
-    before_save: function(frm, cdt, cdn) {
+    before_save: function (frm, cdt, cdn) {
         // Trigger antes de guardar
         frm.doc.items.forEach((item) => {
             // for each button press each line is being processed.
@@ -1640,10 +1609,10 @@ frappe.ui.form.on("Delivery Note", {
 });
 
 frappe.ui.form.on("Delivery Note Item", {
-    items_add: function(frm, cdt, cdn) {},
-    items_move: function(frm, cdt, cdn) {},
-    before_items_remove: function(frm, cdt, cdn) {},
-    items_remove: function(frm, cdt, cdn) {
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
+    items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
@@ -1652,7 +1621,7 @@ frappe.ui.form.on("Delivery Note Item", {
         fix_gt_tax_services = 0;
         fix_gt_tax_iva = 0;
 
-        $.each(frm.doc.items || [], function(i, d) {
+        $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_dn_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.shs_dn_gt_tax_net_goods_amt);
             fix_gt_tax_services += flt(d.shs_dn_gt_tax_net_services_amt);
@@ -1664,28 +1633,28 @@ frappe.ui.form.on("Delivery Note Item", {
         cur_frm.set_value("shs_dn_gt_tax_services", fix_gt_tax_services);
         cur_frm.set_value("shs_dn_total_iva", fix_gt_tax_iva);
     },
-    item_code: function(frm, cdt, cdn) {
+    item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
     },
-    qty: function(frm, cdt, cdn) {
+    qty: function (frm, cdt, cdn) {
         // Trigger cantidad
         shs_delivery_note_calculation(frm, cdt, cdn);
         console.log("cdt contains: " + cdt);
         console.log("cdn contains: " + cdn);
     },
-    uom: function(frm, cdt, cdn) {
+    uom: function (frm, cdt, cdn) {
         // Trigger UOM
         console.log("The unit of measure field was changed and the code from the trigger was run");
     },
-    conversion_factor: function(frm, cdt, cdn) {
+    conversion_factor: function (frm, cdt, cdn) {
         // Trigger factor de conversion
         console.log("El disparador de factor de conversión se corrió.");
         shs_delivery_note_calculation(frm, cdt, cdn);
     },
-    shs_dn_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+    shs_dn_tax_rate_per_uom_account: function (frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
         frm.doc.items.forEach((item_row_i, index_i) => {
             if (item_row_i.name == cdn) {
@@ -1704,7 +1673,7 @@ frappe.ui.form.on("Delivery Note Item", {
                                         name_account_tax_gt: cuenta
                                     },
                                     // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                                    callback: function(data) {
+                                    callback: function (data) {
                                         // Asigna los valores retornados del servidor
                                         frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
                                         frm.doc.taxes[index].account_head = cuenta;
@@ -1723,14 +1692,14 @@ frappe.ui.form.on("Delivery Note Item", {
             }
         });
     },
-    rate: function(frm, cdt, cdn) {
+    rate: function (frm, cdt, cdn) {
         shs_delivery_note_calculation(frm, cdt, cdn);
     }
 });
 
 // Codigo Adaptado para Supplier Quotation (Presupuesto de Proveedor)
 // Funcion para calculo de impuestos
-shs_supplier_quotation_calculation = function(frm, cdt, cdn) {
+shs_supplier_quotation_calculation = function (frm, cdt, cdn) {
 
     refresh_field('items');
 
@@ -1757,7 +1726,7 @@ shs_supplier_quotation_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].shs_spq_sales_tax_for_this_row = (item_row.shs_spq_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 total_fuel = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.shs_spq_is_fuel == true) {
                         total_fuel += flt(d.shs_spq_gt_tax_net_fuel_amt);
@@ -1771,7 +1740,7 @@ shs_supplier_quotation_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].shs_spq_sales_tax_for_this_row = (item_row.shs_spq_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
                 total_goods = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.shs_spq_is_good == true) {
                         total_goods += flt(d.shs_spq_gt_tax_net_goods_amt);
                     };
@@ -1783,7 +1752,7 @@ shs_supplier_quotation_calculation = function(frm, cdt, cdn) {
                 frm.doc.items[index].shs_spq_sales_tax_for_this_row = (item_row.shs_spq_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
                 total_servi = 0;
-                $.each(frm.doc.items || [], function(i, d) {
+                $.each(frm.doc.items || [], function (i, d) {
                     if (d.shs_spq_is_service == true) {
                         total_servi += flt(d.shs_spq_gt_tax_net_services_amt);
                     };
@@ -1791,7 +1760,7 @@ shs_supplier_quotation_calculation = function(frm, cdt, cdn) {
                 frm.doc.shs_spq_gt_tax_services = total_servi;
             };
             full_tax_iva = 0;
-            $.each(frm.doc.items || [], function(i, d) {
+            $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.shs_spq_sales_tax_for_this_row);
             });
             frm.doc.shs_spq_total_iva = full_tax_iva;
@@ -1800,11 +1769,11 @@ shs_supplier_quotation_calculation = function(frm, cdt, cdn) {
 }
 
 frappe.ui.form.on("Supplier Quotation", {
-    refresh: function(frm, cdt, cdn) {
+    refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         console.log('Exito Script In Supplier Quotation');
         // Boton para recalcular
-        frm.add_custom_button("UOM Recalculation", function() {
+        frm.add_custom_button("UOM Recalculation", function () {
             frm.doc.items.forEach((item) => {
                 // for each button press each line is being processed.
                 console.log("item contains: " + item);
@@ -1813,11 +1782,11 @@ frappe.ui.form.on("Supplier Quotation", {
             });
         });
     },
-    shs_spq_nit: function(frm, cdt, cdn) {
+    shs_spq_nit: function (frm, cdt, cdn) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
         valNit(frm.doc.shs_spq_nit, frm.doc.supplier, frm);
     },
-    discount_amount: function(frm, cdt, cdn) {
+    discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
         tax_before_calc = frm.doc.shs_spq_total_iva;
         console.log("El descuento total es:" + frm.doc.discount_amount);
@@ -1829,12 +1798,12 @@ frappe.ui.form.on("Supplier Quotation", {
         frm.doc.shs_spq_total_iva = (frm.doc.shs_spq_total_iva - discount_amount_tax_value);
         console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.shs_spq_total_iva);
     },
-    supplier: function(frm, cdt, cdn) {
+    supplier: function (frm, cdt, cdn) {
         // Trigger Proveedor
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log('Corrio customer trigger y se cargo el IVA, el cual es ' + this_company_sales_tax_var);
     },
-    before_save: function(frm, cdt, cdn) {
+    before_save: function (frm, cdt, cdn) {
         // Trigger antes de guardar
         frm.doc.items.forEach((item) => {
             // for each button press each line is being processed.
@@ -1852,17 +1821,17 @@ frappe.ui.form.on("Supplier Quotation", {
             console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.shs_spq_total_iva);
         });
     },
-    onload: function(frm, cdt, cdn) {
+    onload: function (frm, cdt, cdn) {
         // console.log('Funcionando Onload Trigger'); SI FUNCIONA EL TRIGGER
         // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
     },
 });
 
 frappe.ui.form.on("Supplier Quotation Item", {
-    items_add: function(frm, cdt, cdn) {},
-    items_move: function(frm, cdt, cdn) {},
-    before_items_remove: function(frm, cdt, cdn) {},
-    items_remove: function(frm, cdt, cdn) {
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
+    items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
@@ -1871,7 +1840,7 @@ frappe.ui.form.on("Supplier Quotation Item", {
         fix_gt_tax_services = 0;
         fix_gt_tax_iva = 0;
 
-        $.each(frm.doc.items || [], function(i, d) {
+        $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_spq_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.shs_spq_gt_tax_net_goods_amt);
             fix_gt_tax_services += flt(d.shs_spq_gt_tax_net_services_amt);
@@ -1883,7 +1852,7 @@ frappe.ui.form.on("Supplier Quotation Item", {
         cur_frm.set_value("shs_spq_gt_tax_services", fix_gt_tax_services);
         cur_frm.set_value("shs_spq_total_iva", fix_gt_tax_iva);
     },
-    item_code: function(frm, cdt, cdn) {
+    item_code: function (frm, cdt, cdn) {
 
         // Trigger codigo de producto
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
@@ -1891,22 +1860,22 @@ frappe.ui.form.on("Supplier Quotation Item", {
         refresh_field('qty');
 
     },
-    qty: function(frm, cdt, cdn) {
+    qty: function (frm, cdt, cdn) {
         // Trigger cantidad
         shs_supplier_quotation_calculation(frm, cdt, cdn);
         console.log("cdt contains: " + cdt);
         console.log("cdn contains: " + cdn);
     },
-    uom: function(frm, cdt, cdn) {
+    uom: function (frm, cdt, cdn) {
         // Trigger UOM
         console.log("The unit of measure field was changed and the code from the trigger was run");
     },
-    conversion_factor: function(frm, cdt, cdn) {
+    conversion_factor: function (frm, cdt, cdn) {
         // Trigger factor de conversion
         console.log("El disparador de factor de conversión se corrió.");
         shs_supplier_quotation_calculation(frm, cdt, cdn);
     },
-    shs_spq_tax_rate_per_uom_account: function(frm, cdt, cdn) {
+    shs_spq_tax_rate_per_uom_account: function (frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
         frm.doc.items.forEach((item_row_i, index_i) => {
             if (item_row_i.name == cdn) {
@@ -1925,7 +1894,7 @@ frappe.ui.form.on("Supplier Quotation Item", {
                                         name_account_tax_gt: cuenta
                                     },
                                     // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                                    callback: function(data) {
+                                    callback: function (data) {
                                         // Asigna los valores retornados del servidor
                                         frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
                                         frm.doc.taxes[index].account_head = cuenta;
@@ -1944,7 +1913,7 @@ frappe.ui.form.on("Supplier Quotation Item", {
             }
         });
     },
-    rate: function(frm, cdt, cdn) {
+    rate: function (frm, cdt, cdn) {
         shs_supplier_quotation_calculation(frm, cdt, cdn);
     }
 });

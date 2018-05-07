@@ -205,8 +205,9 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                 frappe.msgprint(_('No existen series configuradas'))
 
 @frappe.whitelist()
-def save_url_pdf():
-    '''Verifica la configuracion para guardar los pdf generados'''
+def obtenerConfiguracionManualAutomatica():
+    '''Verifica la configuracion guardada ya sea Automatica o Manual, aplica para la generacion de 
+       facturas o la forma en que se guarda'''
     try:
         configuracion_fac = frappe.db.get_values('Configuracion Factura Electronica', filters={'name': 'CONFIG-FAC00001'},
                                                  fieldname=['generacion_factura'], as_dict=1)
