@@ -184,7 +184,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                         if (((errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
                                             datoCAEF = guardar(respuesta, dato_factura, tiempo_enviado)
 
-                                            frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
+                                            # frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
 
                                             with open('respuesta.xml', 'w') as recibidoxml:
                                                 recibidoxml.write(respuesta)

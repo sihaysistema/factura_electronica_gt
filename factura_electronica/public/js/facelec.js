@@ -138,10 +138,255 @@ function valNit(nit, cus_supp, frm) { // cus_supp = customer or supplier
     }
 }
 
+// Funcion para la obtencion del PDF, segun el documento generado.
+function pdf_button(cae_documento, frm) {
+    // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
+    frm.add_custom_button(__("Obtener PDF"),
+        function () {
+            window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
+        }).addClass("btn-primary");
+}
+
+// Funcion que incluye el boton para generar la factura electronica
+function generarFacturaBTN(frm, cdt, cdn) {
+    // Codigo para generar Factura Electronica FACE, CFACE
+    // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+        // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+        if (frm.doc.cae_factura_electronica) {
+            cur_frm.clear_custom_buttons();
+            pdf_button(frm.doc.cae_factura_electronica, frm);
+        } else {
+            frm.add_custom_button(__('Factura Electronica'), function () {
+                frappe.call({
+                    method: "factura_electronica.api.generar_factura_electronica",
+                    args: {
+                        serie_factura: frm.doc.name,
+                        nombre_cliente: frm.doc.customer
+                    },
+                    // El callback recibe como parametro el dato retornado por el script python del lado del servidor
+                    callback: function (data) {
+                        // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                        // 'cae_factura_electronica' para ser mostrado del lado del cliente y luego guardado en la DB
+                        cur_frm.set_value("cae_factura_electronica", data.message);
+                        if (frm.doc.cae_factura_electronica) {
+                            cur_frm.clear_custom_buttons();
+                            pdf_button(frm.doc.cae_factura_electronica, frm);
+                        }
+                    }
+                });
+            }).addClass("btn-primary");
+        }
+    }
+    // Codigo para Notas de Credito NCE
+    // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
+    if (frm.doc.status === "Return") {
+        //var nombre = 'Nota Credito';
+        // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+        if (frm.doc.cae_nota_de_credito) {
+            cur_frm.clear_custom_buttons();
+            pdf_button(frm.doc.cae_nota_de_credito, frm);
+        } else {
+            frm.add_custom_button(__('Nota Credito'), function () {
+                frappe.call({
+                    method: "factura_electronica.api.generar_factura_electronica",
+                    args: {
+                        serie_factura: frm.doc.name,
+                        nombre_cliente: frm.doc.customer
+                    },
+                    // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                    callback: function (data) {
+                        // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                        // 'cae_nota_de_credito' para ser mostrado del lado del cliente y luego guardado en la DB
+                        cur_frm.set_value("cae_nota_de_credito", data.message);
+                        if (frm.doc.cae_nota_de_credito) {
+                            cur_frm.clear_custom_buttons();
+                            pdf_button(frm.doc.cae_nota_de_credito, frm);
+                        }
+                    }
+                });
+            }).addClass("btn-primary");
+        }
+    }
+
+    // Codigo para notas de debito
+    // Codigo para Notas de Credito NDE
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+
+        //var nombre = 'Nota Debito';
+        if (frm.doc.es_nota_de_debito == 1) {
+            cur_frm.clear_custom_buttons('Factura Electronica');
+            if (frm.doc.cae_nota_de_debito) {
+                cur_frm.clear_custom_buttons();
+                pdf_button(frm.doc.cae_nota_de_debito, frm);
+            } else {
+                frm.add_custom_button(__('Nota Debito'), function () {
+                    frappe.call({
+                        method: "factura_electronica.api.generar_factura_electronica",
+                        args: {
+                            serie_factura: frm.doc.name,
+                            nombre_cliente: frm.doc.customer
+                        },
+                        // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                        callback: function (data) {
+                            cur_frm.set_value("cae_nota_de_debito", data.message);
+                            if (frm.doc.cae_nota_de_debito) {
+                                cur_frm.clear_custom_buttons();
+                                pdf_button(frm.doc.cae_nota_de_debito, frm);
+                            }
+                        }
+                    });
+                }).addClass("btn-primary");
+            }
+        }
+    }
+}
+
+// Funcion sin boton para generar factura electronica
+let generarFacturaSINBTN = function (frm, cdt, cdn) {
+    // Codigo para generar Factura Electronica FACE, CFACE
+    // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+        // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+        if (frm.doc.cae_factura_electronica) {
+            cur_frm.clear_custom_buttons();
+            pdf_button(frm.doc.cae_factura_electronica, frm);
+        } else {
+            frappe.call({
+                method: "factura_electronica.api.generar_factura_electronica",
+                args: {
+                    serie_factura: frm.doc.name,
+                    nombre_cliente: frm.doc.customer
+                },
+                // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                callback: function (data) {
+                    // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                    // 'cae_factura_electronica' para ser mostrado del lado del cliente y luego guardado en la DB
+                    cur_frm.set_value("cae_factura_electronica", data.message);
+                    frm.save("Update");
+                    if (frm.doc.cae_factura_electronica) {
+                        cur_frm.clear_custom_buttons();
+                        pdf_button(frm.doc.cae_factura_electronica, frm);
+                    }
+                }
+            });
+        }
+    }
+    // Codigo para Notas de Credito NCE
+    // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
+    if (frm.doc.status === "Return") {
+        //var nombre = 'Nota Credito';
+        // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+        if (frm.doc.cae_nota_de_credito) {
+            cur_frm.clear_custom_buttons();
+            pdf_button(frm.doc.cae_nota_de_credito, frm);
+        } else {
+            frappe.call({
+                method: "factura_electronica.api.generar_factura_electronica",
+                args: {
+                    serie_factura: frm.doc.name,
+                    nombre_cliente: frm.doc.customer
+                },
+                // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                callback: function (data) {
+                    // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                    // 'cae_nota_de_credito' para ser mostrado del lado del cliente y luego guardado en la DB
+                    cur_frm.set_value("cae_nota_de_credito", data.message);
+                    frm.save("Update");
+                    if (frm.doc.cae_nota_de_credito) {
+                        cur_frm.clear_custom_buttons();
+                        pdf_button(frm.doc.cae_nota_de_credito, frm);
+                    }
+                }
+            });
+        }
+    }
+
+    // Codigo para notas de debito
+    // Codigo para Notas de Credito NDE
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+        //var nombre = 'Nota Debito';
+        if (frm.doc.es_nota_de_debito == 1) {
+            cur_frm.clear_custom_buttons('Factura Electronica');
+            if (frm.doc.cae_nota_de_debito) {
+                cur_frm.clear_custom_buttons();
+                pdf_button(frm.doc.cae_nota_de_debito, frm);
+            } else {
+                frappe.call({
+                    method: "factura_electronica.api.generar_factura_electronica",
+                    args: {
+                        serie_factura: frm.doc.name,
+                        nombre_cliente: frm.doc.customer
+                    },
+                    // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                    callback: function (data) {
+                        cur_frm.set_value("cae_nota_de_debito", data.message);
+                        frm.save("Update");
+                        if (frm.doc.cae_nota_de_debito) {
+                            cur_frm.clear_custom_buttons();
+                            pdf_button(frm.doc.cae_nota_de_debito, frm);
+                        }
+                    }
+                });
+            }
+        }
+    }
+}
+
+function verificacionCAE(frm, cdt, cdn) {
+    /* ------------------------------ COMPROBACIONES DE CAE ------------------------------ */
+    // FACTURAS FACE, CFACE
+    // Este codigo entra en funcionamiento cuando la generacion automatica de la factura no es exitosa.
+    // esto permite volver intentarlo hasta obtener el cae de la factura en que se estre trabajando.
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+        // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+        if (frm.doc.cae_factura_electronica) {
+            cur_frm.clear_custom_buttons();
+            pdf_button(frm.doc.cae_factura_electronica, frm);
+        } else {
+            generarFacturaBTN(frm, cdt, cdn);
+        }
+    }
+
+    // Codigo para Notas de Credito NCE
+    // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
+    if (frm.doc.status === "Return") {
+        //var nombre = 'Nota Credito';
+        // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+        if (frm.doc.cae_nota_de_credito) {
+            cur_frm.clear_custom_buttons();
+            pdf_button(frm.doc.cae_nota_de_credito, frm);
+        } else {
+            generarFacturaBTN(frm, cdt, cdn);
+        }
+    }
+
+    // Codigo para notas de debito
+    // Codigo para Notas de Credito NDE
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+        //var nombre = 'Nota Debito';
+        if (frm.doc.es_nota_de_debito) {
+            cur_frm.clear_custom_buttons('Factura Electronica');
+            if (frm.doc.cae_nota_de_debito) {
+                cur_frm.clear_custom_buttons();
+                pdf_button(frm.doc.cae_nota_de_debito, frm);
+            } else {
+                generarFacturaBTN(frm, cdt, cdn);
+            }
+        }
+    }
+    /* -------------------------------------------------------------------------------------- */
+}
+
 frappe.ui.form.on("Sales Invoice", {
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
-        console.log('Exito Script In Sales Invoice');
         // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
         // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
         cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
@@ -155,113 +400,6 @@ frappe.ui.form.on("Sales Invoice", {
                 facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
             });
         });
-
-        // Codigo para Factura Electronica FACE, CFACE
-        // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
-        if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
-            // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
-            // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
-            if (frm.doc.cae_factura_electronica) {
-                cur_frm.clear_custom_buttons();
-                pdf_button(frm.doc.cae_factura_electronica);
-            } else {
-
-                frm.add_custom_button(__('Factura Electronica'), function () {
-                    frappe.call({
-                        method: "factura_electronica.api.generar_factura_electronica",
-                        args: {
-                            serie_factura: frm.doc.name,
-                            nombre_cliente: frm.doc.customer
-                        },
-                        // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                        callback: function (data) {
-                            // Asignacion del valor retornado por el script python del lado del servidor en el campo
-                            // 'cae_factura_electronica' para ser mostrado del lado del cliente y luego guardado en la DB
-                            cur_frm.set_value("cae_factura_electronica", data.message);
-                            if (frm.doc.cae_factura_electronica) {
-                                cur_frm.clear_custom_buttons();
-                                pdf_button(frm.doc.cae_factura_electronica);
-                            }
-                        }
-                    });
-                }).addClass("btn-primary");
-
-            }
-        }
-
-        // Funcion para la obtencion del PDF, segun el documento generado.
-        function pdf_button(cae_documento) {
-            // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
-            frm.add_custom_button(__("Obtener PDF"),
-                function () {
-                    window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
-                }).addClass("btn-primary");
-        }
-
-        // Codigo para Notas de Credito NCE
-        // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
-        if (frm.doc.status === "Return") {
-            //var nombre = 'Nota Credito';
-            // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
-            // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
-            if (frm.doc.cae_nota_de_credito) {
-                cur_frm.clear_custom_buttons();
-                pdf_button(frm.doc.cae_nota_de_credito);
-            } else {
-                frm.add_custom_button(__('Nota Credito'), function () {
-                    frappe.call({
-                        method: "factura_electronica.api.generar_factura_electronica",
-                        args: {
-                            serie_factura: frm.doc.name,
-                            nombre_cliente: frm.doc.customer
-                        },
-                        // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                        callback: function (data) {
-                            // Asignacion del valor retornado por el script python del lado del servidor en el campo
-                            // 'cae_nota_de_credito' para ser mostrado del lado del cliente y luego guardado en la DB
-                            cur_frm.set_value("cae_nota_de_credito", data.message);
-                            if (frm.doc.cae_nota_de_credito) {
-                                cur_frm.clear_custom_buttons();
-                                pdf_button(frm.doc.cae_nota_de_credito);
-                            }
-                        }
-                    });
-                }).addClass("btn-primary");
-            }
-        }
-
-        // Codigo para notas de debito
-        // Codigo para Notas de Credito NDE
-        if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
-
-            //var nombre = 'Nota Debito';
-            if (frm.doc.es_nota_de_debito == 1) {
-                cur_frm.clear_custom_buttons('Factura Electronica');
-                if (frm.doc.cae_nota_de_debito) {
-                    cur_frm.clear_custom_buttons();
-                    pdf_button(frm.doc.cae_nota_de_debito);
-                } else {
-                    frm.add_custom_button(__('Nota Debito'), function () {
-                        frappe.call({
-                            method: "factura_electronica.api.generar_factura_electronica",
-                            args: {
-                                serie_factura: frm.doc.name,
-                                nombre_cliente: frm.doc.customer
-                            },
-                            // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                            callback: function (data) {
-
-                                cur_frm.set_value("cae_nota_de_debito", data.message);
-                                if (frm.doc.cae_nota_de_debito) {
-                                    cur_frm.clear_custom_buttons();
-                                    pdf_button(frm.doc.cae_nota_de_debito);
-                                }
-                            }
-                        });
-                    }).addClass("btn-primary");
-                }
-            }
-        }
     },
     nit_face_customer: function (frm, cdt, cdn) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
@@ -302,10 +440,41 @@ frappe.ui.form.on("Sales Invoice", {
             console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
         });
     },
-    onload: function (frm, cdt, cdn) {
-        // console.log('Funcionando Onload Trigger'); SI FUNCIONA EL TRIGGER
-        // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
+    on_submit: function (frm, cdt, cdn) {
+        // Ocurre cuando se presione el boton validar.
+        // Cuando se valida el documento, se hace la consulta al servidor por medio de frappe.call
+        // con esto se obtiene la configuracion guardada, ya sea automatico o manual
+        // FUNCION AUTOMATICA: Cuando se valida el documento automaticamente genera la estrucutura para la factura solicitada
+        // y realiza la peticion a INFILE para la generacion, respuesta y guardado en nuestra base de datos.
+        frappe.call({
+            method: "factura_electronica.api.obtenerConfiguracionManualAutomatica",
+            // El callback recibe como parametro el dato retornado por script python del lado del servidor
+            callback: function (data) {
+                console.log(data.message)
+                if (data.message === 'Manual') {
+                    console.log('Configuracion encontrada: MANUAL');
+                    // No es necesario tener activa esta parte, ya que cuando se ingresa a cualquier factura en el evento
+                    // refresh, hay una funcion que se encarga de comprobar de que se haya generado exitosamente la 
+                    // factura electronica, en caso no sea asi, se mostrarán los botones correspondientes, para hacer
+                    // la generacion de la factura electronica manualmente.
+                    // generarFacturaBTN(frm, cdt, cdn);
+                }
+                if (data.message === 'Automatico') {
+                    console.log('Configuracion encontrada: AUTOMATICO');
+                    generarFacturaSINBTN(frm, cdt, cdn);
+                    verificacionCAE(frm, cdt, cdn);
+                }
+            }
+        });
     },
+    onload: function (frm, cdt, cdn) {
+        verificacionCAE(frm, cdt, cdn);
+    },
+    // onload_post_render: function(frm, cdt, cdn){
+    // console.log('si funciona')
+    // console.log('Funcionando Onload Trigger'); SI FUNCIONA EL TRIGGER
+    // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
+    // }
 });
 
 frappe.ui.form.on("Sales Invoice Item", {
