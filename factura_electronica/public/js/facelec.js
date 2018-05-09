@@ -147,7 +147,8 @@ function pdf_button(cae_documento, frm) {
         }).addClass("btn-primary");
 }
 
-// Funcion que incluye el boton para generar la factura electronica
+// Funcion que incluye el boton para generar la factura electronica, esta se activa
+// cuando en la configuracion de factura electronica se encuentra en MANUAL
 function generarFacturaBTN(frm, cdt, cdn) {
     // Codigo para generar Factura Electronica FACE, CFACE
     // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
@@ -170,6 +171,7 @@ function generarFacturaBTN(frm, cdt, cdn) {
                         // Asignacion del valor retornado por el script python del lado del servidor en el campo
                         // 'cae_factura_electronica' para ser mostrado del lado del cliente y luego guardado en la DB
                         cur_frm.set_value("cae_factura_electronica", data.message);
+                        frm.save("Update");
                         if (frm.doc.cae_factura_electronica) {
                             cur_frm.clear_custom_buttons();
                             pdf_button(frm.doc.cae_factura_electronica, frm);
@@ -201,6 +203,7 @@ function generarFacturaBTN(frm, cdt, cdn) {
                         // Asignacion del valor retornado por el script python del lado del servidor en el campo
                         // 'cae_nota_de_credito' para ser mostrado del lado del cliente y luego guardado en la DB
                         cur_frm.set_value("cae_nota_de_credito", data.message);
+                        frm.save("Update");
                         if (frm.doc.cae_nota_de_credito) {
                             cur_frm.clear_custom_buttons();
                             pdf_button(frm.doc.cae_nota_de_credito, frm);
@@ -232,6 +235,7 @@ function generarFacturaBTN(frm, cdt, cdn) {
                         // El callback recibe como parametro el dato retornado por script python del lado del servidor
                         callback: function (data) {
                             cur_frm.set_value("cae_nota_de_debito", data.message);
+                            frm.save("Update");
                             if (frm.doc.cae_nota_de_debito) {
                                 cur_frm.clear_custom_buttons();
                                 pdf_button(frm.doc.cae_nota_de_debito, frm);
@@ -244,7 +248,8 @@ function generarFacturaBTN(frm, cdt, cdn) {
     }
 }
 
-// Funcion sin boton para generar factura electronica
+// Funcion sin boton para generar factura electronica, esta se activa cuando la configuracion de factura
+// electronica se encuentra en AUTOMATICA. Permite generar facturas electronicas despues de validar.
 let generarFacturaSINBTN = function (frm, cdt, cdn) {
     // Codigo para generar Factura Electronica FACE, CFACE
     // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
@@ -337,6 +342,8 @@ let generarFacturaSINBTN = function (frm, cdt, cdn) {
     }
 }
 
+// Funcion verifica que se haya generado el CAE, para el documento requerido, en caso no se haya
+// generado mostrara un boton para hacerlo manualmente.
 function verificacionCAE(frm, cdt, cdn) {
     /* ------------------------------ COMPROBACIONES DE CAE ------------------------------ */
     // FACTURAS FACE, CFACE
@@ -400,6 +407,9 @@ frappe.ui.form.on("Sales Invoice", {
                 facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
             });
         });
+
+        verificacionCAE(frm, cdt, cdn);
+
     },
     nit_face_customer: function (frm, cdt, cdn) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
@@ -467,9 +477,11 @@ frappe.ui.form.on("Sales Invoice", {
             }
         });
     },
-    onload: function (frm, cdt, cdn) {
-        verificacionCAE(frm, cdt, cdn);
-    },
+    // onload: function (frm, cdt, cdn) {
+    //     // Cuando se carge el documento por completo realizara la comprobacion de que se haya 
+    //     // generado el CAE para el documento requerido.
+    //     verificacionCAE(frm, cdt, cdn);
+    // },
     // onload_post_render: function(frm, cdt, cdn){
     // console.log('si funciona')
     // console.log('Funcionando Onload Trigger'); SI FUNCIONA EL TRIGGER
