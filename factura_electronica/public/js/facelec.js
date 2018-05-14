@@ -1,5 +1,5 @@
 // Funcion para los calculos necesarios.
-facelec_tax_calculation_conversion = function (frm, cdt, cdn) {
+function facelec_tax_calculation_conversion(frm, cdt, cdn) {
     // es-GT: Actualiza los datos en los campos de la tabla hija 'items'
     refresh_field('items');
 
@@ -95,7 +95,7 @@ facelec_tax_calculation_conversion = function (frm, cdt, cdn) {
 }
 
 // Funcion para evitar realizar calculos con cuentas duplicadas
-buscar_account = function (frm, cuenta_b) {
+function buscar_account(frm, cuenta_b) {
     /* Funcionamiento: recibe como parametro frm, y cuenta_b, lo que hace es, buscar en todas las filas de taxes
        si existe ya una cuenta con el nombre de la cuenta recibida por parametro, en caso ya exista esa cuenta en
        la tabla no hace nada, pero si encuentra que no hay una cuenta igual a la recibida en el parametro, entonces
@@ -250,7 +250,7 @@ function generarFacturaBTN(frm, cdt, cdn) {
 
 // Funcion sin boton para generar factura electronica, esta se activa cuando la configuracion de factura
 // electronica se encuentra en AUTOMATICA. Permite generar facturas electronicas despues de validar.
-let generarFacturaSINBTN = function (frm, cdt, cdn) {
+function generarFacturaSINBTN(frm, cdt, cdn) {
     // Codigo para generar Factura Electronica FACE, CFACE
     // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
     if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
@@ -586,7 +586,7 @@ frappe.ui.form.on("Sales Invoice Item", {
 
 // Codigo Adaptado para Purchase Invoice (Factura de Compra) 
 // Funcion para calculo de impuestos
-shs_purchase_invoice_calculation = function (frm, cdt, cdn) {
+function shs_purchase_invoice_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
 
@@ -801,7 +801,7 @@ frappe.ui.form.on("Purchase Invoice Item", {
 
 // Codigo Adaptado para Purchase Quotation (Cotizacion de compra)
 // Funcion para calculo de impuestos
-shs_quotation_calculation = function (frm, cdt, cdn) {
+function shs_quotation_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
 
@@ -1016,7 +1016,7 @@ frappe.ui.form.on("Quotation Item", {
 
 // Codigo Adaptado para Purchase Order (Orden de compra)
 // Funcion para calculo de impuestos
-shs_purchase_order_calculation = function (frm, cdt, cdn) {
+function shs_purchase_order_calculation(frm, cdt, cdn) {
     // es-GT: Actualiza los campos de la tabla hija 'items'
     refresh_field('items');
     // es-GT: Asigna a la variable el valor rate de la tabla hija 'taxes' en la posicion 0
@@ -1235,7 +1235,7 @@ frappe.ui.form.on("Purchase Order Item", {
 
 // Codigo Adaptado para Purchase Receipt (Recibo de Compra) 
 // Funcion para calculo de impuestos
-shs_purchase_receipt_calculation = function (frm, cdt, cdn) {
+function shs_purchase_receipt_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
 
@@ -1450,7 +1450,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
 
 // Codigo Adaptado para Sales Order (Orden de Venta) 
 // Funcion para calculo de impuestos
-shs_sales_order_calculation = function (frm, cdt, cdn) {
+function shs_sales_order_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
 
@@ -1665,7 +1665,7 @@ frappe.ui.form.on("Sales Order Item", {
 
 // Codigo Adaptado para Delivery Note (Nota de entrega)
 // Funcion para calculo de impuestos
-shs_delivery_note_calculation = function (frm, cdt, cdn) {
+function shs_delivery_note_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
 
@@ -1880,7 +1880,7 @@ frappe.ui.form.on("Delivery Note Item", {
 
 // Codigo Adaptado para Supplier Quotation (Presupuesto de Proveedor)
 // Funcion para calculo de impuestos
-shs_supplier_quotation_calculation = function (frm, cdt, cdn) {
+function shs_supplier_quotation_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
 
