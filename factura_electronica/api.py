@@ -43,6 +43,13 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
 
     # Si la verificacion es igual a '1' se procede a la generacion de la factura electronica
     if (verificacionConfig[0] == 1):
+        # TODO:Funcionalidad en desarrollo
+        # if frappe.db.exists('Envios Facturas Electronicas', {'numero_dte': dato_factura}):
+        #     factura_electronica = frappe.db.get_values('Envios Facturas Electronicas',
+        #                                             filters={'numero_dte': dato_factura},
+        #                                             fieldname=['serie_factura_original', 'cae'],
+        #                                             as_dict=1)
+
         # es-GT: Verifica la existencia de facturas generadas con la misma serie,
         # esto para evitar duplicadas. En caso no se encuentre, se procede a la
         # generacion del documento.
