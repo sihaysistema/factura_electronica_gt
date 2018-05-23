@@ -20,26 +20,30 @@ def validarConfiguracion():
        1 = Una configuracion valida, 2 = Hay mas de una configuracion, 3 = No hay configuraciones"""
     # verifica que exista un documento validado, docstatus = 1 => validado
     if frappe.db.exists('Configuracion Factura Electronica', {'docstatus': 1}):
-
+        # Guarda los datos solicitados de la tabla Configuracion Factura Electronica
         configuracionValida = frappe.db.get_values('Configuracion Factura Electronica',
                                                    filters={'docstatus': 1},
                                                    fieldname=['name'], as_dict=1)
-
+        # Encontro una configuracion validada
         if (len(configuracionValida) == 1):
             # Retorna el valor 1 como valido y el nombre de la configuracion encontrada validada
             return (1, configuracionValida[0]['name'])
-
+        # Encontro mas de una configuracion validada
         elif (len(configuracionValida) > 1):
             return (2, 'Error 2')
 
     else:
+        # No encontro ninguna configuracion validada
         return (3, 'Error 3')
 
 @frappe.whitelist()
 def generar_factura_electronica(serie_factura, nombre_cliente):
     """Obtencion de datos requeridos y construccion de request"""
+    # Guarda la serie original de la factura
     dato_factura = serie_factura
+    # Guarda el nombre del cliente
     dato_cliente = nombre_cliente
+    # Guarda el resultado de la funcion, puede ser 1, 2, 3
     verificacionConfig = validarConfiguracion()
 
     # Si la verificacion es igual a '1' se procede a la generacion de la factura electronica
@@ -140,7 +144,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                                                     'nit_gface', 'importe_total_exento', 'url_listener'], as_dict=1)
 
             except:
-                frappe.msgprint(_('Error: Problemas con la Base de Datos!'))
+                frappe.msgprint(_('''Error: Problemas con la Base de Datos. No se pudieron obtener los datos requeridos
+                                     para realizar una peticion a INFILE'''))
             # es-GT: Si la obtencion de los datos de la base de datos es exitosa, se procede a la generacion del documento solicitado.
             #        de lo contrario solo mostrara el error de 'Problemas con la base de datos'
             # en-US: If the obtaining of the data of the database is successful, it proceeds to the generation of the requested document.
@@ -224,9 +229,13 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                                 with open('respuesta.xml', 'w') as recibidoxml:
                                                     recibidoxml.write(respuesta)
                                                     recibidoxml.close()
-                                                # Retorna el cae y este es capturado por javascript que a su vez actualiza y guarda
-                                                # el documento
-                                                return datoCAEF
+                                                # FIXME:
+                                                # # Retorna el cae y este es capturado por javascript que a su vez actualiza y guarda
+                                                # # el documento
+                                                # return datoCAEF
+
+                                                # La funcion se encarga de actualizar la factura y todos los documetos relacionados
+                                                actualizartb(dato_factura)
                                         except:
                                             frappe.msgprint(_('''
                                             AVISOS <span class="label label-default" style="font-size: 16px">{}</span>

@@ -1,5 +1,11 @@
+/**
+ * Copyright (c) 2017, 2018 SHS and contributors
+ * For license information, please see license.txt
+ */
+
 // Funcion para los calculos necesarios.
 function facelec_tax_calculation_conversion(frm, cdt, cdn) {
+
     // es-GT: Actualiza los datos en los campos de la tabla hija 'items'
     refresh_field('items');
 
@@ -96,13 +102,14 @@ function facelec_tax_calculation_conversion(frm, cdt, cdn) {
 
 // Funcion para evitar realizar calculos con cuentas duplicadas
 function buscar_account(frm, cuenta_b) {
-    /* Funcionamiento: recibe como parametro frm, y cuenta_b, lo que hace es, buscar en todas las filas de taxes
-       si existe ya una cuenta con el nombre de la cuenta recibida por parametro, en caso ya exista esa cuenta en
-       la tabla no hace nada, pero si encuentra que no hay una cuenta igual a la recibida en el parametro, entonces
-       la funcion encargada agregara una nueva fila con los datos correspondientes, esta funcion retorna true
-       en caso si encuentre una cuenta existente
-    */
-    var estado = ''
+    /**
+     * Funcionamiento: recibe como parametro frm, y cuenta_b, lo que hace es, buscar en todas las filas de taxes
+     * si existe ya una cuenta con el nombre de la cuenta recibida por parametro, en caso ya exista esa cuenta en
+     * la tabla no hace nada, pero si encuentra que no hay una cuenta igual a la recibida en el parametro, entonces
+     * la funcion encargada agregara una nueva fila con los datos correspondientes, esta funcion retorna true
+     * en caso si encuentre una cuenta existente
+     */
+    var estado = false
     $.each(frm.doc.taxes || [], function (i, d) {
         if (d.account_head === cuenta_b) {
             console.log('Si Existe en el indice ' + i)
@@ -138,10 +145,20 @@ function valNit(nit, cus_supp, frm) { // cus_supp = customer or supplier
     }
 }
 
-// Funcion para la obtencion del PDF, segun el documento generado.
+// Funcion para crear un boton para obtener el PDF, segun el documento generado.
 function pdf_button(cae_documento, frm) {
     // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
     frm.add_custom_button(__("Obtener PDF"),
+        function () {
+            window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
+        }).addClass("btn-primary");
+}
+
+// Funcion crea un boton que permite actualizar la serie de una factura
+// con el numero de DTE. Factura Electronica
+function pdf_button(cae_documento, frm) {
+    // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
+    frm.add_custom_button(__("Actualizar Datos Factura"),
         function () {
             window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
         }).addClass("btn-primary");
