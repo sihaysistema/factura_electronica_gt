@@ -140,43 +140,43 @@ def actualizarTablas(serieOriginalFac):
             if frappe.db.exists('Sales Taxes and Charges', {'parent': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabSales Taxes and Charges` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
-            else:
-                frappe.msgprint(_('No hay registro en Sales Taxes and Charges'))
+            # else:
+            #     frappe.msgprint(_('No hay registro en Sales Taxes and Charges'))
 
             # Pago programado
             if frappe.db.exists('Payment Schedule', {'parent': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabPayment Schedule` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
-            else:
-                frappe.msgprint(_('No hay registro en Payment Schedule'))
+            # else:
+            #     frappe.msgprint(_('No hay registro en Payment Schedule'))
 
             # subscripcion
             if frappe.db.exists('Subscription', {'reference_document': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabSubscription` SET reference_document=%(name)s
                                 WHERE reference_document=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
-            else:
-                frappe.msgprint(_('No hay registro en Subscription'))
+            # else:
+            #     frappe.msgprint(_('No hay registro en Subscription'))
 
             # Entrada del libro mayor
             if frappe.db.exists('Stock Ledger Entry', {'voucher_no': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabStock Ledger Entry` SET voucher_no=%(name)s
                                 WHERE voucher_no=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
-            else:
-                frappe.msgprint(_('No hay registro en Stock Ledger Entry'))
+            # else:
+            #     frappe.msgprint(_('No hay registro en Stock Ledger Entry'))
 
             # Hoja de tiempo de factura de ventas
             if frappe.db.exists('Sales Invoice Timesheet', {'parent': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabSales Invoice Timesheet` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
-            else:
-                frappe.msgprint(_('No hay registro en Sales Invoice Timesheet'))
+            # else:
+            #     frappe.msgprint(_('No hay registro en Sales Invoice Timesheet'))
 
             # Equipo Ventas
             if frappe.db.exists('Sales Team', {'parent': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabSales Team` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
-            else:
-                frappe.msgprint(_('No hay registro en Sales Team'))
+            # else:
+            #     frappe.msgprint(_('No hay registro en Sales Team'))
 
             # Posible modifacadas
             # # Artículo empaquetado
