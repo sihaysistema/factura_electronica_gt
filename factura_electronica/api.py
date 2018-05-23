@@ -8,6 +8,7 @@ import xmltodict
 from request_xml import construir_xml
 from datetime import datetime, date
 from guardar_factura import guardar_factura_electronica as guardar
+from guardar_factura import actualizarTablas as actualizartb
 from valida_errores import encuentra_errores as errores
 
 import sys
@@ -17,7 +18,7 @@ sys.setdefaultencoding('utf-8')
 def validarConfiguracion():
     """Permite verificar que exista una configuración validada para Factura Electrónica, retorna 1 de 3 opciones:
        1 = Una configuracion valida, 2 = Hay mas de una configuracion, 3 = No hay configuraciones"""
-
+    # verifica que exista un documento validado, docstatus = 1 => validado
     if frappe.db.exists('Configuracion Factura Electronica', {'docstatus': 1}):
 
         configuracionValida = frappe.db.get_values('Configuracion Factura Electronica',
@@ -42,28 +43,22 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
     verificacionConfig = validarConfiguracion()
 
     # Si la verificacion es igual a '1' se procede a la generacion de la factura electronica
+    # igual a uno significa que hay una configuracion validada
     if (verificacionConfig[0] == 1):
-        # TODO:Funcionalidad en desarrollo
-        # if frappe.db.exists('Envios Facturas Electronicas', {'numero_dte': dato_factura}):
-        #     factura_electronica = frappe.db.get_values('Envios Facturas Electronicas',
-        #                                             filters={'numero_dte': dato_factura},
-        #                                             fieldname=['serie_factura_original', 'cae'],
-        #                                             as_dict=1)
-
         # es-GT: Verifica la existencia de facturas generadas con la misma serie,
         # esto para evitar duplicadas. En caso no se encuentre, se procede a la
         # generacion del documento.
         # en-US: Verify the existence of invoices generated with the same series,
         # this to avoid duplicates. If it is not found, the document is generated.
-        if frappe.db.exists('Envios Facturas Electronicas', {'serie_factura_original': dato_factura}):
+        if frappe.db.exists('Envios Facturas Electronicas', {'numero_dte': dato_factura}):
             factura_electronica = frappe.db.get_values('Envios Facturas Electronicas',
-                                                    filters={'serie_factura_original': dato_factura},
-                                                    fieldname=['serie_factura_original', 'cae'],
+                                                    filters={'numero_dte': dato_factura},
+                                                    fieldname=['serie_factura_original', 'cae', 'numero_dte'],
                                                     as_dict=1)
 
             frappe.msgprint(_('''
             <b>AVISO:</b> La Factura ya fue generada Anteriormente <b>{}</b>
-            '''.format(str(factura_electronica[0]['serie_factura_original']))))
+            '''.format(str(factura_electronica[0]['numero_dte']))))
 
             cae_factura = str(factura_electronica[0]['cae'])
 
@@ -153,16 +148,19 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
             else:
                 # es-GT: Verifica que existan las series configuradas, para generar documentos: FACE, CFACE, NCE, NDE
                 #        En caso no existan una serie valida configurada no procede a generar el documento solicitado.
+                #        y mostrara un mensaje mostrando que no hay series configuradas
                 # en-US: Verify that the configured series exist, to generate documents: FACE, CFACE, NCE, NDE
                 #        In case there is not a valid configured series, it does not proceed to generate the requested document.
                 if frappe.db.exists('Configuracion Series', {'parent': verificacionConfig[1], 'serie': nombre_serie}):
+                    # Obtencion de datos de la tabla Configuracion Series de Factura Electronica
                     series_configuradas = frappe.db.get_values('Configuracion Series',
                                                             filters={'parent': verificacionConfig[1], 'serie': nombre_serie},
                                                             fieldname=['fecha_resolucion', 'estado_documento',
-                                                                        'tipo_documento', 'serie', 'secuencia_infile',
+                                                                    'tipo_documento', 'serie', 'secuencia_infile',
                                                                         'numero_resolucion', 'codigo_sat'], as_dict=1)
 
                     # es-GT: Llama al metodo 'contruir_xml' del script 'request_xml.py' para generar la peticion en XML.
+                    #        se encarga de contruir el XML con los datos anteriomente recopilados.
                     # en-US: Call the 'contruir_xml' method of the 'request_xml.py' script to generate the request in XML.
                     construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice_item,
                                 datos_compania, nit_cliente, datos_configuracion, series_configuradas,
@@ -193,7 +191,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                 # CABECERAS: Indican el tipo de datos FUNCIONA OK!!!
                                 headers = {"content-type": "text/xml"}
                                 # FUNCIONA OK!!!
-                                response = requests.post(url, data=envio_datos, headers=headers, timeout=15)
+                                response = requests.post(url, data=envio_datos, headers=headers, timeout=10)
                                 respuesta = response.content
                             except:
                                 frappe.msgprint(_('Error en la Comunicacion al servidor de INFILE. Verifique al PBX: +502 2208-2208'))
@@ -222,11 +220,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                                 datoCAEF = guardar(respuesta, dato_factura, tiempo_enviado)
 
                                                 # frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
-
+                                                # el archivo rexpuest.xml se encuentra en la ruta, /home/frappe/frappe-bench/sites
                                                 with open('respuesta.xml', 'w') as recibidoxml:
                                                     recibidoxml.write(respuesta)
                                                     recibidoxml.close()
-
+                                                # Retorna el cae y este es capturado por javascript que a su vez actualiza y guarda
+                                                # el documento
                                                 return datoCAEF
                                         except:
                                             frappe.msgprint(_('''
@@ -312,3 +311,5 @@ def get_data_tax_account(name_account_tax_gt):
         return str(datos_cuenta[0]['tax_rate'])
     else:
         frappe.msgprint(_('No existe cuenta relacionada con el producto'))
+
+# @frappe.whitelist()

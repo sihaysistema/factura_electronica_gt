@@ -27,7 +27,7 @@ function facelec_tax_calculation_conversion(frm, cdt, cdn) {
             console.log("conversion_factor is: " + item_row.conversion_factor);
 
             // Verificacion Individual para verificar si es Fuel, Good o Service
-            if (item_row.factelecis_fuel == 1) {
+            if (item_row.factelecis_fuel === 1) {
                 //console.log("The item you added is FUEL!" + item_row.facelec_is_good);// WORKS OK!
                 // Estimamos el valor del IVA para esta linea
                 //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (1 + (this_company_sales_tax_var / 100))).toFixed(2);
@@ -35,7 +35,7 @@ function facelec_tax_calculation_conversion(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
-                total_fuel = 0;
+                let total_fuel = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.factelecis_fuel == true) {
@@ -46,7 +46,7 @@ function facelec_tax_calculation_conversion(frm, cdt, cdn) {
                 frm.doc.facelec_gt_tax_fuel = total_fuel;
                 frm.refresh_field("factelecis_fuel");
             };
-            if (item_row.facelec_is_good == 1) {
+            if (item_row.facelec_is_good === 1) {
                 //console.log("The item you added is a GOOD!" + item_row.facelec_is_good);// WORKS OK!
                 //console.log("El valor en bienes para el libro de compras es: " + net_goods_tally);// WORKS OK!
                 // Estimamos el valor del IVA para esta linea
@@ -55,7 +55,7 @@ function facelec_tax_calculation_conversion(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
-                total_goods = 0;
+                let total_goods = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.facelec_is_good == true) {
@@ -65,7 +65,7 @@ function facelec_tax_calculation_conversion(frm, cdt, cdn) {
                 //console.log("El total neto de bienes es:" + total_goods);// WORKS OK!
                 frm.doc.facelec_gt_tax_goods = total_goods;
             };
-            if (item_row.facelec_is_service == 1) {
+            if (item_row.facelec_is_service === 1) {
                 //console.log("The item you added is a SERVICE!" + item_row.facelec_is_service);// WORKS OK!
                 //console.log("El valor en servicios para el libro de compras es: " + net_services_tally);// WORKS OK!
                 // Estimamos el valor del IVA para esta linea
@@ -74,7 +74,7 @@ function facelec_tax_calculation_conversion(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
 
-                total_servi = 0;
+                let total_servi = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_is_service == true) {
                         total_servi += flt(d.facelec_gt_tax_net_services_amt);
@@ -85,7 +85,7 @@ function facelec_tax_calculation_conversion(frm, cdt, cdn) {
             };
 
             // Para el calculo total de IVA, basado en la sumatoria de facelec_sales_tax_for_this_row de cada item
-            full_tax_iva = 0;
+            let full_tax_iva = 0;
             $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_sales_tax_for_this_row);
             });
@@ -160,6 +160,8 @@ function generarFacturaBTN(frm, cdt, cdn) {
             pdf_button(frm.doc.cae_factura_electronica, frm);
         } else {
             frm.add_custom_button(__('Factura Electronica'), function () {
+                // frm.reload(); permite hacer un refresh de todo el documento
+                frm.reload_doc();
                 frappe.call({
                     method: "factura_electronica.api.generar_factura_electronica",
                     args: {
@@ -192,6 +194,8 @@ function generarFacturaBTN(frm, cdt, cdn) {
             pdf_button(frm.doc.cae_nota_de_credito, frm);
         } else {
             frm.add_custom_button(__('Nota Credito'), function () {
+                // frm.reload(); permite hacer un refresh de todo el documento
+                frm.reload_doc();
                 frappe.call({
                     method: "factura_electronica.api.generar_factura_electronica",
                     args: {
@@ -226,6 +230,8 @@ function generarFacturaBTN(frm, cdt, cdn) {
                 pdf_button(frm.doc.cae_nota_de_debito, frm);
             } else {
                 frm.add_custom_button(__('Nota Debito'), function () {
+                    // frm.reload(); permite hacer un refresh de todo el documento
+                    frm.reload_doc();
                     frappe.call({
                         method: "factura_electronica.api.generar_factura_electronica",
                         args: {
@@ -260,6 +266,8 @@ function generarFacturaSINBTN(frm, cdt, cdn) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
         } else {
+            // frm.reload(); permite hacer un refresh de todo el documento
+            frm.reload_doc();
             frappe.call({
                 method: "factura_electronica.api.generar_factura_electronica",
                 args: {
@@ -290,6 +298,8 @@ function generarFacturaSINBTN(frm, cdt, cdn) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_nota_de_credito, frm);
         } else {
+            // frm.reload(); permite hacer un refresh de todo el documento
+            frm.reload_doc();
             frappe.call({
                 method: "factura_electronica.api.generar_factura_electronica",
                 args: {
@@ -321,6 +331,8 @@ function generarFacturaSINBTN(frm, cdt, cdn) {
                 cur_frm.clear_custom_buttons();
                 pdf_button(frm.doc.cae_nota_de_debito, frm);
             } else {
+                // frm.reload(); permite hacer un refresh de todo el documento
+                frm.reload_doc();
                 frappe.call({
                     method: "factura_electronica.api.generar_factura_electronica",
                     args: {
@@ -407,7 +419,10 @@ frappe.ui.form.on("Sales Invoice", {
                 facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
             });
         });
-
+        // Cuando el documento se actualiza, la funcion verificac de que exista un cae.
+        // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
+        // En caso no exista un cae mostrara el boton para generar la factura electronica
+        // correspondiente a su serie.
         verificacionCAE(frm, cdt, cdn);
 
     },
@@ -499,10 +514,10 @@ frappe.ui.form.on("Sales Invoice Item", {
         // console.log('Trigger remove en tabla hija');
 
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        fix_gt_tax_fuel = 0;
-        fix_gt_tax_goods = 0;
-        fix_gt_tax_services = 0;
-        fix_gt_tax_iva = 0;
+        let fix_gt_tax_fuel = 0;
+        let fix_gt_tax_goods = 0;
+        let fix_gt_tax_services = 0;
+        let fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
 

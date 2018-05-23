@@ -94,35 +94,103 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
         # es-GT: Al terminar de guardar el registro en la base de datos, retorna el CAE
         # en-US: When done saving the records to the database, it returns de CAE
 
-        # EN DASARROLLO #############################################################
-        # try:
-        #     # serieDte: guarda el numero DTE retornado por INFILE, se utilizara para reemplazar el nombre de la serie de la
-        #     # factura que lo generó.
-        #     serieDte = numeroDTEINFILE
-        #     # serieFacturaOriginal: Guarda la serie original de la factura.
-        #     serieFacturaOriginal = serie_fact
-
-        #     # frappe.db.sql("""update `tabSales Invoice` set name = '{0}'
-        #     # where name = '{1}'""").format(serieDte, serie_fact)
-
-        #     # QUERY para actualizar la serie de la factura que lo origino, con el numero de DTE
-        #     # Listado tablas para actualizar.
-        #     frappe.db.sql('''UPDATE `tabSales Invoice` SET name=%(name)s WHERE name=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
-        #     frappe.db.sql('''UPDATE `tabSales Invoice Item` SET parent=%(name)s WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
-        #     frappe.db.sql('''UPDATE `tabGL Entry` SET voucher_no=%(name)s, against_voucher=%(name)s WHERE voucher_no=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
-        # except:
-        #     # En caso exista un error al renombrar la factura retornara el mensaje con el error
-        #     frappe.msgprint(_('Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'))
-
-        return cae_dato
+        # return cae_dato
         # frappe.msgprint(_("Factura Electronica Generada!"))
     except:
         # es-GT: Si algo falla, muestra el error en el navegador.
         # es-GT: Este mensaje solo indica que no se guardo la confirmacion de la factura electronica.
         # en-US: If something fails, the exception shows this message in the browser
         # en-US: This message simply states that the Electronic Invoice Confirmation was not saved.
-        frappe.msgprint(_("Error: No se guardo correctamente la Factura Electronica"))
-        # es-GT: FIXME  Que accion se le sugiere tomar al usuario ahora?
-        # es-GT: FIXME  Sugerir por lo menos un par de opciones: Verificar configuracion local e intentar de nuevo, o llamar a INFILE.
-        # en-US: FIXME What course of action may we suggest to the user?
-        # en-US: FIXME Suggest a couple of options: verify local configuration and try Again or call INFILE?
+        frappe.msgprint(_("""Error: No se guardo correctamente la Factura Electronica. Por favor vuelva a presionar el
+                             boton de Factura Electronica"""))
+    else:
+        # Si los datos se Guardan correctamente, se retornara el cae generado, que sera capturado por api.py 
+        # que es el encargado de actualizar el documento con la ayuda de python y javascript.
+        return cae_dato
+
+def actualizarTablas():
+    pass
+    # if frappe.db.exists('Envios Facturas Electronicas', {'numero_dte': numeroDTEINFILE}):
+    #     facelecGuardada = frappe.db.get_values('Envios Facturas Electronicas',
+    #                                            filters={'numero_dte': numeroDTEINFILE},
+    #                                            fieldname=['name'], as_dict=1)
+    #     # Esta seccion se encarga de actualizar la serie, con una nueva que es el numero de DTE
+    #     # buscara en las tablas donde exista una coincidencia actualizando con la nueva serie
+    #     try:
+    #         # serieDte: guarda el numero DTE retornado por INFILE, se utilizara para reemplazar el nombre de la serie de la
+    #         # factura que lo generó.
+    #         serieDte = numeroDTEINFILE
+    #         # serieFacturaOriginal: Guarda la serie original de la factura.
+    #         serieFacturaOriginal = serie_fact
+
+    #         # frappe.db.sql("""update `tabSales Invoice` set name = '{0}'
+    #         # where name = '{1}'""").format(serieDte, serie_fact)
+
+    #         # Actualizacion de tablas que son modificadas directamente.
+    #         frappe.db.sql('''UPDATE `tabSales Invoice` SET name=%(name)s
+    #                         WHERE name=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
+
+    #         frappe.db.sql('''UPDATE `tabSales Invoice Item` SET parent=%(name)s
+    #                         WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
+
+    #         frappe.db.sql('''UPDATE `tabGL Entry` SET voucher_no=%(name)s, against_voucher=%(name)s
+    #                         WHERE voucher_no=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
+
+    #         # Actualizacion de tablas que pueden ser modificadas desde Sales Invoice
+    #         # Comprobacion de existencias: verifica en cada tabla si existe un dato relacionado con la serie,
+    #         # si existe procede a actualizar.
+    #         if frappe.db.exists('Sales Taxes and Charges', {'parent': serieFacturaOriginal}):
+    #             frappe.db.sql('''UPDATE `Sales Taxes and Charges` SET parent=%(name)s
+    #                             WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
+    #         else:
+    #             frappe.msgprint(_('No hay registro en Sales Taxes and Charges'))
+
+    #         # Pago programado
+    #         if frappe.db.exists('Payment Schedule', {'parent': serieFacturaOriginal}):
+    #             frappe.db.sql('''UPDATE `Payment Schedule` SET parent=%(name)s
+    #                             WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
+    #         else:
+    #             frappe.msgprint(_('No hay registro en Payment Schedule'))
+
+    #         # subscripcion
+    #         if frappe.db.exists('Subscription', {'reference_document': serieFacturaOriginal}):
+    #             frappe.db.sql('''UPDATE `Subscription` SET reference_document=%(name)s
+    #                             WHERE reference_document=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
+    #         else:
+    #             frappe.msgprint(_('No hay registro en Subscription'))
+
+    #         # Entrada del libro mayor
+    #         if frappe.db.exists('Stock Ledger Entry', {'voucher_no': serieFacturaOriginal}):
+    #             frappe.db.sql('''UPDATE `Stock Ledger Entry` SET voucher_no=%(name)s
+    #                             WHERE voucher_no=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
+    #         else:
+    #             frappe.msgprint(_('No hay registro en Stock Ledger Entry'))
+
+    #         # Hoja de tiempo de factura de ventas
+    #         if frappe.db.exists('Sales Invoice Timesheet', {'parent': serieFacturaOriginal}):
+    #             frappe.db.sql('''UPDATE `Sales Invoice Timesheet` SET parent=%(name)s
+    #                             WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
+    #         else:
+    #             frappe.msgprint(_('No hay registro en Sales Invoice Timesheet'))
+
+    #         # Equipo Ventas
+    #         if frappe.db.exists('Sales Team', {'parent': serieFacturaOriginal}):
+    #             frappe.db.sql('''UPDATE `Sales Team` SET parent=%(name)s
+    #                             WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serieFacturaOriginal})
+    #         else:
+    #             frappe.msgprint(_('No hay registro en Sales Team'))
+
+    #         # Posible modifacadas
+    #         # # Artículo empaquetado
+    #         # if frappe.db.exists('Packed Item', {'': }): # ?
+    #         # # Avance de Factura de Ventas
+    #         # if frappe.db.exists('Sales Invoice Advance', {'': }): # ?
+    #         # # Pago de factura de ventas
+    #         # if frappe.db.exists('Sales Invoice Payment', {'': }): # ?
+    #         # # Entrada de Diario
+    #         # if frappe.db.exists('Journal Entry', {'': }): # ?
+    #         # # hoja de tiempo
+    #         # if frappe.db.exists('Timesheet', {'': }): # No hay registro
+    #     except:
+    #         # En caso exista un error al renombrar la factura retornara el mensaje con el error
+    #         frappe.msgprint(_('Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'))
