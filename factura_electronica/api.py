@@ -235,6 +235,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                                 # return datoCAEF
 
                                                 # La funcion se encarga de actualizar la factura y todos los documetos relacionados
+                                                # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
                                                 numero_dte_correcto = actualizartb(dato_factura)
 
                                                 return numero_dte_correcto

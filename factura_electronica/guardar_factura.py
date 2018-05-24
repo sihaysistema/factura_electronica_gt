@@ -124,7 +124,7 @@ def actualizarTablas(serieOriginalFac):
             serie_fac_original = serieOriginalFac
 
             # Actualizacion de tablas que son modificadas directamente.
-            # tabSales Invoice
+            # 01 - tabSales Invoice
             frappe.db.sql('''UPDATE `tabSales Invoice`
                              SET name=%(name)s,
                                  cae_factura_electronica=%(cae_correcto)s,
@@ -132,16 +132,17 @@ def actualizarTablas(serieOriginalFac):
                             WHERE name=%(serieFa)s
                             ''', {'name':serieDte, 'cae_correcto': factura_guardada[0]['cae'],
                                   'serie_orig_correcta': serie_fac_original, 'serieFa':serie_fac_original})
-            # tabSales Invoice Item
+            # 02 - tabSales Invoice Item
             frappe.db.sql('''UPDATE `tabSales Invoice Item` SET parent=%(name)s
                             WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
-            # tabGL Entry
+            # 03 - tabGL Entry
             frappe.db.sql('''UPDATE `tabGL Entry` SET voucher_no=%(name)s, against_voucher=%(name)s
                             WHERE voucher_no=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
 
             # Actualizacion de tablas que pueden ser modificadas desde Sales Invoice
             # Verificara tabla por tabla en busca de un valor existe, en caso sea verdadero actualizara,
             # en caso no encuentre nada no hara nada
+            # 04 - tabSales Taxes and Charges
             if frappe.db.exists('Sales Taxes and Charges', {'parent': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabSales Taxes and Charges` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
@@ -149,6 +150,7 @@ def actualizarTablas(serieOriginalFac):
             #     frappe.msgprint(_('No hay registro en Sales Taxes and Charges'))
 
             # Pago programado
+            # 05 - tabPayment Schedule
             if frappe.db.exists('Payment Schedule', {'parent': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabPayment Schedule` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
@@ -156,13 +158,15 @@ def actualizarTablas(serieOriginalFac):
             #     frappe.msgprint(_('No hay registro en Payment Schedule'))
 
             # subscripcion
+            # 06 - tabSubscription
             if frappe.db.exists('Subscription', {'reference_document': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabSubscription` SET reference_document=%(name)s
                                 WHERE reference_document=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
             # else:
             #     frappe.msgprint(_('No hay registro en Subscription'))
 
-            # Entrada del libro mayor
+            # Entrada del libro mayor de inventarios
+            # 07 - tabStock Ledger Entry
             if frappe.db.exists('Stock Ledger Entry', {'voucher_no': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabStock Ledger Entry` SET voucher_no=%(name)s
                                 WHERE voucher_no=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
@@ -170,6 +174,7 @@ def actualizarTablas(serieOriginalFac):
             #     frappe.msgprint(_('No hay registro en Stock Ledger Entry'))
 
             # Hoja de tiempo de factura de ventas
+            # 08 - tabSales Invoice Timesheet
             if frappe.db.exists('Sales Invoice Timesheet', {'parent': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabSales Invoice Timesheet` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
@@ -177,11 +182,63 @@ def actualizarTablas(serieOriginalFac):
             #     frappe.msgprint(_('No hay registro en Sales Invoice Timesheet'))
 
             # Equipo Ventas
+            # 09 - tabSales Team
             if frappe.db.exists('Sales Team', {'parent': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabSales Team` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
             # else:
             #     frappe.msgprint(_('No hay registro en Sales Team'))
+            
+            # Packed Item
+            # 10 - tabPacked Item
+            if frappe.db.exists('Packed Item', {'parent': serie_fac_original}):
+                frappe.db.sql('''UPDATE `tabPacked Item` SET parent=%(name)s
+                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+            # else:
+            #     frappe.msgprint(_('No hay registro en tabPackedItem))
+            
+            # Sales Invoice Advance - Anticipos a facturas
+            # 11 - tabSales Invoice Advance
+            if frappe.db.exists('Sales Invoice Advance', {'parent': serie_fac_original}):
+                frappe.db.sql('''UPDATE `tabSales Invoice Advance` SET parent=%(name)s
+                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+            # else:
+            #     frappe.msgprint(_('No hay registro en tabSales Invoice Advance))
+            
+            # Sales Invoice Payment - Pagos sobre a facturas
+            # 12 - tabSales Invoice Payment
+            if frappe.db.exists('Sales Invoice Payment', {'parent': serie_fac_original}):
+                frappe.db.sql('''UPDATE `tabSales Invoice Payment` SET parent=%(name)s
+                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+            # else:
+            #     frappe.msgprint(_('No hay registro en tabSales Invoice Payment))
+            
+            # Payment Entry Reference -
+            # 13 - tabPayment Entry Reference
+            if frappe.db.exists('Payment Entry Reference', {'parent': serie_fac_original}):
+                frappe.db.sql('''UPDATE `tabSales Invoice Payment` SET parent=%(name)s
+                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+            # else:
+            #     frappe.msgprint(_('No hay registro en tabPayment Entry Reference))
+            
+            # Payment Entry Reference -
+            # 14 - tabPayment Entry Reference
+            if frappe.db.exists('Payment Entry Reference', {'parent': serie_fac_original}):
+                frappe.db.sql('''UPDATE `tabSales Invoice Payment` SET parent=%(name)s
+                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+            # else:
+            #     frappe.msgprint(_('No hay registro en tabPayment Entry Reference))
+            
+            # Sales Order
+            # 15 - tabSales Order
+            if frappe.db.exists('Sales Order', {'parent': serie_fac_original}):
+                frappe.db.sql('''UPDATE `tabSales Order` SET parent=%(name)s
+                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+            # else:
+            #     frappe.msgprint(_('No hay registro en tabSales Order))
+            
+
+            
 
             # Posible modifacadas
             # # Artículo empaquetado
