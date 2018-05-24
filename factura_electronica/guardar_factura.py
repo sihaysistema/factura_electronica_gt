@@ -113,7 +113,7 @@ def actualizarTablas(serieOriginalFac):
     if frappe.db.exists('Envios Facturas Electronicas', {'serie_factura_original': serieOriginalFac}):
         factura_guardada = frappe.db.get_values('Envios Facturas Electronicas',
                                                 filters={'serie_factura_original': serieOriginalFac},
-                                                fieldname=['numero_dte'], as_dict=1)
+                                                fieldname=['numero_dte', 'cae', 'serie_factura_original'], as_dict=1)
         # Esta seccion se encarga de actualizar la serie, con una nueva que es el numero de DTE
         # buscara en las tablas donde exista una coincidencia actualizando con la nueva serie
         try:
@@ -125,8 +125,13 @@ def actualizarTablas(serieOriginalFac):
 
             # Actualizacion de tablas que son modificadas directamente.
             # tabSales Invoice
-            frappe.db.sql('''UPDATE `tabSales Invoice` SET name=%(name)s
-                            WHERE name=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+            frappe.db.sql('''UPDATE `tabSales Invoice`
+                             SET name=%(name)s,
+                                 cae_factura_electronica=%(cae_correcto)s,
+                                 serie_original_del_documento=%(serie_orig_correcta)s
+                            WHERE name=%(serieFa)s
+                            ''', {'name':serieDte, 'cae_correcto': factura_guardada[0]['cae'],
+                                  'serie_orig_correcta': serie_fac_original, 'serieFa':serie_fac_original})
             # tabSales Invoice Item
             frappe.db.sql('''UPDATE `tabSales Invoice Item` SET parent=%(name)s
                             WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
@@ -192,5 +197,5 @@ def actualizarTablas(serieOriginalFac):
         except:
             # En caso exista un error al renombrar la factura retornara el mensaje con el error
             frappe.msgprint(_('Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'))
-        # else:
-        #     return True
+        else:
+            return factura_guardada[0]['numero_dte']

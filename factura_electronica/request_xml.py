@@ -61,7 +61,8 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 
     # Verificacion Nombre Comercial Comprador, en caso sea C/F se asignara como consumidor final
     if (str(nit_cliente[0][0]) == 'C/F' or str(nit_cliente[0][0]) == 'c/f'):
-        nombreComercialCompradorTag_Value = 'Consumidor Final'
+        # nombreComercialCompradorTag_Value = 'Consumidor Final'
+        nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
     else:
         nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
 

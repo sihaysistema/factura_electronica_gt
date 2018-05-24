@@ -145,20 +145,11 @@ function valNit(nit, cus_supp, frm) { // cus_supp = customer or supplier
     }
 }
 
-// Funcion para crear un boton para obtener el PDF, segun el documento generado.
-function pdf_button(cae_documento, frm) {
-    // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
-    frm.add_custom_button(__("Obtener PDF"),
-        function () {
-            window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
-        }).addClass("btn-primary");
-}
-
 // Funcion crea un boton que permite actualizar la serie de una factura
 // con el numero de DTE. Factura Electronica
 function pdf_button(cae_documento, frm) {
     // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
-    frm.add_custom_button(__("Actualizar Datos Factura"),
+    frm.add_custom_button(__("VER PDF FACTURA ELECTRONICA"),
         function () {
             window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
         }).addClass("btn-primary");
@@ -189,12 +180,16 @@ function generarFacturaBTN(frm, cdt, cdn) {
                     callback: function (data) {
                         // Asignacion del valor retornado por el script python del lado del servidor en el campo
                         // 'cae_factura_electronica' para ser mostrado del lado del cliente y luego guardado en la DB
-                        cur_frm.set_value("cae_factura_electronica", data.message);
-                        frm.save("Update");
-                        if (frm.doc.cae_factura_electronica) {
-                            cur_frm.clear_custom_buttons();
-                            pdf_button(frm.doc.cae_factura_electronica, frm);
-                        }
+                        console.log(data.message)
+                        let mi_url = window.location.href;
+                        window.location.assign("http://192.168.43.252/desk#Form/Sales%20Invoice/" + data.message)
+                        frm.reload_doc();
+                        // cur_frm.set_value("cae_factura_electronica", data.message);
+                        // frm.save("Update");
+                        // if (frm.doc.cae_factura_electronica) {
+                        //     cur_frm.clear_custom_buttons();
+                        //     pdf_button(frm.doc.cae_factura_electronica, frm);
+                        // }
                     }
                 });
             }).addClass("btn-primary");
