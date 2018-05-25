@@ -236,9 +236,23 @@ def actualizarTablas(serieOriginalFac):
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
             # else:
             #     frappe.msgprint(_('No hay registro en tabSales Order))
-            
 
-            
+            # Sales Order
+            # 15 - tabSales Order
+            if frappe.db.exists('Sales Order', {'parent': serie_fac_original}):
+                frappe.db.sql('''UPDATE `tabSales Order` SET parent=%(name)s
+                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+            # else:
+            #     frappe.msgprint(_('No hay registro en tabSales Order))
+            # Parece que este no enlaza directamente con sales invoice es el sales invoice que enlaza con este.
+            # Delivery Note
+            # 16 - tabDelivery Note
+            if frappe.db.exists('Delivery Note', {'parent': serie_fac_original}):
+                frappe.db.sql('''UPDATE `tabDelivery Note` SET parent=%(name)s
+                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+            # else:
+            #     frappe.msgprint(_('No hay registro en tabSales Order))
+
 
             # Posible modifacadas
             # # Artículo empaquetado
