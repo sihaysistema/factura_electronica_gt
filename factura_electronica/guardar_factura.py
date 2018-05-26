@@ -105,7 +105,7 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
                              boton de Factura Electronica"""))
     else:
         # Si los datos se Guardan correctamente, se retornara el cae generado, que sera capturado por api.py
-        # que es el encargado de actualizar el documento con la ayuda de python y javascript.
+        # Puede utlizar para futuros cambios en el codigo
         return cae_dato
 
 def actualizarTablas(serieOriginalFac):
@@ -188,7 +188,7 @@ def actualizarTablas(serieOriginalFac):
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
             # else:
             #     frappe.msgprint(_('No hay registro en Sales Team'))
-            
+
             # Packed Item
             # 10 - tabPacked Item
             if frappe.db.exists('Packed Item', {'parent': serie_fac_original}):
@@ -196,7 +196,7 @@ def actualizarTablas(serieOriginalFac):
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
             # else:
             #     frappe.msgprint(_('No hay registro en tabPackedItem))
-            
+
             # Sales Invoice Advance - Anticipos a facturas
             # 11 - tabSales Invoice Advance
             if frappe.db.exists('Sales Invoice Advance', {'parent': serie_fac_original}):
@@ -204,7 +204,7 @@ def actualizarTablas(serieOriginalFac):
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
             # else:
             #     frappe.msgprint(_('No hay registro en tabSales Invoice Advance))
-            
+
             # Sales Invoice Payment - Pagos sobre a facturas
             # 12 - tabSales Invoice Payment
             if frappe.db.exists('Sales Invoice Payment', {'parent': serie_fac_original}):
@@ -212,7 +212,7 @@ def actualizarTablas(serieOriginalFac):
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
             # else:
             #     frappe.msgprint(_('No hay registro en tabSales Invoice Payment))
-            
+
             # Payment Entry Reference -
             # 13 - tabPayment Entry Reference
             if frappe.db.exists('Payment Entry Reference', {'parent': serie_fac_original}):
@@ -220,7 +220,7 @@ def actualizarTablas(serieOriginalFac):
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
             # else:
             #     frappe.msgprint(_('No hay registro en tabPayment Entry Reference))
-            
+
             # Payment Entry Reference -
             # 14 - tabPayment Entry Reference
             if frappe.db.exists('Payment Entry Reference', {'parent': serie_fac_original}):
@@ -228,7 +228,7 @@ def actualizarTablas(serieOriginalFac):
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
             # else:
             #     frappe.msgprint(_('No hay registro en tabPayment Entry Reference))
-            
+
             # Sales Order
             # 15 - tabSales Order
             if frappe.db.exists('Sales Order', {'parent': serie_fac_original}):
@@ -269,4 +269,6 @@ def actualizarTablas(serieOriginalFac):
             # En caso exista un error al renombrar la factura retornara el mensaje con el error
             frappe.msgprint(_('Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'))
         else:
+            # Si los datos se Guardan correctamente, se retornara el Numero Dte generado, que sera capturado por api.py
+            # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
             return factura_guardada[0]['numero_dte']

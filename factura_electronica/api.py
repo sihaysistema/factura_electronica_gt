@@ -64,13 +64,10 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
             <b>AVISO:</b> La Factura ya fue generada Anteriormente <b>{}</b>
             '''.format(str(factura_electronica[0]['numero_dte']))))
 
-            cae_factura = str(factura_electronica[0]['cae'])
+            dte_factura = str(factura_electronica[0]['numero_dte'])
 
-            # es-GT: retorna el cae de la factura electronica, que es obtenida por js del lado del cliente,
-            #        para colocarla en 'Sales Invoice'.
-            # en-US: returns the fall of the electronic invoice, which is obtained by js from the client's
-            #        side, to place it in 'Sales Invoice'.
-            return cae_factura
+            # es-GT: retorna el numero de dte, para actualizar la url en caso sea necesario
+            return dte_factura
         else:
             # es-GT: Obtiene los datos necesarios de la base de datos de ERPNEXT, si ocurre un error, retornara
             #        un mensaje de error.
@@ -238,6 +235,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                                 # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
                                                 numero_dte_correcto = actualizartb(dato_factura)
 
+                                                # Este dato sera capturado por Js actualizando la url
                                                 return numero_dte_correcto
                                         except:
                                             frappe.msgprint(_('''
