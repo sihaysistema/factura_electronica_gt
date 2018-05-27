@@ -10,8 +10,9 @@ sys.setdefaultencoding('utf-8')
 
 def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice_item, datos_compania,
                   nit_cliente, datos_configuracion, series_configuradas, dato_factura, direccion_compania):
-    """Genera el archivo xml, peticion para generar la factura electronica"""
+    """Genera el archivo xml con los datos necesarios para la peticion de factura electronica"""
     direccion_cliente = str(sales_invoice[0]['customer_address'])
+    # Serie utlizada para la factura original
     serie_doc = str(sales_invoice[0]['naming_series'])
     tipo_doc = str(series_configuradas[0]['tipo_documento'])
 
@@ -61,8 +62,8 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 
     # Verificacion Nombre Comercial Comprador, en caso sea C/F se asignara como consumidor final
     if (str(nit_cliente[0][0]) == 'C/F' or str(nit_cliente[0][0]) == 'c/f'):
-        # nombreComercialCompradorTag_Value = 'Consumidor Final'
-        nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
+        nombreComercialCompradorTag_Value = 'Consumidor Final'
+        # nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
     else:
         nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
 
@@ -74,7 +75,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 
     # es-GT: Formateando la Primera parte del cuerpo de request XML.
     # en-US: Formatting the first part of the request XML body.
-    body_parte1 = """<?xml version="1.0" ?>
+    body_parte1 = """<?xml version="1.0" encoding="UTF-8"?>
 <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
 <S:Body>
 <ns2:registrarDte xmlns:ns2="http://listener.ingface.com/">

@@ -400,12 +400,10 @@ frappe.ui.form.on("Sales Invoice Item", {
         let fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
-
             fix_gt_tax_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.facelec_gt_tax_net_goods_amt);
             fix_gt_tax_services += flt(d.facelec_gt_tax_net_services_amt);
             fix_gt_tax_iva += flt(d.facelec_sales_tax_for_this_row);
-
         });
 
         cur_frm.set_value("facelec_gt_tax_fuel", fix_gt_tax_fuel);
@@ -436,6 +434,7 @@ frappe.ui.form.on("Sales Invoice Item", {
         console.log("El disparador de factor de conversión se corrió.");
         facelec_tax_calculation_conversion(frm, cdt, cdn);
     },
+    // FUNCIONA!!
     facelec_tax_rate_per_uom_account: function (frm, cdt, cdn) {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
         frm.doc.items.forEach((item_row_i, index_i) => {

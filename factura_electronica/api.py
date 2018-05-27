@@ -226,7 +226,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                                 with open('respuesta.xml', 'w') as recibidoxml:
                                                     recibidoxml.write(respuesta)
                                                     recibidoxml.close()
-                                                # FIXME:
                                                 # # Retorna el cae y este es capturado por javascript que a su vez actualiza y guarda
                                                 # # el documento
                                                 # return datoCAEF
