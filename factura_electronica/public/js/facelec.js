@@ -1992,3 +1992,25 @@ frappe.ui.form.on("Supplier Quotation Item", {
         shs_supplier_quotation_calculation(frm, cdt, cdn);
     }
 });
+
+/** Verificacion que exista un solo check */
+frappe.ui.form.on("Item", {
+    facelec_is_fuel: function (frm, cdt, cdn) {
+        if (frm.doc.facelec_is_fuel) {
+            cur_frm.set_value("facelec_is_good", 0);
+            cur_frm.set_value("facelec_is_service", 0);
+        }
+    },
+    facelec_is_good: function (frm, cdt, cdn) {
+        if (frm.doc.facelec_is_good) {
+            cur_frm.set_value("facelec_is_fuel", 0);
+            cur_frm.set_value("facelec_is_service", 0);
+        }
+    },
+    facelec_is_service: function (frm, cdt, cdn) {
+        if (frm.doc.facelec_is_service) {
+            cur_frm.set_value("facelec_is_fuel", 0);
+            cur_frm.set_value("facelec_is_good", 0);
+        }
+    }
+});
