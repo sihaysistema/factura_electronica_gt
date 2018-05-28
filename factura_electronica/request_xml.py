@@ -105,11 +105,10 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     with open('envio_request.xml', 'w') as salida:
         salida.write(body_parte1)
         salida.close()
-
+    # ------------------------------------------------------------------------------------------------------------------
     # es-GT: CONSTRUYENDO LA SEGUNDA PARTE DEL CUERPO XML.
     # SI hay mas de un producto en la Factura, genera los 'detalleDte' necesarios,
     # agregandolos al archivo 'envio_request.xml'.
-
     # en-US: BUILDING THE SECOND PART OF THE XML BODY.
     # If there is more than one product in the Invoice, generate the necessary
     # 'detalleDte', adding them to the file 'envio_request.xml'.
@@ -135,7 +134,6 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
                 # detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12)))
                 # FORMA 2
                 detalleImpuestosIvaTag_Value = float((sales_invoice_item[i]['facelec_sales_tax_for_this_row']))
-
                 importeOtrosImpuestosTag_Value = float((sales_invoice_item[i]['facelec_other_tax_amount']))
                 importeTotalOperacionTag_Value = abs(float((sales_invoice_item[i]['amount'])))
                 montoDescuentoTag_Value = float(sales_invoice_item[i]['discount_percentage'])
@@ -153,26 +151,26 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
                     tipoProductoTag_Value = 'B'
 
                 body_parte2 = """
-
-    <detalleDte>
-        <cantidad>{0}</cantidad>
-        <codigoProducto>{1}</codigoProducto>
-        <descripcionProducto>{2}</descripcionProducto>
-        <detalleImpuestosIva>{3}</detalleImpuestosIva>
-        <importeExento>{4}</importeExento>
-        <importeNetoGravado>{5}</importeNetoGravado>
-        <importeOtrosImpuestos>{6}</importeOtrosImpuestos>
-        <importeTotalOperacion>{7}</importeTotalOperacion>
-        <montoBruto>{8}</montoBruto>
-        <montoDescuento>{9}</montoDescuento>
-        <precioUnitario>{10}</precioUnitario>
-        <tipoProducto>{11}</tipoProducto>
-        <unidadMedida>{12}</unidadMedida>
-    </detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value,
-                            detalleImpuestosIvaTag_Value, importeExentoTag_Value, importeNetoGravadoTag_Value,
-                            importeOtrosImpuestosTag_Value, importeTotalOperacionTag_Value, montoBrutoTag_Value,
-                            montoDescuentoTag_Value, precioUnitarioTag_Value, tipoProductoTag_Value,
-                            unidadMedidaTag_Value)
+        <detalleDte>
+            <cantidad>{0}</cantidad>
+            <codigoProducto>{1}</codigoProducto>
+            <descripcionProducto>{2}</descripcionProducto>
+            <detalleImpuestosIva>{3}</detalleImpuestosIva>
+            <importeExento>{4}</importeExento>
+            <importeNetoGravado>{5}</importeNetoGravado>
+            <importeOtrosImpuestos>{6}</importeOtrosImpuestos>
+            <importeTotalOperacion>{7}</importeTotalOperacion>
+            <montoBruto>{8}</montoBruto>
+            <montoDescuento>{9}</montoDescuento>
+            <precioUnitario>{10}</precioUnitario>
+            <tipoProducto>{11}</tipoProducto>
+            <unidadMedida>{12}</unidadMedida>
+        </detalleDte>
+        """.format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value,
+                   detalleImpuestosIvaTag_Value, importeExentoTag_Value, importeNetoGravadoTag_Value,
+                   importeOtrosImpuestosTag_Value, importeTotalOperacionTag_Value, montoBrutoTag_Value,
+                   montoDescuentoTag_Value, precioUnitarioTag_Value, tipoProductoTag_Value,
+                   unidadMedidaTag_Value)
                 salida.write(body_parte2)
         salida.close()
 
@@ -195,7 +193,6 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
         # detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(importeNetoGravadoTag_Value - (importeNetoGravadoTag_Value/1.12)))
         # FORMA 2
         detalleImpuestosIvaTag_Value = float((sales_invoice_item[0]['facelec_sales_tax_for_this_row']))
-
         importeOtrosImpuestosTag_Value = float((sales_invoice_item[0]['facelec_other_tax_amount']))
         importeTotalOperacionTag_Value = abs(float((sales_invoice_item[0]['amount'])))
         montoDescuentoTag_Value = float(sales_invoice_item[0]['discount_percentage'])
@@ -213,7 +210,6 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
             tipoProductoTag_Value = 'B'
 
         body_parte2 = """
-
     <detalleDte>
         <cantidad>{0}</cantidad>
         <codigoProducto>{1}</codigoProducto>
@@ -228,15 +224,16 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
         <precioUnitario>{10}</precioUnitario>
         <tipoProducto>{11}</tipoProducto>
         <unidadMedida>{12}</unidadMedida>
-    </detalleDte>""".format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value,
-                            detalleImpuestosIvaTag_Value, importeExentoTag_Value, importeNetoGravadoTag_Value,
-                            importeOtrosImpuestosTag_Value, importeTotalOperacionTag_Value, montoBrutoTag_Value,
-                            montoDescuentoTag_Value, precioUnitarioTag_Value, tipoProductoTag_Value, unidadMedidaTag_Value)
+    </detalleDte>
+    """.format(cantidadTag_Value, codigoProductoTag_Value, descripcionProductoTag_Value,
+               detalleImpuestosIvaTag_Value, importeExentoTag_Value, importeNetoGravadoTag_Value,
+               importeOtrosImpuestosTag_Value, importeTotalOperacionTag_Value, montoBrutoTag_Value,
+               montoDescuentoTag_Value, precioUnitarioTag_Value, tipoProductoTag_Value, unidadMedidaTag_Value)
 
         with open('envio_request.xml', 'a') as salida:
             salida.write(body_parte2)
             salida.close()
-
+    # ------------------------------------------------------------------------------------------------------------------
     # es-GT: CONSTRUYENDO LA TERCERA PARTE DEL CUERPO XML
     # Asigna a cada variable su valor correspondiente
 
@@ -258,7 +255,6 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     # es-GT: Formato de fechas = "2013-10-10T00:00:00.000-06:00"
     # en-US: Format of dates = "2013-10-10T00: 00: 00.000-06: 00"
     fechaDocumentoTag_Value = str((sales_invoice[0]['creation']).isoformat())
-
     fechaResolucionTag_Value = (series_configuradas[0]['fecha_resolucion'])
     idDispositivoTag_Value = str(datos_configuracion[0]['id_dispositivo'])
     importeBrutoTag_Value = abs(float(sales_invoice[0]['net_total']))
@@ -270,9 +266,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     nitCompradorTag_Value = str(nit_cliente[0][0]).replace('-', '')
     nitGFACETag_Value = str(datos_configuracion[0]['nit_gface']).replace('-', '')
     nitVendedorTag_Value = str(datos_compania[0]['nit_face_company']).replace('-', '')
-
     nombreComercialRazonSocialVendedorTag_Value = str(datos_compania[0]['company_name'])
-
     nombreCompletoVendedorTag_Value = str(datos_compania[0]['company_name'])
 
     # es-GT: Las Facturas CFACE necesitan el correlativo de la factura, excluyendo la serie, por lo que se hace un slice
@@ -285,8 +279,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     else:
         numeroDocumentoTag_Value = str(dato_factura)
 
-    numeroResolucionTag_Value = str(series_configuradas[0]['numero_resolucion'])
-
+    numeroResolucionTag_Value = str(series_configuradas[0]['numero_resolucion']).replace('-', '')
     regimenISRTag_Value = str(datos_configuracion[0]['regimen_isr'])
     serieAutorizadaTag_Value = str(series_configuradas[0]['secuencia_infile'])
     serieDocumentoTag_Value = str(series_configuradas[0]['codigo_sat'])
@@ -295,7 +288,6 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     # es-GT: Cuando es moneda local, obligatoriamente debe llevar 1.00
     # en-US: When it is local currency, it must necessarily carry 1.00
     tipoCambioTag_Value = float(sales_invoice[0]['conversion_rate'])
-
     tipoDocumentoTag_Value = str(series_configuradas[0]['tipo_documento'])
     usuarioTag_Value = str(datos_configuracion[0]['usuario'])
     validadorTag_Value = str(datos_configuracion[0]['validador'])
@@ -310,7 +302,6 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
         regimen2989Tag_Value = 'true'
 
     body_parte3 = """
-
         <detalleImpuestosIva>{0}</detalleImpuestosIva>
         <direccionComercialComprador>{1}</direccionComercialComprador>
         <direccionComercialVendedor>{2}</direccionComercialVendedor>
