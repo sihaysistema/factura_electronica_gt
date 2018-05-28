@@ -256,9 +256,9 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         //var nombre = 'Nota Credito';
         // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
         // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
-        if (frm.doc.cae_nota_de_credito) {
+        if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
-            pdf_button(frm.doc.cae_nota_de_credito, frm);
+            pdf_button(frm.doc.cae_factura_electronica, frm);
         } else {
             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
             if (modalidad === 'manual') {
@@ -277,9 +277,9 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         //var nombre = 'Nota Debito';
         if (frm.doc.es_nota_de_debito) {
             cur_frm.clear_custom_buttons('Factura Electronica');
-            if (frm.doc.cae_nota_de_debito) {
+            if (frm.doc.cae_factura_electronica) {
                 cur_frm.clear_custom_buttons();
-                pdf_button(frm.doc.cae_nota_de_debito, frm);
+                pdf_button(frm.doc.cae_factura_electronica, frm);
             } else {
                 // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
                 if (modalidad === 'manual') {
@@ -379,7 +379,7 @@ frappe.ui.form.on("Sales Invoice", {
                 if (data.message === 'Automatico') {
                     console.log('Configuracion encontrada: AUTOMATICO');
                     // generarFacturaSINBTN(frm, cdt, cdn);
-                    verificacionCAE('automatico', cdt, cdn);
+                    verificacionCAE('automatico', frm, cdt, cdn);
                 }
             }
         });
