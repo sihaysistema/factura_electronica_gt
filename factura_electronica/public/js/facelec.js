@@ -126,13 +126,14 @@ function valNit(nit, cus_supp, frm) {
     if (nit === "C/F" || nit === "c/f") {
         frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
     } else {
+        var nit_validado;
         var nd, add = 0;
         if (nd = /^(\d+)\-?([\dk])$/i.exec(nit)) {
             nd[2] = (nd[2].toLowerCase() == 'k') ? 10 : parseInt(nd[2]);
             for (var i = 0; i < nd[1].length; i++) {
                 add += ((((i - nd[1].length) * -1) + 1) * nd[1][i]);
             }
-            var nit_validado = ((11 - (add % 11)) % 11) == nd[2];
+            nit_validado = ((11 - (add % 11)) % 11) == nd[2];
         } else {
             nit_validado = false;
         }
@@ -158,8 +159,10 @@ function pdf_button(cae_documento, frm) {
 }
 
 /* ---------------------------------------------------------------------------------------------------------------- */
+// Se ejecuta cuando la configuracion de generacion de facturas se encuentra en 'MANUAL'
 // Recibe como parametros:
-// tipo_factura: Almacena el nombre del tipo de factura, este se mostrara en el texto del boton
+// tipo_factura: Almacena el nombre del tipo de factura, este se mostrara en el texto del boton, puede ser
+// 'Factura Electronica', 'Nota Credito Electronica', 'Nota Debito Electronica'
 // frm: Documento que se esta trabajando
 function generar_boton_factura(tipo_factura, frm) {
     frm.add_custom_button(__(tipo_factura), function () {
@@ -176,8 +179,8 @@ function generar_boton_factura(tipo_factura, frm) {
             },
             // El callback recibe como parametro el dato retornado por el script python del lado del servidor
             callback: function (data) {
-                console.log('Serie generada: ' + data.message);
-                console.log('serie original: ' + serie_de_factura);
+                // console.log('Serie generada: ' + data.message);
+                // console.log('serie original: ' + serie_de_factura);
                 if (data.message !== undefined) {
                     // Crea una nueva url con el nombre del documento actualizado
                     let url_nueva = mi_url.replace(serie_de_factura, data.message);
@@ -190,6 +193,9 @@ function generar_boton_factura(tipo_factura, frm) {
     }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
 }
 
+// Se ejecuta cuando la configuracion de generacion de facturas se encuentra en 'AUTOMATICO'
+// Recibe como parametros:
+// frm: Documento que se esta trabajando
 function generar_factura_sin_btn(frm) {
     // frm.reload(); permite hacer un refresh de todo el documento
     frm.reload_doc();
@@ -204,8 +210,8 @@ function generar_factura_sin_btn(frm) {
         },
         // El callback recibe como parametro el dato retornado por el script python del lado del servidor
         callback: function (data) {
-            console.log('Serie generada: ' + data.message);
-            console.log('serie original: ' + serie_de_factura);
+            // console.log('Serie generada: ' + data.message);
+            // console.log('serie original: ' + serie_de_factura);
             if (data.message !== undefined) {
                 // Crea una nueva url con el nombre del documento actualizado
                 let url_nueva = mi_url.replace(serie_de_factura, data.message);
@@ -233,9 +239,11 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
         } else {
+            // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
             if (modalidad === 'manual') {
                 generar_boton_factura('Factura Electronica', frm);
             }
+            // Si la modalidad recibida es automatica se realiza la factura electronica directamente
             if (modalidad === 'automatico') {
                 generar_factura_sin_btn(frm);
             }
@@ -252,9 +260,11 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_nota_de_credito, frm);
         } else {
+            // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
             if (modalidad === 'manual') {
                 generar_boton_factura('Nota Credito Electronica', frm);
             }
+            // Si la modalidad recibida es automatica se realiza la factura electronica directamente
             if (modalidad === 'automatico') {
                 generar_factura_sin_btn(frm);
             }
@@ -271,9 +281,11 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
                 cur_frm.clear_custom_buttons();
                 pdf_button(frm.doc.cae_nota_de_debito, frm);
             } else {
+                // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
                 if (modalidad === 'manual') {
                     generar_boton_factura('Nota Debito Electronica', frm);
                 }
+                // Si la modalidad recibida es automatica se realiza la factura electronica directamente
                 if (modalidad === 'automatico') {
                     generar_factura_sin_btn(frm);
                 }
@@ -506,7 +518,7 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_p_gt_tax_net_fuel_amt = (item_row.facelec_p_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_p_sales_tax_for_this_row = (item_row.facelec_p_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
-                total_fuel = 0;
+                let total_fuel = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.facelec_p_is_fuel == true) {
@@ -520,7 +532,7 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_p_gt_tax_net_goods_amt = (item_row.facelec_p_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_p_sales_tax_for_this_row = (item_row.facelec_p_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
-                total_goods = 0;
+                let total_goods = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_p_is_good == true) {
                         total_goods += flt(d.facelec_p_gt_tax_net_goods_amt);
@@ -532,7 +544,7 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_p_gt_tax_net_services_amt = (item_row.facelec_p_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_p_sales_tax_for_this_row = (item_row.facelec_p_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
-                total_servi = 0;
+                let total_servi = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_p_is_service == true) {
                         total_servi += flt(d.facelec_p_gt_tax_net_services_amt);
@@ -540,7 +552,7 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
                 });
                 frm.doc.facelec_p_gt_tax_services = total_servi;
             };
-            full_tax_iva = 0;
+            let full_tax_iva = 0;
             $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_p_sales_tax_for_this_row);
             });
@@ -612,10 +624,10 @@ frappe.ui.form.on("Purchase Invoice Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        fix_gt_tax_fuel = 0;
-        fix_gt_tax_goods = 0;
-        fix_gt_tax_services = 0;
-        fix_gt_tax_iva = 0;
+        let fix_gt_tax_fuel = 0;
+        let fix_gt_tax_goods = 0;
+        let fix_gt_tax_services = 0;
+        let fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_p_gt_tax_net_fuel_amt);
@@ -721,7 +733,7 @@ function shs_quotation_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_qt_gt_tax_net_fuel_amt = (item_row.facelec_qt_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_qt_sales_tax_for_this_row = (item_row.facelec_qt_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
-                total_fuel = 0;
+                let total_fuel = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.facelec_qt_is_fuel == true) {
@@ -735,7 +747,7 @@ function shs_quotation_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_qt_gt_tax_net_goods_amt = (item_row.facelec_qt_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_qt_sales_tax_for_this_row = (item_row.facelec_qt_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
-                total_goods = 0;
+                let total_goods = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_qt_is_good == true) {
                         total_goods += flt(d.facelec_qt_gt_tax_net_goods_amt);
@@ -747,7 +759,7 @@ function shs_quotation_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_qt_gt_tax_net_services_amt = (item_row.facelec_qt_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_qt_sales_tax_for_this_row = (item_row.facelec_qt_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
-                total_servi = 0;
+                let total_servi = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_qt_is_service == true) {
                         total_servi += flt(d.facelec_qt_gt_tax_net_services_amt);
@@ -755,7 +767,7 @@ function shs_quotation_calculation(frm, cdt, cdn) {
                 });
                 frm.doc.facelec_qt_gt_tax_services = total_servi;
             };
-            full_tax_iva = 0;
+            let full_tax_iva = 0;
             $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_qt_sales_tax_for_this_row);
             });
@@ -827,10 +839,10 @@ frappe.ui.form.on("Quotation Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        fix_gt_tax_fuel = 0;
-        fix_gt_tax_goods = 0;
-        fix_gt_tax_services = 0;
-        fix_gt_tax_iva = 0;
+        let fix_gt_tax_fuel = 0;
+        let fix_gt_tax_goods = 0;
+        let fix_gt_tax_services = 0;
+        let fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_qt_gt_tax_net_fuel_amt);
@@ -937,7 +949,7 @@ function shs_purchase_order_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_po_gt_tax_net_fuel_amt = (item_row.facelec_po_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_po_sales_tax_for_this_row = (item_row.facelec_po_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
-                total_fuel = 0;
+                let total_fuel = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.facelec_po_is_fuel == true) {
@@ -952,7 +964,7 @@ function shs_purchase_order_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_po_gt_tax_net_goods_amt = (item_row.facelec_po_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_po_sales_tax_for_this_row = (item_row.facelec_po_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
-                total_goods = 0;
+                let total_goods = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_po_is_good == true) {
                         total_goods += flt(d.facelec_po_gt_tax_net_goods_amt);
@@ -965,7 +977,7 @@ function shs_purchase_order_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_po_gt_tax_net_services_amt = (item_row.facelec_po_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_po_sales_tax_for_this_row = (item_row.facelec_po_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
-                total_servi = 0;
+                let total_servi = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_po_is_service == true) {
                         total_servi += flt(d.facelec_po_gt_tax_net_services_amt);
@@ -974,7 +986,7 @@ function shs_purchase_order_calculation(frm, cdt, cdn) {
                 frm.doc.facelec_po_gt_tax_services = total_servi;
             };
             // es-GT: Sumatoria para obtener el IVA total
-            full_tax_iva = 0;
+            let full_tax_iva = 0;
             $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_po_sales_tax_for_this_row);
             });
@@ -1046,10 +1058,10 @@ frappe.ui.form.on("Purchase Order Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        fix_gt_tax_fuel = 0;
-        fix_gt_tax_goods = 0;
-        fix_gt_tax_services = 0;
-        fix_gt_tax_iva = 0;
+        let fix_gt_tax_fuel = 0;
+        let fix_gt_tax_goods = 0;
+        let fix_gt_tax_services = 0;
+        let fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_po_gt_tax_net_fuel_amt);
@@ -1155,7 +1167,7 @@ function shs_purchase_receipt_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_pr_gt_tax_net_fuel_amt = (item_row.facelec_pr_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_pr_sales_tax_for_this_row = (item_row.facelec_pr_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
-                total_fuel = 0;
+                let total_fuel = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.facelec_pr_is_fuel == true) {
@@ -1169,7 +1181,7 @@ function shs_purchase_receipt_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_pr_gt_tax_net_goods_amt = (item_row.facelec_pr_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_pr_sales_tax_for_this_row = (item_row.facelec_pr_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
-                total_goods = 0;
+                let total_goods = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_pr_is_good == true) {
                         total_goods += flt(d.facelec_pr_gt_tax_net_goods_amt);
@@ -1181,7 +1193,7 @@ function shs_purchase_receipt_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_pr_gt_tax_net_services_amt = (item_row.facelec_pr_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_pr_sales_tax_for_this_row = (item_row.facelec_pr_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
-                total_servi = 0;
+                let total_servi = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_pr_is_service == true) {
                         total_servi += flt(d.facelec_pr_gt_tax_net_services_amt);
@@ -1189,7 +1201,7 @@ function shs_purchase_receipt_calculation(frm, cdt, cdn) {
                 });
                 frm.doc.facelec_pr_gt_tax_services = total_servi;
             };
-            full_tax_iva = 0;
+            let full_tax_iva = 0;
             $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_pr_sales_tax_for_this_row);
             });
@@ -1261,10 +1273,10 @@ frappe.ui.form.on("Purchase Receipt Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        fix_gt_tax_fuel = 0;
-        fix_gt_tax_goods = 0;
-        fix_gt_tax_services = 0;
-        fix_gt_tax_iva = 0;
+        let fix_gt_tax_fuel = 0;
+        let fix_gt_tax_goods = 0;
+        let fix_gt_tax_services = 0;
+        let fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_pr_gt_tax_net_fuel_amt);
@@ -1476,10 +1488,10 @@ frappe.ui.form.on("Sales Order Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        fix_gt_tax_fuel = 0;
-        fix_gt_tax_goods = 0;
-        fix_gt_tax_services = 0;
-        fix_gt_tax_iva = 0;
+        let fix_gt_tax_fuel = 0;
+        let fix_gt_tax_goods = 0;
+        let fix_gt_tax_services = 0;
+        let fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_so_gt_tax_net_fuel_amt);
@@ -1585,7 +1597,7 @@ function shs_delivery_note_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].shs_dn_gt_tax_net_fuel_amt = (item_row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].shs_dn_sales_tax_for_this_row = (item_row.shs_dn_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
-                total_fuel = 0;
+                let total_fuel = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.shs_dn_is_fuel == true) {
@@ -1599,7 +1611,7 @@ function shs_delivery_note_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].shs_dn_gt_tax_net_goods_amt = (item_row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].shs_dn_sales_tax_for_this_row = (item_row.shs_dn_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
-                total_goods = 0;
+                let total_goods = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.shs_dn_is_good == true) {
                         total_goods += flt(d.shs_dn_gt_tax_net_goods_amt);
@@ -1611,7 +1623,7 @@ function shs_delivery_note_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].shs_dn_gt_tax_net_services_amt = (item_row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].shs_dn_sales_tax_for_this_row = (item_row.shs_dn_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
-                total_servi = 0;
+                let total_servi = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.shs_dn_is_service == true) {
                         total_servi += flt(d.shs_dn_gt_tax_net_services_amt);
@@ -1619,7 +1631,7 @@ function shs_delivery_note_calculation(frm, cdt, cdn) {
                 });
                 frm.doc.shs_dn_gt_tax_services = total_servi;
             };
-            full_tax_iva = 0;
+            let full_tax_iva = 0;
             $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.shs_dn_sales_tax_for_this_row);
             });
@@ -1691,10 +1703,10 @@ frappe.ui.form.on("Delivery Note Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        fix_gt_tax_fuel = 0;
-        fix_gt_tax_goods = 0;
-        fix_gt_tax_services = 0;
-        fix_gt_tax_iva = 0;
+        let fix_gt_tax_fuel = 0;
+        let fix_gt_tax_goods = 0;
+        let fix_gt_tax_services = 0;
+        let fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_dn_gt_tax_net_fuel_amt);
@@ -1800,7 +1812,7 @@ function shs_supplier_quotation_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].shs_spq_gt_tax_net_fuel_amt = (item_row.shs_spq_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].shs_spq_sales_tax_for_this_row = (item_row.shs_spq_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
-                total_fuel = 0;
+                let total_fuel = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
                     if (d.shs_spq_is_fuel == true) {
@@ -1814,7 +1826,7 @@ function shs_supplier_quotation_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].shs_spq_gt_tax_net_goods_amt = (item_row.shs_spq_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].shs_spq_sales_tax_for_this_row = (item_row.shs_spq_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
-                total_goods = 0;
+                let total_goods = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.shs_spq_is_good == true) {
                         total_goods += flt(d.shs_spq_gt_tax_net_goods_amt);
@@ -1826,7 +1838,7 @@ function shs_supplier_quotation_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].shs_spq_gt_tax_net_services_amt = (item_row.shs_spq_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].shs_spq_sales_tax_for_this_row = (item_row.shs_spq_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
-                total_servi = 0;
+                let total_servi = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.shs_spq_is_service == true) {
                         total_servi += flt(d.shs_spq_gt_tax_net_services_amt);
@@ -1834,7 +1846,7 @@ function shs_supplier_quotation_calculation(frm, cdt, cdn) {
                 });
                 frm.doc.shs_spq_gt_tax_services = total_servi;
             };
-            full_tax_iva = 0;
+            let full_tax_iva = 0;
             $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.shs_spq_sales_tax_for_this_row);
             });
@@ -1910,10 +1922,10 @@ frappe.ui.form.on("Supplier Quotation Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        fix_gt_tax_fuel = 0;
-        fix_gt_tax_goods = 0;
-        fix_gt_tax_services = 0;
-        fix_gt_tax_iva = 0;
+        let fix_gt_tax_fuel = 0;
+        let fix_gt_tax_goods = 0;
+        let fix_gt_tax_services = 0;
+        let fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_spq_gt_tax_net_fuel_amt);
@@ -1993,7 +2005,7 @@ frappe.ui.form.on("Supplier Quotation Item", {
     }
 });
 
-/** Verificacion que exista un solo check */
+/** Verificacion para que exista un solo check */
 frappe.ui.form.on("Item", {
     facelec_is_fuel: function (frm, cdt, cdn) {
         if (frm.doc.facelec_is_fuel) {
