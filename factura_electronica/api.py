@@ -205,8 +205,11 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                     frappe.msgprint(_('Error en la comunicacion no se recibieron datos de INFILE'))
                                 else:
                                     documento_descripcion = xmltodict.parse(respuesta)
-
+                                    # es-GT: OJO!  Si se enviaron caracteres como la cedille o el ampersand, habra error. 1. se configurara con INFILE, 2. Se hara un if else o try except para capturar este error
+                                    # try:
                                     descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
+                                    # except:  
+                                    # Cual es el error. Por ahora, el unico que conocemos es sobre los caracteres
                                     # es-GT: en la variable 'errores_diccionario' se almacena un diccionario retornado
                                     #        por el metodo errores del script valida_errores.py con los errores encontrados,
                                     #        en caso existan errores los muestra. en caso no existan errores, se procede a
