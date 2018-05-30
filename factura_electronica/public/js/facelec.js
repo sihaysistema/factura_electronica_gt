@@ -119,14 +119,13 @@ function buscar_account(frm, cuenta_b) {
     return estado;
 }
 
-// Funcion para validar el NIT
-// Parametros:
-// cus_supp = customer or supplier
+/**
+ * Funcion para validar el NIT:
+ */
 function valNit(nit, cus_supp, frm) {
     if (nit === "C/F" || nit === "c/f") {
         frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
     } else {
-        var nit_validado;
         var nd, add = 0;
         if (nd = /^(\d+)\-?([\dk])$/i.exec(nit)) {
             nd[2] = (nd[2].toLowerCase() == 'k') ? 10 : parseInt(nd[2]);
@@ -293,6 +292,14 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         }
     }
     /* -------------------------------------------------------------------------------------- */
+    // Funcionalidad evita copiar CAE cuando se duplica una factura
+    if (frm.doc.status === 'Draft') {
+        // console.log('No Guardada');
+        cur_frm.set_value("cae_factura_electronica", '');
+        cur_frm.set_value("serie_original_del_documento", '');
+        // frm.doc.cae_factura_electronica = '';
+        // frm.doc.serie_original_del_documento = '';
+    }
 }
 /* ---------------------------------------------------------------------------------------------------------------- */
 
@@ -319,8 +326,11 @@ frappe.ui.form.on("Sales Invoice", {
         verificacionCAE('manual', frm, cdt, cdn);
     },
     nit_face_customer: function (frm, cdt, cdn) {
+        // if (frm.doc.nit_face_customer === null) {
+        //     console.log('EL NIT ES NULL')
+        // }
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
-        valNit(frm.doc.nit_face_customer, frm.doc.customer, frm)
+        valNit(frm.doc.nit_face_customer, frm.doc.customer, frm);
     },
     discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
@@ -389,10 +399,16 @@ frappe.ui.form.on("Sales Invoice", {
     //     // generado el CAE para el documento requerido.
     //     verificacionCAE(frm, cdt, cdn);
     // },
-    // onload_post_render: function(frm, cdt, cdn){
-    // console.log('si funciona')
-    // console.log('Funcionando Onload Trigger'); SI FUNCIONA EL TRIGGER
-    // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
+    // onload_post_render: function (frm, cdt, cdn) {
+    //     // console.log('si funciona')
+    //     // console.log('Funcionando Onload Trigger'); SI FUNCIONA EL TRIGGER
+    //     // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
+    //     frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]', function (e) {
+    //         console.log("Blurring from the Rate Field");
+    //         setTimeout(function () {
+    //             console.log(cur_frm.doc.item_code)
+    //         }, 100);
+    //     });
     // }
 });
 
@@ -429,6 +445,13 @@ frappe.ui.form.on("Sales Invoice Item", {
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
+        // frm.doc.items.forEach((item_row, index) => {
+        //     if (item_row.name == cdn) {
+        //         console.log(item_row.item_code);
+        //         let prueba = frappe.get_doc('Item', item_row.item_code);
+        //         console.log(prueba);
+        //     };
+        // });
 
     },
     qty: function (frm, cdt, cdn) {
