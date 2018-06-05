@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-from __future__ import unicode_literals
 import frappe
 from frappe import _
-
+from valida_errores import normalizar_texto as normalizar
 from datetime import datetime
 import sys
 reload(sys)
@@ -11,9 +11,11 @@ sys.setdefaultencoding('utf-8')
 def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice_item, datos_compania,
                   nit_cliente, datos_configuracion, series_configuradas, dato_factura, direccion_compania):
     """Genera el archivo xml con los datos necesarios para la peticion de factura electronica"""
+
     direccion_cliente = str(sales_invoice[0]['customer_address'])
     # Serie utlizada para la factura original
     serie_doc = str(sales_invoice[0]['naming_series'])
+    # Tipo Documento INFILE
     tipo_doc = str(series_configuradas[0]['tipo_documento'])
 
     # es-GT: Verifica si existe la direccion del cliente, en caso si exista la direccion,
@@ -31,7 +33,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
         if ((datos_cliente[0]['city']) == ''):
             departamentoCompradorTag_Value = 'N/A'
         else:
-            departamentoCompradorTag_Value = str(datos_cliente[0]['city'])
+            departamentoCompradorTag_Value = str(normalizar(datos_cliente[0]['city']))
 
         # Verificacion Direccion Comercial Comprador, en caso no exista se asignara N/A
         if ((datos_cliente[0]['address_line1']) == ''):
@@ -49,7 +51,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
         if ((datos_cliente[0]['state']) == ''):
             municipioCompradorTag_Value = 'N/A'
         else:
-            municipioCompradorTag_Value = str(datos_cliente[0]['state'])
+            municipioCompradorTag_Value = str(normalizar(datos_cliente[0]['state']))
 
     # es-GT: En caso no exista la direccion del cliente, los valores se establecen a 'N/A' y a 'Consumidor Final'.
     # en-US: In case there is no customer address, the values are set to 'N / A' and 'Final Consumer'.
@@ -65,17 +67,17 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
         nombreComercialCompradorTag_Value = 'Consumidor Final'
         # nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
     else:
-        nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
+        nombreComercialCompradorTag_Value = str(normalizar(sales_invoice[0]['customer_name']))
 
     claveTag_Value = str(datos_configuracion[0]['clave'])
     codigoEstablecimientoTag_Value = str(datos_configuracion[0]['codigo_establecimiento'])
     codigoMonedaTag_Value = str(sales_invoice[0]['currency'])
-    departamentoVendedorTag_Value = str(direccion_compania[0]['city'])
+    departamentoVendedorTag_Value = str(normalizar(direccion_compania[0]['city']))
     descripcionOtroImpuestoTag_Value = str(datos_configuracion[0]['descripcion_otro_impuesto'])
 
     # es-GT: Formateando la Primera parte del cuerpo de request XML.
     # en-US: Formatting the first part of the request XML body.
-    body_parte1 = """<?xml version="1.0" encoding="UTF-8"?>
+    body_parte1 = """<?xml version="1.0" encoding="utf-8"?>
 <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
 <S:Body>
 <ns2:registrarDte xmlns:ns2="http://listener.ingface.com/">
@@ -239,7 +241,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 
     # en-US: BUILDING THE THIRD PART OF THE XML BODY
     # Assign each variable its corresponding value
-    direccionComercialVendedorTag_Value = str(direccion_compania[0]['address_line1'])
+    direccionComercialVendedorTag_Value = str(normalizar(direccion_compania[0]['address_line1']))
 
     # es-GT: Depende si una factura esta cancelada o es valida, **MODIFICAR PARA FUTURAS IMPLEMENTACIONES**
     # en-US: Depends if an invoice is canceled or is valid, ** MODIFY FOR FUTURE IMPLEMENTATIONS **
@@ -266,8 +268,8 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     nitCompradorTag_Value = str(nit_cliente[0][0]).replace('-', '')
     nitGFACETag_Value = str(datos_configuracion[0]['nit_gface']).replace('-', '')
     nitVendedorTag_Value = str(datos_compania[0]['nit_face_company']).replace('-', '')
-    nombreComercialRazonSocialVendedorTag_Value = str(datos_compania[0]['company_name'])
-    nombreCompletoVendedorTag_Value = str(datos_compania[0]['company_name'])
+    nombreComercialRazonSocialVendedorTag_Value = str(normalizar(datos_compania[0]['company_name']))
+    nombreCompletoVendedorTag_Value = str(normalizar(datos_compania[0]['company_name']))
 
     # es-GT: Las Facturas CFACE necesitan el correlativo de la factura, excluyendo la serie, por lo que se hace un slice
     #        para que tome solo el correlativo, si no es CFACE tomara la serie completa.
@@ -283,7 +285,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     regimenISRTag_Value = str(datos_configuracion[0]['regimen_isr'])
     serieAutorizadaTag_Value = str(series_configuradas[0]['secuencia_infile'])
     serieDocumentoTag_Value = str(series_configuradas[0]['codigo_sat'])
-    municipioVendedorTag_Value = str(direccion_compania[0]['state'])
+    municipioVendedorTag_Value = str(normalizar(direccion_compania[0]['state']))
 
     # es-GT: Cuando es moneda local, obligatoriamente debe llevar 1.00
     # en-US: When it is local currency, it must necessarily carry 1.00

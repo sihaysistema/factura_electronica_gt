@@ -18,6 +18,7 @@ sys.setdefaultencoding('utf-8')
 def validarConfiguracion():
     """Permite verificar que exista una configuración validada para Factura Electrónica, retorna 1 de 3 opciones:
        1 = Una configuracion valida, 2 = Hay mas de una configuracion, 3 = No hay configuraciones"""
+
     # verifica que exista un documento validado, docstatus = 1 => validado
     if frappe.db.exists('Configuracion Factura Electronica', {'docstatus': 1}):
         # Guarda los datos solicitados de la tabla Configuracion Factura Electronica
@@ -194,7 +195,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                 headers = {"content-type": "text/xml"}
                                 # FUNCIONA OK!!!
                                 response = requests.post(url, data=envio_datos, headers=headers, timeout=10)
-                                respuesta = response.content
+                                #respuesta = response.content
                             except:
                                 frappe.msgprint(_('Error en la Comunicacion al servidor de INFILE. Verifique al PBX: +502 2208-2208'))
                             else:
@@ -205,47 +206,50 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                     frappe.msgprint(_('Error en la comunicacion no se recibieron datos de INFILE'))
                                 else:
                                     documento_descripcion = xmltodict.parse(respuesta)
+                                    try:
+                                        descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
+                                    except:
+                                        frappe.msgprint(_('Error recepcion datos por INFILE' + respuesta))
+                                    else:
+                                        # es-GT: en la variable 'errores_diccionario' se almacena un diccionario retornado
+                                        #        por el metodo errores del script valida_errores.py con los errores encontrados,
+                                        #        en caso existan errores los muestra. en caso no existan errores, se procede a
+                                        #        guardar en la base de datos, en la tabla 'Envios Facturas Electronicas'.
+                                        # en-US: In the variable 'errors_dictionary' a dictionary returned by the error method of
+                                        #        the valida_errors.py script is stored with the errors found, if there are errors,
+                                        #        it shows them. In case there are no errors, we proceed to save in the database,
+                                        #        in the 'Shipping Electronic Invoices' table.
+                                        errores_diccionario = errores(descripciones)
+                                        if (len(errores_diccionario) > 0):
+                                            try:
+                                                if (((errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
+                                                    datoCAEF = guardar(respuesta, dato_factura, tiempo_enviado)
 
-                                    descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
-                                    # es-GT: en la variable 'errores_diccionario' se almacena un diccionario retornado
-                                    #        por el metodo errores del script valida_errores.py con los errores encontrados,
-                                    #        en caso existan errores los muestra. en caso no existan errores, se procede a
-                                    #        guardar en la base de datos, en la tabla 'Envios Facturas Electronicas'.
-                                    # en-US: In the variable 'errors_dictionary' a dictionary returned by the error method of
-                                    #        the valida_errors.py script is stored with the errors found, if there are errors,
-                                    #        it shows them. In case there are no errors, we proceed to save in the database,
-                                    #        in the 'Shipping Electronic Invoices' table.
-                                    errores_diccionario = errores(descripciones)
-                                    if (len(errores_diccionario) > 0):
-                                        try:
-                                            if (((errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
-                                                datoCAEF = guardar(respuesta, dato_factura, tiempo_enviado)
+                                                    # frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
+                                                    # el archivo rexpuest.xml se encuentra en la ruta, /home/frappe/frappe-bench/sites
+                                                    with open('respuesta.xml', 'w') as recibidoxml:
+                                                        recibidoxml.write(respuesta)
+                                                        recibidoxml.close()
+                                                    # # Retorna el cae y este es capturado por javascript que a su vez actualiza y guarda
+                                                    # # el documento
+                                                    # return datoCAEF
 
-                                                # frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
-                                                # el archivo rexpuest.xml se encuentra en la ruta, /home/frappe/frappe-bench/sites
-                                                with open('respuesta.xml', 'w') as recibidoxml:
-                                                    recibidoxml.write(respuesta)
-                                                    recibidoxml.close()
-                                                # # Retorna el cae y este es capturado por javascript que a su vez actualiza y guarda
-                                                # # el documento
-                                                # return datoCAEF
+                                                    # La funcion se encarga de actualizar la factura y todos los documetos relacionados
+                                                    # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
+                                                    numero_dte_correcto = actualizartb(dato_factura)
 
-                                                # La funcion se encarga de actualizar la factura y todos los documetos relacionados
-                                                # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
-                                                numero_dte_correcto = actualizartb(dato_factura)
-
-                                                # Este dato sera capturado por Js actualizando la url
-                                                return numero_dte_correcto
-                                        except:
-                                            frappe.msgprint(_('''
-                                            AVISOS <span class="label label-default" style="font-size: 16px">{}</span>
-                                            '''.format(str(len(errores_diccionario))) + ' VERIFIQUE SU MANUAL'))
-                                            for llave in errores_diccionario:
+                                                    # Este dato sera capturado por Js actualizando la url
+                                                    return numero_dte_correcto
+                                            except:
                                                 frappe.msgprint(_('''
-                                                <span class="label label-warning" style="font-size: 14px">{}</span>
-                                                '''.format(str(llave)) + ' = ' + str(errores_diccionario[llave])))
+                                                AVISOS <span class="label label-default" style="font-size: 16px">{}</span>
+                                                '''.format(str(len(errores_diccionario))) + ' VERIFIQUE SU MANUAL'))
+                                                for llave in errores_diccionario:
+                                                    frappe.msgprint(_('''
+                                                    <span class="label label-warning" style="font-size: 14px">{}</span>
+                                                    '''.format(str(llave)) + ' = ' + str(errores_diccionario[llave])))
 
-                                            frappe.msgprint(_('NO GENERADA'))
+                                                frappe.msgprint(_('NO GENERADA'))
                 else:
                     frappe.msgprint(_('No existen series configuradas'))
 
