@@ -2,16 +2,36 @@
 # -*- coding: utf-8 -*-from __future__ import unicode_literals
 import frappe
 from frappe import _
-from valida_errores import normalizar_texto as normalizar
 from datetime import datetime
+
+import unicodedata
+from xml.sax.saxutils import escape
+
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+def normalizar_texto(texto):
+    """Funcion para normalizar texto a abc ingles, elimina acentos, ñ, simbolos y tag a entidades html
+       para ser reconocidos y evitar el error Woodstox Parser Java de INFILE"""
+    # Vuelve a convertir a string el dato recibido
+    string_normal = str(texto)
+
+    # Convertir a Unicode
+    # escape : permite convertir los simbolos a entidades 'html' https://www.w3schools.com/html/html_entities.asp
+    # https://wiki.python.org/moin/EscapingXml
+    string_a_unicode = unicode(escape(string_normal), "utf-8")
+
+    # Normalizacion de texto NFKD: modo abc ingles
+    string_normalizado = unicodedata.normalize('NFKD', string_a_unicode).encode('ASCII', 'ignore')
+
+    # Retorna el string normalizado
+    return string_normalizado
+
 def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice_item, datos_compania,
                   nit_cliente, datos_configuracion, series_configuradas, dato_factura, direccion_compania):
     """Genera el archivo xml con los datos necesarios para la peticion de factura electronica"""
-
+    # Para mas informacion de los campos consulte el xls documentado 'Campos Request' - monroy95
     direccion_cliente = str(sales_invoice[0]['customer_address'])
     # Serie utlizada para la factura original
     serie_doc = str(sales_invoice[0]['naming_series'])
@@ -33,7 +53,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
         if ((datos_cliente[0]['city']) == ''):
             departamentoCompradorTag_Value = 'N/A'
         else:
-            departamentoCompradorTag_Value = str(normalizar(datos_cliente[0]['city']))
+            departamentoCompradorTag_Value = str(normalizar_texto(datos_cliente[0]['city']))
 
         # Verificacion Direccion Comercial Comprador, en caso no exista se asignara N/A
         if ((datos_cliente[0]['address_line1']) == ''):
@@ -51,7 +71,7 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
         if ((datos_cliente[0]['state']) == ''):
             municipioCompradorTag_Value = 'N/A'
         else:
-            municipioCompradorTag_Value = str(normalizar(datos_cliente[0]['state']))
+            municipioCompradorTag_Value = str(normalizar_texto(datos_cliente[0]['state']))
 
     # es-GT: En caso no exista la direccion del cliente, los valores se establecen a 'N/A' y a 'Consumidor Final'.
     # en-US: In case there is no customer address, the values are set to 'N / A' and 'Final Consumer'.
@@ -67,12 +87,17 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
         nombreComercialCompradorTag_Value = 'Consumidor Final'
         # nombreComercialCompradorTag_Value = str(sales_invoice[0]['customer_name'])
     else:
-        nombreComercialCompradorTag_Value = str(normalizar(sales_invoice[0]['customer_name']))
+        nombreComercialCompradorTag_Value = str(normalizar_texto(sales_invoice[0]['customer_name']))
 
+    # Llave para conexion con INFILE
     claveTag_Value = str(datos_configuracion[0]['clave'])
+    # Codigo establecimiento autorizada
     codigoEstablecimientoTag_Value = str(datos_configuracion[0]['codigo_establecimiento'])
+    # Moneda en este caso QUETZAL
     codigoMonedaTag_Value = str(sales_invoice[0]['currency'])
-    departamentoVendedorTag_Value = str(normalizar(direccion_compania[0]['city']))
+    # Departamento del vendedor (empresa)
+    departamentoVendedorTag_Value = str(normalizar_texto(direccion_compania[0]['city']))
+    # Descripcion otros immpuesto, Prensa, INGUAT, entre otros.
     descripcionOtroImpuestoTag_Value = str(datos_configuracion[0]['descripcion_otro_impuesto'])
 
     # es-GT: Formateando la Primera parte del cuerpo de request XML.
@@ -241,7 +266,8 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
 
     # en-US: BUILDING THE THIRD PART OF THE XML BODY
     # Assign each variable its corresponding value
-    direccionComercialVendedorTag_Value = str(normalizar(direccion_compania[0]['address_line1']))
+    # Direccion comercial del vendedor (empresa)
+    direccionComercialVendedorTag_Value = str(normalizar_texto(direccion_compania[0]['address_line1']))
 
     # es-GT: Depende si una factura esta cancelada o es valida, **MODIFICAR PARA FUTURAS IMPLEMENTACIONES**
     # en-US: Depends if an invoice is canceled or is valid, ** MODIFY FOR FUTURE IMPLEMENTATIONS **
@@ -257,19 +283,32 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     # es-GT: Formato de fechas = "2013-10-10T00:00:00.000-06:00"
     # en-US: Format of dates = "2013-10-10T00: 00: 00.000-06: 00"
     fechaDocumentoTag_Value = str((sales_invoice[0]['creation']).isoformat())
+    # Fecha autorizacion de la serie utilizada
     fechaResolucionTag_Value = (series_configuradas[0]['fecha_resolucion'])
+    # Codigo del dispositivo, puede ser desde una caja registradora, impresora, computadora, etc.
     idDispositivoTag_Value = str(datos_configuracion[0]['id_dispositivo'])
+    # Valor Base Máximo 5 decimales
     importeBrutoTag_Value = abs(float(sales_invoice[0]['net_total']))
+    # Valor total de todos los descuentos aplicados en el documento
     importeDescuentoTag_Value = float(sales_invoice[0]['discount_amount'])
+    # Valor neto del documento
     importeNetoGravadoTag_Value = abs(float(sales_invoice[0]['grand_total']))
+    # Valor total de otros impuestos adicionales al valor del IVA, excepto el ISR.
     importeOtrosImpuestosTag_Value = float(datos_configuracion[0]['importe_otros_impuestos'])
+    # Valor total exento facturado
     importeTotalExentoTag_Value = float(datos_configuracion[0]['importe_total_exento'])
+    # monto total de la operacion
     montoTotalOperacionTag_Value = abs(float(sales_invoice[0]['grand_total']))
+    # NIT DE CLIENTE, se le quita el guion
     nitCompradorTag_Value = str(nit_cliente[0][0]).replace('-', '')
+    # NIT GFACE, se le quita el guion
     nitGFACETag_Value = str(datos_configuracion[0]['nit_gface']).replace('-', '')
+    # NIT del vendedor (empresa)
     nitVendedorTag_Value = str(datos_compania[0]['nit_face_company']).replace('-', '')
-    nombreComercialRazonSocialVendedorTag_Value = str(normalizar(datos_compania[0]['company_name']))
-    nombreCompletoVendedorTag_Value = str(normalizar(datos_compania[0]['company_name']))
+    # Nombre comercial de la empresa
+    nombreComercialRazonSocialVendedorTag_Value = str(normalizar_texto(datos_compania[0]['company_name']))
+    # Nombre de la empresa
+    nombreCompletoVendedorTag_Value = str(normalizar_texto(datos_compania[0]['company_name']))
 
     # es-GT: Las Facturas CFACE necesitan el correlativo de la factura, excluyendo la serie, por lo que se hace un slice
     #        para que tome solo el correlativo, si no es CFACE tomara la serie completa.
@@ -281,16 +320,22 @@ def construir_xml(sales_invoice, direccion_cliente, datos_cliente, sales_invoice
     else:
         numeroDocumentoTag_Value = str(dato_factura)
 
+    # Numero de resolucion asignado por la SAT
     numeroResolucionTag_Value = str(series_configuradas[0]['numero_resolucion']).replace('-', '')
     regimenISRTag_Value = str(datos_configuracion[0]['regimen_isr'])
+    # Nombre de la serie autorizada para la emisión de documentos
     serieAutorizadaTag_Value = str(series_configuradas[0]['secuencia_infile'])
+    # Codigo o prefijo de la SAT
     serieDocumentoTag_Value = str(series_configuradas[0]['codigo_sat'])
-    municipioVendedorTag_Value = str(normalizar(direccion_compania[0]['state']))
+    # Municipio del vendedor (empresa)
+    municipioVendedorTag_Value = str(normalizar_texto(direccion_compania[0]['state']))
 
     # es-GT: Cuando es moneda local, obligatoriamente debe llevar 1.00
     # en-US: When it is local currency, it must necessarily carry 1.00
     tipoCambioTag_Value = float(sales_invoice[0]['conversion_rate'])
+    # Tipo de documento electronico para generar
     tipoDocumentoTag_Value = str(series_configuradas[0]['tipo_documento'])
+    # usuario brindado por INFILE
     usuarioTag_Value = str(datos_configuracion[0]['usuario'])
     validadorTag_Value = str(datos_configuracion[0]['validador'])
 

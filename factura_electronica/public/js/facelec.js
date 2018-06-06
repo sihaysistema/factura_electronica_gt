@@ -175,6 +175,7 @@ function generar_boton_factura(tipo_factura, frm) {
             args: {
                 serie_factura: frm.doc.name,
                 nombre_cliente: frm.doc.customer
+                // pre_serie: frm.doc.naming_series
             },
             // El callback recibe como parametro el dato retornado por el script python del lado del servidor
             callback: function (data) {
@@ -206,6 +207,7 @@ function generar_factura_sin_btn(frm) {
         args: {
             serie_factura: frm.doc.name,
             nombre_cliente: frm.doc.customer
+            // pre_serie: frm.doc.naming_series
         },
         // El callback recibe como parametro el dato retornado por el script python del lado del servidor
         callback: function (data) {

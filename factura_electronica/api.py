@@ -44,7 +44,9 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
     dato_factura = serie_factura
     # Guarda el nombre del cliente
     dato_cliente = nombre_cliente
-    # Guarda el resultado de la funcion, puede ser 1, 2, 3
+    # Busca que exista una unica configuracion valida para factura electronica
+    # devuelve 3 posibles valores. 1 -> valida, 2 -> hay mas de una configuracion valida
+    # 3 -> No existe configuracion valida
     verificacionConfig = validarConfiguracion()
 
     # Si la verificacion es igual a '1' se procede a la generacion de la factura electronica
@@ -205,8 +207,10 @@ def generar_factura_electronica(serie_factura, nombre_cliente):
                                 except:
                                     frappe.msgprint(_('Error en la comunicacion no se recibieron datos de INFILE'))
                                 else:
+                                    # xmltodic parsea la respuesta por parte de INFILE
                                     documento_descripcion = xmltodict.parse(respuesta)
                                     try:
+                                        # En la descripcion se encuentra el mensaje, si el documento electronico se realizo con exito
                                         descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
                                     except:
                                         frappe.msgprint(_('Error recepcion datos por INFILE' + respuesta))
