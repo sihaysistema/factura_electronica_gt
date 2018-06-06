@@ -1,8 +1,3 @@
-/**
- * Copyright (c) 2017, 2018 SHS and contributors
- * For license information, please see license.txt
- */
-
 console.log("Se cargo exitosamente la aplicación de Factura Electronica");
 var otro_impuesto = 0;
 var valor_con_iva = 0;
@@ -80,6 +75,7 @@ Esta organizado en dos principales secciones: Una para funciones, otra para disp
 2.16 es-GT: Disparadores para Producto de Presupuesto de Proveedor
 */
 
+
 /*
 	The route followed ultimately is like this:
 1. JavaScript is loaded from the server:
@@ -102,7 +98,6 @@ Esta organizado en dos principales secciones: Una para funciones, otra para disp
 
 /*	1 en-US: Functions BEGIN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 /*	1 es-GT: Funciones EMPIEZAN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
-
 function facelec_tax_calc_new(frm, cdt, cdn) {
     // es-GT: Actualiza los datos en los campos de la tabla hija 'items'
     //console.log("ran facelec_tax_calc_new");
@@ -228,8 +223,7 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
 // Esta función refresca los valores de las filas para tener los calculos completos
 // Sin necesidad de guardar el formulario.  Esto costo una buenas horas de trabajo!!
 // Se lanza con un evento disparado por un escuchador
-// FIXME: Lo unico es que solo se puede poner item code con ENTER o CLICK. Tab no funciona.  
-//Quizas aqui si sirve usar un listener de keypress para guardarlo en una variable que lo hace permanecer mientras se escribe el item.
+// FIXME: Lo unico es que solo se puede poner item code con ENTER o CLICK. Tab no funciona.  Quizas aqui si sirve usar un listener de keypress para guardarlo en una variable que lo hace permanecer mientras se escribe el item.
 // Esto soluciona el issue #18
 function each_item(frm, cdt, cdn) {
     // es-GT: Esta permite ya que se calcule correctamente desde el INICIO!
@@ -274,127 +268,127 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
     var total_fuel = 0;
     var total_goods = 0;
     var total_servi = 0;
-    console.log('Funcion para agregar filas en taxes and charges')
-    // frm.doc.items.forEach((item_row_i, index_i) => {
-    //     if (item_row_i.name == cdn) {
-    //         var cuenta = item_row_i.facelec_tax_rate_per_uom_account;
-    //         //console.log("NUEVA: La cuenta es: " + cuenta); // WORKS OK
-    //         this_row_tax_amount = (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom);
-    //         this_row_taxable_amount = (item_row_i.amount - (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom));
-    //         //console.log("NUEVA: Valor con iva contiene: Q" + (item_row.amount - (item_row.stock_qty * item_row.facelec_tax_rate_per_uom))); //WORKS OK
-    //         //console.log("NUEVA: Monto otro impuesto: = Q" + (item_row.stock_qty * item_row.facelec_tax_rate_per_uom)); //WORKS OK
-    //         // IMPORTANTE:  Se debe de calcular Justo a Tiempo, no depende obtener datos de campos cuyos valores todavía no han sido asignados.
-    //         // We change the fields for other tax amount as per the complete row taxable amount.
-    //         // We refresh the items to recalculate everything to ensure proper math
-    //         frm.refresh_field('items');
-    //         frm.refresh_field('conversion_factor');
-    //         // Verificacion si existe la cuenta en la tabla de items.
-    //         if (cuenta !== null) {
-    //             // Si si existe, entonces corre esto
-    //             console.log("NUEVA: La cuenta se detecto en Items: " + cuenta); // WORKS OK
-    //             if (buscar_account(frm, cuenta)) {
-    //                 console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
-    //                 // Estimar el rate basado en lo que ya existe, para que CUADRE!
-    //                 otro_impuesto = this_row_tax_amount;
-    //                 valor_con_iva = this_row_taxable_amount;
-    //                 if (valor_con_iva == 0) {
-    //                     console.log("NUEVA: Valor con IVA es 0");
-    //                 } else {
-    //                     console.log(" NUEVA: El valor con IVA, cuando la cuenta ya existe es: " + valor_con_iva);
-    //                     // Aqui podemos correr el codigo de iterar por la fila y revisar.
-    //                 }
-    //                 if (otro_impuesto == 0) {
-    //                     //console.log("NUEVA: Valor del impuesto es 0");
-    //                     // No hacer NADA.
-    //                 } else {
-    //                     //console.log("NUEVA: El otro monto de impuesto es, cuando la cuenta ya existe es: " + otro_impuesto);
-    //                     // Aqui es mejor no hacer nada, porque el otro impuesto pudiera valer 0!
-    //                 }
-    //                 // Aqui busca las filas de items que tengan cuenta.
-    //                 frm.doc.taxes.forEach((tax_row, index) => {
-    //                     if (tax_row.account_head == cuenta) {
-    //                         otro_impuesto = this_row_tax_amount;
-    //                         valor_con_iva = this_row_taxable_amount;
-    //                         // Buscamos en el server, pasandole la cuenta configurada en Items, para obtener, con validación la cuenta que esta configurado.
-    //                         // Esto nos asegura doblemente! que la cuenta que estamos agregando, EXISTA configurada en el Item, y por lo tanto, como ya se configuro en Item previament,e ya paso UN nivel de validación, asegurando su existencia en el sistema.
-    //                         // Evaluar no dejar guardar o validar la factura si no ha sido indicada una cuenta contable en la tabla de impuestos.
-    //                         frappe.call({
-    //                             method: "factura_electronica.api.get_data_tax_account",
-    //                             args: {
-    //                                 name_account_tax_gt: cuenta
-    //                             },
-    //                             // El callback recibe como parametro el dato retornado por script python del lado del servidor. La variable definida despues de callback en el function, es una variable dummy. La variable dummy sirve para adjuntarle despues el metodo para accesar la data que ella contiene!
-    //                             callback: function (data) {
-    //                                 // Asigna los valores retornados del servidor
-    //                                 // Asigna la cuenta que acabmos de encontrar a la fila.
-    //                                 frm.doc.taxes[index].account_head = cuenta;
-    //                                 // TODO: Se hace un estimado como "On Net Total" con impuesto incluido, para que el rate logre cuadrar el monto del impuesto. Este "rate" sera un precursor que estamos usando de muleta, mientras logramos modificar la aplicacion core!
-    //                                 frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
-    //                                 // En el caso de Impuestos especiales en Guate, estan incluidos, asi que aseguramos que la caja tenga 1 o "si".
-    //                                 frm.doc.taxes[index].included_in_print_rate = 1;
-    //                                 // ojo ojo ojo ojo FIXME FIXME FIXME  TODO TODO
-    //                                 // 1. Valor de IDP de la fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges.
-    //                                 // 2. Valor Neto sin IVA de la Fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges
-    //                                 // Como fix temporal, intentaremos estimar un "rate" el cual finalice en un numero que permite que el "amount" sea el correcto, cuando se usa On Net Total, puesto que de esta forma podemos lelgar a obtener el resultado esperado de contabilizar correctamente el IDP, sin necesidad de modificar el software.  Esto es un fix paliativo.
-    //                                 frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); //4600 / 20000
-    //                                 // Una breve descripción
-    //                                 console.log("El rate para colocar es:" + (otro_impuesto / (valor_con_iva / (1 + 12))));
-    //                                 frm.doc.taxes[index].description = 'Impuesto';
-    //                                 // Esto es en caso le querramos colocar monto, pero OJO, porque no se pueden poner montos que esten incluidos. Ver abajo.
-    //                                 //frm.doc.taxes[index].tax_amount = '39.99';
-    //                                 //frm.doc.taxes[index].rate = data.message;
-    //                                 //refresh_field("taxes");
-    //                             }
-    //                         });
-    //                     } // TERMINA if else (tax_row.account_head == undefined) 
-    //                 }); // TERMINA frm.doc.taxes.forEach((tax_row, index) =>
-    //             } else {
-    //                 console.log('NUEVA: La cuenta no existe en tabla Taxes, se agregara una nueva fila');
-    //                 // Aqui le indicamos que agregue una fila o un hijo de impuestos al campo Taxes
-    //                 // FIXME  FIXME:  Talvez sea necesario agregar la fila en otra verificacion, porque se estan agregando dos. Aunque si se verifica en la mera tabla.
-    //                 frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
-    //                 // Ahora iteramos dentro de la tabla de Sales Taxes and Charges
-    //                 frm.doc.taxes.forEach((tax_row, index) => {
-    //                     // Como la fila que se acaba de agregar NO TIENE CUENTA, logicamente la PRIMERA sera true porque esta vacia.
-    //                     if (tax_row.account_head == undefined) {
-    //                         // Buscamos en el server, pasandole la cuenta configurada en Items, para obtener, con validación la cuenta que esta configurado.
-    //                         // Esto nos asegura doblemente! que la cuenta que estamos agregando, EXISTA configurada en el Item, y por lo tanto, como ya se configuro en Item previament,e ya paso UN nivel de validación, asegurando su existencia en el sistema.
-    //                         // Evaluar no dejar guardar o validar la factura si no ha sido indicada una cuenta contable en la tabla de impuestos.
-    //                         frappe.call({
-    //                             method: "factura_electronica.api.get_data_tax_account",
-    //                             args: {
-    //                                 name_account_tax_gt: cuenta
-    //                             },
-    //                             // El callback recibe como parametro el dato retornado por script python del lado del servidor. La variable definida despues de callback en el function, es una variable dummy. La variable dummy sirve para adjuntarle despues el metodo para accesar la data que ella contiene!
-    //                             callback: function (data) {
-    //                                 // Asigna los valores retornados del servidor
-    //                                 // Asigna la cuenta que acabmos de encontrar a la fila.
-    //                                 frm.doc.taxes[index].account_head = cuenta;
-    //                                 // TODO: Se hace un estimado como "On Net Total" con impuesto incluido, para que el rate logre cuadrar el monto del impuesto. Este "rate" sera un precursor que estamos usando de muleta, mientras logramos modificar la aplicacion core!
-    //                                 frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
-    //                                 // En el caso de Impuestos especiales en Guate, estan incluidos, asi que aseguramos que la caja tenga 1 o "si".
-    //                                 frm.doc.taxes[index].included_in_print_rate = 1;
-    //                                 // ojo ojo ojo ojo FIXME FIXME FIXME  TODO TODO
-    //                                 // 1. Valor de IDP de la fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges.
-    //                                 // 2. Valor Neto sin IVA de la Fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges
-    //                                 // Como fix temporal, intentaremos estimar un "rate" el cual finalice en un numero que permite que el "amount" sea el correcto, cuando se usa On Net Total, puesto que de esta forma podemos lelgar a obtener el resultado esperado de contabilizar correctamente el IDP, sin necesidad de modificar el software.  Esto es un fix paliativo.
-    //                                 frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); //4600 / 20000
-    //                                 console.log("El rate para colocar es:" + (otro_impuesto / (valor_con_iva / (1 + 12))));
-    //                                 // Una breve descripción
-    //                                 frm.doc.taxes[index].description = 'Impuesto';
-    //                                 // Esto es en caso le querramos colocar monto, pero OJO, porque no se pueden poner montos que esten incluidos. Ver abajo.
-    //                                 //frm.doc.taxes[index].tax_amount = '39.99';
-    //                                 //frm.doc.taxes[index].rate = data.message;
-    //                                 //refresh_field("taxes");
-    //                             }
-    //                         }); // Termina el Callback que verifica si la cuenta existe.
-    //                     } // El If que corre si la cuenta no esta definida en Sales Taxes & Charges
-    //                 }); // frm.doc.taxes.forEach((tax_row, index) => Cierra For loop que itera sobre todas las filas de la tabla de impuestos.
-    //             }
-    //         } // TERMINA if (cuenta !== null)
-    //         console.log('NUEVO: Se encontró cuenta, o simplemente se agregó');
-    //     }
-    // });
+
+    frm.doc.items.forEach((item_row_i, index_i) => {
+        if (item_row_i.name == cdn) {
+            var cuenta = item_row_i.facelec_tax_rate_per_uom_account;
+            //console.log("NUEVA: La cuenta es: " + cuenta); // WORKS OK
+            this_row_tax_amount = (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom);
+            this_row_taxable_amount = (item_row_i.amount - (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom));
+            //console.log("NUEVA: Valor con iva contiene: Q" + (item_row.amount - (item_row.stock_qty * item_row.facelec_tax_rate_per_uom))); //WORKS OK
+            //console.log("NUEVA: Monto otro impuesto: = Q" + (item_row.stock_qty * item_row.facelec_tax_rate_per_uom)); //WORKS OK
+            // IMPORTANTE:  Se debe de calcular Justo a Tiempo, no depende obtener datos de campos cuyos valores todavía no han sido asignados.
+            // We change the fields for other tax amount as per the complete row taxable amount.
+            // We refresh the items to recalculate everything to ensure proper math
+            frm.refresh_field('items');
+            frm.refresh_field('conversion_factor');
+            // Verificacion si existe la cuenta en la tabla de items.
+            if (cuenta !== null) {
+                // Si si existe, entonces corre esto
+                console.log("NUEVA: La cuenta se detecto en Items: " + cuenta); // WORKS OK
+                if (buscar_account(frm, cuenta)) {
+                    console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
+                    // Estimar el rate basado en lo que ya existe, para que CUADRE!
+                    otro_impuesto = this_row_tax_amount;
+                    valor_con_iva = this_row_taxable_amount;
+                    if (valor_con_iva == 0) {
+                        console.log("NUEVA: Valor con IVA es 0");
+                    } else {
+                        console.log(" NUEVA: El valor con IVA, cuando la cuenta ya existe es: " + valor_con_iva);
+                        // Aqui podemos correr el codigo de iterar por la fila y revisar.
+                    }
+                    if (otro_impuesto == 0) {
+                        //console.log("NUEVA: Valor del impuesto es 0");
+                        // No hacer NADA.
+                    } else {
+                        //console.log("NUEVA: El otro monto de impuesto es, cuando la cuenta ya existe es: " + otro_impuesto);
+                        // Aqui es mejor no hacer nada, porque el otro impuesto pudiera valer 0!
+                    }
+                    // Aqui busca las filas de items que tengan cuenta.
+                    frm.doc.taxes.forEach((tax_row, index) => {
+                        if (tax_row.account_head == cuenta) {
+                            otro_impuesto = this_row_tax_amount;
+                            valor_con_iva = this_row_taxable_amount;
+                            // Buscamos en el server, pasandole la cuenta configurada en Items, para obtener, con validación la cuenta que esta configurado.
+                            // Esto nos asegura doblemente! que la cuenta que estamos agregando, EXISTA configurada en el Item, y por lo tanto, como ya se configuro en Item previament,e ya paso UN nivel de validación, asegurando su existencia en el sistema.
+                            // Evaluar no dejar guardar o validar la factura si no ha sido indicada una cuenta contable en la tabla de impuestos.
+                            frappe.call({
+                                method: "factura_electronica.api.get_data_tax_account",
+                                args: {
+                                    name_account_tax_gt: cuenta
+                                },
+                                // El callback recibe como parametro el dato retornado por script python del lado del servidor. La variable definida despues de callback en el function, es una variable dummy. La variable dummy sirve para adjuntarle despues el metodo para accesar la data que ella contiene!
+                                callback: function (data) {
+                                    // Asigna los valores retornados del servidor
+                                    // Asigna la cuenta que acabmos de encontrar a la fila.
+                                    frm.doc.taxes[index].account_head = cuenta;
+                                    // TODO: Se hace un estimado como "On Net Total" con impuesto incluido, para que el rate logre cuadrar el monto del impuesto. Este "rate" sera un precursor que estamos usando de muleta, mientras logramos modificar la aplicacion core!
+                                    frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
+                                    // En el caso de Impuestos especiales en Guate, estan incluidos, asi que aseguramos que la caja tenga 1 o "si".
+                                    frm.doc.taxes[index].included_in_print_rate = 1;
+                                    // ojo ojo ojo ojo FIXME FIXME FIXME  TODO TODO
+                                    // 1. Valor de IDP de la fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges.
+                                    // 2. Valor Neto sin IVA de la Fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges
+                                    // Como fix temporal, intentaremos estimar un "rate" el cual finalice en un numero que permite que el "amount" sea el correcto, cuando se usa On Net Total, puesto que de esta forma podemos lelgar a obtener el resultado esperado de contabilizar correctamente el IDP, sin necesidad de modificar el software.  Esto es un fix paliativo.
+                                    frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); //4600 / 20000
+                                    // Una breve descripción
+                                    console.log("El rate para colocar es:" + (otro_impuesto / (valor_con_iva / (1 + 12))));
+                                    frm.doc.taxes[index].description = 'Impuesto';
+                                    // Esto es en caso le querramos colocar monto, pero OJO, porque no se pueden poner montos que esten incluidos. Ver abajo.
+                                    //frm.doc.taxes[index].tax_amount = '39.99';
+                                    //frm.doc.taxes[index].rate = data.message;
+                                    //refresh_field("taxes");
+                                }
+                            });
+                        } // TERMINA if else (tax_row.account_head == undefined) 
+                    }); // TERMINA frm.doc.taxes.forEach((tax_row, index) =>
+                } else {
+                    console.log('NUEVA: La cuenta no existe en tabla Taxes, se agregara una nueva fila');
+                    // Aqui le indicamos que agregue una fila o un hijo de impuestos al campo Taxes
+                    // FIXME  FIXME:  Talvez sea necesario agregar la fila en otra verificacion, porque se estan agregando dos. Aunque si se verifica en la mera tabla.
+                    frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
+                    // Ahora iteramos dentro de la tabla de Sales Taxes and Charges
+                    frm.doc.taxes.forEach((tax_row, index) => {
+                        // Como la fila que se acaba de agregar NO TIENE CUENTA, logicamente la PRIMERA sera true porque esta vacia.
+                        if (tax_row.account_head == undefined) {
+                            // Buscamos en el server, pasandole la cuenta configurada en Items, para obtener, con validación la cuenta que esta configurado.
+                            // Esto nos asegura doblemente! que la cuenta que estamos agregando, EXISTA configurada en el Item, y por lo tanto, como ya se configuro en Item previament,e ya paso UN nivel de validación, asegurando su existencia en el sistema.
+                            // Evaluar no dejar guardar o validar la factura si no ha sido indicada una cuenta contable en la tabla de impuestos.
+                            frappe.call({
+                                method: "factura_electronica.api.get_data_tax_account",
+                                args: {
+                                    name_account_tax_gt: cuenta
+                                },
+                                // El callback recibe como parametro el dato retornado por script python del lado del servidor. La variable definida despues de callback en el function, es una variable dummy. La variable dummy sirve para adjuntarle despues el metodo para accesar la data que ella contiene!
+                                callback: function (data) {
+                                    // Asigna los valores retornados del servidor
+                                    // Asigna la cuenta que acabmos de encontrar a la fila.
+                                    frm.doc.taxes[index].account_head = cuenta;
+                                    // TODO: Se hace un estimado como "On Net Total" con impuesto incluido, para que el rate logre cuadrar el monto del impuesto. Este "rate" sera un precursor que estamos usando de muleta, mientras logramos modificar la aplicacion core!
+                                    frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
+                                    // En el caso de Impuestos especiales en Guate, estan incluidos, asi que aseguramos que la caja tenga 1 o "si".
+                                    frm.doc.taxes[index].included_in_print_rate = 1;
+                                    // ojo ojo ojo ojo FIXME FIXME FIXME  TODO TODO
+                                    // 1. Valor de IDP de la fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges.
+                                    // 2. Valor Neto sin IVA de la Fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges
+                                    // Como fix temporal, intentaremos estimar un "rate" el cual finalice en un numero que permite que el "amount" sea el correcto, cuando se usa On Net Total, puesto que de esta forma podemos lelgar a obtener el resultado esperado de contabilizar correctamente el IDP, sin necesidad de modificar el software.  Esto es un fix paliativo.
+                                    frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); //4600 / 20000
+                                    console.log("El rate para colocar es:" + (otro_impuesto / (valor_con_iva / (1 + 12))));
+                                    // Una breve descripción
+                                    frm.doc.taxes[index].description = 'Impuesto';
+                                    // Esto es en caso le querramos colocar monto, pero OJO, porque no se pueden poner montos que esten incluidos. Ver abajo.
+                                    //frm.doc.taxes[index].tax_amount = '39.99';
+                                    //frm.doc.taxes[index].rate = data.message;
+                                    //refresh_field("taxes");
+                                }
+                            }); // Termina el Callback que verifica si la cuenta existe.
+                        } // El If que corre si la cuenta no esta definida en Sales Taxes & Charges
+                    }); // frm.doc.taxes.forEach((tax_row, index) => Cierra For loop que itera sobre todas las filas de la tabla de impuestos.
+                }
+            } // TERMINA if (cuenta !== null)
+            console.log('NUEVO: Se encontró cuenta, o simplemente se agregó');
+        }
+    });
 } // OK
 /* 1.1b en-US: Add rows, accounts and totalize taxes END -----------------------------*/
 /* 1.1b es-GT: Agregar fila, cuentas y totalizar impuestos en tabla TERMINA ----------*/
@@ -403,18 +397,17 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
 /*	1.2 es-GT: Busqueda de Cuenta de Impuestos EMPIEZA -------------------------------*/
 // Funcion para evitar realizar calculos con cuentas duplicadas
 function buscar_account(frm, cuenta_b) {
-    /**
-     * Funcionamiento: recibe como parametro frm, y cuenta_b, lo que hace es, buscar en todas las filas de taxes
-     * si existe ya una cuenta con el nombre de la cuenta recibida por parametro, en caso ya exista esa cuenta en
-     * la tabla no hace nada, pero si encuentra que no hay una cuenta igual a la recibida en el parametro, entonces
-     * la funcion encargada agregara una nueva fila con los datos correspondientes, esta funcion retorna true
-     * en caso si encuentre una cuenta existente
-     */
-    var estado = false;
+    /* Funcionamiento: recibe como parametro frm, y cuenta_b, lo que hace es, buscar en todas las filas de taxes
+       si existe ya una cuenta con el nombre de la cuenta recibida por parametro, en caso ya exista esa cuenta en
+       la tabla no hace nada, pero si encuentra que no hay una cuenta igual a la recibida en el parametro, entonces
+       la funcion encargada agregara una nueva fila con los datos correspondientes, esta funcion retorna true
+       en caso si encuentre una cuenta existente
+    */
+    var estado = ''
     $.each(frm.doc.taxes || [], function (i, d) {
         if (d.account_head === cuenta_b) {
-            // console.log('Si Existe en el indice ' + i)
-            estado = true;
+            //console.log('Si Existe la cuenta de impuestos en el indice ' + i)
+            estado = true
         }
     });
     return estado;
@@ -425,7 +418,7 @@ function buscar_account(frm, cuenta_b) {
 /*	1.3 en-US: Validate Tax ID (NIT) BEGIN -------------------------------------------*/
 /*	1.3 es-GT: Validar NIT EMPIEZA ---------------------------------------------------*/
 // Funcion para validar el NIT
-function valNit(nit, cus_supp, frm) {
+function valNit(nit, cus_supp, frm) { // cus_supp = customer or supplier
     if (nit === "C/F" || nit === "c/f") {
         frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
     } else {
@@ -454,11 +447,10 @@ function valNit(nit, cus_supp, frm) {
 
 /*	1.4 en-US: Obtain Electronic Invoice PDF BEGIN -----------------------------------*/
 /*	1.4 es-GT: Obtener PDF de Factura Electronica EMPIEZA ----------------------------*/
-// Funcion crea un boton que permite actualizar la serie de una factura
-// con el numero de DTE. Factura Electronica
+// Funcion para la obtencion del PDF, segun el documento generado.
 function pdf_button(cae_documento, frm) {
     // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
-    frm.add_custom_button(__("VER PDF FACTURA ELECTRONICA"),
+    frm.add_custom_button(__("Obtener PDF"),
         function () {
             window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
         }).addClass("btn-primary");
@@ -466,80 +458,217 @@ function pdf_button(cae_documento, frm) {
 /*	1.4 en-US: Obtain Electronic Invoice PDF END -------------------------------------*/
 /*	1.4 es-GT: Obtener PDF de Factura Electronica TERMINA ----------------------------*/
 
-/* ---------------------------------------------------------------------------------------------------------------- */
 /*	1.5 en-US: Generate Electronic Invoice Manually with Button Press BEGIN ----------*/
 /*	1.5 es-GT: Genera la Factura Electronica Manualmente presionando el Botón EMPIEZA */
-// Se ejecuta cuando la configuracion de generacion de facturas se encuentra en 'MANUAL'
-// Recibe como parametros:
-// tipo_factura: Almacena el nombre del tipo de factura, este se mostrara en el texto del boton, puede ser
-// 'Factura Electronica', 'Nota Credito Electronica', 'Nota Debito Electronica'
-// frm: Documento que se esta trabajando
-function generar_boton_factura(tipo_factura, frm) {
-    frm.add_custom_button(__(tipo_factura), function () {
-        // frm.reload(); permite hacer un refresh de todo el documento
-        frm.reload_doc();
-        let serie_de_factura = frm.doc.name;
-        // Guarda la url actual
-        let mi_url = window.location.href;
-        frappe.call({
-            method: "factura_electronica.api.generar_factura_electronica",
-            args: {
-                serie_factura: frm.doc.name,
-                nombre_cliente: frm.doc.customer
-                // pre_serie: frm.doc.naming_series
-            },
-            // El callback recibe como parametro el dato retornado por el script python del lado del servidor
-            callback: function (data) {
-                // console.log('Serie generada: ' + data.message);
-                // console.log('serie original: ' + serie_de_factura);
-                if (data.message !== undefined) {
-                    // Crea una nueva url con el nombre del documento actualizado
-                    let url_nueva = mi_url.replace(serie_de_factura, data.message);
-                    // Asigna la nueva url a la ventana actual
-                    window.location.assign(url_nueva);
+// Funcion que incluye el boton para generar la factura electronica, esta se activa
+// cuando en la configuracion de factura electronica se encuentra en MANUAL
+function generarFacturaBTN(frm, cdt, cdn) {
+    // Codigo para generar Factura Electronica FACE, CFACE
+    // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+        // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+        if (frm.doc.cae_factura_electronica) {
+            cur_frm.clear_custom_buttons();
+            pdf_button(frm.doc.cae_factura_electronica, frm);
+        } else {
+            frm.add_custom_button(__('Factura Electronica'), function () {
+                // frm.reload(); permite hacer un refresh de todo el documento
+                frm.reload_doc();
+                frappe.call({
+                    method: "factura_electronica.api.generar_factura_electronica",
+                    args: {
+                        serie_factura: frm.doc.name,
+                        nombre_cliente: frm.doc.customer
+                    },
+                    // El callback recibe como parametro el dato retornado por el script python del lado del servidor
+                    callback: function (data) {
+                        // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                        // 'cae_factura_electronica' para ser mostrado del lado del cliente y luego guardado en la DB
+                        cur_frm.set_value("cae_factura_electronica", data.message);
+                        frm.save("Update");
+                        if (frm.doc.cae_factura_electronica) {
+                            cur_frm.clear_custom_buttons();
+                            pdf_button(frm.doc.cae_factura_electronica, frm);
+                        }
+                    }
+                });
+            }).addClass("btn-primary");
+        }
+    }
+    // Codigo para Notas de Credito NCE
+    // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
+    if (frm.doc.status === "Return") {
+        //var nombre = 'Nota Credito';
+        // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+        if (frm.doc.cae_nota_de_credito) {
+            cur_frm.clear_custom_buttons();
+            pdf_button(frm.doc.cae_nota_de_credito, frm);
+        } else {
+            frm.add_custom_button(__('Nota Credito'), function () {
+                // frm.reload(); permite hacer un refresh de todo el documento
+                frm.reload_doc();
+                frappe.call({
+                    method: "factura_electronica.api.generar_factura_electronica",
+                    args: {
+                        serie_factura: frm.doc.name,
+                        nombre_cliente: frm.doc.customer
+                    },
+                    // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                    callback: function (data) {
+                        // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                        // 'cae_nota_de_credito' para ser mostrado del lado del cliente y luego guardado en la DB
+                        cur_frm.set_value("cae_nota_de_credito", data.message);
+                        frm.save("Update");
+                        if (frm.doc.cae_nota_de_credito) {
+                            cur_frm.clear_custom_buttons();
+                            pdf_button(frm.doc.cae_nota_de_credito, frm);
+                        }
+                    }
+                });
+            }).addClass("btn-primary");
+        }
+    }
+
+    // Codigo para notas de debito
+    // Codigo para Notas de Credito NDE
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+
+        //var nombre = 'Nota Debito';
+        if (frm.doc.es_nota_de_debito == 1) {
+            cur_frm.clear_custom_buttons('Factura Electronica');
+            if (frm.doc.cae_nota_de_debito) {
+                cur_frm.clear_custom_buttons();
+                pdf_button(frm.doc.cae_nota_de_debito, frm);
+            } else {
+                frm.add_custom_button(__('Nota Debito'), function () {
+                    // frm.reload(); permite hacer un refresh de todo el documento
                     frm.reload_doc();
-                }
+                    frappe.call({
+                        method: "factura_electronica.api.generar_factura_electronica",
+                        args: {
+                            serie_factura: frm.doc.name,
+                            nombre_cliente: frm.doc.customer
+                        },
+                        // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                        callback: function (data) {
+                            cur_frm.set_value("cae_nota_de_debito", data.message);
+                            frm.save("Update");
+                            if (frm.doc.cae_nota_de_debito) {
+                                cur_frm.clear_custom_buttons();
+                                pdf_button(frm.doc.cae_nota_de_debito, frm);
+                            }
+                        }
+                    });
+                }).addClass("btn-primary");
             }
-        });
-    }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
+        }
+    }
 }
 /*	1.5 en-US: Generate Electronic Invoice Manually with Button Press END ------------*/
 /*	1.5 es-GT: Genera la Factura Electronica Manualmente presionando el Botón TERMINA */
 
-
 /*	1.6 en-US: Generate Electronic Invoice Automatically BEGIN -----------------------*/
 /*	1.6 es-GT: Genera la Factura Electronica Automaticamente EMPIEZA -----------------*/
-// Se ejecuta cuando la configuracion de generacion de facturas se encuentra en 'AUTOMATICO'
-// Recibe como parametros:
-// frm: Documento que se esta trabajando
-function generar_factura_sin_btn(frm) {
-    // frm.reload(); permite hacer un refresh de todo el documento
-    frm.reload_doc();
-    let serie_de_factura = frm.doc.name;
-    // Guarda la url actual
-    let mi_url = window.location.href;
-    frappe.call({
-        method: "factura_electronica.api.generar_factura_electronica",
-        args: {
-            serie_factura: frm.doc.name,
-            nombre_cliente: frm.doc.customer
-            // pre_serie: frm.doc.naming_series
-        },
-        // El callback recibe como parametro el dato retornado por el script python del lado del servidor
-        callback: function (data) {
-            // console.log('Serie generada: ' + data.message);
-            // console.log('serie original: ' + serie_de_factura);
-            if (data.message !== undefined) {
-                // Crea una nueva url con el nombre del documento actualizado
-                let url_nueva = mi_url.replace(serie_de_factura, data.message);
-                // Asigna la nueva url a la ventana actual
-                window.location.assign(url_nueva);
-                frm.reload_doc();
+// Funcion sin boton para generar factura electronica, esta se activa cuando la configuracion de factura
+// electronica se encuentra en AUTOMATICA. Permite generar facturas electronicas despues de validar.
+function generarFacturaSINBTN(frm, cdt, cdn) {
+    // Codigo para generar Factura Electronica FACE, CFACE
+    // El codigo se ejecutara segun el estado del documento, puede ser: Pagado, No Pagado, Validado, Atrasado
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+        // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+        if (frm.doc.cae_factura_electronica) {
+            cur_frm.clear_custom_buttons();
+            pdf_button(frm.doc.cae_factura_electronica, frm);
+        } else {
+            // frm.reload(); permite hacer un refresh de todo el documento
+            frm.reload_doc();
+            frappe.call({
+                method: "factura_electronica.api.generar_factura_electronica",
+                args: {
+                    serie_factura: frm.doc.name,
+                    nombre_cliente: frm.doc.customer
+                },
+                // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                callback: function (data) {
+                    // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                    // 'cae_factura_electronica' para ser mostrado del lado del cliente y luego guardado en la DB
+                    cur_frm.set_value("cae_factura_electronica", data.message);
+                    frm.save("Update");
+                    if (frm.doc.cae_factura_electronica) {
+                        cur_frm.clear_custom_buttons();
+                        pdf_button(frm.doc.cae_factura_electronica, frm);
+                    }
+                }
+            });
+        }
+    }
+    // Codigo para Notas de Credito NCE
+    // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
+    if (frm.doc.status === "Return") {
+        //var nombre = 'Nota Credito';
+        // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
+        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+        if (frm.doc.cae_nota_de_credito) {
+            cur_frm.clear_custom_buttons();
+            pdf_button(frm.doc.cae_nota_de_credito, frm);
+        } else {
+            // frm.reload(); permite hacer un refresh de todo el documento
+            frm.reload_doc();
+            frappe.call({
+                method: "factura_electronica.api.generar_factura_electronica",
+                args: {
+                    serie_factura: frm.doc.name,
+                    nombre_cliente: frm.doc.customer
+                },
+                // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                callback: function (data) {
+                    // Asignacion del valor retornado por el script python del lado del servidor en el campo
+                    // 'cae_nota_de_credito' para ser mostrado del lado del cliente y luego guardado en la DB
+                    cur_frm.set_value("cae_nota_de_credito", data.message);
+                    frm.save("Update");
+                    if (frm.doc.cae_nota_de_credito) {
+                        cur_frm.clear_custom_buttons();
+                        pdf_button(frm.doc.cae_nota_de_credito, frm);
+                    }
+                }
+            });
+        }
+    }
+
+    // Codigo para notas de debito
+    // Codigo para Notas de Credito NDE
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+        //var nombre = 'Nota Debito';
+        if (frm.doc.es_nota_de_debito == 1) {
+            cur_frm.clear_custom_buttons('Factura Electronica');
+            if (frm.doc.cae_nota_de_debito) {
+                cur_frm.clear_custom_buttons();
+                pdf_button(frm.doc.cae_nota_de_debito, frm);
             } else {
+                // frm.reload(); permite hacer un refresh de todo el documento
                 frm.reload_doc();
+                frappe.call({
+                    method: "factura_electronica.api.generar_factura_electronica",
+                    args: {
+                        serie_factura: frm.doc.name,
+                        nombre_cliente: frm.doc.customer
+                    },
+                    // El callback recibe como parametro el dato retornado por script python del lado del servidor
+                    callback: function (data) {
+                        cur_frm.set_value("cae_nota_de_debito", data.message);
+                        frm.save("Update");
+                        if (frm.doc.cae_nota_de_debito) {
+                            cur_frm.clear_custom_buttons();
+                            pdf_button(frm.doc.cae_nota_de_debito, frm);
+                        }
+                    }
+                });
             }
         }
-    });
+    }
 }
 /*	1.6 en-US: Generate Electronic Invoice Automatically END -------------------------*/
 /*	1.6 es-GT: Genera la Factura Electronica Automaticamente TERMINA -----------------*/
@@ -548,7 +677,7 @@ function generar_factura_sin_btn(frm) {
 /*	1.7 es-GT: Genera la Factura Electronica si no encuentra CAE EMPIEZA -------------*/
 // Funcion verifica que se haya generado el CAE, para el documento requerido, en caso no se haya
 // generado mostrara un boton para hacerlo manualmente.
-function verificacionCAE(modalidad, frm, cdt, cdn) {
+function verificacionCAE(frm, cdt, cdn) {
     /* ------------------------------ COMPROBACIONES DE CAE ------------------------------ */
     // FACTURAS FACE, CFACE
     // Este codigo entra en funcionamiento cuando la generacion automatica de la factura no es exitosa.
@@ -560,14 +689,7 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
         } else {
-            // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
-            if (modalidad === 'manual') {
-                generar_boton_factura('Factura Electronica', frm);
-            }
-            // Si la modalidad recibida es automatica se realiza la factura electronica directamente
-            if (modalidad === 'automatico') {
-                generar_factura_sin_btn(frm);
-            }
+            generarFacturaBTN(frm, cdt, cdn);
         }
     }
 
@@ -577,18 +699,11 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         //var nombre = 'Nota Credito';
         // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
         // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
-        if (frm.doc.cae_factura_electronica) {
+        if (frm.doc.cae_nota_de_credito) {
             cur_frm.clear_custom_buttons();
-            pdf_button(frm.doc.cae_factura_electronica, frm);
+            pdf_button(frm.doc.cae_nota_de_credito, frm);
         } else {
-            // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
-            if (modalidad === 'manual') {
-                generar_boton_factura('Nota Credito Electronica', frm);
-            }
-            // Si la modalidad recibida es automatica se realiza la factura electronica directamente
-            if (modalidad === 'automatico') {
-                generar_factura_sin_btn(frm);
-            }
+            generarFacturaBTN(frm, cdt, cdn);
         }
     }
 
@@ -598,29 +713,13 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         //var nombre = 'Nota Debito';
         if (frm.doc.es_nota_de_debito) {
             cur_frm.clear_custom_buttons('Factura Electronica');
-            if (frm.doc.cae_factura_electronica) {
+            if (frm.doc.cae_nota_de_debito) {
                 cur_frm.clear_custom_buttons();
-                pdf_button(frm.doc.cae_factura_electronica, frm);
+                pdf_button(frm.doc.cae_nota_de_debito, frm);
             } else {
-                // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
-                if (modalidad === 'manual') {
-                    generar_boton_factura('Nota Debito Electronica', frm);
-                }
-                // Si la modalidad recibida es automatica se realiza la factura electronica directamente
-                if (modalidad === 'automatico') {
-                    generar_factura_sin_btn(frm);
-                }
+                generarFacturaBTN(frm, cdt, cdn);
             }
         }
-    }
-    /* -------------------------------------------------------------------------------------- */
-    // Funcionalidad evita copiar CAE cuando se duplica una factura
-    if (frm.doc.status === 'Draft') {
-        // console.log('No Guardada');
-        cur_frm.set_value("cae_factura_electronica", '');
-        cur_frm.set_value("serie_original_del_documento", '');
-        // frm.doc.cae_factura_electronica = '';
-        // frm.doc.serie_original_del_documento = '';
     }
 }
 /*	1.7 en-US: Generate Electronic Invoice if CAE not present END --------------------*/
@@ -1294,33 +1393,29 @@ frappe.ui.form.on("Sales Invoice", {
             facelec_sales_taxes_charges_row(frm, cdt, cdn);
         });
     },
+    customer: function (frm, cdt, cdn) {
+        // Trigger Cliente
+    },
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
         // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
         cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
 
-        // WORKS OK!
+        // Works OK!
         frm.add_custom_button("UOM Recalculation", function () {
             frm.doc.items.forEach((item) => {
                 // for each button press each line is being processed.
                 console.log("item contains: " + item);
                 //Importante
-                facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
+                facelec_tax_calc_new(frm, "Sales Invoice Item", item.name);
             });
         });
-        // Cuando el documento se actualiza, la funcion verificac de que exista un cae.
-        // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
-        // En caso no exista un cae mostrara el boton para generar la factura electronica
-        // correspondiente a su serie.
-        verificacionCAE('manual', frm, cdt, cdn);
+        verificacionCAE(frm, cdt, cdn);
     },
     nit_face_customer: function (frm, cdt, cdn) {
-        // if (frm.doc.nit_face_customer === null) {
-        //     console.log('EL NIT ES NULL')
-        // }
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
-        valNit(frm.doc.nit_face_customer, frm.doc.customer, frm);
+        valNit(frm.doc.nit_face_customer, frm.doc.customer, frm)
     },
     taxes_and_charges: function (frm, cdt, cdn) {
         // es-GT: Se corre aqui en caso se seleccione una tabla de impuestos nueva.
@@ -1330,7 +1425,6 @@ frappe.ui.form.on("Sales Invoice", {
         // Pensando en colocar un trigger aqui para cuando se actualice el campo de descuento adicional
     },
     discount_amount: function (frm, cdt, cdn) {
-        // Trigger Monto de descuento
         // Trigger Monto de descuento
         tax_before_calc = frm.doc.facelec_total_iva;
         console.log("El descuento total es:" + frm.doc.discount_amount);
@@ -1348,13 +1442,10 @@ frappe.ui.form.on("Sales Invoice", {
             console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
         }
     },
-    customer: function (frm, cdt, cdn) {
-        // Trigger Proveedor
-    },
     before_save: function (frm, cdt, cdn) {
-        // Trigger antes de guardar
         each_item(frm, cdt, cdn);
         facelec_sales_taxes_charges_row(frm, cdt, cdn);
+        // Trigger antes de guardar
     },
     on_submit: function (frm, cdt, cdn) {
         // Ocurre cuando se presione el boton validar.
@@ -1377,8 +1468,8 @@ frappe.ui.form.on("Sales Invoice", {
                 }
                 if (data.message === 'Automatico') {
                     console.log('Configuracion encontrada: AUTOMATICO');
-                    // generarFacturaSINBTN(frm, cdt, cdn);
-                    verificacionCAE('automatico', frm, cdt, cdn);
+                    generarFacturaSINBTN(frm, cdt, cdn);
+                    verificacionCAE(frm, cdt, cdn);
                 }
             }
         });
@@ -1399,16 +1490,18 @@ frappe.ui.form.on("Sales Invoice Item", {
         // console.log('Trigger remove en tabla hija');
 
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
+
             fix_gt_tax_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.facelec_gt_tax_net_goods_amt);
             fix_gt_tax_services += flt(d.facelec_gt_tax_net_services_amt);
             fix_gt_tax_iva += flt(d.facelec_sales_tax_for_this_row);
+
         });
 
         cur_frm.set_value("facelec_gt_tax_fuel", fix_gt_tax_fuel);
@@ -1422,7 +1515,7 @@ frappe.ui.form.on("Sales Invoice Item", {
     },
     qty: function (frm, cdt, cdn) {
         //facelec_tax_calculation(frm, cdt, cdn);
-        facelec_tax_calculation_conversion(frm, cdt, cdn);
+        facelec_tax_calc_new(frm, cdt, cdn);
         console.log("cdt contains: " + cdt);
         console.log("cdn contains: " + cdn);
     },
@@ -1433,51 +1526,18 @@ frappe.ui.form.on("Sales Invoice Item", {
     conversion_factor: function (frm, cdt, cdn) {
         // Trigger factor de conversion
         console.log("El disparador de factor de conversión se corrió.");
-        facelec_tax_calculation_conversion(frm, cdt, cdn);
+        facelec_tax_calc_new(frm, cdt, cdn);
     },
-    // FUNCIONA!!
     facelec_tax_rate_per_uom_account: function (frm, cdt, cdn) {
-        facelec_sales_taxes_charges_row(frm, cdt,cdn);
+        //facelec_sales_taxes_charges_row(frm, cdt,cdn);
         // esto debe correr aqui?
-        frm.doc.items.forEach((item_row_i, index_i) => {
-            if (item_row_i.name == cdn) {
-                var cuenta = item_row_i.facelec_tax_rate_per_uom_account;
-                if (cuenta !== null) {
-                    if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
-                    } else {
-                        console.log('La cuenta no existe, se agregara una nueva fila en taxes');
-                        frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
-                        frm.doc.taxes.forEach((item_row, index) => {
-                            if (item_row.account_head == undefined) {
-                                frappe.call({
-                                    method: "factura_electronica.api.get_data_tax_account",
-                                    args: {
-                                        name_account_tax_gt: cuenta
-                                    },
-                                    // El callback recibe como parametro el dato retornado por script python del lado del servidor
-                                    callback: function (data) {
-                                        // Asigna los valores retornados del servidor
-                                        frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
-                                        frm.doc.taxes[index].account_head = cuenta;
-                                        frm.doc.taxes[index].rate = data.message;
-                                        //item_row.account_head = cuenta;
-                                        //refresh_field("taxes");
-                                        frm.doc.taxes[index].description = 'Impuesto';
-                                    }
-                                });
-                            }
-                        });
-                    }
-                } else {
-                    console.log('El producto seleccionado no tiene una cuenta asociada');
-                }
-            }
-        });
     },
     rate: function (frm, cdt, cdn) {
-        facelec_tax_calculation(frm, cdt, cdn);
-    }
+        facelec_tax_calc_new(frm, cdt, cdn);
+    },
+    /*onload_post_render: function(frm, cdt, cdn){
+		console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
+    }*/
 });
 /*	2.2 en-US: Triggers for Sales Invoice Items END ----------------------------------*/
 /*	2.2 es-GT: Disparadores para Productos de Factura de Venta TERMINAN  -------------*/
@@ -1551,10 +1611,10 @@ frappe.ui.form.on("Purchase Invoice Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_p_gt_tax_net_fuel_amt);
@@ -1596,9 +1656,9 @@ frappe.ui.form.on("Purchase Invoice Item", {
                 var cuenta = item_row_i.facelec_p_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
-                        console.log('La cuenta no existe, se agregara una nueva fila en taxes');
+                        console.log('La cuenta de impuestos y cargos no existe, se agregara una nueva fila en Taxes and Charges');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
                         frm.doc.taxes.forEach((item_row, index) => {
                             if (item_row.account_head == undefined) {
@@ -1703,10 +1763,10 @@ frappe.ui.form.on("Quotation Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_qt_gt_tax_net_fuel_amt);
@@ -1748,7 +1808,7 @@ frappe.ui.form.on("Quotation Item", {
                 var cuenta = item_row_i.facelec_qt_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -1855,10 +1915,10 @@ frappe.ui.form.on("Purchase Order Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_po_gt_tax_net_fuel_amt);
@@ -1900,7 +1960,7 @@ frappe.ui.form.on("Purchase Order Item", {
                 var cuenta = item_row_i.facelec_po_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -2007,10 +2067,10 @@ frappe.ui.form.on("Purchase Receipt Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_pr_gt_tax_net_fuel_amt);
@@ -2052,7 +2112,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
                 var cuenta = item_row_i.facelec_pr_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -2159,10 +2219,10 @@ frappe.ui.form.on("Sales Order Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_so_gt_tax_net_fuel_amt);
@@ -2204,7 +2264,7 @@ frappe.ui.form.on("Sales Order Item", {
                 var cuenta = item_row_i.shs_so_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -2311,10 +2371,10 @@ frappe.ui.form.on("Delivery Note Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_dn_gt_tax_net_fuel_amt);
@@ -2356,7 +2416,7 @@ frappe.ui.form.on("Delivery Note Item", {
                 var cuenta = item_row_i.shs_dn_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -2467,10 +2527,10 @@ frappe.ui.form.on("Supplier Quotation Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_spq_gt_tax_net_fuel_amt);
@@ -2514,7 +2574,7 @@ frappe.ui.form.on("Supplier Quotation Item", {
                 var cuenta = item_row_i.shs_spq_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -2551,25 +2611,3 @@ frappe.ui.form.on("Supplier Quotation Item", {
 });
 /*	2.16 en-US: Triggers for Supplier Quotation Item END -----------------------------*/
 /*	2.16 es-GT: Disparadores para Producto de Presupuesto de Proveedor TERMINA -------*/
-
-/** Verificacion para que exista un solo check */
-frappe.ui.form.on("Item", {
-    facelec_is_fuel: function (frm, cdt, cdn) {
-        if (frm.doc.facelec_is_fuel) {
-            cur_frm.set_value("facelec_is_good", 0);
-            cur_frm.set_value("facelec_is_service", 0);
-        }
-    },
-    facelec_is_good: function (frm, cdt, cdn) {
-        if (frm.doc.facelec_is_good) {
-            cur_frm.set_value("facelec_is_fuel", 0);
-            cur_frm.set_value("facelec_is_service", 0);
-        }
-    },
-    facelec_is_service: function (frm, cdt, cdn) {
-        if (frm.doc.facelec_is_service) {
-            cur_frm.set_value("facelec_is_fuel", 0);
-            cur_frm.set_value("facelec_is_good", 0);
-        }
-    }
-});
