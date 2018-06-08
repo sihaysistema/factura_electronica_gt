@@ -273,10 +273,12 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
     var total_fuel = 0;
     var total_goods = 0;
     var total_servi = 0;
+    var cuenta = '';
 
     frm.doc.items.forEach((item_row_i, index_i) => {
         if (item_row_i.name == cdn) {
-            var cuenta = item_row_i.facelec_tax_rate_per_uom_account;
+            cuenta = item_row_i.facelec_tax_rate_per_uom_account;
+            console.log('\n ESTE ES EN NOMBRE DE LA CUENTA: ' + cuenta)
             //console.log("NUEVA: La cuenta es: " + cuenta); // WORKS OK
             this_row_tax_amount = (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom);
             this_row_taxable_amount = (item_row_i.amount - (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom));
@@ -354,7 +356,6 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                     }); // TERMINA frm.doc.taxes.forEach((tax_row, index) =>
                 } else {
                     console.log('NUEVA: La cuenta no existe en tabla Taxes, se agregara una nueva fila');
-                    cuenta = item_row_i.facelec_tax_rate_per_uom_account;
                     // Aqui le indicamos que agregue una fila o un hijo de impuestos al campo Taxes, esta entra como undefined.  en blanco.
                     // FIXME  FIXME:  Talvez sea necesario agregar la fila en otra verificacion, porque se estan agregando dos. Aunque si se verifica en la mera tabla.
                     // FIXME  Colocar la de IDP en el indice 0  o hasta arriba.
