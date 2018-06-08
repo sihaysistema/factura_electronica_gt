@@ -2,6 +2,7 @@
  * Copyright (c) 2017, 2018 SHS and contributors
  * For license information, please see license.txt
  */
+
 console.log("Se cargo exitosamente la aplicación de Factura Electronica");
 var otro_impuesto = 0;
 var valor_con_iva = 0;
@@ -78,6 +79,7 @@ Esta organizado en dos principales secciones: Una para funciones, otra para disp
 2.15 es-GT: Disparadores para Presupuesto de Proveedor
 2.16 es-GT: Disparadores para Producto de Presupuesto de Proveedor
 */
+
 
 /*
 	The route followed ultimately is like this:
@@ -352,6 +354,7 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                     }); // TERMINA frm.doc.taxes.forEach((tax_row, index) =>
                 } else {
                     console.log('NUEVA: La cuenta no existe en tabla Taxes, se agregara una nueva fila');
+                    cuenta = item_row_i.facelec_tax_rate_per_uom_account;
                     // Aqui le indicamos que agregue una fila o un hijo de impuestos al campo Taxes, esta entra como undefined.  en blanco.
                     // FIXME  FIXME:  Talvez sea necesario agregar la fila en otra verificacion, porque se estan agregando dos. Aunque si se verifica en la mera tabla.
                     // FIXME  Colocar la de IDP en el indice 0  o hasta arriba.
@@ -1194,6 +1197,7 @@ function shs_supplier_quotation_calculation(frm, cdt, cdn) {
 
 /*	2.1 en-US: Triggers for Sales Invoice BEGIN --------------------------------------*/
 /*	2.1 es-GT: Disparadores para Factura de Venta EMPIEZAN  --------------------------*/
+
 frappe.ui.form.on("Sales Invoice", {
     onload_post_render: function (frm, cdt, cdn) {
         console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
@@ -1307,13 +1311,13 @@ frappe.ui.form.on("Sales Invoice", {
         // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
         cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
 
-        // WORKS OK!
+        // Works OK!
         frm.add_custom_button("UOM Recalculation", function () {
             frm.doc.items.forEach((item) => {
                 // for each button press each line is being processed.
                 console.log("item contains: " + item);
                 //Importante
-                facelec_tax_calculation_conversion(frm, "Sales Invoice Item", item.name);
+                facelec_tax_calc_new(frm, "Sales Invoice Item", item.name);
             });
         });
         // Cuando el documento se actualiza, la funcion verificac de que exista un cae.
@@ -1355,9 +1359,9 @@ frappe.ui.form.on("Sales Invoice", {
         }
     },
     before_save: function (frm, cdt, cdn) {
-        // Trigger antes de guardar
         each_item(frm, cdt, cdn);
         facelec_sales_taxes_charges_row(frm, cdt, cdn);
+        // Trigger antes de guardar
     },
     on_submit: function (frm, cdt, cdn) {
         // Ocurre cuando se presione el boton validar.
@@ -1385,12 +1389,7 @@ frappe.ui.form.on("Sales Invoice", {
                 }
             }
         });
-    },
-    // onload: function (frm, cdt, cdn) {
-    //     // Cuando se carge el documento por completo realizara la comprobacion de que se haya 
-    //     // generado el CAE para el documento requerido.
-    //     verificacionCAE(frm, cdt, cdn);
-    // }
+    }
 });
 /*	2.1 en-US: Triggers for Sales Invoice END ----------------------------------------*/
 /*	2.1 es-GT: Disparadores para Factura de Venta TERMINAN  --------------------------*/
@@ -1407,16 +1406,18 @@ frappe.ui.form.on("Sales Invoice Item", {
         // console.log('Trigger remove en tabla hija');
 
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
+
             fix_gt_tax_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.facelec_gt_tax_net_goods_amt);
             fix_gt_tax_services += flt(d.facelec_gt_tax_net_services_amt);
             fix_gt_tax_iva += flt(d.facelec_sales_tax_for_this_row);
+
         });
 
         cur_frm.set_value("facelec_gt_tax_fuel", fix_gt_tax_fuel);
@@ -1430,7 +1431,7 @@ frappe.ui.form.on("Sales Invoice Item", {
     },
     qty: function (frm, cdt, cdn) {
         //facelec_tax_calculation(frm, cdt, cdn);
-        facelec_tax_calculation_conversion(frm, cdt, cdn);
+        facelec_tax_calc_new(frm, cdt, cdn);
         console.log("cdt contains: " + cdt);
         console.log("cdn contains: " + cdn);
     },
@@ -1441,15 +1442,14 @@ frappe.ui.form.on("Sales Invoice Item", {
     conversion_factor: function (frm, cdt, cdn) {
         // Trigger factor de conversion
         console.log("El disparador de factor de conversión se corrió.");
-        facelec_tax_calculation_conversion(frm, cdt, cdn);
+        facelec_tax_calc_new(frm, cdt, cdn);
     },
-    // FUNCIONA!!
     facelec_tax_rate_per_uom_account: function (frm, cdt, cdn) {
         //facelec_sales_taxes_charges_row(frm, cdt,cdn);
         // esto debe correr aqui?
     },
     rate: function (frm, cdt, cdn) {
-        facelec_tax_calculation(frm, cdt, cdn);
+        facelec_tax_calc_new(frm, cdt, cdn);
     },
     /*onload_post_render: function(frm, cdt, cdn){
 		console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
@@ -1527,10 +1527,10 @@ frappe.ui.form.on("Purchase Invoice Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_p_gt_tax_net_fuel_amt);
@@ -1572,9 +1572,9 @@ frappe.ui.form.on("Purchase Invoice Item", {
                 var cuenta = item_row_i.facelec_p_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
-                        console.log('La cuenta no existe, se agregara una nueva fila en taxes');
+                        console.log('La cuenta de impuestos y cargos no existe, se agregara una nueva fila en Taxes and Charges');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
                         frm.doc.taxes.forEach((item_row, index) => {
                             if (item_row.account_head == undefined) {
@@ -1679,10 +1679,10 @@ frappe.ui.form.on("Quotation Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_qt_gt_tax_net_fuel_amt);
@@ -1724,7 +1724,7 @@ frappe.ui.form.on("Quotation Item", {
                 var cuenta = item_row_i.facelec_qt_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -1831,10 +1831,10 @@ frappe.ui.form.on("Purchase Order Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_po_gt_tax_net_fuel_amt);
@@ -1876,7 +1876,7 @@ frappe.ui.form.on("Purchase Order Item", {
                 var cuenta = item_row_i.facelec_po_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -1983,10 +1983,10 @@ frappe.ui.form.on("Purchase Receipt Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_pr_gt_tax_net_fuel_amt);
@@ -2028,7 +2028,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
                 var cuenta = item_row_i.facelec_pr_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -2135,10 +2135,10 @@ frappe.ui.form.on("Sales Order Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_so_gt_tax_net_fuel_amt);
@@ -2180,7 +2180,7 @@ frappe.ui.form.on("Sales Order Item", {
                 var cuenta = item_row_i.shs_so_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -2287,10 +2287,10 @@ frappe.ui.form.on("Delivery Note Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_dn_gt_tax_net_fuel_amt);
@@ -2332,7 +2332,7 @@ frappe.ui.form.on("Delivery Note Item", {
                 var cuenta = item_row_i.shs_dn_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -2443,10 +2443,10 @@ frappe.ui.form.on("Supplier Quotation Item", {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-        let fix_gt_tax_fuel = 0;
-        let fix_gt_tax_goods = 0;
-        let fix_gt_tax_services = 0;
-        let fix_gt_tax_iva = 0;
+        fix_gt_tax_fuel = 0;
+        fix_gt_tax_goods = 0;
+        fix_gt_tax_services = 0;
+        fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.shs_spq_gt_tax_net_fuel_amt);
@@ -2490,7 +2490,7 @@ frappe.ui.form.on("Supplier Quotation Item", {
                 var cuenta = item_row_i.shs_spq_tax_rate_per_uom_account;
                 if (cuenta !== null) {
                     if (buscar_account(frm, cuenta)) {
-                        console.log('La cuenta ya existe');
+                        console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
@@ -2528,9 +2528,7 @@ frappe.ui.form.on("Supplier Quotation Item", {
 /*	2.16 en-US: Triggers for Supplier Quotation Item END -----------------------------*/
 /*	2.16 es-GT: Disparadores para Producto de Presupuesto de Proveedor TERMINA -------*/
 
-/** Verificacion para que exista un solo check en la seleccion de tipo de servicio
- * en Items
- */
+/** Verificacion para que exista un solo check */
 frappe.ui.form.on("Item", {
     facelec_is_fuel: function (frm, cdt, cdn) {
         if (frm.doc.facelec_is_fuel) {
