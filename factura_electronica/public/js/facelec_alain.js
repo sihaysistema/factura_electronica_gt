@@ -285,7 +285,7 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
             // Verificacion si existe la cuenta en la tabla de items.
             if (cuenta !== null) {
                 // Si si existe, entonces corre esto
-                console.log("NUEVA: La cuenta se detecto en Items: " + cuenta); // WORKS OK
+                //console.log("NUEVA: La cuenta se detecto en Items: " + cuenta); // WORKS OK
                 if (buscar_account(frm, cuenta)) {
                     console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                     // Estimar el rate basado en lo que ya existe, para que CUADRE!
@@ -309,6 +309,7 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                         if (tax_row.account_head == cuenta) {
                             otro_impuesto = this_row_tax_amount;
                             valor_con_iva = this_row_taxable_amount;
+                            valor_iva_modificado = 0;
                             // Buscamos en el server, pasandole la cuenta configurada en Items, para obtener, con validación la cuenta que esta configurado.
                             // Esto nos asegura doblemente! que la cuenta que estamos agregando, EXISTA configurada en el Item, y por lo tanto, como ya se configuro en Item previament,e ya paso UN nivel de validación, asegurando su existencia en el sistema.
                             // Evaluar no dejar guardar o validar la factura si no ha sido indicada una cuenta contable en la tabla de impuestos.
@@ -326,17 +327,21 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                                     frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
                                     // En el caso de Impuestos especiales en Guate, estan incluidos, asi que aseguramos que la caja tenga 1 o "si".
                                     frm.doc.taxes[index].included_in_print_rate = 1;
+                                    // Este es el que obtiene el resultado del Callback que debe de ser 12% si es Guate.
+                                    //frm.doc.taxes[index].rate = data.message;
                                     // ojo ojo ojo ojo FIXME FIXME FIXME  TODO TODO
                                     // 1. Valor de IDP de la fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges.
                                     // 2. Valor Neto sin IVA de la Fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges
                                     // Como fix temporal, intentaremos estimar un "rate" el cual finalice en un numero que permite que el "amount" sea el correcto, cuando se usa On Net Total, puesto que de esta forma podemos lelgar a obtener el resultado esperado de contabilizar correctamente el IDP, sin necesidad de modificar el software.  Esto es un fix paliativo.
-                                    frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); //4600 / 20000
-                                    // Una breve descripción
-                                    console.log("El rate para colocar es:" + (otro_impuesto / (valor_con_iva / (1 + 12))));
+                                    valor_iva_modificado = ((valor_con_iva / (1 + data.message)) * data.message)
+                                    frm.doc.taxes[index].rate = (otro_impuesto / valor_con_iva); // Una breve descripción
+                                    //console.log("El rate para colocar es:" + (otro_impuesto / valor_con_iva));  // WORKS OK. VERIFIED WITH QUANTITY CHANGE AND AMOUNT CHANGE.
+                                    //console.log("Este rate derivado, genera un Valor IDP de: " + ((otro_impuesto / valor_con_iva) * valor_con_iva)); // WORKS OK. VERIFIED WITH QUANTITY CHANGE AND AMOUNT CHANGE.
+                                    //console.log("El valor del otro impuesto es de :" + otro_impuesto); // WORKS OK. VERIFIED WITH QUANTITY CHANGE AND AMOUNT CHANGE.
                                     frm.doc.taxes[index].description = 'Impuesto';
                                     // Esto es en caso le querramos colocar monto, pero OJO, porque no se pueden poner montos que esten incluidos. Ver abajo.
                                     //frm.doc.taxes[index].tax_amount = '39.99';
-                                    //frm.doc.taxes[index].rate = data.message;
+
                                     //refresh_field("taxes");
                                 }
                             });
@@ -344,16 +349,18 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                     }); // TERMINA frm.doc.taxes.forEach((tax_row, index) =>
                 } else {
                     console.log('NUEVA: La cuenta no existe en tabla Taxes, se agregara una nueva fila');
-                    // Aqui le indicamos que agregue una fila o un hijo de impuestos al campo Taxes
+                    // Aqui le indicamos que agregue una fila o un hijo de impuestos al campo Taxes, esta entra como undefined.  en blanco.
                     // FIXME  FIXME:  Talvez sea necesario agregar la fila en otra verificacion, porque se estan agregando dos. Aunque si se verifica en la mera tabla.
+                    // FIXME  Colocar la de IDP en el indice 0  o hasta arriba.
+                    // FIXME Colocar sales tax en el indice siguiente.
                     frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
-                    // Ahora iteramos dentro de la tabla de Sales Taxes and Charges
+                    // Ahora iteramos dentro de la tabla de Sales Taxes and Charges, aprestandonos para colocart la data en la fila que acabamos de nombrar.
                     frm.doc.taxes.forEach((tax_row, index) => {
                         // Como la fila que se acaba de agregar NO TIENE CUENTA, logicamente la PRIMERA sera true porque esta vacia.
                         if (tax_row.account_head == undefined) {
                             // Buscamos en el server, pasandole la cuenta configurada en Items, para obtener, con validación la cuenta que esta configurado.
-                            // Esto nos asegura doblemente! que la cuenta que estamos agregando, EXISTA configurada en el Item, y por lo tanto, como ya se configuro en Item previament,e ya paso UN nivel de validación, asegurando su existencia en el sistema.
-                            // Evaluar no dejar guardar o validar la factura si no ha sido indicada una cuenta contable en la tabla de impuestos.
+                            // Esto nos asegura doblemente! que la cuenta que estamos agregando, EXISTA configurada en el Item, y por lo tanto, como ya se configuro en Item previamente ya paso UN nivel de validación, asegurando su existencia en el sistema.
+                            // Evaluar no dejar guardar o validar la factura si no ha sido indicada una cuenta contable en la tabla de impuestos.  No es necesario
                             frappe.call({
                                 method: "factura_electronica.api.get_data_tax_account",
                                 args: {
@@ -1287,6 +1294,7 @@ function shs_supplier_quotation_calculation(frm, cdt, cdn) {
 
 /*	2 en-US: Triggers BEGIN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 /*	2 es-GT: Disparadores EMPIEZAN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+
 /*	2.1 en-US: Triggers for Sales Invoice BEGIN --------------------------------------*/
 /*	2.1 es-GT: Disparadores para Factura de Venta EMPIEZAN  --------------------------*/
 frappe.ui.form.on("Sales Invoice", {
