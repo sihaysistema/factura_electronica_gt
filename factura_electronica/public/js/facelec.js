@@ -80,7 +80,6 @@ Esta organizado en dos principales secciones: Una para funciones, otra para disp
 2.16 es-GT: Disparadores para Producto de Presupuesto de Proveedor
 */
 
-
 /*
 	The route followed ultimately is like this:
 1. JavaScript is loaded from the server:
@@ -262,24 +261,32 @@ function each_item(frm, cdt, cdn) {
 
 /* -----------------------------------------------------------------------------------*/
 // Funcion para agregar, quitar, sumar, restar nuevas filas con sus respectivos calculos
-function agregar_fila_impuesto() {
+function agregar_fila_impuesto(frm, cdt, cdn) {
+    var this_row_tax_amount = 0; // Valor IDP
+    var this_row_taxable_amount = 0; // Valor todavía con IVA
+
+    // Recorre todas las filas de items, parametro 1 : nombre de la fila
+    // Parametro 2 : Indice
     frm.doc.items.forEach((item_row_i, index_i) => {
+        // Verifica que el nombre de la fila sea igual al del documento
         if (item_row_i.name === cdn) {
             // En la variable se guarda el nombre de la cuenta que se haya encontrado en el item
             var cuenta = item_row_i.facelec_tax_rate_per_uom_account;
             console.log('\n CUENTA ENCONTRADA: ' + cuenta + '\n');
-            // Si la cuenta tiene un nombre se procede, de lo contrario significa
-            // que el item que se esta trabajando no tiene una cuenta.
+
+            // Si encuentra una cuenta con nombre procede
+            // Verifica que no sea undefined ni null
             if (cuenta !== undefined) {
                 if (cuenta !== null) {
                     // Busca si la cuenta ya fue agregada en la tabla hija taxes
-                    // Si encuentra que si existe, mostrara el mensaje
+                    // Si encuentra que si existe, mostrara el mensaje de que ya existe
                     // TODO: Hacer que se vaya concatenando el valor de la cuenta cada vez que encuentre uno
                     if (buscar_account(frm, cuenta)) {
                         console.log('La cuenta de impuestos y cargos ya existe en la tabla Taxes and Charges');
                         // Estimar el rate basado en lo que ya existe, para que CUADRE!
-                        otro_impuesto = this_row_tax_amount;
-                        valor_con_iva = this_row_taxable_amount;
+                        var otro_impuesto = this_row_tax_amount;
+                        var valor_con_iva = this_row_taxable_amount;
+
                         if (valor_con_iva == 0) {
                             console.log("NUEVA: Valor con IVA es 0");
                         } else {
@@ -293,12 +300,16 @@ function agregar_fila_impuesto() {
                             //console.log("NUEVA: El otro monto de impuesto es, cuando la cuenta ya existe es: " + otro_impuesto);
                             // Aqui es mejor no hacer nada, porque el otro impuesto pudiera valer 0!
                         }
-                        // Aqui busca las filas de items que tengan cuenta.
+
+                        // Recorre las filas de taxes (child table taxes and charges)
                         frm.doc.taxes.forEach((tax_row, index) => {
-                            if (tax_row.account_head == cuenta) {
-                                otro_impuesto = this_row_tax_amount;
-                                valor_con_iva = this_row_taxable_amount;
-                                valor_iva_modificado = 0;
+                            // Si encuentra una fila con el nombre de la cuenta del producto que se esta usando
+                            // procede a hacer las operaciones matematicas
+                            if (tax_row.account_head === cuenta) {
+                                // Estas variables ya fueron asignadas arriba
+                                // otro_impuesto = this_row_tax_amount;
+                                // valor_con_iva = this_row_taxable_amount;
+                                var valor_iva_modificado = 0;
                                 // Buscamos en el server, pasandole la cuenta configurada en Items, para obtener, con validación la cuenta que esta configurado.
                                 // Esto nos asegura doblemente! que la cuenta que estamos agregando, EXISTA configurada en el Item, y por lo tanto, como ya se configuro en Item previament,e ya paso UN nivel de validación, asegurando su existencia en el sistema.
                                 // Evaluar no dejar guardar o validar la factura si no ha sido indicada una cuenta contable en la tabla de impuestos.
@@ -322,8 +333,8 @@ function agregar_fila_impuesto() {
                                         // 1. Valor de IDP de la fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges.
                                         // 2. Valor Neto sin IVA de la Fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges
                                         // Como fix temporal, intentaremos estimar un "rate" el cual finalice en un numero que permite que el "amount" sea el correcto, cuando se usa On Net Total, puesto que de esta forma podemos lelgar a obtener el resultado esperado de contabilizar correctamente el IDP, sin necesidad de modificar el software.  Esto es un fix paliativo.
-                                        valor_iva_modificado = ((valor_con_iva / (1 + data.message)) * data.message)
-                                        frm.doc.taxes[index].rate = (otro_impuesto / valor_con_iva); // Una breve descripción
+                                        valor_iva_modificado = parseFloat((valor_con_iva / (1 + data.message)) * data.message)
+                                        frm.doc.taxes[index].rate = parseFloat(otro_impuesto / valor_con_iva); // Una breve descripción
                                         //console.log("El rate para colocar es:" + (otro_impuesto / valor_con_iva));  // WORKS OK. VERIFIED WITH QUANTITY CHANGE AND AMOUNT CHANGE.
                                         //console.log("Este rate derivado, genera un Valor IDP de: " + ((otro_impuesto / valor_con_iva) * valor_con_iva)); // WORKS OK. VERIFIED WITH QUANTITY CHANGE AND AMOUNT CHANGE.
                                         //console.log("El valor del otro impuesto es de :" + otro_impuesto); // WORKS OK. VERIFIED WITH QUANTITY CHANGE AND AMOUNT CHANGE.
@@ -370,7 +381,7 @@ function agregar_fila_impuesto() {
                                         // 1. Valor de IDP de la fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges.
                                         // 2. Valor Neto sin IVA de la Fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges
                                         // Como fix temporal, intentaremos estimar un "rate" el cual finalice en un numero que permite que el "amount" sea el correcto, cuando se usa On Net Total, puesto que de esta forma podemos lelgar a obtener el resultado esperado de contabilizar correctamente el IDP, sin necesidad de modificar el software.  Esto es un fix paliativo.
-                                        frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); //4600 / 20000
+                                        frm.doc.taxes[index].rate = parseFloat(otro_impuesto / (valor_con_iva / (1 + 12))); //4600 / 20000
                                         console.log("El rate para colocar es:" + (otro_impuesto / (valor_con_iva / (1 + 12))));
                                         // Una breve descripción
                                         frm.doc.taxes[index].description = 'Impuesto';
@@ -536,6 +547,7 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
             console.log('NUEVO: Se encontró cuenta, o simplemente se agregó');
         }
     });
+
 } // OK
 /* 1.1b en-US: Add rows, accounts and totalize taxes END -----------------------------*/
 /* 1.1b es-GT: Agregar fila, cuentas y totalizar impuestos en tabla TERMINA ----------*/
