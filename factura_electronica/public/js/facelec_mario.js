@@ -476,10 +476,16 @@ frappe.ui.form.on("Sales Invoice Item", {
         // Eleccion de este trigger para la adicion de filas en taxes con sus respectivos valores.
         frm.doc.items.forEach((item_row_i, index_i) => {
             if (item_row_i.name == cdn) {
+                // En la variable se guarda el nombre de la cuenta que se haya encontrado en el item
                 var cuenta = item_row_i.facelec_tax_rate_per_uom_account;
+                // Si la cuenta tiene un nombre se procede, de lo contrario significa
+                // que el item que se esta trabajando no tiene una cuenta.
                 if (cuenta !== null) {
+                    // Busca si la cuenta ya fue agregada en la tabla hija taxes
+                    // Si encuentra que si existe, mostrara el mensaje
                     if (buscar_account(frm, cuenta)) {
                         console.log('La cuenta ya existe');
+                        // Si la cuenta no existe se agregara una nueva
                     } else {
                         console.log('La cuenta no existe, se agregara una nueva fila en taxes');
                         frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
