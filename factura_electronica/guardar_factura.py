@@ -1,15 +1,14 @@
-#!/usr/local/bin/python
-# -*- coding: utf-8 -*-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import frappe
 from frappe import _
 import xmltodict
 from datetime import datetime, date, time
 import os
-# es-GT: Resuelve el problema de codificacion
-# en-US: Solve the coding problem
+
+# Permite trabajar con acentos, ñ, simbolos, etc
 import sys
 reload(sys)
-#sys.setdefaultencoding('Cp1252')
 sys.setdefaultencoding('utf-8')
 
 # es-GT: Guarda los datos recibidos de infile en la Tabla 'Facturas Electronicas'.
@@ -109,6 +108,8 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
         return cae_dato
 
 def actualizarTablas(serieOriginalFac):
+    """Funcion permite actualizar tablas en la base de datos, despues de haber generado
+    la factura electronica"""
     # Verifica que exista un documento en la tabla Envios Facturas Electronicas con el nombre de la serie original
     if frappe.db.exists('Envios Facturas Electronicas', {'serie_factura_original': serieOriginalFac}):
         factura_guardada = frappe.db.get_values('Envios Facturas Electronicas',
@@ -119,7 +120,7 @@ def actualizarTablas(serieOriginalFac):
         try:
             # serieDte: guarda el numero DTE retornado por INFILE, se utilizara para reemplazar el nombre de la serie de la
             # factura que lo generó.
-            serieDte = factura_guardada[0]['numero_dte']
+            serieDte = str(factura_guardada[0]['numero_dte'])
             # serie_fac_original: Guarda la serie original de la factura.
             serie_fac_original = serieOriginalFac
 
@@ -132,9 +133,11 @@ def actualizarTablas(serieOriginalFac):
                             WHERE name=%(serieFa)s
                             ''', {'name':serieDte, 'cae_correcto': factura_guardada[0]['cae'],
                                   'serie_orig_correcta': serie_fac_original, 'serieFa':serie_fac_original})
+
             # 02 - tabSales Invoice Item
             frappe.db.sql('''UPDATE `tabSales Invoice Item` SET parent=%(name)s
                             WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
             # 03 - tabGL Entry
             frappe.db.sql('''UPDATE `tabGL Entry` SET voucher_no=%(name)s, against_voucher=%(name)s
                             WHERE voucher_no=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
@@ -271,4 +274,4 @@ def actualizarTablas(serieOriginalFac):
         else:
             # Si los datos se Guardan correctamente, se retornara el Numero Dte generado, que sera capturado por api.py
             # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
-            return factura_guardada[0]['numero_dte']
+            return str(factura_guardada[0]['numero_dte'])

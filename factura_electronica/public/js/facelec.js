@@ -172,6 +172,7 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                 cur_frm.set_value('facelec_gt_tax_fuel', total_fuel);
                 frm.refresh_field("factelecis_fuel");
             };
+
             if (item_row.facelec_is_good) {
                 frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
@@ -187,6 +188,7 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                 // cur_frm.doc.facelec_gt_tax_goods = total_goods;
                 cur_frm.set_value('facelec_gt_tax_goods', total_goods);
             };
+
             if (item_row.facelec_is_service) {
                 //console.log("The item you added is a SERVICE!" + item_row.facelec_is_service);// WORKS OK!
                 //console.log("El valor en servicios para el libro de compras es: " + net_services_tally);// WORKS OK!
@@ -467,8 +469,8 @@ function generar_boton_factura(tipo_factura, frm) {
             method: "factura_electronica.api.generar_factura_electronica",
             args: {
                 serie_factura: frm.doc.name,
-                nombre_cliente: frm.doc.customer
-                // pre_serie: frm.doc.naming_series
+                nombre_cliente: frm.doc.customer,
+                pre_se: frm.doc.naming_series
             },
             // El callback recibe como parametro el dato retornado por el script python del lado del servidor
             callback: function (data) {
@@ -503,8 +505,8 @@ function generar_factura_sin_btn(frm) {
         method: "factura_electronica.api.generar_factura_electronica",
         args: {
             serie_factura: frm.doc.name,
-            nombre_cliente: frm.doc.customer
-            // pre_serie: frm.doc.naming_series
+            nombre_cliente: frm.doc.customer,
+            pre_se: frm.doc.naming_series
         },
         // El callback recibe como parametro el dato retornado por el script python del lado del servidor
         callback: function (data) {
@@ -2134,6 +2136,7 @@ frappe.ui.form.on("Sales Order Item", {
     },
     item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
+        // cur_frm.add_fetch("item_code", "facelec_three_digit_uom", "shs_so_facelec_three_digit_uom_code");
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
