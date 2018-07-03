@@ -263,7 +263,28 @@ function each_item(frm, cdt, cdn) {
 }
 /*	1.1a en-US: Item refreshing calculations END -------------------------------------*/
 /*	1.1a es-GT: Calculos para refrescar articulos TERMINA ----------------------------*/
-
+function agregar_fila(doc, table_name, doctype, position) {
+    // item bigger than length
+    if (position > doc[table_name].length) {
+        var row = frappe.model.add_child(doc, doctype, table_name);
+        return row;
+    }
+    // item less than first
+    else if (position < doc[table_name][0].idx) {
+        var row = frappe.model.add_child(doc, doctype, table_name);
+        row.idx = position;
+        return row;
+    }
+    // item in the middle
+    else {
+        for (var curr_pos = position; curr_pos < doc[table_name].length; curr_pos++) {
+            doc[table_name][curr_pos].idx += 1;
+        }
+        var row = frappe.model.add_child(doc, doctype, table_name);
+        row.idx = position;
+        return row;
+    }
+}
 /* 1.1b en-US: Add rows, accounts and totalize taxes BEGIN ---------------------------*/
 /* 1.1b es-GT: Agregar fila, cuentas y totalizar impuestos en tabla EMPIEZA ----------*/
 function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
@@ -272,18 +293,18 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
     var otro_impuesto = 0;
     var valor_con_iva = 0;
     var rate_acumulado = 0; // variable de prueba
-
+    var otro_impuesto_prueba = 0;
+    var contador = 0;
     frm.doc.items.forEach((item_row_i, indice) => {
-        console.log('ESTAS UBICADO EN EL INDICE DE ITEMS---------------> ' + indice)
 
         if (item_row_i.name === cdn) {
             // Calculos Alain
             this_row_tax_amount = (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom);
             this_row_taxable_amount = (item_row_i.amount - (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom));
 
+            otro_impuesto_prueba = item_row_i.facelec_other_tax_amount;
             // Guarda el nombre de la cuenta del item seleccionado
             var cuenta = item_row_i.facelec_tax_rate_per_uom_account;
-
             console.log('Cuenta de item encontrada es : ' + cuenta);
 
             // Refresh data de items y conversion_factor
@@ -300,7 +321,10 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                 if (!(buscar_account(frm, cuenta))) { // Si no encuentra una cuenta, procede.
                     // Agrega una nueva fila, se agrega y queda almacenada en la variables para despues asignarle propiedades
                     // FIXME: Aun no se ha encontrado una forma para agregar filas en una posicion especifica
-                    var nuevaFila = frm.add_child("taxes");
+                    // var item_row_tax = agregar_fila(cur_frm.doc, "taxes", "Sales Taxes and Charges", 0);
+                    //modify item
+                    cur_frm.refresh_field("taxes")
+                    var fila_nueva = frm.add_child("taxes");
 
                     // Refresh datos de la tabla hija items
                     frm.refresh_field('items');
@@ -310,7 +334,6 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                     // Recorre la tabla hija 'taxes' en busca de la nueva fila que se agrego anteriormente donde account_head
                     // sea undefined
                     frm.doc.taxes.forEach((tax_row, index) => {
-                        console.log('ESTAS UBICADO EN EL INDICE DE TAXES 1---------------> ' + index); // Indica en que posicion se esta trabajando
                         // Si encuentra la fila anteriormente agregada procede
                         if (tax_row.account_head === undefined) {
                             // Metodo para consultar al servidor el rate de la cuenta que fue detectada en el item
@@ -329,14 +352,15 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                                     // 		 Esto para tener siempre los datos correctos
 
                                     // Metodos para asignar las propiedades a las filas
-                                    nuevaFila.account_head = cuenta;
-                                    nuevaFila.charge_type = 'On Net Total';
-                                    nuevaFila.included_in_print_rate = 1;
-                                    nuevaFila.rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funcion OK
-                                    // cur_frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funciona oK
-                                    nuevaFila.description = 'Impuesto';
-                                    // Refresca los datos que anteriormente fueron asignados
-                                    cur_frm.refresh_field("taxes");
+                                    fila_nueva.account_head = cuenta;
+                                    // fila_nueva.charge_type = 'On Net Total';
+                                    // fila_nueva.included_in_print_rate = 1;
+                                    // fila_nueva.rate = otro_impuesto_prueba;
+                                    // // fila_nueva.rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funcion OK
+                                    // // // cur_frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funciona oK
+                                    // fila_nueva.description = 'Impuesto';
+                                    // // // Refresca los datos que anteriormente fueron asignados
+                                    // cur_frm.refresh_field("taxes");
                                 }
                             });
                         }
@@ -359,9 +383,19 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                             // Recorrer items en busca de las cuenta con el mismo tipo de cuenta de impuesto
                             // y sumar, esto permitira siempre tener los calculos, totales correctos.
                             // FIXME: Que formulas o calculos utilizar?
-                            frm.doc.items.forEach((item_tax) => {
-                                total_impuesto_cuenta += 'loque sea';
-                            });
+                            // frm.doc.items.forEach((item_tax) => {
+                            //     total_impuesto_cuenta += 'loque sea';
+                            // });
+
+                            cur_frm.doc.taxes[index].account_head = cuenta;
+                            cur_frm.doc.taxes[index].charge_type = 'On Net Total';
+                            cur_frm.doc.taxes[index].included_in_print_rate = 1;
+                            cur_frm.doc.taxes[index].rate = otro_impuesto_prueba;
+                            // fila_nueva.rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funcion OK
+                            // // cur_frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funciona oK
+                            cur_frm.doc.taxes[index].description = 'Impuesto';
+                            // // Refresca los datos que anteriormente fueron asignados
+                            cur_frm.refresh_field("taxes");
                         }
                     });
 
@@ -446,6 +480,16 @@ function pdf_button(cae_documento, frm) {
         function () {
             window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
         }).addClass("btn-primary");
+
+    frm.add_custom_button(__('GUARDAR PDF'), function () {
+        frappe.call({
+            method: "factura_electronica.api.guardar_pdf_servidor",
+            args: {
+                nombre_archivo: frm.doc.name,
+                url_archivo: 'https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=' + frm.doc.cae_factura_electronica
+            }
+        });
+    }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
 }
 /*	1.4 en-US: Obtain Electronic Invoice PDF END -------------------------------------*/
 /*	1.4 es-GT: Obtener PDF de Factura Electronica TERMINA ----------------------------*/
@@ -1302,6 +1346,7 @@ frappe.ui.form.on("Sales Invoice", {
                 facelec_tax_calc_new(frm, "Sales Invoice Item", item.name);
             });
         });
+
         // Cuando el documento se actualiza, la funcion verificac de que exista un cae.
         // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
         // En caso no exista un cae mostrara el boton para generar la factura electronica

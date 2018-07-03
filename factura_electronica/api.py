@@ -13,7 +13,7 @@ from valida_errores import encuentra_errores as errores
 from valida_errores import normalizar_texto
 
 # Permite trabajar con acentos, ñ, simbolos, etc
-import sys
+import os, sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -200,28 +200,41 @@ def obtenerConfiguracionManualAutomatica():
         frappe.msgprint(_('No se encontró una configuración válida. Verifique que exista una configuración validada'))
 
 @frappe.whitelist()
-# TODO:FIXME: FUNCIONALIDAD EN DESARROLLO
-def save_pdf_server(file_url, filename, dt, dn, folder, is_private):
-    '''Funcion para guardar automaticamente los pdf en la base de datos de forma privada'''
-    pass
-    # if not (file_url.startswith("http://") or file_url.startswith("https://")):
-    # 	frappe.msgprint("URL must start with 'http://' or 'https://'")
-    # 	return None, None
-    # try:
-    # ile_url = unquote(file_url)
-    #    tabArchivos = frappe.new_doc("File")
-    #    tabArchivos.file_url = file_url
-    #    tabArchivos.file_name = 'prueba'
-    #    tabArchivos.attached_to_doctype = 'Sales Invoice'
-    #    tabArchivos.attached_to_name = dn
-    #    tabArchivos.folder = 'Home/Facturas Electronicas'
-    #    tabArchivos.is_private = 1
-    #    tabArchivos.ignore_permissions = True
-    #    tabArchivos.save()
-    # except:
-    #    frappe.msgprint(_('Archivo no guardado'))
-    # else:
-    #    frappe.msgprint(_('Guardado'))
+def guardar_pdf_servidor(nombre_archivo, url_archivo):
+    '''Descarga factura en servidor y registra en base de datos'''
+
+    ruta_archivo = 'site1.local/private/files/factura-electronica/'
+
+    if os.path.exists(ruta_archivo):
+        descarga_archivo = os.system('curl -s -o {0}{1}.pdf {2}'.format(ruta_archivo, nombre_archivo, url_archivo))
+    else:
+        frappe.create_folder(ruta_archivo)
+        descarga_archivo = os.system('curl -s -o {0}{1}.pdf {2}'.format(ruta_archivo, nombre_archivo, url_archivo))
+
+    if descarga_archivo == 0:
+        bytes_archivo = os.path.getsize("site1.local/private/files/factura-electronica/{0}.pdf".format(nombre_archivo))
+
+        try:
+            nuevo_archivo = frappe.new_doc("File")
+
+            nuevo_archivo.docstatus = 0
+            nuevo_archivo.file_name = str(nombre_archivo) + '.pdf'
+            nuevo_archivo.file_url = '/private/files/factura-electronica/{0}.pdf'.format(nombre_archivo)
+            nuevo_archivo.attached_to_name = nombre_archivo
+            nuevo_archivo.file_size = bytes_archivo
+            nuevo_archivo.attached_to_doctype = 'Sales Invoice'
+            nuevo_archivo.is_home_folder = 0
+            nuevo_archivo.if_folder = 0
+            nuevo_archivo.folder = 'Home/attachments'
+            nuevo_archivo.is_private = 1
+            nuevo_archivo.old_parent = 'Home/attachments'
+
+            nuevo_archivo.save()
+        except:
+            frappe.msgprint(_('Error no se pudo guardar en la DB'))
+    else:
+        frappe.msgprint(_('''No se pudo obtener el archivo pdf de la factura electronica.
+                            Por favor intente de nuevo.'''))
 
 @frappe.whitelist()
 def get_data_tax_account(name_account_tax_gt):
