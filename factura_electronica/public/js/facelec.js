@@ -480,7 +480,11 @@ function pdf_button(cae_documento, frm) {
         function () {
             window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
         }).addClass("btn-primary");
+}
+/*	1.4 en-US: Obtain Electronic Invoice PDF END -------------------------------------*/
+/*	1.4 es-GT: Obtener PDF de Factura Electronica TERMINA ----------------------------*/
 
+function descargar_pdf(frm) {
     frm.add_custom_button(__('GUARDAR PDF'), function () {
         frappe.call({
             method: "factura_electronica.api.guardar_pdf_servidor",
@@ -491,8 +495,6 @@ function pdf_button(cae_documento, frm) {
         });
     }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
 }
-/*	1.4 en-US: Obtain Electronic Invoice PDF END -------------------------------------*/
-/*	1.4 es-GT: Obtener PDF de Factura Electronica TERMINA ----------------------------*/
 
 /* ---------------------------------------------------------------------------------------------------------------- */
 /*	1.5 en-US: Generate Electronic Invoice Manually with Button Press BEGIN ----------*/

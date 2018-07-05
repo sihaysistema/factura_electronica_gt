@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
+from frappe.utils.file_manager import get_file_doc, upload
 import requests
 import xmltodict
 
@@ -76,7 +77,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
 
                 url_configurada = frappe.db.get_values('Configuracion Factura Electronica',
                                                     filters={'name': nombre_config_validada},
-                                                    fieldname=['url_listener'], as_dict=1)
+                                                    fieldname=['url_listener', 'descargar_pdf_factura_electronica',
+                                                               'url_descarga_pdf'], as_dict=1)
 
                 # Funcion obtiene los datos necesarios y construye el xml
                 construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
@@ -145,6 +147,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
 
                                                 # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
                                                 numero_dte_correcto = actualizartb(serie_original_factura)
+                                                # Funcion para descargar y guardar pdf factura electronica
+                                                guardar_pdf_servidor(numero_dte_correcto, url_configurada[0]['url_descarga_pdf'], url_configurada[0]['descargar_pdf_factura_electronica'])
 
                                                 # Este dato sera capturado por Js actualizando la url
                                                 return numero_dte_correcto
@@ -200,41 +204,47 @@ def obtenerConfiguracionManualAutomatica():
         frappe.msgprint(_('No se encontró una configuración válida. Verifique que exista una configuración validada'))
 
 @frappe.whitelist()
-def guardar_pdf_servidor(nombre_archivo, url_archivo):
+def guardar_pdf_servidor(nombre_archivo, url_archivo, modo_configuracion):
     '''Descarga factura en servidor y registra en base de datos'''
 
     ruta_archivo = 'site1.local/private/files/factura-electronica/'
 
-    if os.path.exists(ruta_archivo):
-        descarga_archivo = os.system('curl -s -o {0}{1}.pdf {2}'.format(ruta_archivo, nombre_archivo, url_archivo))
-    else:
-        frappe.create_folder(ruta_archivo)
-        descarga_archivo = os.system('curl -s -o {0}{1}.pdf {2}'.format(ruta_archivo, nombre_archivo, url_archivo))
+    if modo_configuracion == 'ACTIVAR':
+        if os.path.exists(ruta_archivo):
+            descarga_archivo = os.system('curl -s -o {0}{1}.pdf {2}'.format(ruta_archivo, nombre_archivo, url_archivo))
+        else:
+            frappe.create_folder(ruta_archivo)
+            descarga_archivo = os.system('curl -s -o {0}{1}.pdf {2}'.format(ruta_archivo, nombre_archivo, url_archivo))
 
-    if descarga_archivo == 0:
-        bytes_archivo = os.path.getsize("site1.local/private/files/factura-electronica/{0}.pdf".format(nombre_archivo))
-
-        try:
-            nuevo_archivo = frappe.new_doc("File")
-
-            nuevo_archivo.docstatus = 0
-            nuevo_archivo.file_name = str(nombre_archivo) + '.pdf'
-            nuevo_archivo.file_url = '/private/files/factura-electronica/{0}.pdf'.format(nombre_archivo)
-            nuevo_archivo.attached_to_name = nombre_archivo
-            nuevo_archivo.file_size = bytes_archivo
-            nuevo_archivo.attached_to_doctype = 'Sales Invoice'
-            nuevo_archivo.is_home_folder = 0
-            nuevo_archivo.if_folder = 0
-            nuevo_archivo.folder = 'Home/attachments'
-            nuevo_archivo.is_private = 1
-            nuevo_archivo.old_parent = 'Home/attachments'
-
-            nuevo_archivo.save()
-        except:
-            frappe.msgprint(_('Error no se pudo guardar en la DB'))
-    else:
-        frappe.msgprint(_('''No se pudo obtener el archivo pdf de la factura electronica.
-                            Por favor intente de nuevo.'''))
+        if descarga_archivo == 0:
+            bytes_archivo = os.path.getsize("site1.local/private/files/factura-electronica/{0}.pdf".format(nombre_archivo))
+            # frappe.upload()
+            # def get_file_doc(dt=None, dn=None, folder=None, is_private=None, df=None):
+            # frappe.utils.file_manager.upload()
+            # mi_archivo = frappe.utils.file_manager.get_file_doc('Sales Invoice', nombre_archivo)
+            # frappe.msgprint(_(mi_archivo))
+            try:
+                nuevo_archivo = frappe.new_doc("File")
+                nuevo_archivo.docstatus = 0
+                nuevo_archivo.file_name = str(nombre_archivo) + '.pdf'
+                nuevo_archivo.file_url = '/private/files/factura-electronica/{0}.pdf'.format(nombre_archivo)
+                nuevo_archivo.attached_to_name = nombre_archivo
+                nuevo_archivo.file_size = bytes_archivo
+                nuevo_archivo.attached_to_doctype = 'Sales Invoice'
+                nuevo_archivo.is_home_folder = 0
+                nuevo_archivo.if_folder = 0
+                nuevo_archivo.folder = 'Home/attachments'
+                nuevo_archivo.is_private = 1
+                nuevo_archivo.old_parent = 'Home/attachments'
+                nuevo_archivo.save()
+            except:
+                frappe.msgprint(_('''Error no se pudo guardar PDF de la factura electronica en la
+                                    base de datos. Intente de nuevo.'''))
+            else:
+                return 'ok'
+        else:
+            frappe.msgprint(_('''No se pudo obtener el archivo pdf de la factura electronica.
+                                Por favor intente de nuevo.'''))
 
 @frappe.whitelist()
 def get_data_tax_account(name_account_tax_gt):
