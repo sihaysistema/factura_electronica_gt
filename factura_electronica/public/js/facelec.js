@@ -484,18 +484,36 @@ function pdf_button(cae_documento, frm) {
 /*	1.4 en-US: Obtain Electronic Invoice PDF END -------------------------------------*/
 /*	1.4 es-GT: Obtener PDF de Factura Electronica TERMINA ----------------------------*/
 
-function descargar_pdf(frm) {
+function guardar_pdf(frm) {
     frm.add_custom_button(__('GUARDAR PDF'), function () {
         frappe.call({
             method: "factura_electronica.api.guardar_pdf_servidor",
             args: {
                 nombre_archivo: frm.doc.name,
-                url_archivo: 'https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=' + frm.doc.cae_factura_electronica
+                cae_de_factura_electronica: frm.doc.cae_factura_electronica
+            },
+            callback: function () {
+                frm.reload_doc();
             }
         });
     }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
 }
 
+// FIXME: MODIFICAR PARA QUE PERMITE ELIMINAR EL PDF
+function eliminar_pdf() {
+    frm.add_custom_button(__('ELIMINAR PDF'), function () {
+        frappe.call({
+            method: "factura_electronica.api.guardar_pdf_servidor",
+            args: {
+                nombre_archivo: frm.doc.name,
+                cae_de_factura_electronica: frm.doc.cae_factura_electronica
+            },
+            callback: function () {
+                frm.reload_doc();
+            }
+        });
+    }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
+}
 /* ---------------------------------------------------------------------------------------------------------------- */
 /*	1.5 en-US: Generate Electronic Invoice Manually with Button Press BEGIN ----------*/
 /*	1.5 es-GT: Genera la Factura Electronica Manualmente presionando el Botón EMPIEZA */
@@ -588,6 +606,7 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
+            guardar_pdf(frm);
         } else {
             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
             if (modalidad === 'manual') {
@@ -609,6 +628,7 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
+            guardar_pdf(frm);
         } else {
             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
             if (modalidad === 'manual') {
@@ -630,6 +650,7 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
             if (frm.doc.cae_factura_electronica) {
                 cur_frm.clear_custom_buttons();
                 pdf_button(frm.doc.cae_factura_electronica, frm);
+                guardar_pdf(frm);
             } else {
                 // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
                 if (modalidad === 'manual') {

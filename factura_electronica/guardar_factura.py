@@ -256,6 +256,7 @@ def actualizarTablas(serieOriginalFac):
             # else:
             #     frappe.msgprint(_('No hay registro en tabSales Order))
 
+            frappe.db.commit()
 
             # Posible modifacadas
             # # Artículo empaquetado
