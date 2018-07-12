@@ -322,18 +322,20 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                     // Agrega una nueva fila, se agrega y queda almacenada en la variables para despues asignarle propiedades
                     // FIXME: Aun no se ha encontrado una forma para agregar filas en una posicion especifica
                     // var item_row_tax = agregar_fila(cur_frm.doc, "taxes", "Sales Taxes and Charges", 0);
+                    // var fila_nueva = agregar_fila(cur_frm.doc, "otros_impuestos", "Otros Impuestos Factura Electronica", 0);
                     //modify item
-                    cur_frm.refresh_field("taxes")
-                    var fila_nueva = frm.add_child("taxes");
+                    // cur_frm.refresh_field("otros_impuestos");
+                    // var fila_nueva = cur_frm.add_child("otros_impuestos");
+                    var fila_nueva = frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica", "otros_impuestos");
 
                     // Refresh datos de la tabla hija items
-                    frm.refresh_field('items');
+                    cur_frm.refresh_field('items');
                     otro_impuesto = this_row_tax_amount;
                     valor_con_iva = this_row_taxable_amount;
 
                     // Recorre la tabla hija 'taxes' en busca de la nueva fila que se agrego anteriormente donde account_head
                     // sea undefined
-                    frm.doc.taxes.forEach((tax_row, index) => {
+                    frm.doc.otros_impuestos.forEach((tax_row, index) => {
                         // Si encuentra la fila anteriormente agregada procede
                         if (tax_row.account_head === undefined) {
                             // Metodo para consultar al servidor el rate de la cuenta que fue detectada en el item
@@ -353,14 +355,14 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
 
                                     // Metodos para asignar las propiedades a las filas
                                     fila_nueva.account_head = cuenta;
-                                    // fila_nueva.charge_type = 'On Net Total';
-                                    // fila_nueva.included_in_print_rate = 1;
-                                    // fila_nueva.rate = otro_impuesto_prueba;
-                                    // // fila_nueva.rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funcion OK
-                                    // // // cur_frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funciona oK
-                                    // fila_nueva.description = 'Impuesto';
-                                    // // // Refresca los datos que anteriormente fueron asignados
-                                    // cur_frm.refresh_field("taxes");
+                                    fila_nueva.charge_type = 'On Net Total';
+                                    fila_nueva.included_in_print_rate = 1;
+                                    fila_nueva.rate = otro_impuesto_prueba;
+                                    // fila_nueva.rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funcion OK
+                                    // // cur_frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funciona oK
+                                    fila_nueva.description = 'Impuesto';
+                                    // // Refresca los datos que anteriormente fueron asignados
+                                    cur_frm.refresh_field("otros_impuestos");
                                 }
                             });
                         }
@@ -370,7 +372,7 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                     // se procede a sumar los datos nuevos con los que se agregaron anteriormente
 
                     // Recorre las filas de taxes (child table taxes and charges)
-                    frm.doc.taxes.forEach((tax_row, index) => {
+                    frm.doc.otros_impuestos.forEach((tax_row, index) => {
                         console.log('ESTAS UBICADO EN EL INDICE DE TAXES---------------> ' + index) // Indica en que posicion se esta trabajando
                         // Si encuentra una fila con el nombre de la cuenta del producto que se esta usando
                         // procede a hacer las operaciones matematicas
@@ -387,15 +389,15 @@ function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
                             //     total_impuesto_cuenta += 'loque sea';
                             // });
 
-                            cur_frm.doc.taxes[index].account_head = cuenta;
-                            cur_frm.doc.taxes[index].charge_type = 'On Net Total';
-                            cur_frm.doc.taxes[index].included_in_print_rate = 1;
-                            cur_frm.doc.taxes[index].rate = otro_impuesto_prueba;
-                            // fila_nueva.rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funcion OK
-                            // // cur_frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funciona oK
-                            cur_frm.doc.taxes[index].description = 'Impuesto';
-                            // // Refresca los datos que anteriormente fueron asignados
-                            cur_frm.refresh_field("taxes");
+                            // cur_frm.doc.otros_impuestos[index].account_head = cuenta;
+                            // cur_frm.doc.otros_impuestos[index].charge_type = 'On Net Total';
+                            // cur_frm.doc.otros_impuestos[index].included_in_print_rate = 1;
+                            // cur_frm.doc.otros_impuestos[index].rate = otro_impuesto_prueba;
+                            // // fila_nueva.rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funcion OK
+                            // // // cur_frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); // Funciona oK
+                            // cur_frm.doc.otros_impuestos[index].description = 'Impuesto';
+                            // // // Refresca los datos que anteriormente fueron asignados
+                            // cur_frm.refresh_field("otros_impuestos");
                         }
                     });
 

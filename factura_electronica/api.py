@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils.file_manager import get_file_doc, upload
 import requests
 import xmltodict
 
@@ -208,6 +207,7 @@ def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
     modalidad_configurada = validar_configuracion()
     ruta_archivo = 'site1.local/private/files/factura-electronica/'
 
+    # Verifica que exista un configuracion valida para factura electronica
     if modalidad_configurada[0] == 1:
         configuracion_factura = frappe.db.get_values('Configuracion Factura Electronica',
                                                     filters={'name': modalidad_configurada[1]},
@@ -216,19 +216,24 @@ def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
 
         url_archivo = configuracion_factura[0]['url_descarga_pdf'] + cae_de_factura_electronica
 
+        # Verifica que la funcionalidad para descargar pdf automaticamente, este activa
         if configuracion_factura[0]['descargar_pdf_factura_electronica'] == 'ACTIVAR':
 
+            # Si no existe registro en la base de datos procede a descargar y guardar
             if not frappe.db.exists('File', {'file_name': (nombre_archivo + '.pdf')}):
 
+                # Verifica existencia ruta de archivo, si no existe la crea, si ya existe descarga el pdf en esa ruta
                 if os.path.exists(ruta_archivo):
                     descarga_archivo = os.system('curl -s -o {0}{1}.pdf {2}'.format(ruta_archivo, nombre_archivo, url_archivo))
                 else:
                     frappe.create_folder(ruta_archivo)
                     descarga_archivo = os.system('curl -s -o {0}{1}.pdf {2}'.format(ruta_archivo, nombre_archivo, url_archivo))
 
+                # Cuando la descarga es exitosa retorna 0, por lo que si es existosa procede
                 if descarga_archivo == 0:
+                    # Obtiene el tamaño del archivo en bytes
                     bytes_archivo = os.path.getsize("site1.local/private/files/factura-electronica/{0}.pdf".format(nombre_archivo))
-
+                    # Guarda los datos en la base de datos
                     try:
                         nuevo_archivo = frappe.new_doc("File")
                         nuevo_archivo.docstatus = 0
