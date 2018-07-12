@@ -271,3 +271,11 @@ def get_data_tax_account(name_account_tax_gt):
         return str(datos_cuenta[0]['tax_rate'])
     else:
         frappe.msgprint(_('No existe cuenta relacionada con el producto'))
+
+
+@frappe.whitelist()
+def prueba_funcion(nombre_fac):
+    if frappe.db.exists('GL Entry', {'voucher_no': nombre_fac}):
+        frappe.msgprint(_('YA EXISTE PARA ESTA FACTURA :)'))
+    else:
+        frappe.msgprint(_('NO EXISTE PARTIDA PARA ESTA FACTURA'))
