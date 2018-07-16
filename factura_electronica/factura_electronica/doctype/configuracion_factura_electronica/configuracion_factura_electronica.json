@@ -373,7 +373,7 @@
    "read_only": 0, 
    "remember_last_selected_value": 0, 
    "report_hide": 0, 
-   "reqd": 0, 
+   "reqd": 1, 
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
@@ -752,7 +752,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2018-07-05 14:03:03.579962", 
+ "modified": "2018-07-16 12:10:11.002593", 
  "modified_by": "Administrator", 
  "module": "Factura Electronica", 
  "name": "Configuracion Factura Electronica", 
