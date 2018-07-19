@@ -140,7 +140,10 @@ def actualizarTablas(serieOriginalFac):
 
             # 03 - tabGL Entry
             frappe.db.sql('''UPDATE `tabGL Entry` SET voucher_no=%(name)s, against_voucher=%(name)s
-                            WHERE voucher_no=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+                            WHERE voucher_no=%(serieFa)s AND against_voucher=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+            frappe.db.sql('''UPDATE `tabGL Entry` SET voucher_no=%(name)s, docstatus=1
+                            WHERE voucher_no=%(serieFa)s AND against_voucher IS NULL''', {'name':serieDte, 'serieFa':serie_fac_original})
 
             # Actualizacion de tablas que pueden ser modificadas desde Sales Invoice
             # Verificara tabla por tabla en busca de un valor existe, en caso sea verdadero actualizara,
