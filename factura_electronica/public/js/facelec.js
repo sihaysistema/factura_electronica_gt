@@ -407,6 +407,11 @@ function pdf_button(cae_documento, frm) {
 }
 
 function guardar_pdf(frm) {
+    /*
+    Crea un boton que permite guardar el PDF de factura electronica generado en el servidor
+    de forma privada, tras finalizar la ejecucion del script del lado del servidor en el
+    callback se recarga la pagina para mostrar el archivo adjunto.
+    */
     frm.add_custom_button(__('GUARDAR PDF'), function () {
         frappe.call({
             method: "factura_electronica.api.guardar_pdf_servidor",
@@ -460,6 +465,7 @@ function generar_boton_factura(tipo_factura, frm) {
                     let url_nueva = mi_url.replace(serie_de_factura, data.message);
                     // Asigna la nueva url a la ventana actual
                     window.location.assign(url_nueva);
+                    // Recarga la pagina
                     frm.reload_doc();
                 }
             }
@@ -467,6 +473,7 @@ function generar_boton_factura(tipo_factura, frm) {
     }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
 }
 
+// Realiza la funcionalidad del boton automaticamente
 function generar_factura_sin_btn(frm) {
     // frm.reload(); permite hacer un refresh de todo el documento
     frm.reload_doc();

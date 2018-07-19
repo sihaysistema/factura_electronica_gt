@@ -10,6 +10,7 @@ import os, sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+#TODO:
 def calculate_values_with_special_tax():
     '''Grand total, quitar sumatoria totoal shs otros imuestos, = neto para iva
     se calcula sobre ese neto, y se va a ir a modificar en glentry para reflejar los cambios'''
