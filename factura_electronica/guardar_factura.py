@@ -152,6 +152,11 @@ def actualizarTablas(serieOriginalFac):
             if frappe.db.exists('Sales Taxes and Charges', {'parent': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabSales Taxes and Charges` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+            if frappe.db.exists('Otros Impuestos Factura Electronica', {'parent': serie_fac_original}):
+                frappe.db.sql('''UPDATE `tabOtros Impuestos Factura Electronica` SET parent=%(name)s
+                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
             # else:
             #     frappe.msgprint(_('No hay registro en Sales Taxes and Charges'))
 
