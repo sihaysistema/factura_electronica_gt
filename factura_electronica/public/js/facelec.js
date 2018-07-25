@@ -343,6 +343,34 @@ function facelec_otros_impuestos_fila(frm, cdt, cdn) {
 
 }
 
+
+function totalizar_valores(frm, cdn) {
+    frm.doc.shs_otros_impuestos.forEach((item_row_1, index_1) => {
+
+        if (item_row_1.account_head) {
+            // console.log('------------------------> ');
+            frm.doc.items.forEach((tax_row_2, index_2) => {
+
+                if (tax_row_2.facelec_tax_rate_per_uom_account === item_row_1.account_head) {
+                    console.log('------------------------> ');
+                    let totalizador = 0;
+
+                    console.log('La cuenta a eliminar es ------------> ' + tax_row_2.facelec_tax_rate_per_uom_account);
+                    totalizador = facelec_add_taxes(frm, tax_row_2.facelec_tax_rate_per_uom_account);
+                    console.log('El valor del totalizador es ------------ > ' + totalizador);
+                    // frm.doc.shs_otros_impuestos[index_1].total = totalizador;
+
+                    // cur_frm.refresh_field("shs_otros_impuestos");
+                    // shs_total_other_tax(frm);
+
+                    // cur_frm.refresh_field("shs_otros_impuestos");
+                }
+
+            });
+        }
+
+    });
+}
 /* 4 --------------------------------------------------------------------------------------------------------------- */
 
 function buscar_account(frm, cuenta_b) {
@@ -1311,7 +1339,7 @@ frappe.ui.form.on("Sales Invoice", {
                 },
                 // El callback se ejecuta tras finalizar la ejecucion del script python del lado
                 // del servidor
-                callback: function (data) {
+                callback: function () {
                     // Busca la modalidad configurada, ya sea Manual o Automatica
                     // Esto para mostrar u ocultar los botones para la geneneracion de factura
                     // electronica
@@ -1336,6 +1364,29 @@ frappe.ui.form.on("Sales Invoice", {
                     });
                 }
             });
+        } else {
+            // Busca la modalidad configurada, ya sea Manual o Automatica
+            // Esto para mostrar u ocultar los botones para la geneneracion de factura
+            // electronica
+            frappe.call({
+                method: "factura_electronica.api.obtenerConfiguracionManualAutomatica",
+                callback: function (data) {
+                    console.log(data.message);
+                    if (data.message === 'Manual') {
+                        console.log('Configuracion encontrada: MANUAL');
+                        /* No es necesario tener activa esta parte, ya que cuando se ingresa a cualquier factura en el evento
+                        refresh, hay una funcion que se encarga de comprobar de que se haya generado exitosamente la
+                        factura electronica, en caso no sea asi, se mostrarán los botones correspondientes, para hacer
+                        la generacion de la factura electronica manualmente.
+                        generarFacturaBTN(frm, cdt, cdn); */
+                    }
+                    if (data.message === 'Automatico') {
+                        console.log('Configuracion encontrada: AUTOMATICO');
+                        // generarFacturaSINBTN(frm, cdt, cdn);
+                        verificacionCAE('automatico', frm, cdt, cdn);
+                    }
+                }
+            });
         }
 
     }
@@ -1344,7 +1395,38 @@ frappe.ui.form.on("Sales Invoice", {
 frappe.ui.form.on("Sales Invoice Item", {
     items_add: function (frm, cdt, cdn) {},
     items_move: function (frm, cdt, cdn) {},
-    before_items_remove: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {
+        // totalizar_valores(frm, cdn);
+        frm.doc.items.forEach((item_row_1, index_1) => {
+            if (item_row_1.name == cdn) {
+                console.log('La Fila a Eliminar es --------------> ' + item_row_1.item_code);
+                var numero = facelec_add_taxes(frm, item_row_1.facelec_p_tax_rate_per_uom_account);
+                console.log(numero);
+            }
+            // if (item_row_1.account_head) {
+            //     // console.log('------------------------> ');
+            //     frm.doc.items.forEach((tax_row_2, index_2) => {
+
+            //         if (tax_row_2.facelec_tax_rate_per_uom_account === item_row_1.account_head) {
+            //             console.log('------------------------> ');
+            //             let totalizador = 0;
+
+            //             console.log('La cuenta a eliminar es ------------> ' + tax_row_2.facelec_tax_rate_per_uom_account);
+            //             totalizador = facelec_add_taxes(frm, tax_row_2.facelec_tax_rate_per_uom_account);
+            //             console.log('El valor del totalizador es ------------ > ' + totalizador);
+            //             // frm.doc.shs_otros_impuestos[index_1].total = totalizador;
+
+            //             // cur_frm.refresh_field("shs_otros_impuestos");
+            //             // shs_total_other_tax(frm);
+
+            //             // cur_frm.refresh_field("shs_otros_impuestos");
+            //         }
+
+            //     });
+            // }
+
+        });
+    },
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -1367,6 +1449,8 @@ frappe.ui.form.on("Sales Invoice Item", {
         cur_frm.set_value("facelec_gt_tax_goods", fix_gt_tax_goods);
         cur_frm.set_value("facelec_gt_tax_services", fix_gt_tax_services);
         cur_frm.set_value("facelec_total_iva", fix_gt_tax_iva);
+
+        // totalizar_valores(frm, cdn);
     },
     item_code: function (frm, cdt, cdn) {
         each_item(frm, cdt, cdn);
