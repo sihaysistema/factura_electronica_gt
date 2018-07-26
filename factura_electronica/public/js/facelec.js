@@ -344,32 +344,41 @@ function facelec_otros_impuestos_fila(frm, cdt, cdn) {
 }
 
 
-function totalizar_valores(frm, cdn) {
-    frm.doc.shs_otros_impuestos.forEach((item_row_1, index_1) => {
+function totalizar_valores(frm, cdn, tax_account_n) {
+    /**
+     * Se encarga de recalcular el total de otros impuestos cuando se elimina un item
+     */
+    // recorre items
+    frm.doc.items.forEach((item_row, i1) => {
+        if (item_row.facelec_tax_rate_per_uom_account === tax_account_n) {
+            total = facelec_add_taxes(frm, tax_account_n);
+            // recorre shs_otros_impuestos
+            frm.doc.shs_otros_impuestos.forEach((tax_row, i2) => {
+                if (tax_row.account_head === tax_account_n) {
+                    var total = 0;
+                    cur_frm.refresh_field("shs_otros_impuestos");
+                    console.log('EL NUEVO TOTAL ES -------------> ' + total);
+                    cur_frm.doc.shs_otros_impuestos[i2].total = total;
+                    shs_total_other_tax(frm);
+                    cur_frm.refresh_field("shs_otros_impuestos");
 
-        if (item_row_1.account_head) {
-            // console.log('------------------------> ');
-            frm.doc.items.forEach((tax_row_2, index_2) => {
-
-                if (tax_row_2.facelec_tax_rate_per_uom_account === item_row_1.account_head) {
-                    console.log('------------------------> ');
-                    let totalizador = 0;
-
-                    console.log('La cuenta a eliminar es ------------> ' + tax_row_2.facelec_tax_rate_per_uom_account);
-                    totalizador = facelec_add_taxes(frm, tax_row_2.facelec_tax_rate_per_uom_account);
-                    console.log('El valor del totalizador es ------------ > ' + totalizador);
-                    // frm.doc.shs_otros_impuestos[index_1].total = totalizador;
-
-                    // cur_frm.refresh_field("shs_otros_impuestos");
-                    // shs_total_other_tax(frm);
-
-                    // cur_frm.refresh_field("shs_otros_impuestos");
+                    if (tax_row.total === 0) {
+                        console.log('SE ELIMINARA LA FILA ---------------->');
+                        // Elimina la fila con valor 0
+                        cur_frm.doc.shs_otros_impuestos.splice(cur_frm.doc.shs_otros_impuestos[i2], 1);
+                        cur_frm.refresh_field("shs_otros_impuestos");
+                    }
                 }
-
             });
         }
+        //  else {
+        //     frm.doc.shs_otros_impuestos.forEach((tax_row, i2) => {
+
+        //     });
+        // }
 
     });
+
 }
 /* 4 --------------------------------------------------------------------------------------------------------------- */
 
@@ -1396,35 +1405,12 @@ frappe.ui.form.on("Sales Invoice Item", {
     items_add: function (frm, cdt, cdn) {},
     items_move: function (frm, cdt, cdn) {},
     before_items_remove: function (frm, cdt, cdn) {
-        // totalizar_valores(frm, cdn);
+
         frm.doc.items.forEach((item_row_1, index_1) => {
             if (item_row_1.name == cdn) {
                 console.log('La Fila a Eliminar es --------------> ' + item_row_1.item_code);
-                var numero = facelec_add_taxes(frm, item_row_1.facelec_p_tax_rate_per_uom_account);
-                console.log(numero);
+                totalizar_valores(frm, cdn, item_row_1.facelec_tax_rate_per_uom_account)
             }
-            // if (item_row_1.account_head) {
-            //     // console.log('------------------------> ');
-            //     frm.doc.items.forEach((tax_row_2, index_2) => {
-
-            //         if (tax_row_2.facelec_tax_rate_per_uom_account === item_row_1.account_head) {
-            //             console.log('------------------------> ');
-            //             let totalizador = 0;
-
-            //             console.log('La cuenta a eliminar es ------------> ' + tax_row_2.facelec_tax_rate_per_uom_account);
-            //             totalizador = facelec_add_taxes(frm, tax_row_2.facelec_tax_rate_per_uom_account);
-            //             console.log('El valor del totalizador es ------------ > ' + totalizador);
-            //             // frm.doc.shs_otros_impuestos[index_1].total = totalizador;
-
-            //             // cur_frm.refresh_field("shs_otros_impuestos");
-            //             // shs_total_other_tax(frm);
-
-            //             // cur_frm.refresh_field("shs_otros_impuestos");
-            //         }
-
-            //     });
-            // }
-
         });
     },
     items_remove: function (frm, cdt, cdn) {
@@ -1450,7 +1436,6 @@ frappe.ui.form.on("Sales Invoice Item", {
         cur_frm.set_value("facelec_gt_tax_services", fix_gt_tax_services);
         cur_frm.set_value("facelec_total_iva", fix_gt_tax_iva);
 
-        // totalizar_valores(frm, cdn);
     },
     item_code: function (frm, cdt, cdn) {
         each_item(frm, cdt, cdn);
