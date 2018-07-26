@@ -1339,7 +1339,8 @@ frappe.ui.form.on("Sales Invoice", {
         // Si existe por lo menos una cuenta, se ejecuta frappe.call
         if (Object.keys(cuentas_registradas).length > 0) {
             // llama al metodo python, el cual recibe de parametros el nombre de la factura y el objeto
-            // con las cuentas encontradas
+            // con las ('cuentas encontradas
+            console.log('---------------------- se encontro por lo menos una cuenta--------------------');
             frappe.call({
                 method: "factura_electronica.special_tax.add_gl_entry_other_special_tax",
                 args: {
@@ -1402,8 +1403,8 @@ frappe.ui.form.on("Sales Invoice", {
 });
 
 frappe.ui.form.on("Sales Invoice Item", {
-    items_add: function (frm, cdt, cdn) {},
-    items_move: function (frm, cdt, cdn) {},
+    items_add: function (frm, cdt, cdn) { },
+    items_move: function (frm, cdt, cdn) { },
     before_items_remove: function (frm, cdt, cdn) {
 
         frm.doc.items.forEach((item_row_1, index_1) => {
@@ -1525,9 +1526,9 @@ frappe.ui.form.on("Purchase Invoice", {
 });
 
 frappe.ui.form.on("Purchase Invoice Item", {
-    items_add: function (frm, cdt, cdn) {},
-    items_move: function (frm, cdt, cdn) {},
-    before_items_remove: function (frm, cdt, cdn) {},
+    items_add: function (frm, cdt, cdn) { },
+    items_move: function (frm, cdt, cdn) { },
+    before_items_remove: function (frm, cdt, cdn) { },
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -1670,9 +1671,9 @@ frappe.ui.form.on("Quotation", {
 });
 
 frappe.ui.form.on("Quotation Item", {
-    items_add: function (frm, cdt, cdn) {},
-    items_move: function (frm, cdt, cdn) {},
-    before_items_remove: function (frm, cdt, cdn) {},
+    items_add: function (frm, cdt, cdn) { },
+    items_move: function (frm, cdt, cdn) { },
+    before_items_remove: function (frm, cdt, cdn) { },
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -1815,9 +1816,9 @@ frappe.ui.form.on("Purchase Order", {
 });
 
 frappe.ui.form.on("Purchase Order Item", {
-    items_add: function (frm, cdt, cdn) {},
-    items_move: function (frm, cdt, cdn) {},
-    before_items_remove: function (frm, cdt, cdn) {},
+    items_add: function (frm, cdt, cdn) { },
+    items_move: function (frm, cdt, cdn) { },
+    before_items_remove: function (frm, cdt, cdn) { },
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -1960,9 +1961,9 @@ frappe.ui.form.on("Purchase Receipt", {
 });
 
 frappe.ui.form.on("Purchase Receipt Item", {
-    items_add: function (frm, cdt, cdn) {},
-    items_move: function (frm, cdt, cdn) {},
-    before_items_remove: function (frm, cdt, cdn) {},
+    items_add: function (frm, cdt, cdn) { },
+    items_move: function (frm, cdt, cdn) { },
+    before_items_remove: function (frm, cdt, cdn) { },
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -2105,9 +2106,9 @@ frappe.ui.form.on("Sales Order", {
 });
 
 frappe.ui.form.on("Sales Order Item", {
-    items_add: function (frm, cdt, cdn) {},
-    items_move: function (frm, cdt, cdn) {},
-    before_items_remove: function (frm, cdt, cdn) {},
+    items_add: function (frm, cdt, cdn) { },
+    items_move: function (frm, cdt, cdn) { },
+    before_items_remove: function (frm, cdt, cdn) { },
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -2251,9 +2252,9 @@ frappe.ui.form.on("Delivery Note", {
 });
 
 frappe.ui.form.on("Delivery Note Item", {
-    items_add: function (frm, cdt, cdn) {},
-    items_move: function (frm, cdt, cdn) {},
-    before_items_remove: function (frm, cdt, cdn) {},
+    items_add: function (frm, cdt, cdn) { },
+    items_move: function (frm, cdt, cdn) { },
+    before_items_remove: function (frm, cdt, cdn) { },
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -2400,9 +2401,9 @@ frappe.ui.form.on("Supplier Quotation", {
 });
 
 frappe.ui.form.on("Supplier Quotation Item", {
-    items_add: function (frm, cdt, cdn) {},
-    items_move: function (frm, cdt, cdn) {},
-    before_items_remove: function (frm, cdt, cdn) {},
+    items_add: function (frm, cdt, cdn) { },
+    items_move: function (frm, cdt, cdn) { },
+    before_items_remove: function (frm, cdt, cdn) { },
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
