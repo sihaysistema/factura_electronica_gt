@@ -7,7 +7,101 @@ console.log("Se cargo exitosamente la aplicación de Factura Electronica");
 var otro_impuesto = 0;
 var valor_con_iva = 0;
 var para_rate = 0;
-/* 1 Funcion calculadora para Sales Invoice ------------------------------------------------------------------------ */
+/*
+# en-US: Index for Factura Electronica App
+This JavaScript file contains the functions that run on the client machine.
+It is organized into two main sections: One for functions, another for triggers
+1. Functions
+1.1 en-US: Tax Calculation Conversions
+1.2 en-US: Search Tax Account
+1.3 en-US: Validate Tax ID (NIT)
+1.4 en-US: Obtain Electronic Invoice PDF
+1.5 en-US: Generate Electronic Invoice Manually with Button Press
+1.6 en-US: Generate Electronic Invoice Automatically
+1.7 en-US: Generate Electronic Invoice if CAE not present
+1.8 en-US: Tax Calculation Conversions for Purchase Invoice
+1.9 en-US: Tax Calculation Conversions for Cotizacion de Compra
+1.10 en-US: Tax Calculation Conversions for Quotation Item
+1.11 en-US: Tax Calculation Conversions for Purchase Receipt
+1.12 en-US: Tax Calculation Conversions for Sales Order
+1.13 en-US: Tax Calculation Conversions for Delivery Note
+1.14 en-US: Tax Calculation Conversions for Supplier Quotation
+2. Triggers
+2.1 en-US: Triggers for Sales Invoice
+2.2 en-US: Triggers for Sales Invoice Items
+2.3 en-US: Triggers for Purchase Invoice
+2.4 en-US: Triggers for Purchase Invoice Items
+2.5 en-US: Triggers for Quotation
+2.6 en-US: Triggers for Quotation Item
+2.7 en-US: Triggers for Purchase Order
+2.8 en-US: Triggers for Purchase Order Items
+2.9 en-US: Triggers for Purchase Receipt
+2.10 en-US: Triggers for Purchase Receipt Item
+2.11 en-US: Triggers for Sales Order
+2.12 en-US: Triggers for Sales Order Item
+2.13 en-US: Triggers for Delivery Note
+2.14 en-US: Triggers for Delivery Note Item
+2.15 en-US: Triggers for Supplier Quotation
+2.16 en-US: Triggers for Supplier Quotation Item
+# es-GT: Indice para Aplicacion Factura Electronica
+Este archivo JavaScript contiene las funciones que corren en la máquina del cliente
+Esta organizado en dos principales secciones: Una para funciones, otra para disparadores
+1. Funciones
+1.1 es-GT: Calculos y Conversiones de impuestos EMPIEZA
+1.2 es-GT: Busqueda de Cuenta de Impuestos
+1.3 es-GT: Validar NIT
+1.4 es-GT: Obtener PDF de Factura Electronica
+1.5 es-GT: Genera la Factura Electronica Manualmente presionando el Botón
+1.6 es-GT: Genera la Factura Electronica Automaticamente
+1.7 es-GT: Genera la Factura Electronica si no encuentra CAE
+1.8 es-GT: Calculos y Conversiones para Factura de Compra
+1.9 es-GT: Calculos y Conversiones para Cotizacion de Compra
+1.10 es-GT: Calculos y Conversiones para Quotation Item
+1.11 es-GT: Calculos y Conversiones para Recibo de Compra
+1.12 es-GT: Calculos y Conversiones para Orden de Venta
+1.13 es-GT: Calculos y Conversiones para Nota de Entrega
+1.14 es-GT: Calculos y Conversiones para Presupuesto de Proveedor
+2. Disparadores
+2.1 es-GT: Disparadores para Factura de Venta
+2.2 es-GT: Disparadores para Productos de Factura de Venta
+2.3 es-GT: Disparadores para Factura de Compra
+2.4 es-GT: Disparadores para Productos de Factura de Compra
+2.5 es-GT: Disparadores para Cotización
+2.6 es-GT: Disparadores para Producto de Cotización
+2.7 es-GT: Disparadores para Orden de Compra
+2.8 es-GT: Disparadores para Productos de Orden de Compra
+2.9 es-GT: Disparadores para Recibo de Compra
+2.10 es-GT: Disparadores para Productos de Recibo de Compra
+2.11 es-GT: Disparadores para Orden de Venta
+2.12 es-GT: Disparadores para Productos de Orden de Venta
+2.13 es-GT: Disparadores para Nota de Entrega 
+2.14 es-GT: Disparadores para Producto de Nota de Entrega
+2.15 es-GT: Disparadores para Presupuesto de Proveedor
+2.16 es-GT: Disparadores para Producto de Presupuesto de Proveedor
+*/
+
+/*
+	The route followed ultimately is like this:
+1. JavaScript is loaded from the server:
+2. Sales invoice form is referenced: frappe.ui.form.on("Sales Invoice", {//TRIGGER CODE GOES HERE!}
+3. Triggers are called: onload_post_render: function(frm, cdt, cdn){ //LISTENERS ARE CALLED HERE!},
+4. Listeners are activated, for main DocType fields and Child Table Fields:
+4.1 Main DocType: cur_frm.fields_dict.[FIELD].$input.on("[EVENT]", function(evt){
+			//ACTUAL CODE THAT RUNS GOES HERE
+		});
+4.2 Child Table DocType: frm.fields_dict.items.grid.wrapper.on('click', 'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]', function(e) {
+	//ACTUAL CODE THAT RUNS GOES HERE
+}
+4.3 For both you specify: DocField, Event
+4.4 For child table: Also specify the Child Table DocType
+5. Three functions are called, in this order, generally:
+5.1 each_item(): Goes through each item line and updates the fields, so the next function has correct data.
+5.2 facelec_tax_calc_new(): Does the actual calculations.
+5.3 facelec_sales_taxes_charges_row(frm, cdt,cdn): Adds rows, amount to the taxes and charges table.
+*/
+
+/*	1 en-US: Functions BEGIN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+/*	1 es-GT: Funciones EMPIEZAN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 function facelec_tax_calc_new(frm, cdt, cdn) {
     // es-GT: Actualiza los datos en los campos de la tabla hija 'items'
     //console.log("ran facelec_tax_calc_new");
@@ -30,9 +124,9 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
     var this_row_tax_rate = 0;
     var this_row_tax_amount = 0;
     var this_row_taxable_amount = 0;
-    // var total_fuel = 0;
-    // var total_goods = 0;
-    // var total_servi = 0;
+    var total_fuel = 0;
+    var total_goods = 0;
+    var total_servi = 0;
 
     // es-GT: Esta funcion permite trabajar linea por linea de la tabla hija items
     //OJO! FIXME Queda pendiente trabajar la forma de que el control o pop up que contiene estos datos, a la hora de cambiar conversion factor, funcione adecuadamente sin depender en un mouse click fuera del campo o que se tenga que guardar. Por ahora solo con hacer click afuera del campo o guardar o ingresar a otro campo con la funcion each_item, se actualiza correctamente.  Es un fix temporal, aunque se debe siempre guardar cualquier documento, y al validar tambien se debe correr correctamente!
@@ -40,11 +134,11 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
         if (item_row.name === cdn) {
             // first we calculate the amount total for this row and assign it to a variable
             //this_row_amount = (item_row.qty * item_row.rate);
-            this_row_amount = item_row.amount;
+            this_row_amount = (item_row.amount);
             // Now, we get the quantity in terms of stock quantity by multiplying by conversion factor
-            this_row_stock_qty = item_row.stock_qty;
+            this_row_stock_qty = item_row.stock_qty
             // We then assign the tax rate per stock UOM to a variable
-            this_row_tax_rate = item_row.facelec_tax_rate_per_uom;
+            this_row_tax_rate = (item_row.facelec_tax_rate_per_uom);
             // We calculate the total amount of excise or special tax based on the stock quantity and tax rate per uom variables above.
             this_row_tax_amount = (item_row.stock_qty * item_row.facelec_tax_rate_per_uom);
             // We then estimate the remainder taxable amount for which Other ERPNext configured taxes will apply.
@@ -62,40 +156,36 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
             console.log("Amount - Other Tax Amount = Amount minus excise tax: " + item_row.amount + " - " + (item_row.stock_qty * item_row.facelec_tax_rate_per_uom) + " = " + item_row.facelec_amount_minus_excise_tax);
             console.log("Q" + item_row.amount + " - (" + item_row.stock_qty + " * " + item_row.facelec_tax_rate_per_uom + ") ")
             // Verificacion Individual para verificar si es Fuel, Good o Service
-            if (item_row.factelecis_fuel) {
+            if (item_row.factelecis_fuel == 1) {
                 frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
-                var total_fuel = 0;
+                total_fuel = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
-                    if (d.factelecis_fuel) {
+                    if (d.factelecis_fuel == true) {
                         total_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
                     };
                 });
                 //console.log("El total neto de fuel es:" + total_fuel); // WORKS OK!
-                // cur_frm.doc.facelec_gt_tax_fuel = total_fuel;
-                cur_frm.set_value('facelec_gt_tax_fuel', total_fuel);
+                cur_frm.doc.facelec_gt_tax_fuel = total_fuel;
                 frm.refresh_field("factelecis_fuel");
             };
-
-            if (item_row.facelec_is_good) {
+            if (item_row.facelec_is_good == 1) {
                 frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
-                var total_goods = 0;
+                total_goods = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     // total_qty += flt(d.qty);
-                    if (d.facelec_is_good) {
+                    if (d.facelec_is_good == true) {
                         total_goods += flt(d.facelec_gt_tax_net_goods_amt);
                     };
                 });
                 console.log("El total neto de bienes es:" + total_goods); // WORKS OK!
-                // cur_frm.doc.facelec_gt_tax_goods = total_goods;
-                cur_frm.set_value('facelec_gt_tax_goods', total_goods);
+                cur_frm.doc.facelec_gt_tax_goods = total_goods;
             };
-
-            if (item_row.facelec_is_service) {
+            if (item_row.facelec_is_service == 1) {
                 //console.log("The item you added is a SERVICE!" + item_row.facelec_is_service);// WORKS OK!
                 //console.log("El valor en servicios para el libro de compras es: " + net_services_tally);// WORKS OK!
                 // Estimamos el valor del IVA para esta linea
@@ -104,30 +194,37 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
 
-                var total_servi = 0;
+                total_servi = 0;
                 $.each(frm.doc.items || [], function (i, d) {
-                    if (d.facelec_is_service) {
+                    if (d.facelec_is_service == true) {
                         total_servi += flt(d.facelec_gt_tax_net_services_amt);
                         console.log("se detecto cheque de servicio"); // WORKS!
                     };
                 });
                 console.log("El total neto de servicios es:" + total_servi); // WORKS OK!
-                // cur_frm.doc.facelec_gt_tax_services = total_servi;
-                cur_frm.set_value('facelec_gt_tax_services', total_servi);
+                cur_frm.doc.facelec_gt_tax_services = total_servi;
             };
 
             // Para el calculo total de IVA, basado en la sumatoria de facelec_sales_tax_for_this_row de cada item
-            var full_tax_iva = 0;
+            full_tax_iva = 0;
             $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_sales_tax_for_this_row);
             });
-            // Seccion Guatemala Tax: Se asigna al campo de IVA de la seccion
-            // frm.doc.facelec_total_iva = full_tax_iva;
-            cur_frm.set_value('facelec_total_iva', full_tax_iva);
+            // Seccion Guatemala Tax: Se asigna al campo de IVA de la seccion 
+            frm.doc.facelec_total_iva = full_tax_iva;
         };
     });
 }
+/*	1.1 en-US: Tax Calculation Conversions BEGIN -------------------------------------*/
+/*	1.1 es-GT: Calculos y Conversiones de impuestos EMPIEZA --------------------------*/
+// Funcion para los calculos necesarios.
 
+/*	1.1 en-US: Tax Calculation Conversions END ---------------------------------------*/
+/*	1.1 es-GT: Calculos y Conversiones de impuestos TERMINA --------------------------*/
+
+/*	1.1a en-US: Item refreshing calculations BEGIN -----------------------------------*/
+/*	1.1a es-GT: Calculos para refrescar articulos EMPIEZA ----------------------------*/
+// Esta función refresca los valores de las filas para tener los calculos completos
 // Sin necesidad de guardar el formulario.  Esto costo una buenas horas de trabajo!!
 // Se lanza con un evento disparado por un escuchador
 // FIXME: Lo unico es que solo se puede poner item code con ENTER o CLICK. Tab no funciona.  Quizas aqui si sirve usar un listener de keypress para guardarlo en una variable que lo hace permanecer mientras se escribe el item.
@@ -155,233 +252,160 @@ function each_item(frm, cdt, cdn) {
             console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
         }
         facelec_tax_calc_new(frm, "Sales Invoice Item", item.name);
-        facelec_otros_impuestos_fila(frm, "Sales Invoice Item", item.name);
+        facelec_sales_taxes_charges_row(frm, "Sales Invoice Item", item.name);
     });
 }
+/*	1.1a en-US: Item refreshing calculations END -------------------------------------*/
+/*	1.1a es-GT: Calculos para refrescar articulos TERMINA ----------------------------*/
 
-/* 2 --------------------------------------------------------------------------------------------------------------- */
-// Permite agregar filas en la posicion que le especifiquemos
-function agregar_fila(doc, table_name, doctype, position) {
-    // item bigger than length
-    if (position > doc[table_name].length) {
-        var row = frappe.model.add_child(doc, doctype, table_name);
-        return row;
-    }
-    // item less than first
-    else if (position < doc[table_name][0].idx) {
-        var row = frappe.model.add_child(doc, doctype, table_name);
-        row.idx = position;
-        return row;
-    }
-    // item in the middle
-    else {
-        for (var curr_pos = position; curr_pos < doc[table_name].length; curr_pos++) {
-            doc[table_name][curr_pos].idx += 1;
-        }
-        var row = frappe.model.add_child(doc, doctype, table_name);
-        row.idx = position;
-        return row;
-    }
-}
-
-/* 3 Funciones para otros impuestos IDP ... ------------------------------------------------------------------------ */
-
-// FIXME: PARA LOS DEMAS, uno para todos en items
-// Esta funcion suma si es combustible, bien o servicio, totalizando los montos
-// cada uno
-function facelec_add_taxes(frm, tax_account) {
-    /**
-     * Parametros:
-     * #1 frm = formulario que se esta trabajando
-     * #2 tax_account = nombre de la cuenta
-     *
-     * Funcionamiento:
-     * Recorre la tabla items, por cada item que encuentre con el nombre de
-     * cuenta recibido, lo ira concatenando en una variable que al finalizar
-     * el recorrido de la tabla lo retornara a quien haya invocado la fucnion
-     */
-    var total_sumatoria = 0;
-
-    $.each(frm.doc.items || [], function (i, d) {
-        if (d.facelec_tax_rate_per_uom_account === tax_account) {
-            total_sumatoria += flt(d.facelec_other_tax_amount);
-        };
-    });
-
-    return total_sumatoria;
-}
-
-function sumar_otros_impuestos_shs(frm, cdt, cdn) {
-    /**
-     * Parametros:
-     * #1 frm = formulario que se esta trabajando
-     * #2 cdt = Doctype
-     * #3 cdn = Docname
-     *
-     * Funcionamiento:
-     * Recorre la tabla items, por cada item encontrado, si tiene una cuenta asignada,
-     * recorrera la tabla hija shs_otros_impuestos en busca de items con el mismo nombre
-     * de cuenta anteriormente encontrado, para totalizar el valor del impuestos, para todos
-     * los items con la misma cuenta.
-     */
-    frm.doc.items.forEach((item_row_1, index_1) => {
-
-        if (item_row_1.name === cdn) {
-            if (item_row_1.facelec_tax_rate_per_uom_account) {
-
-                frm.doc.shs_otros_impuestos.forEach((tax_row_2, index_2) => {
-                    if (tax_row_2.account_head === item_row_1.facelec_tax_rate_per_uom_account) {
-                        var totalizador = 0;
-                        totalizador = facelec_add_taxes(frm, tax_row_2.account_head)
-                        cur_frm.doc.shs_otros_impuestos[index_2].total = totalizador;
-                        shs_total_other_tax(frm);
-                    }
-                });
-            }
-
-        }
-    });
-}
-
-function shs_total_other_tax(frm) {
-    /**
-     * Parametros:
-     * #1 frm = formulario que se esta trabajando
-     *
-     * Funcionamiento:
-     * Recorre la tabla hija shs_otros_impuestos, realiza sumatoria de todos las filas
-     * que tenga una cuenta, el valor totalizado se asigna al campo shs_total_otros_imp_incl
-     */
-    var total_tax = 0;
-
-    $.each(frm.doc.shs_otros_impuestos || [], function (i, d) {
-        if (d.account_head) {
-            total_tax += flt(d.total);
-        };
-    });
-
-    cur_frm.set_value('shs_total_otros_imp_incl', total_tax);
-    frm.refresh_field("shs_total_otros_imp_incl");
-}
-
-function facelec_otros_impuestos_fila(frm, cdt, cdn) {
-    /**
-     * Parametros:
-     * #1 frm = formulario que se esta trabajando
-     * #2 cdt = Doctype
-     * #3 cdn = Docname
-     *
-     * Funcionamiento:
-     * Recorre la tabla items, por cada fila con una cuenta asignada buscara en la tabla hija
-     * shs_otros_impuestos por una fila con el mismo nombre de la cuenta anteriormente encontrada,
-     * si no la encuentra en shs_otros_impuestos creara una nueva fila, y le asignara los valores
-     * de nombre de cuenta y el total para esa cuenta. Si la cuenta ya se encuentra creada en
-     * shs_otros_impuestos le sumara los valores encontrados.
-     */
+/* 1.1b en-US: Add rows, accounts and totalize taxes BEGIN ---------------------------*/
+/* 1.1b es-GT: Agregar fila, cuentas y totalizar impuestos en tabla EMPIEZA ----------*/
+function facelec_sales_taxes_charges_row(frm, cdt, cdn) {
     var this_row_tax_amount = 0; // Valor IDP
     var this_row_taxable_amount = 0; // Valor todavía con IVA
-    var shs_otro_impuesto = 0;
-    var total_suma_impuesto = 0;
-
+    var otro_impuesto = 0;
+    var valor_con_iva = 0;
+    // Recorre todas las filas de items, parametro 1 : nombre de la fila
+    // Parametro 2 : Indice
     frm.doc.items.forEach((item_row_i, indice) => {
+        console.log('ESTAS UBICADO EN EL INDICE DE ITEMS---------------> ' + indice)
+        // Verifica que el nombre de la fila sea igual al del documento
         if (item_row_i.name === cdn) {
-            // Calculos Alain
             this_row_tax_amount = (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom);
-            //this_row_taxable_amount = (item_row_i.amount - (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom));
-            shs_otro_impuesto = item_row_i.facelec_other_tax_amount;
-
-            // Guarda el nombre de la cuenta del item seleccionado
+            this_row_taxable_amount = (item_row_i.amount - (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom));
+            // En la variable se guarda el nombre de la cuenta que se haya encontrado en el item
             var cuenta = item_row_i.facelec_tax_rate_per_uom_account;
             console.log('Cuenta de item encontrada es : ' + cuenta);
-
-            // Refresh data de items y conversion_factor
+            //console.log("NUEVA: Valor con iva contiene: Q" + (item_row.amount - (item_row.stock_qty * item_row.facelec_tax_rate_per_uom))); //WORKS OK
+            //console.log("NUEVA: Monto otro impuesto: = Q" + (item_row.stock_qty * item_row.facelec_tax_rate_per_uom)); //WORKS OK
+            // IMPORTANTE:  Se debe de calcular Justo a Tiempo, no depende obtener datos de campos cuyos valores todavía no han sido asignados.
+            // We change the fields for other tax amount as per the complete row taxable amount.
+            // We refresh the items to recalculate everything to ensure proper math
             frm.refresh_field('items');
             frm.refresh_field('conversion_factor');
 
-            if (cuenta) { // Si encuentra una cuenta con nombre procede
+            // Si encuentra una cuenta con nombre procede
+            if (cuenta) {
+                console.log('EXISTE UNA CUENTA EN EL ITEM--------------------------->' + cuenta)
                 otro_impuesto = this_row_tax_amount;
-                //valor_con_iva = this_row_taxable_amount;
-
-                if (!(buscar_account(frm, cuenta))) { // Si no encuentra una cuenta, procede.
-                    // var fila_nueva = cur_frm.add_child("shs_otros_impuestos");
-                    // var fila_nueva = frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica", "shs_otros_impuestos");
-                    // Crea una nueva fila vacia en la tabla hija shs_otros_impuestos
-                    frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica", "shs_otros_impuestos");
-
-                    // Refresh datos de la tabla hija items
-                    cur_frm.refresh_field('items');
-                    // otro_impuesto = this_row_tax_amount;
-                    // valor_con_iva = this_row_taxable_amount;
-
-                    // Recorre la tabla hija 'taxes' en busca de la nueva fila que se agrego anteriormente donde account_head
-                    // sea undefined
-                    frm.doc.shs_otros_impuestos.forEach((tax_row, index) => {
-                        // Si encuentra la fila anteriormente agregada procede
+                valor_con_iva = this_row_taxable_amount;
+                // Verifica si la cuenta ya fue agregada a la tabla hija taxes, en caso no encuentre nada
+                // se procede a agregar una nueva fila con los datos, calculos correspondientes
+                if (!(buscar_account(frm, cuenta))) { // Si es true
+                    console.log('NO SE HA AGREGADO UNA CUENTA A TAXES ------------------>')
+                    console.log('SE AGREGARA UNA NUEVA FILA EN TAXES ------------------>')
+                    // Agrega una nueva fila con los campos en blanco en la tabla hija taxes
+                    frappe.model.add_child(frm.doc, "Sales Taxes and Charges", "taxes");
+                    // Ahora iteramos dentro de la tabla de Sales Taxes and Charges, aprestandonos para colocart la data
+                    // en la fila que acabamos de nombrar.
+                    frm.refresh_field('items');
+                    frm.doc.taxes.forEach((tax_row, index) => {
+                        console.log('ESTAS UBICADO EN EL INDICE DE TAXES 1---------------> ' + index)
+                        // Como la fila que se acaba de agregar NO TIENE CUENTA, logicamente la PRIMERA sera true porque esta vacia.
                         if (tax_row.account_head === undefined) {
-                            // Asigna valores en la fila recien creada
-                            cur_frm.doc.shs_otros_impuestos[index].account_head = cuenta;
-                            cur_frm.doc.shs_otros_impuestos[index].total = shs_otro_impuesto;
+                            // Buscamos en el server, pasandole la cuenta configurada en Items, para obtener, con validación la cuenta que esta configurado.
+                            // Esto nos asegura doblemente! que la cuenta que estamos agregando, EXISTA configurada en el Item, y por lo tanto, como ya se configuro en Item previamente ya paso UN nivel de validación, asegurando su existencia en el sistema.
+                            // Evaluar no dejar guardar o validar la factura si no ha sido indicada una cuenta contable en la tabla de impuestos.  No es necesario
+                            frappe.call({
+                                method: "factura_electronica.api.get_data_tax_account",
+                                args: {
+                                    name_account_tax_gt: cuenta
+                                },
+                                // El callback recibe como parametro el dato retornado por script python del lado del servidor. La variable definida despues de callback en el function, es una variable dummy. La variable dummy sirve para adjuntarle despues el metodo para accesar la data que ella contiene!
+                                callback: function (data) {
+                                    // Asigna los valores retornados del servidor
+                                    // Asigna la cuenta que acabmos de encontrar a la fila.
+                                    frm.doc.taxes[index].account_head = cuenta;
+                                    // TODO: Se hace un estimado como "On Net Total" con impuesto incluido, para que el rate logre cuadrar el monto del impuesto. Este "rate" sera un precursor que estamos usando de muleta, mientras logramos modificar la aplicacion core!
+                                    frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
+                                    // En el caso de Impuestos especiales en Guate, estan incluidos, asi que aseguramos que la caja tenga 1 o "si".
+                                    frm.doc.taxes[index].included_in_print_rate = 1;
+                                    // ojo ojo ojo ojo FIXME FIXME FIXME  TODO TODO
+                                    // 1. Valor de IDP de la fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges.
+                                    // 2. Valor Neto sin IVA de la Fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges
+                                    // Como fix temporal, intentaremos estimar un "rate" el cual finalice en un numero que permite que el "amount" sea el correcto, cuando se usa On Net Total, puesto que de esta forma podemos lelgar a obtener el resultado esperado de contabilizar correctamente el IDP, sin necesidad de modificar el software.  Esto es un fix paliativo.
+                                    // frm.doc.taxes[index].rate = (otro_impuesto / (valor_con_iva / (1 + 12))); //4600 / 20000
+                                    frappe.model.set_value(cdt, cdn, "rate", (otro_impuesto / (valor_con_iva / (1 + 12))))
+                                    // cur_frm.set_value('rate', (otro_impuesto / (valor_con_iva / (1 + 12))))
+                                    console.log("El rate para colocar es: ----->" + (otro_impuesto / (valor_con_iva / (1 + 12))));
+                                    // Una breve descripción
+                                    frm.doc.taxes[index].description = 'Impuesto';
+                                    // Esto es en caso le querramos colocar monto, pero OJO, porque no se pueden poner montos que esten incluidos. Ver abajo.
+                                    //frm.doc.taxes[index].tax_amount = '39.99';
+                                    //frm.doc.taxes[index].rate = data.message;
+                                    //refresh_field("taxes");
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    // La cuenta fue agregada anteriormente, asi que no hay necesidad de agregar una nueva fila
+                    // se procede a sumar los datos nuevos con los que se agregaron anteriormente
 
-                            // Actualiza los datos de la tabla hija
-                            cur_frm.refresh_field("shs_otros_impuestos");
+                    // Recorre las filas de taxes (child table taxes and charges)
+                    frm.doc.taxes.forEach((tax_row, index) => {
+                        console.log('ESTAS UBICADO EN EL INDICE DE TAXES---------------> ' + index)
+                        // Si encuentra una fila con el nombre de la cuenta del producto que se esta usando
+                        // procede a hacer las operaciones matematicas
+                        if (tax_row.account_head === cuenta) {
+                            // Estas variables ya fueron asignadas arriba
+                            // otro_impuesto = this_row_tax_amount;
+                            // valor_con_iva = this_row_taxable_amount;
+                            var valor_iva_modificado = 0;
+                            // Buscamos en el server, pasandole la cuenta configurada en Items, para obtener, con validación la cuenta que esta configurado.
+                            // Esto nos asegura doblemente! que la cuenta que estamos agregando, EXISTA configurada en el Item, y por lo tanto, como ya se configuro en Item previament,e ya paso UN nivel de validación, asegurando su existencia en el sistema.
+                            // Evaluar no dejar guardar o validar la factura si no ha sido indicada una cuenta contable en la tabla de impuestos.
+                            frappe.call({
+                                method: "factura_electronica.api.get_data_tax_account",
+                                args: {
+                                    name_account_tax_gt: cuenta
+                                },
+                                // El callback recibe como parametro el dato retornado por script python del lado del servidor. La variable definida despues de callback en el function, es una variable dummy. La variable dummy sirve para adjuntarle despues el metodo para accesar la data que ella contiene!
+                                callback: function (data) {
+                                    // Asigna los valores retornados del servidor
+                                    // Asigna la cuenta que acabmos de encontrar a la fila.
+                                    frm.doc.taxes[index].account_head = cuenta;
+                                    // TODO: Se hace un estimado como "On Net Total" con impuesto incluido, para que el rate logre cuadrar el monto del impuesto. Este "rate" sera un precursor que estamos usando de muleta, mientras logramos modificar la aplicacion core!
+                                    frm.doc.taxes[index].charge_type = 'On Net Total'; // Opcion 1: Actual, Opcion 2: On Net Total, Opcion 3: On Previous Row Amount, Opcion 4: On Previous Row Total
+                                    // En el caso de Impuestos especiales en Guate, estan incluidos, asi que aseguramos que la caja tenga 1 o "si".
+                                    frm.doc.taxes[index].included_in_print_rate = 1;
+                                    // Este es el que obtiene el resultado del Callback que debe de ser 12% si es Guate.
+                                    //frm.doc.taxes[index].rate = data.message;
+                                    // ojo ojo ojo ojo FIXME FIXME FIXME  TODO TODO
+                                    // 1. Valor de IDP de la fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges.
+                                    // 2. Valor Neto sin IVA de la Fila de items se asigna acumuladamente a cada fila de cuenta en el sales taxes & charges
+                                    // Como fix temporal, intentaremos estimar un "rate" el cual finalice en un numero que permite que el "amount" sea el correcto, cuando se usa On Net Total, puesto que de esta forma podemos lelgar a obtener el resultado esperado de contabilizar correctamente el IDP, sin necesidad de modificar el software.  Esto es un fix paliativo.
+                                    valor_iva_modificado = ((valor_con_iva / (1 + data.message)) * data.message)
+                                    valor_sumado = (otro_impuesto / valor_con_iva); // Una breve descripción
+                                    frm.doc.taxes[index].rate = frm.doc.taxes[index].rate + valor_sumado;
+                                    console.log('El nuevo valor de rate es ---------------------> ' + frm.doc.taxes[index].rate)
+                                    //console.log("El rate para colocar es:" + (otro_impuesto / valor_con_iva));  // WORKS OK. VERIFIED WITH QUANTITY CHANGE AND AMOUNT CHANGE.
+                                    //console.log("Este rate derivado, genera un Valor IDP de: " + ((otro_impuesto / valor_con_iva) * valor_con_iva)); // WORKS OK. VERIFIED WITH QUANTITY CHANGE AND AMOUNT CHANGE.
+                                    //console.log("El valor del otro impuesto es de :" + otro_impuesto); // WORKS OK. VERIFIED WITH QUANTITY CHANGE AND AMOUNT CHANGE.
+                                    frm.doc.taxes[index].description = 'Impuesto';
+                                    // Esto es en caso le querramos colocar monto, pero OJO, porque no se pueden poner montos que esten incluidos. Ver abajo.
+                                    //frm.doc.taxes[index].tax_amount = '39.99';
 
-                            // Funcion que se encarda de sumar los valores por cuenta
-                            sumar_otros_impuestos_shs(frm, cdt, cdn);
-                            cur_frm.refresh_field("shs_otros_impuestos");
+                                    //refresh_field("taxes");
+                                }
+                            });
                         }
                     });
 
-                } else { // Si la cuenta ya esta agregada en shs_otros_impuestos, se procede a sumar sobre los valores
-                    // ya existentes
-                    // Funcion que se encarda de sumar los valores por cuenta
-                    sumar_otros_impuestos_shs(frm, cdt, cdn);
-                    cur_frm.refresh_field("shs_otros_impuestos");
                 }
+            } else {
+                console.log('El Item no tiene cuenta -------------------->')
             }
         }
     });
 
-}
+} // OK
+/* 1.1b en-US: Add rows, accounts and totalize taxes END -----------------------------*/
+/* 1.1b es-GT: Agregar fila, cuentas y totalizar impuestos en tabla TERMINA ----------*/
 
-
-function totalizar_valores(frm, cdn, tax_account_n) {
-    /**
-     * Se encarga de recalcular el total de otros impuestos cuando se elimina un item
-     */
-    // recorre items
-    frm.doc.items.forEach((item_row, i1) => {
-        if (item_row.facelec_tax_rate_per_uom_account === tax_account_n) {
-            total = facelec_add_taxes(frm, tax_account_n);
-            // recorre shs_otros_impuestos
-            frm.doc.shs_otros_impuestos.forEach((tax_row, i2) => {
-                if (tax_row.account_head === tax_account_n) {
-                    var total = 0;
-                    cur_frm.refresh_field("shs_otros_impuestos");
-                    console.log('EL NUEVO TOTAL ES -------------> ' + total);
-                    cur_frm.doc.shs_otros_impuestos[i2].total = total;
-                    shs_total_other_tax(frm);
-                    cur_frm.refresh_field("shs_otros_impuestos");
-
-                    if (tax_row.total === 0) {
-                        console.log('SE ELIMINARA LA FILA ---------------->');
-                        // Elimina la fila con valor 0
-                        cur_frm.doc.shs_otros_impuestos.splice(cur_frm.doc.shs_otros_impuestos[i2], 1);
-                        cur_frm.refresh_field("shs_otros_impuestos");
-                    }
-                }
-            });
-        }
-        //  else {
-        //     frm.doc.shs_otros_impuestos.forEach((tax_row, i2) => {
-
-        //     });
-        // }
-
-    });
-
-}
-/* 4 --------------------------------------------------------------------------------------------------------------- */
-
+/*	1.2 en-US: Search Tax Account BEGIN ----------------------------------------------*/
+/*	1.2 es-GT: Busqueda de Cuenta de Impuestos EMPIEZA -------------------------------*/
+// Funcion para evitar realizar calculos con cuentas duplicadas
 function buscar_account(frm, cuenta_b) {
     /**
      * Funcionamiento: recibe como parametro frm, y cuenta_b, lo que hace es, buscar en todas las filas de taxes
@@ -392,7 +416,7 @@ function buscar_account(frm, cuenta_b) {
      */
     var estado = false;
 
-    $.each(frm.doc.shs_otros_impuestos || [], function (i, d) {
+    $.each(frm.doc.taxes || [], function (i, d) {
         if (d.account_head === cuenta_b) {
             // console.log('Si Existe en el indice ' + i)
             estado = true;
@@ -401,15 +425,12 @@ function buscar_account(frm, cuenta_b) {
 
     return estado;
 }
+/*	1.2 en-US: Search Tax Account END ------------------------------------------------*/
+/*	1.2 es-GT: Busqueda de Cuenta de Impuestos TERMINA -------------------------------*/
 
-/* 5 --------------------------------------------------------------------------------------------------------------- */
+/*	1.3 en-US: Validate Tax ID (NIT) BEGIN -------------------------------------------*/
+/*	1.3 es-GT: Validar NIT EMPIEZA ---------------------------------------------------*/
 function valNit(nit, cus_supp, frm) {
-    /**
-     * Funcionamiento: Valida que el Nit sea C/F o un numero de nit valido permitiendo
-     * activar la opcion para guardar. Si el nit es invalido desactiva la funcion
-     * guardar hasta que se ingrese uno correcto, esto permite no tener errores con
-     * INFILE y tener los datos correctos.
-     */
     if (nit === "C/F" || nit === "c/f") {
         frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
     } else {
@@ -433,8 +454,13 @@ function valNit(nit, cus_supp, frm) {
         }
     }
 }
+/*	1.3 en-US: Validate Tax ID (NIT) END ---------------------------------------------*/
+/*	1.3 es-GT: Validar NIT TERMINA ---------------------------------------------------*/
 
-/* 6 Funciones creadoras de botones --------------------------------------------------------------------------------------- */
+/*	1.4 en-US: Obtain Electronic Invoice PDF BEGIN -----------------------------------*/
+/*	1.4 es-GT: Obtener PDF de Factura Electronica EMPIEZA ----------------------------*/
+// Funcion crea un boton que permite actualizar la serie de una factura
+// con el numero de DTE. Factura Electronica
 function pdf_button(cae_documento, frm) {
     // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
     frm.add_custom_button(__("VER PDF FACTURA ELECTRONICA"),
@@ -442,43 +468,17 @@ function pdf_button(cae_documento, frm) {
             window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
         }).addClass("btn-primary");
 }
+/*	1.4 en-US: Obtain Electronic Invoice PDF END -------------------------------------*/
+/*	1.4 es-GT: Obtener PDF de Factura Electronica TERMINA ----------------------------*/
 
-function guardar_pdf(frm) {
-    /*
-    Crea un boton que permite guardar el PDF de factura electronica generado en el servidor
-    de forma privada, tras finalizar la ejecucion del script del lado del servidor en el
-    callback se recarga la pagina para mostrar el archivo adjunto.
-    */
-    frm.add_custom_button(__('GUARDAR PDF'), function () {
-        frappe.call({
-            method: "factura_electronica.api.guardar_pdf_servidor",
-            args: {
-                nombre_archivo: frm.doc.name,
-                cae_de_factura_electronica: frm.doc.cae_factura_electronica
-            },
-            callback: function () {
-                frm.reload_doc();
-            }
-        });
-    }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
-}
-
-// FIXME: MODIFICAR PARA QUE PERMITE ELIMINAR EL PDF
-function eliminar_pdf() {
-    frm.add_custom_button(__('ELIMINAR PDF'), function () {
-        frappe.call({
-            method: "factura_electronica.api.guardar_pdf_servidor",
-            args: {
-                nombre_archivo: frm.doc.name,
-                cae_de_factura_electronica: frm.doc.cae_factura_electronica
-            },
-            callback: function () {
-                frm.reload_doc();
-            }
-        });
-    }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
-}
-
+/* ---------------------------------------------------------------------------------------------------------------- */
+/*	1.5 en-US: Generate Electronic Invoice Manually with Button Press BEGIN ----------*/
+/*	1.5 es-GT: Genera la Factura Electronica Manualmente presionando el Botón EMPIEZA */
+// Se ejecuta cuando la configuracion de generacion de facturas se encuentra en 'MANUAL'
+// Recibe como parametros:
+// tipo_factura: Almacena el nombre del tipo de factura, este se mostrara en el texto del boton, puede ser
+// 'Factura Electronica', 'Nota Credito Electronica', 'Nota Debito Electronica'
+// frm: Documento que se esta trabajando
 function generar_boton_factura(tipo_factura, frm) {
     frm.add_custom_button(__(tipo_factura), function () {
         // frm.reload(); permite hacer un refresh de todo el documento
@@ -490,8 +490,8 @@ function generar_boton_factura(tipo_factura, frm) {
             method: "factura_electronica.api.generar_factura_electronica",
             args: {
                 serie_factura: frm.doc.name,
-                nombre_cliente: frm.doc.customer,
-                pre_se: frm.doc.naming_series
+                nombre_cliente: frm.doc.customer
+                // pre_serie: frm.doc.naming_series
             },
             // El callback recibe como parametro el dato retornado por el script python del lado del servidor
             callback: function (data) {
@@ -502,15 +502,20 @@ function generar_boton_factura(tipo_factura, frm) {
                     let url_nueva = mi_url.replace(serie_de_factura, data.message);
                     // Asigna la nueva url a la ventana actual
                     window.location.assign(url_nueva);
-                    // Recarga la pagina
                     frm.reload_doc();
                 }
             }
         });
     }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
 }
+/*	1.5 en-US: Generate Electronic Invoice Manually with Button Press END ------------*/
+/*	1.5 es-GT: Genera la Factura Electronica Manualmente presionando el Botón TERMINA */
 
-// Realiza la funcionalidad del boton automaticamente
+/*	1.6 en-US: Generate Electronic Invoice Automatically BEGIN -----------------------*/
+/*	1.6 es-GT: Genera la Factura Electronica Automaticamente EMPIEZA -----------------*/
+// Se ejecuta cuando la configuracion de generacion de facturas se encuentra en 'AUTOMATICO'
+// Recibe como parametros:
+// frm: Documento que se esta trabajando
 function generar_factura_sin_btn(frm) {
     // frm.reload(); permite hacer un refresh de todo el documento
     frm.reload_doc();
@@ -521,8 +526,8 @@ function generar_factura_sin_btn(frm) {
         method: "factura_electronica.api.generar_factura_electronica",
         args: {
             serie_factura: frm.doc.name,
-            nombre_cliente: frm.doc.customer,
-            pre_se: frm.doc.naming_series
+            nombre_cliente: frm.doc.customer
+            // pre_serie: frm.doc.naming_series
         },
         // El callback recibe como parametro el dato retornado por el script python del lado del servidor
         callback: function (data) {
@@ -540,8 +545,13 @@ function generar_factura_sin_btn(frm) {
         }
     });
 }
+/*	1.6 en-US: Generate Electronic Invoice Automatically END -------------------------*/
+/*	1.6 es-GT: Genera la Factura Electronica Automaticamente TERMINA -----------------*/
 
-/* 7 Funciones Verificadoras ------------------------------------------------------------------------------------------------- */
+/*	1.7 en-US: Generate Electronic Invoice if CAE not present BEGIN ------------------*/
+/*	1.7 es-GT: Genera la Factura Electronica si no encuentra CAE EMPIEZA -------------*/
+// Funcion verifica que se haya generado el CAE, para el documento requerido, en caso no se haya
+// generado mostrara un boton para hacerlo manualmente.
 function verificacionCAE(modalidad, frm, cdt, cdn) {
     /* ------------------------------ COMPROBACIONES DE CAE ------------------------------ */
     // FACTURAS FACE, CFACE
@@ -553,7 +563,6 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
-            guardar_pdf(frm);
         } else {
             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
             if (modalidad === 'manual') {
@@ -575,7 +584,6 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
-            guardar_pdf(frm);
         } else {
             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
             if (modalidad === 'manual') {
@@ -597,7 +605,6 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
             if (frm.doc.cae_factura_electronica) {
                 cur_frm.clear_custom_buttons();
                 pdf_button(frm.doc.cae_factura_electronica, frm);
-                guardar_pdf(frm);
             } else {
                 // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
                 if (modalidad === 'manual') {
@@ -620,10 +627,14 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         // frm.doc.serie_original_del_documento = '';
     }
 }
+/*	1.7 en-US: Generate Electronic Invoice if CAE not present END --------------------*/
+/*	1.7 es-GT: Genera la Factura Electronica si no encuentra CAE TERMINA -------------*/
+/* ---------------------------------------------------------------------------------------------------------------- */
 
-/* 8 Funciones Calculadoras -------------------------------------------------------------------------------------------------- */
-
-// Factura de Compra
+/*	1.8 en-US: Tax Calculation Conversions for Purchase Invoice BEGIN ----------------*/
+/*	1.8 es-GT: Calculos y Conversiones para Factura de Compra EMPIEZA ----------------*/
+// Codigo Adaptado para Purchase Invoice (Factura de Compra) 
+// Funcion para calculo de impuestos
 function shs_purchase_invoice_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
@@ -696,8 +707,13 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
         };
     });
 }
+/*	1.8 en-US: Tax Calculation Conversions for Purchase Invoice END ------------------*/
+/*	1.8 es-GT: Calculos y Conversiones para Factura de Compra TERMINA ----------------*/
 
-// cálculo de cotizaciones
+/*	1.9 en-US: Tax Calculation Conversions for Cotizacion de Compra BEGIN ------------*/
+/*	1.9 es-GT: Calculos y Conversiones para Cotizacion de Compra EMPIEZA -------------*/
+// Codigo Adaptado para Purchase Quotation (Cotizacion de compra)
+// Funcion para calculo de impuestos
 function shs_quotation_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
@@ -770,8 +786,13 @@ function shs_quotation_calculation(frm, cdt, cdn) {
         };
     });
 }
+/*	1.9 en-US: Tax Calculation Conversions for Cotizacion de Compra END --------------*/
+/*	1.9 es-GT: Calculos y Conversiones para Cotizacion de Compra TERMINA -------------*/
 
-// cálculo de orden de compra
+/*	1.10 en-US: Tax Calculation Conversions for Quotation Item BEGIN -----------------*/
+/*	1.10 es-GT: Calculos y Conversiones para Quotation Item EMPIEZA ------------------*/
+// Codigo Adaptado para Purchase Order (Orden de compra)
+// Funcion para calculo de impuestos
 function shs_purchase_order_calculation(frm, cdt, cdn) {
     // es-GT: Actualiza los campos de la tabla hija 'items'
     refresh_field('items');
@@ -848,8 +869,13 @@ function shs_purchase_order_calculation(frm, cdt, cdn) {
         };
     });
 }
+/*	1.10 en-US: Tax Calculation Conversions for Cotizacion de Compra END -------------*/
+/*	1.10 es-GT: Calculos y Conversiones para Cotizacion de Compra TERMINA ------------*/
 
-// cálculo de recibo de compra
+/*	1.11 en-US: Tax Calculation Conversions for Purchase Receipt BEGIN ---------------*/
+/*	1.11 es-GT: Calculos y Conversiones para Recibo de Compra EMPIEZA ----------------*/
+// Codigo Adaptado para Purchase Receipt (Recibo de Compra) 
+// Funcion para calculo de impuestos
 function shs_purchase_receipt_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
@@ -922,8 +948,13 @@ function shs_purchase_receipt_calculation(frm, cdt, cdn) {
         };
     });
 }
+/*	1.11 en-US: Tax Calculation Conversions for Purchase Receipt END -----------------*/
+/*	1.11 es-GT: Calculos y Conversiones para Recibo de Compra TERMINA ----------------*/
 
-// cálculo de orden de ventas
+/*	1.12 en-US: Tax Calculation Conversions for Sales Order BEGIN --------------------*/
+/*	1.12 es-GT: Calculos y Conversiones para Orden de Venta EMPIEZA ------------------*/
+// Codigo Adaptado para Sales Order (Orden de Venta) 
+// Funcion para calculo de impuestos
 function shs_sales_order_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
@@ -996,8 +1027,13 @@ function shs_sales_order_calculation(frm, cdt, cdn) {
         };
     });
 }
+/*	1.12 en-US: Tax Calculation Conversions for Sales Order END ----------------------*/
+/*	1.12 es-GT: Calculos y Conversiones para Orden de Venta TERMINA ------------------*/
 
-// cálculo de nota de entrega
+/*	1.13 en-US: Tax Calculation Conversions for Delivery Note BEGIN ------------------*/
+/*	1.13 es-GT: Calculos y Conversiones para Nota de Entrega EMPIEZA -----------------*/
+// Codigo Adaptado para Delivery Note (Nota de entrega)
+// Funcion para calculo de impuestos
 function shs_delivery_note_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
@@ -1070,8 +1106,13 @@ function shs_delivery_note_calculation(frm, cdt, cdn) {
         };
     });
 }
+/*	1.13 en-US: Tax Calculation Conversions for Delivery Note END --------------------*/
+/*	1.13 es-GT: Calculos y Conversiones para Nota de Entrega TERMINA -----------------*/
 
-// cálculo de cotizacion del proveedor
+/*	1.14 en-US: Tax Calculation Conversions for Supplier Quotation BEGIN -------------*/
+/*	1.14 es-GT: Calculos y Conversiones para Presupuesto de Proveedor EMPIEZA --------*/
+// Codigo Adaptado para Supplier Quotation (Presupuesto de Proveedor)
+// Funcion para calculo de impuestos
 function shs_supplier_quotation_calculation(frm, cdt, cdn) {
 
     refresh_field('items');
@@ -1144,10 +1185,18 @@ function shs_supplier_quotation_calculation(frm, cdt, cdn) {
         };
     });
 }
+/*	1.14 en-US: Tax Calculation Conversions for Supplier Quotation END ---------------*/
+/*	1.14 es-GT: Calculos y Conversiones para Presupuesto de Proveedor TERMINA --------*/
 
-/* 9 Eventos en Doctypes---------------------------------------------------------------------------------------------- */
+/*	1 en-US: Functions END <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+/*	1 es-GT: Funciones TERMINAN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 
-/* Factura de Ventas-------------------------------------------------------------------------------------------------- */
+/*	2 en-US: Triggers BEGIN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+/*	2 es-GT: Disparadores EMPIEZAN <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+
+/*	2.1 en-US: Triggers for Sales Invoice BEGIN --------------------------------------*/
+/*	2.1 es-GT: Disparadores para Factura de Venta EMPIEZAN  --------------------------*/
+
 frappe.ui.form.on("Sales Invoice", {
     onload_post_render: function (frm, cdt, cdn) {
         console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
@@ -1164,7 +1213,7 @@ frappe.ui.form.on("Sales Invoice", {
 
             each_item(frm, cdt, cdn);
             facelec_tax_calc_new(frm, cdt, cdn);
-            // facelec_otros_impuestos_fila(frm, cdt, cdn);
+            // facelec_sales_taxes_charges_row(frm, cdt, cdn);
         });
 
         // FIXME NO FUNCIONA CON TAB, SOLO HACIENDO CLICK Y ENTER.  Si se presiona TAB, SE BORRA!
@@ -1190,7 +1239,7 @@ frappe.ui.form.on("Sales Invoice", {
         frm.fields_dict.items.grid.wrapper.on('focus', 'input[data-fieldname="item_name"][data-doctype="Sales Invoice Item"]', function (e) {
             console.log("Focusing with keyboard cursor through TAB on the Item Name Field");
             each_item(frm, cdt, cdn);
-            facelec_otros_impuestos_fila(frm, cdt, cdn);
+            facelec_sales_taxes_charges_row(frm, cdt, cdn);
         });
         frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="qty"][data-doctype="Sales Invoice Item"]', function (e) {
             console.log("Blurring or focusing out from the Quantity Field");
@@ -1253,7 +1302,7 @@ frappe.ui.form.on("Sales Invoice", {
         cur_frm.fields_dict.taxes_and_charges.$input.on("focusout", function (evt) {
             console.log("Campo taxes and charges perdió el enfoque via focusout");
             facelec_tax_calc_new(frm, cdt, cdn);
-            facelec_otros_impuestos_fila(frm, cdt, cdn);
+            facelec_sales_taxes_charges_row(frm, cdt, cdn);
         });
     },
     customer: function (frm, cdt, cdn) {
@@ -1274,7 +1323,6 @@ frappe.ui.form.on("Sales Invoice", {
                 facelec_tax_calc_new(frm, "Sales Invoice Item", item.name);
             });
         });
-
         // Cuando el documento se actualiza, la funcion verificac de que exista un cae.
         // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
         // En caso no exista un cae mostrara el boton para generar la factura electronica
@@ -1290,7 +1338,7 @@ frappe.ui.form.on("Sales Invoice", {
     },
     taxes_and_charges: function (frm, cdt, cdn) {
         // es-GT: Se corre aqui en caso se seleccione una tabla de impuestos nueva.
-        // facelec_otros_impuestos_fila(cur_frm, cdt,cdn); // NO SIRVE!!
+        // facelec_sales_taxes_charges_row(cur_frm, cdt,cdn); // NO SIRVE!!
     },
     additional_discount_percentage: function (frm, cdt, cdn) {
         // Pensando en colocar un trigger aqui para cuando se actualice el campo de descuento adicional
@@ -1315,105 +1363,46 @@ frappe.ui.form.on("Sales Invoice", {
     },
     before_save: function (frm, cdt, cdn) {
         each_item(frm, cdt, cdn);
-        facelec_otros_impuestos_fila(frm, cdt, cdn);
+        facelec_sales_taxes_charges_row(frm, cdt, cdn);
         // Trigger antes de guardar
     },
     on_submit: function (frm, cdt, cdn) {
         // Ocurre cuando se presione el boton validar.
         // Cuando se valida el documento, se hace la consulta al servidor por medio de frappe.call
-
-        // Creacion objeto vacio para guardar nombre y valor de las cuentas que se encuentren
-        let cuentas_registradas = {};
-
-        // Recorre la tabla hija en busca de cuentas
-        frm.doc.shs_otros_impuestos.forEach((tax_row, index) => {
-            if (tax_row.account_head) {
-                // Agrega un nuevo valor al objeto (JSON-DICCIONARIO) con el
-                // nombre, valor de la cuenta
-                cuentas_registradas[tax_row.account_head] = tax_row.total;
-            };
-        });
-        // console.log(cuentas_registradas);
-        // console.log(Object.keys(cuentas_registradas).length);
-
-        // Si existe por lo menos una cuenta, se ejecuta frappe.call
-        if (Object.keys(cuentas_registradas).length > 0) {
-            // llama al metodo python, el cual recibe de parametros el nombre de la factura y el objeto
-            // con las ('cuentas encontradas
-            console.log('---------------------- se encontro por lo menos una cuenta--------------------');
-            frappe.call({
-                method: "factura_electronica.special_tax.add_gl_entry_other_special_tax",
-                args: {
-                    invoice_name: frm.doc.name,
-                    accounts: cuentas_registradas
-                },
-                // El callback se ejecuta tras finalizar la ejecucion del script python del lado
-                // del servidor
-                callback: function () {
-                    // Busca la modalidad configurada, ya sea Manual o Automatica
-                    // Esto para mostrar u ocultar los botones para la geneneracion de factura
-                    // electronica
-                    frappe.call({
-                        method: "factura_electronica.api.obtenerConfiguracionManualAutomatica",
-                        callback: function (data) {
-                            console.log(data.message);
-                            if (data.message === 'Manual') {
-                                console.log('Configuracion encontrada: MANUAL');
-                                // No es necesario tener activa esta parte, ya que cuando se ingresa a cualquier factura en el evento
-                                // refresh, hay una funcion que se encarga de comprobar de que se haya generado exitosamente la
-                                // factura electronica, en caso no sea asi, se mostrarán los botones correspondientes, para hacer
-                                // la generacion de la factura electronica manualmente.
-                                // generarFacturaBTN(frm, cdt, cdn);
-                            }
-                            if (data.message === 'Automatico') {
-                                console.log('Configuracion encontrada: AUTOMATICO');
-                                // generarFacturaSINBTN(frm, cdt, cdn);
-                                verificacionCAE('automatico', frm, cdt, cdn);
-                            }
-                        }
-                    });
+        // con esto se obtiene la configuracion guardada, ya sea automatico o manual
+        // FUNCION AUTOMATICA: Cuando se valida el documento automaticamente genera la estrucutura para la factura solicitada
+        // y realiza la peticion a INFILE para la generacion, respuesta y guardado en nuestra base de datos.
+        frappe.call({
+            method: "factura_electronica.api.obtenerConfiguracionManualAutomatica",
+            // El callback recibe como parametro el dato retornado por script python del lado del servidor
+            callback: function (data) {
+                console.log(data.message)
+                if (data.message === 'Manual') {
+                    console.log('Configuracion encontrada: MANUAL');
+                    // No es necesario tener activa esta parte, ya que cuando se ingresa a cualquier factura en el evento
+                    // refresh, hay una funcion que se encarga de comprobar de que se haya generado exitosamente la 
+                    // factura electronica, en caso no sea asi, se mostrarán los botones correspondientes, para hacer
+                    // la generacion de la factura electronica manualmente.
+                    // generarFacturaBTN(frm, cdt, cdn);
                 }
-            });
-        } else {
-            // Busca la modalidad configurada, ya sea Manual o Automatica
-            // Esto para mostrar u ocultar los botones para la geneneracion de factura
-            // electronica
-            frappe.call({
-                method: "factura_electronica.api.obtenerConfiguracionManualAutomatica",
-                callback: function (data) {
-                    console.log(data.message);
-                    if (data.message === 'Manual') {
-                        console.log('Configuracion encontrada: MANUAL');
-                        /* No es necesario tener activa esta parte, ya que cuando se ingresa a cualquier factura en el evento
-                        refresh, hay una funcion que se encarga de comprobar de que se haya generado exitosamente la
-                        factura electronica, en caso no sea asi, se mostrarán los botones correspondientes, para hacer
-                        la generacion de la factura electronica manualmente.
-                        generarFacturaBTN(frm, cdt, cdn); */
-                    }
-                    if (data.message === 'Automatico') {
-                        console.log('Configuracion encontrada: AUTOMATICO');
-                        // generarFacturaSINBTN(frm, cdt, cdn);
-                        verificacionCAE('automatico', frm, cdt, cdn);
-                    }
+                if (data.message === 'Automatico') {
+                    console.log('Configuracion encontrada: AUTOMATICO');
+                    // generarFacturaSINBTN(frm, cdt, cdn);
+                    verificacionCAE('automatico', frm, cdt, cdn);
                 }
-            });
-        }
-
-    }
-});
-
-frappe.ui.form.on("Sales Invoice Item", {
-    items_add: function (frm, cdt, cdn) { },
-    items_move: function (frm, cdt, cdn) { },
-    before_items_remove: function (frm, cdt, cdn) {
-
-        frm.doc.items.forEach((item_row_1, index_1) => {
-            if (item_row_1.name == cdn) {
-                console.log('La Fila a Eliminar es --------------> ' + item_row_1.item_code);
-                totalizar_valores(frm, cdn, item_row_1.facelec_tax_rate_per_uom_account)
             }
         });
-    },
+    }
+});
+/*	2.1 en-US: Triggers for Sales Invoice END ----------------------------------------*/
+/*	2.1 es-GT: Disparadores para Factura de Venta TERMINAN  --------------------------*/
+
+/*	2.2 en-US: Triggers for Sales Invoice Items BEGIN --------------------------------*/
+/*	2.2 es-GT: Disparadores para Productos de Factura de Venta EMPIEZAN  -------------*/
+frappe.ui.form.on("Sales Invoice Item", {
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -1426,17 +1415,18 @@ frappe.ui.form.on("Sales Invoice Item", {
         fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
+
             fix_gt_tax_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
             fix_gt_tax_goods += flt(d.facelec_gt_tax_net_goods_amt);
             fix_gt_tax_services += flt(d.facelec_gt_tax_net_services_amt);
             fix_gt_tax_iva += flt(d.facelec_sales_tax_for_this_row);
+
         });
 
         cur_frm.set_value("facelec_gt_tax_fuel", fix_gt_tax_fuel);
         cur_frm.set_value("facelec_gt_tax_goods", fix_gt_tax_goods);
         cur_frm.set_value("facelec_gt_tax_services", fix_gt_tax_services);
         cur_frm.set_value("facelec_total_iva", fix_gt_tax_iva);
-
     },
     item_code: function (frm, cdt, cdn) {
         each_item(frm, cdt, cdn);
@@ -1458,7 +1448,7 @@ frappe.ui.form.on("Sales Invoice Item", {
         facelec_tax_calc_new(frm, cdt, cdn);
     },
     facelec_tax_rate_per_uom_account: function (frm, cdt, cdn) {
-        //facelec_otros_impuestos_fila(frm, cdt,cdn);
+        //facelec_sales_taxes_charges_row(frm, cdt,cdn);
         // esto debe correr aqui?
     },
     rate: function (frm, cdt, cdn) {
@@ -1468,8 +1458,11 @@ frappe.ui.form.on("Sales Invoice Item", {
 		console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
     }*/
 });
+/*	2.2 en-US: Triggers for Sales Invoice Items END ----------------------------------*/
+/*	2.2 es-GT: Disparadores para Productos de Factura de Venta TERMINAN  -------------*/
 
-/* Factura de Compra ------------------------------------------------------------------------------------------------ */
+/*	2.3 en-US: Triggers for Purchase Invoice BEGIN -----------------------------------*/
+/*	2.3 es-GT: Disparadores para Factura de Compra EMPIEZAN  -------------------------*/
 frappe.ui.form.on("Purchase Invoice", {
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
@@ -1524,11 +1517,15 @@ frappe.ui.form.on("Purchase Invoice", {
         });
     },
 });
+/*	2.3 en-US: Triggers for Purchase Invoice END -------------------------------------*/
+/*	2.3 es-GT: Disparadores para Factura de Compra TERMINAN  -------------------------*/
 
+/*	2.4 en-US: Triggers for Purchase Invoice Items BEGIN -----------------------------*/
+/*	2.4 es-GT: Disparadores para Productos de Factura de Compra EMPIEZAN  ------------*/
 frappe.ui.form.on("Purchase Invoice Item", {
-    items_add: function (frm, cdt, cdn) { },
-    items_move: function (frm, cdt, cdn) { },
-    before_items_remove: function (frm, cdt, cdn) { },
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -1613,8 +1610,11 @@ frappe.ui.form.on("Purchase Invoice Item", {
         shs_purchase_invoice_calculation(frm, cdt, cdn);
     }
 });
+/*	2.4 en-US: Triggers for Purchase Invoice Items END -------------------------------*/
+/*	2.4 es-GT: Disparadores para Productos de Factura de Compra TERMINAN  ------------*/
 
-/* Cotizacion ------------------------------------------------------------------------------------------------------- */
+/*	2.5 en-US: Triggers for Quotation BEGIN ------------------------------------------*/
+/*	2.5 es-GT: Disparadores para Cotización EMPIEZA  ---------------------------------*/
 frappe.ui.form.on("Quotation", {
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
@@ -1669,11 +1669,15 @@ frappe.ui.form.on("Quotation", {
         });
     },
 });
+/*	2.5 en-US: Triggers for Quotation END --------------------------------------------*/
+/*	2.5 es-GT: Disparadores para Cotización TERMINA  ---------------------------------*/
 
+/*	2.6 en-US: Triggers for Quotation Item BEGIN -------------------------------------*/
+/*	2.6 es-GT: Disparadores para Producto de Cotización EMPIEZA  ---------------------*/
 frappe.ui.form.on("Quotation Item", {
-    items_add: function (frm, cdt, cdn) { },
-    items_move: function (frm, cdt, cdn) { },
-    before_items_remove: function (frm, cdt, cdn) { },
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -1758,8 +1762,11 @@ frappe.ui.form.on("Quotation Item", {
         shs_quotation_calculation(frm, cdt, cdn);
     }
 });
+/*	2.6 en-US: Triggers for Quotation Item END ---------------------------------------*/
+/*	2.6 es-GT: Disparadores para Producto de Cotización TERMINA  ---------------------*/
 
-/* Orden de Compra -------------------------------------------------------------------------------------------------- */
+/*	2.7 en-US: Triggers for Purchase Order BEGIN -------------------------------------*/
+/*	2.7 es-GT: Disparadores para Orden de Compra EMPIEZA  ----------------------------*/
 frappe.ui.form.on("Purchase Order", {
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
@@ -1814,11 +1821,15 @@ frappe.ui.form.on("Purchase Order", {
         });
     },
 });
+/*	2.7 en-US: Triggers for Purchase Order END ---------------------------------------*/
+/*	2.7 es-GT: Disparadores para Orden de Compra TERMINA  ----------------------------*/
 
+/*	2.8 en-US: Triggers for Purchase Order Items BEGIN -------------------------------*/
+/*	2.8 es-GT: Disparadores para Productos de Orden de Compra EMPIEZA ----------------*/
 frappe.ui.form.on("Purchase Order Item", {
-    items_add: function (frm, cdt, cdn) { },
-    items_move: function (frm, cdt, cdn) { },
-    before_items_remove: function (frm, cdt, cdn) { },
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -1903,8 +1914,11 @@ frappe.ui.form.on("Purchase Order Item", {
         shs_purchase_order_calculation(frm, cdt, cdn);
     }
 });
+/*	2.8 en-US: Triggers for Purchase Order Items END ---------------------------------*/
+/*	2.8 es-GT: Disparadores para Productos de Orden de Compra TERMINA ----------------*/
 
-/* Recibo de compra ------------------------------------------------------------------------------------------------- */
+/*	2.9 en-US: Triggers for Purchase Receipt BEGIN -----------------------------------*/
+/*	2.9 es-GT: Disparadores para Recibo de Compra EMPIEZA ----------------------------*/
 frappe.ui.form.on("Purchase Receipt", {
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
@@ -1959,11 +1973,15 @@ frappe.ui.form.on("Purchase Receipt", {
         });
     },
 });
+/*	2.9 en-US: Triggers for Purchase Receipt END -------------------------------------*/
+/*	2.9 es-GT: Disparadores para Recibo de Compra TERMINA ----------------------------*/
 
+/*	2.10 en-US: Triggers for Purchase Receipt Item BEGIN -----------------------------*/
+/*	2.10 es-GT: Disparadores para Productos de Recibo de Compra EMPIEZA --------------*/
 frappe.ui.form.on("Purchase Receipt Item", {
-    items_add: function (frm, cdt, cdn) { },
-    items_move: function (frm, cdt, cdn) { },
-    before_items_remove: function (frm, cdt, cdn) { },
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -2048,8 +2066,11 @@ frappe.ui.form.on("Purchase Receipt Item", {
         shs_purchase_receipt_calculation(frm, cdt, cdn);
     }
 });
+/*	2.10 en-US: Triggers for Purchase Receipt Item END -------------------------------*/
+/*	2.10 es-GT: Disparadores para Productos de Recibo de Compra TERMINA --------------*/
 
-/* Orden de Venta ------------------------------------------------------------------------------------------------- */
+/*	2.11 en-US: Triggers for Sales Order BEGIN ---------------------------------------*/
+/*	2.11 es-GT: Disparadores para Orden de Venta EMPIEZA -----------------------------*/
 frappe.ui.form.on("Sales Order", {
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
@@ -2104,11 +2125,15 @@ frappe.ui.form.on("Sales Order", {
         });
     },
 });
+/*	2.11 en-US: Triggers for Sales Order END -----------------------------------------*/
+/*	2.11 es-GT: Disparadores para Orden de Venta TERMINA -----------------------------*/
 
+/*	2.12 en-US: Triggers for Sales Order Item BEGIN ----------------------------------*/
+/*	2.12 es-GT: Disparadores para Productos de Orden de Venta EMPIEZA ----------------*/
 frappe.ui.form.on("Sales Order Item", {
-    items_add: function (frm, cdt, cdn) { },
-    items_move: function (frm, cdt, cdn) { },
-    before_items_remove: function (frm, cdt, cdn) { },
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -2132,7 +2157,6 @@ frappe.ui.form.on("Sales Order Item", {
     },
     item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
-        // cur_frm.add_fetch("item_code", "facelec_three_digit_uom", "shs_so_facelec_three_digit_uom_code");
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
@@ -2194,8 +2218,11 @@ frappe.ui.form.on("Sales Order Item", {
         shs_sales_order_calculation(frm, cdt, cdn);
     }
 });
+/*	2.12 en-US: Triggers for Sales Order Item END ------------------------------------*/
+/*	2.12 es-GT: Disparadores para Productos de Orden de Venta TERMINA ----------------*/
 
-/* Nota de Entrega ------------------------------------------------------------------------------------------------- */
+/*	2.13 en-US: Triggers for Delivery Note BEGIN -------------------------------------*/
+/*	2.13 es-GT: Disparadores para Nota de Entrega EMPIEZA ----------------------------*/
 frappe.ui.form.on("Delivery Note", {
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
@@ -2250,11 +2277,15 @@ frappe.ui.form.on("Delivery Note", {
         });
     },
 });
+/*	2.13 en-US: Triggers for Delivery Note END ---------------------------------------*/
+/*	2.13 es-GT: Disparadores para Nota de Entrega TERMINA ----------------------------*/
 
+/*	2.14 en-US: Triggers for Delivery Note Item BEGIN --------------------------------*/
+/*	2.14 es-GT: Disparadores para Producto de Nota de Entrega EMPIEZA ----------------*/
 frappe.ui.form.on("Delivery Note Item", {
-    items_add: function (frm, cdt, cdn) { },
-    items_move: function (frm, cdt, cdn) { },
-    before_items_remove: function (frm, cdt, cdn) { },
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -2339,8 +2370,11 @@ frappe.ui.form.on("Delivery Note Item", {
         shs_delivery_note_calculation(frm, cdt, cdn);
     }
 });
+/*	2.14 en-US: Triggers for Delivery Note Item END ----------------------------------*/
+/*	2.14 es-GT: Disparadores para Producto de Nota de Entrega TERMINA ----------------*/
 
-/* Cotizacion del proveedor ---------------------------------------------------------------------------------------- */
+/*	2.15 en-US: Triggers for Supplier Quotation BEGIN --------------------------------*/
+/*	2.15 es-GT: Disparadores para Presupuesto de Proveedor EMPIEZA -------------------*/
 frappe.ui.form.on("Supplier Quotation", {
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
@@ -2399,11 +2433,15 @@ frappe.ui.form.on("Supplier Quotation", {
         // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
     },
 });
+/*	2.15 en-US: Triggers for Supplier Quotation END ----------------------------------*/
+/*	2.15 es-GT: Disparadores para Presupuesto de Proveedor TERMINA -------------------*/
 
+/*	2.16 en-US: Triggers for Supplier Quotation Item BEGIN ---------------------------*/
+/*	2.16 es-GT: Disparadores para Producto de Presupuesto de Proveedor EMPIEZA -------*/
 frappe.ui.form.on("Supplier Quotation Item", {
-    items_add: function (frm, cdt, cdn) { },
-    items_move: function (frm, cdt, cdn) { },
-    before_items_remove: function (frm, cdt, cdn) { },
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
+    before_items_remove: function (frm, cdt, cdn) {},
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
         // en-US: This trigger runs when removing a row.
@@ -2490,8 +2528,9 @@ frappe.ui.form.on("Supplier Quotation Item", {
         shs_supplier_quotation_calculation(frm, cdt, cdn);
     }
 });
+/*	2.16 en-US: Triggers for Supplier Quotation Item END -----------------------------*/
+/*	2.16 es-GT: Disparadores para Producto de Presupuesto de Proveedor TERMINA -------*/
 
-/* ----------------------------------------------------------------------------------------------------------------- */
 /** Verificacion para que exista un solo check */
 frappe.ui.form.on("Item", {
     facelec_is_fuel: function (frm, cdt, cdn) {
