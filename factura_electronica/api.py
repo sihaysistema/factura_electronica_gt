@@ -274,8 +274,9 @@ def get_data_tax_account(name_account_tax_gt):
 
 
 @frappe.whitelist()
-def prueba_funcion(nombre_fac):
-    if frappe.db.exists('GL Entry', {'voucher_no': nombre_fac}):
-        frappe.msgprint(_('YA EXISTE PARA ESTA FACTURA :)'))
-    else:
-        frappe.msgprint(_('NO EXISTE PARTIDA PARA ESTA FACTURA'))
+def obtener_numero_resolucion(nombre_serie):
+    if frappe.db.exists('Configuracion Series', {'serie': nombre_serie, 'docstatus': 1}):
+        numero_resolucion = frappe.db.get_values('Configuracion Series', filters={'serie': nombre_serie, 'docstatus': 1},
+                                                 fieldname=['numero_resolucion'], as_dict=1)
+
+        return str(numero_resolucion[0]['numero_resolucion'])
