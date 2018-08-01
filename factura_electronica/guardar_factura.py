@@ -232,14 +232,6 @@ def actualizarTablas(serieOriginalFac):
             # else:
             #     frappe.msgprint(_('No hay registro en tabPayment Entry Reference))
 
-            # Payment Entry Reference -
-            # 14 - tabPayment Entry Reference
-            if frappe.db.exists('Payment Entry Reference', {'parent': serie_fac_original}):
-                frappe.db.sql('''UPDATE `tabSales Invoice Payment` SET parent=%(name)s
-                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
-            # else:
-            #     frappe.msgprint(_('No hay registro en tabPayment Entry Reference))
-
             # Sales Order
             # 15 - tabSales Order
             if frappe.db.exists('Sales Order', {'parent': serie_fac_original}):
@@ -248,13 +240,6 @@ def actualizarTablas(serieOriginalFac):
             # else:
             #     frappe.msgprint(_('No hay registro en tabSales Order))
 
-            # Sales Order
-            # 15 - tabSales Order
-            if frappe.db.exists('Sales Order', {'parent': serie_fac_original}):
-                frappe.db.sql('''UPDATE `tabSales Order` SET parent=%(name)s
-                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
-            # else:
-            #     frappe.msgprint(_('No hay registro en tabSales Order))
             # Parece que este no enlaza directamente con sales invoice es el sales invoice que enlaza con este.
             # Delivery Note
             # 16 - tabDelivery Note
