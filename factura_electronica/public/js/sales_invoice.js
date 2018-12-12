@@ -357,10 +357,6 @@ function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
             frm.doc.shs_otros_impuestos.forEach((tax_row, i2) => {
                 if (tax_row.account_head === tax_account_n) {
                     cur_frm.doc.shs_otros_impuestos[i2].total = total;
-
-                    cur_frm.refresh_field("shs_otros_impuestos");
-                    // total = facelec_add_taxes(frm, tax_account_n);
-                    // cur_frm.doc.shs_otros_impuestos[i2].total = total;
                     cur_frm.refresh_field("shs_otros_impuestos");
                     shs_total_other_tax(frm);
                     cur_frm.refresh_field("shs_otros_impuestos");
@@ -907,3 +903,4 @@ frappe.ui.form.on("Sales Invoice Item", {
 		console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
 	}*/
 });
+

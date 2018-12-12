@@ -98,23 +98,20 @@ function pi_total_de_otros_impuestos(frm) {
 * shs_pi_otros_impuestos le sumara los valores encontrados.
 */
 function pi_insertar_fila_otro_impuesto(frm, cdt, cdn) {
-    var this_row_tax_amount = 0; // Valor IDP
     var shs_otro_impuesto = 0;
 
     frm.doc.items.forEach((item_row_i, indice) => {
         if (item_row_i.name === cdn) {
-            this_row_tax_amount = (item_row_i.stock_qty * item_row_i.facelec_p_tax_rate_per_uom);
             shs_otro_impuesto = item_row_i.facelec_p_other_tax_amount;
 
             // Guarda el nombre de la cuenta del item seleccionado
             var cuenta = item_row_i.facelec_p_tax_rate_per_uom_account;
-            console.log('Cuenta de item encontrada es : ' + cuenta);
+            // console.log('Cuenta de item encontrada es : ' + cuenta);
 
             frm.refresh_field('items');
             frm.refresh_field('conversion_factor');
 
             if (cuenta) { // Si encuentra una cuenta con nombre procede
-                otro_impuesto = this_row_tax_amount;
                 if (!(pi_buscar_cuenta(frm, cuenta))) { // Si no encuentra una cuenta, procede.
 
                     frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica", "shs_pi_otros_impuestos");
@@ -153,22 +150,16 @@ function pi_insertar_fila_otro_impuesto(frm, cdt, cdn) {
 /**
 * Se encarga de recalcular el total de otros impuestos cuando se elimina un item
 */
-function pi_total_otros_impuestos_eliminacion(frm, cdn, tax_account_n) {
-
-    var total = 0;
-
-    // recorre items
+function pi_total_otros_impuestos_eliminacion(frm, tax_account_n, otro_impuesto) {
+    // Recorre items
     frm.doc.items.forEach((item_row, i1) => {
-        var total = 0;
         if (item_row.facelec_p_tax_rate_per_uom_account === tax_account_n) {
-
+            var total = (pi_sumatoria_por_cuenta_items(frm, tax_account_n) - otro_impuesto);
             // recorre shs_pi_otros_impuestos
             frm.doc.shs_pi_otros_impuestos.forEach((tax_row, i2) => {
-
                 if (tax_row.account_head === tax_account_n) {
-                    total = pi_sumatoria_por_cuenta_items(frm, tax_account_n);
-                    console.log('Trigger before remove 2: ' + total)
                     cur_frm.doc.shs_pi_otros_impuestos[i2].total = total;
+                    cur_frm.refresh_field("shs_pi_otros_impuestos");
                     pi_total_de_otros_impuestos(frm);
                     cur_frm.refresh_field("shs_pi_otros_impuestos");
 
@@ -180,7 +171,6 @@ function pi_total_otros_impuestos_eliminacion(frm, cdn, tax_account_n) {
                 }
             });
         }
-
     });
 
 }
@@ -228,8 +218,6 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
             frm.doc.items[index].facelec_p_other_tax_amount = ((item_row.facelec_p_tax_rate_per_uom * (item_row.qty * item_row.conversion_factor)));
             //OJO!  No s epuede utilizar stock_qty en los calculos, debe de ser qty a puro tubo!
             frm.doc.items[index].facelec_p_amount_minus_excise_tax = ((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_p_tax_rate_per_uom));
-            // console.log("uom that just changed is: " + item_row.uom);
-            // console.log("stock qty is: " + item_row.stock_qty); // se queda con el numero anterior.  multiplicar por conversion factor (si existiera!)
 
             if (item_row.facelec_p_is_fuel) {
                 frm.doc.items[index].facelec_p_gt_tax_net_fuel_amt = (item_row.facelec_p_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
@@ -287,7 +275,6 @@ frappe.ui.form.on("Purchase Invoice", {
         // es-GT: Habilitando escuchadores de eventos en las tablas hijas del tipo de documento principal
         // No corra KEY UP, KEY PRESS, KEY DOWN en este campo!   NO NO NO NO NONONO
         frm.fields_dict.items.grid.wrapper.on('click focusout blur', 'input[data-fieldname="item_code"][data-doctype="Purchase Invoice Item"]', function (e) {
-            console.log("Clicked on the field Item Code");
             shs_purchase_invoice_calculation(frm, cdt, cdn);
             pi_each_item(frm, cdt, cdn);
         });
@@ -344,22 +331,17 @@ frappe.ui.form.on("Purchase Invoice", {
             cur_frm.refresh_field("conversion_factor");
         });
 
-        // frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="rate"][data-doctype="Purchase Invoice Item"]', function (e) {
-        // 	console.log("Blurring from the Rate Field");
-        // 	// each_item(frm, cdt, cdn);
-        // });
-
         // en-US: Enabling event listeners in the main doctype
         // es-GT: Habilitando escuchadores de eventos en el tipo de documento principal
         // When ANY key is released after being pressed
-        cur_frm.fields_dict.customer.$input.on("keyup", function (evt) {
+        cur_frm.fields_dict.supplier.$input.on("keyup", function (evt) {
             shs_purchase_invoice_calculation(frm, cdt, cdn);
             pi_each_item(frm, cdt, cdn);
             refresh_field('qty');
         });
 
         // When mouse leaves the field
-        cur_frm.fields_dict.customer.$input.on("mouseleave blur focusout", function (evt) {
+        cur_frm.fields_dict.supplier.$input.on("mouseleave blur focusout", function (evt) {
             shs_purchase_invoice_calculation(frm, cdt, cdn);
         });
 
@@ -376,24 +358,21 @@ frappe.ui.form.on("Purchase Invoice", {
     },
     facelec_nit_fproveedor: function (frm, cdt, cdn) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
-        valNit(frm.doc.facelec_nit_fproveedor, frm.doc.customer, frm);
+        valNit(frm.doc.facelec_nit_fproveedor, frm.doc.supplier, frm);
     },
     discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
-        tax_before_calc = frm.doc.facelec_total_iva;
-        console.log("El descuento total es:" + frm.doc.discount_amount);
+        tax_before_calc = frm.doc.facelec_total_iva;;
         // es-GT: Este muestra el IVA que se calculo por medio de nuestra aplicación.
-        console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
         discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
 
         if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) {
-            console.log("No hay descuento definido, calculando sin descuento.");
         } else {
-            console.log("El descuento parece ser un numero definido, calculando con descuento.");
+            // console.log("El descuento parece ser un numero definido, calculando con descuento.");
             discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
-            console.log("El IVA del descuento es:" + discount_amount_tax_value);
+            // console.log("El IVA del descuento es:" + discount_amount_tax_value);
             frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
-            console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
+            // console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
         }
     },
     before_save: function (frm, cdt, cdn) {
@@ -405,18 +384,11 @@ frappe.ui.form.on("Purchase Invoice", {
 
 frappe.ui.form.on("Purchase Invoice Item", {
     before_items_remove: function (frm, cdt, cdn) {
-
-        console.log(frm.doc.items);
         frm.doc.items.forEach((item_row_1, index_1) => {
             if (item_row_1.name == cdn) {
-                console.log('La Fila a Eliminar es --------------> ' + item_row_1.facelec_p_tax_rate_per_uom_account);
-
-                pi_total_otros_impuestos_eliminacion(frm, cdn, item_row_1.facelec_p_tax_rate_per_uom_account);
-                cur_frm.refresh_fields();
-
+                pi_total_otros_impuestos_eliminacion(frm, item_row_1.facelec_p_tax_rate_per_uom_account, item_row_1.facelec_p_other_tax_amount);
             }
         });
-
     },
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
@@ -443,22 +415,22 @@ frappe.ui.form.on("Purchase Invoice Item", {
     item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
-        console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
+        // console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
     },
     qty: function (frm, cdt, cdn) {
         // Trigger cantidad
         shs_purchase_invoice_calculation(frm, cdt, cdn);
-        console.log("cdt contains: " + cdt);
-        console.log("cdn contains: " + cdn);
+        // console.log("cdt contains: " + cdt);
+        // console.log("cdn contains: " + cdn);
     },
     uom: function (frm, cdt, cdn) {
         // Trigger UOM
-        console.log("The unit of measure field was changed and the code from the trigger was run");
+        // console.log("The unit of measure field was changed and the code from the trigger was run");
     },
     conversion_factor: function (frm, cdt, cdn) {
         // Trigger factor de conversion
-        console.log("El disparador de factor de conversión se corrió.");
+        // console.log("El disparador de factor de conversión se corrió.");
         shs_purchase_invoice_calculation(frm, cdt, cdn);
     },
     rate: function (frm, cdt, cdn) {
