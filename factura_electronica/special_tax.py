@@ -90,4 +90,8 @@ def add_gl_entry_other_special_tax(invoice_name, accounts):
             frappe.msgprint(_('NO FUNCIONO :('))
         else:
             # Actualiza el total de factura con el nuevo monto
-            frappe.db.sql('''UPDATE `tabSales Invoice` SET total=%(nuevo_monto)s, base_net_total=%(nuevo_monto)s WHERE name=%(serie_original)s''', {'nuevo_monto': str(total), 'serie_original': invoice_name})
+            frappe.db.sql('''UPDATE `tabSales Invoice` SET total=%(nuevo_monto)s, base_net_total=%(nuevo_monto)s, total_taxes_and_charges=%(nuevo_valor_iva)s WHERE name=%(serie_original)s''', {'nuevo_monto': str(total), 'nuevo_valor_iva': str(valor_iva), 'serie_original': invoice_name})
+            frappe.db.sql('''UPDATE `tabSales Taxes and Charges` SET tax_amount=%(nuevo_monto)s,
+                                     base_tax_amount=%(nuevo_monto)s, base_tax_amount_after_discount_amount=%(nuevo_monto)s,
+                                     tax_amount_after_discount_amount=%(nuevo_monto)s  
+                                     WHERE parent=%(serie_original)s''', {'nuevo_monto': str(valor_iva), 'serie_original': invoice_name})

@@ -793,6 +793,7 @@ frappe.ui.form.on("Sales Invoice", {
                     // Busca la modalidad configurada, ya sea Manual o Automatica
                     // Esto para mostrar u ocultar los botones para la geneneracion de factura
                     // electronica
+                    frm.reload_doc();
                     frappe.call({
                         method: "factura_electronica.api.obtenerConfiguracionManualAutomatica",
                         callback: function (data) {
