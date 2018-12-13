@@ -1,13 +1,13 @@
 // console.log("Hello world from Sales Order");
 
-/* Delivery Note (Nota de entrega) ------------------------------------------------------------------------------------------------------- */
+/* Sales Order (Orden de Venta) ------------------------------------------------------------------------------------------------------- */
 function sales_order_each_item(frm, cdt, cdn) {
     frm.doc.items.forEach((item) => {
         shs_sales_order_calculation(frm, "Sales Order Item", item.name);
     });
 }
 
-// Calculos para Nota de Entrega
+// Calculos para Orden de Venta
 function shs_sales_order_calculation(frm, cdt, cdn) {
     cur_frm.refresh_fields();
     var this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
