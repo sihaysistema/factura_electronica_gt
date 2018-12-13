@@ -11,6 +11,7 @@ from guardar_factura import guardar_factura_electronica as guardar
 from guardar_factura import actualizarTablas as actualizartb
 from valida_errores import encuentra_errores as errores
 from valida_errores import normalizar_texto
+from frappe.utils import get_site_name
 
 # Permite trabajar con acentos, ñ, simbolos, etc
 import os, sys
@@ -205,7 +206,8 @@ def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
     '''Descarga factura en servidor y registra en base de datos'''
 
     modalidad_configurada = validar_configuracion()
-    ruta_archivo = 'site1.local/private/files/factura-electronica/'
+    nombre_de_sitio = get_site_name(frappe.local.site)
+    ruta_archivo = '{0}/private/files/factura-electronica/'.format(nombre_de_sitio)
 
     # Verifica que exista un configuracion valida para factura electronica
     if modalidad_configurada[0] == 1:
@@ -232,7 +234,7 @@ def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
                 # Cuando la descarga es exitosa retorna 0, por lo que si es existosa procede
                 if descarga_archivo == 0:
                     # Obtiene el tamaño del archivo en bytes
-                    bytes_archivo = os.path.getsize("site1.local/private/files/factura-electronica/{0}.pdf".format(nombre_archivo))
+                    bytes_archivo = os.path.getsize("{0}/private/files/factura-electronica/{1}.pdf".format(nombre_de_sitio, nombre_archivo))
                     # Guarda los datos en la base de datos
                     try:
                         nuevo_archivo = frappe.new_doc("File")
