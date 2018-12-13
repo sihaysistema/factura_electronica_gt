@@ -163,7 +163,7 @@ function pi_total_otros_impuestos_eliminacion(frm, tax_account_n, otro_impuesto)
                     pi_total_de_otros_impuestos(frm);
                     cur_frm.refresh_field("shs_pi_otros_impuestos");
 
-                    if (tax_row.total === 0) {
+                    if (!tax_row.total) {
                         // Elimina la fila con valor 0
                         cur_frm.doc.shs_pi_otros_impuestos.splice(cur_frm.doc.shs_pi_otros_impuestos[i2], 1);
                         cur_frm.refresh_field("shs_pi_otros_impuestos");

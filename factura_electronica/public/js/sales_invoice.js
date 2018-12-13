@@ -320,6 +320,8 @@ function facelec_otros_impuestos_fila(frm, cdt, cdn) {
                             // Asigna valores en la fila recien creada
                             cur_frm.doc.shs_otros_impuestos[index].account_head = cuenta;
                             cur_frm.doc.shs_otros_impuestos[index].total = shs_otro_impuesto;
+                            // cur_frm.doc.shs_otros_impuestos[index].doctype_type = 'Sales Invoice';
+                            // cur_frm.doc.shs_otros_impuestos[index].doctype_no = cdn;
 
                             // Actualiza los datos de la tabla hija
                             cur_frm.refresh_field("shs_otros_impuestos");
@@ -361,7 +363,7 @@ function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
                     shs_total_other_tax(frm);
                     cur_frm.refresh_field("shs_otros_impuestos");
 
-                    if (tax_row.total === 0) {
+                    if (!tax_row.total) {
                         // console.log('SE ELIMINARA LA FILA ---------------->');
                         // Elimina la fila con valor 0
                         cur_frm.doc.shs_otros_impuestos.splice(cur_frm.doc.shs_otros_impuestos[i2], 1);
