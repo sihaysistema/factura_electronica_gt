@@ -84,11 +84,11 @@ app_include_js = "/assets/factura_electronica/js/facelec.min.js"
 # Hook on document methods and events
 
 # doc_events = {
-# 	"*": {
-# 		"on_update": "method",
+# 	"Sales Invoice": {
+# 		"on_save": "factura_electronica.api.get_tax_html",
 # 		"on_cancel": "method",
 # 		"on_trash": "method"
-#	}
+# 	}
 # }
 
 # Scheduled Tasks

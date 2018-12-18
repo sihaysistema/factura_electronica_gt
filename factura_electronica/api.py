@@ -285,41 +285,21 @@ def obtener_numero_resolucion(nombre_serie):
 
 @frappe.whitelist()
 def get_tax_html(serie_fac):
-    # if not doc.taxes:
-    # 	return
-    # frappe.flags.company = doc.company
-    # n_items = len(items)
-    # frappe.msgprint(_(str(items)))
-    # get headers
-    # items_tax = []
-    # mi_list = eval(itemsm)
-    # frappe.msgprint(_(items_tax))
-
-    # for i in range(0, len(mi_list)):
-    # 	# frappe.msgprint(_(mi_list[i]))
-    # 	if mi_list[i] not in items_tax:
-    # 		items_tax.append(mi_list[i])
-
-    # frappe.msgprint(_(items_tax))
-
-    # milista = len(eval(itemsm))
     headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("Base Value"), _("IVA"), _("Total")]
 
-    # get tax breakup data
-    # itemised_tax, itemised_taxable_amount = get_itemised_tax_breakup_data(doc)
-
-    # get_rounded_tax_amount(itemised_tax, doc.precision("tax_amount", "taxes"))
-
-    # update_itemised_tax_data(doc)
-    # frappe.flags.company = None
-
-    items_tax = frappe.db.get_values('Sales Invoice Item', filters={'parent': serie_fac},
-                                            fieldname=['item_name', 'item_code'], as_dict=1)
-
-    return frappe.render_template(
-        "templates/other_tax_facelec.html", dict(
-            headers=headers,
-            items_tax=items_tax,
-            index=len(items_tax)
+    try:
+        items_tax = frappe.db.get_values('Sales Invoice Item', filters={'parent': serie_fac},
+                                         fieldname=['item_name', 'item_code', 'facelec_tax_rate_per_uom',
+                                                    'qty', 'facelec_other_tax_amount', 'rate',
+                                                    'facelec_sales_tax_for_this_row', 'net_amount'], as_dict=1)
+    except:
+        frappe.msgprint(_('Fail'))
+    else:
+        # Retorna la tabla HTML lista para renderizar
+        return frappe.render_template(
+            "templates/other_tax_facelec.html", dict(
+                headers=headers,
+                items_tax=items_tax,
+                index=len(items_tax)
+            )
         )
-    )
