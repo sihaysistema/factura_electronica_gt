@@ -1,0 +1,36 @@
+<div class="tax-break-up" style="overflow-x: auto;">
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                {% for key in headers %}
+                {% if loop.first %}
+                <th class="text-left">{{ key }}</th>
+                {% else %}
+                <th class="text-right">{{ key }}</th>
+                {% endif %}
+                {% endfor%}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <td>Jill</td>
+            <td>Smith</td>
+            <td>Mario</td>
+            <td>50</td>
+            <td>100</td>
+            <td>Eso</td>
+            <td>Music</td>
+            </tr>
+
+            {% for i in range(0, index) %}
+              <tr>
+                <td> {{ items_tax[i]["item_name"] }} </td>
+            </tr>
+            {% endfor %}
+
+            {# {% for key, value in items_tax.iteritems ()%}
+           
+            {% endfor %} #}
+        </tbody>
+    </table>
+</div>

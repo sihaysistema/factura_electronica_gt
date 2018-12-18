@@ -705,6 +705,21 @@ frappe.ui.form.on("Sales Invoice", {
         // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
         cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
 
+        frm.add_custom_button(__('Prueba'), function () {
+            frappe.call({
+                method: "factura_electronica.api.get_tax_html",
+                args: {
+                    serie_fac: frm.doc.name
+                },
+                callback: function (r) {
+                    console.log(r.message);
+                    // other_tax_facelec
+                    frm.set_value('other_tax_facelec', r.message);
+                    // frm.refresh_field("other_tax_facelec");
+                }
+            })
+        }).addClass("btn-primary");
+
         // Works OK!
         frm.add_custom_button("UOM Recalculation", function () {
             frm.doc.items.forEach((item) => {
