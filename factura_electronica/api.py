@@ -285,6 +285,8 @@ def obtener_numero_resolucion(nombre_serie):
 
 @frappe.whitelist()
 def get_tax_html(serie_fac):
+    """Funcion para generar tabla html con jinja, para mostrar impuestos por cada item.
+        Toma datos con python"""
     headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("Base Value"), _("IVA"), _("Total")]
 
     try:
@@ -303,3 +305,19 @@ def get_tax_html(serie_fac):
                 index=len(items_tax)
             )
         )
+
+@frappe.whitelist()
+def prueba_tabla(tabla):
+    """Funcion Alternativa para generar tabla html con jinja, toma datos desde JS"""
+    headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("Base Value"), _("IVA"), _("Total")]
+
+    items_tabla = eval(tabla)
+    longi = (len(items_tabla))
+    # Retorna la tabla HTML lista para renderizar
+    return frappe.render_template(
+        "templates/other_tax_facelec.html", dict(
+            headers=headers,
+            items_tax=items_tabla,
+            index=longi
+        )
+    )

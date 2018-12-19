@@ -699,6 +699,25 @@ frappe.ui.form.on("Sales Invoice", {
     customer: function (frm, cdt, cdn) {
         // Trigger Proveedor
     },
+    // Alternativa generar tabla html otros impuestos
+    // tomadno datos con JS
+    // shs_total_otros_imp_incl: function (frm) {
+    //     console.log('Se ejecuto el trigger que puede ser utilizado');
+    //     if (frm.doc.items.length > 0) {
+    //         const mi_array = frm.doc.items;
+    //         console.log(mi_array);
+    //         frappe.call({
+    //             method: "factura_electronica.api.prueba_tabla",
+    //             args: {
+    //                 tabla: Array.from(mi_array)
+    //             },
+    //             callback: function (data) {
+    //                 frm.set_value('other_tax_facelec', data.message);
+    //                 frm.refresh_field("other_tax_facelec");
+    //             }
+    //         });
+    //     }
+    // },
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
@@ -712,6 +731,21 @@ frappe.ui.form.on("Sales Invoice", {
                 //console.log("item contains: " + item);
                 //Importante
                 facelec_tax_calc_new(frm, "Sales Invoice Item", item.name);
+            });
+        });
+
+        frm.add_custom_button("Impuestos", function () {
+            // Crear tabla HTML customizada con jinja, para reflejar impuestos por cada Item de Sales Invoice Item
+            frappe.call({
+                method: "factura_electronica.api.get_tax_html",
+                args: {
+                    serie_fac: frm.doc.name
+                },
+                callback: function (r) {
+                    // console.log(r.message);
+                    frm.set_value('other_tax_facelec', r.message);
+                    frm.refresh_field("other_tax_facelec");
+                }
             });
         });
 
@@ -839,19 +873,6 @@ frappe.ui.form.on("Sales Invoice", {
                 }
             });
         }
-
-        // Crear tabla HTML customizada con jinja, para reflejar impuestos por cada Item de Sales Invoice Item
-        frappe.call({
-            method: "factura_electronica.api.get_tax_html",
-            args: {
-                serie_fac: frm.doc.name
-            },
-            callback: function (r) {
-                // console.log(r.message);
-                frm.set_value('other_tax_facelec', r.message);
-                frm.refresh_field("other_tax_facelec");
-            }
-        });
     },
     naming_series: function (frm, cdt, cdn) {
         frappe.call({
