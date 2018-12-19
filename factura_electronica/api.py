@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 import requests
-import xmltodict
+import xmltodict, json
 
 from request_xml import construir_xml
 from datetime import datetime, date
@@ -284,9 +284,8 @@ def obtener_numero_resolucion(nombre_serie):
         return str(numero_resolucion[0]['numero_resolucion'])
 
 @frappe.whitelist()
-def get_tax_html(serie_fac):
-    """Funcion para generar tabla html con jinja, para mostrar impuestos por cada item.
-        Toma datos con python"""
+def prueba_tabla(serie_fac):
+    """Funcion alterntiva, toma datos ya guardados"""
     headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("Base Value"), _("IVA"), _("Total")]
 
     try:
@@ -307,17 +306,18 @@ def get_tax_html(serie_fac):
         )
 
 @frappe.whitelist()
-def prueba_tabla(tabla):
-    """Funcion Alternativa para generar tabla html con jinja, toma datos desde JS"""
+def generar_tabla_html(tabla):
+    """Funcion para generar tabla html + jinja, para mostrar impuestos por cada item"""
     headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("Base Value"), _("IVA"), _("Total")]
 
-    items_tabla = eval(tabla)
-    longi = (len(items_tabla))
-    # Retorna la tabla HTML lista para renderizar
+    mi_tabla = json.loads(tabla)
+    longi = (len(mi_tabla))
+
+    # # Retorna la tabla HTML lista para renderizar
     return frappe.render_template(
         "templates/other_tax_facelec.html", dict(
             headers=headers,
-            items_tax=items_tabla,
+            items_tax=mi_tabla,
             index=longi
         )
     )

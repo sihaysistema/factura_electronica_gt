@@ -585,11 +585,34 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
     }
 }
 
+function generar_tabla_html(frm) {
+
+    if (frm.doc.items.length > 0) {
+        const mi_array = frm.doc.items;
+        const mi_array_dos = Array.from(mi_array);
+        // console.log(mi_array_dos);
+        frappe.call({
+            method: "factura_electronica.api.generar_tabla_html",
+            args: {
+                tabla: JSON.stringify(mi_array_dos)
+            },
+            callback: function (data) {
+                frm.set_value('other_tax_facelec', data.message);
+                frm.refresh_field("other_tax_facelec");
+            }
+        });
+    }
+}
 /* 9 Eventos en Doctypes---------------------------------------------------------------------------------------------- */
 
 /* Factura de Ventas-------------------------------------------------------------------------------------------------- */
 frappe.ui.form.on("Sales Invoice", {
     onload_post_render: function (frm, cdt, cdn) {
+        // var section_head = $('.section-head').find("a").filter(function () { return $(this).text() == "TAX FACELEC"; }).parent()
+        // section_head.on("click", function () {
+        //     console.log('Hizo click en la seccion');
+        //     generar_tabla_html(frm);
+        // })
         //console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
         // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
 
@@ -699,25 +722,6 @@ frappe.ui.form.on("Sales Invoice", {
     customer: function (frm, cdt, cdn) {
         // Trigger Proveedor
     },
-    // Alternativa generar tabla html otros impuestos
-    // tomadno datos con JS
-    // shs_total_otros_imp_incl: function (frm) {
-    //     console.log('Se ejecuto el trigger que puede ser utilizado');
-    //     if (frm.doc.items.length > 0) {
-    //         const mi_array = frm.doc.items;
-    //         console.log(mi_array);
-    //         frappe.call({
-    //             method: "factura_electronica.api.prueba_tabla",
-    //             args: {
-    //                 tabla: Array.from(mi_array)
-    //             },
-    //             callback: function (data) {
-    //                 frm.set_value('other_tax_facelec', data.message);
-    //                 frm.refresh_field("other_tax_facelec");
-    //             }
-    //         });
-    //     }
-    // },
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
@@ -734,10 +738,12 @@ frappe.ui.form.on("Sales Invoice", {
             });
         });
 
+        /**
+        NOTA: Fucion alternativa para generar la tabla html + jinja de impuestos por item
         frm.add_custom_button("Impuestos", function () {
             // Crear tabla HTML customizada con jinja, para reflejar impuestos por cada Item de Sales Invoice Item
             frappe.call({
-                method: "factura_electronica.api.get_tax_html",
+                method: "factura_electronica.api.prueba_tabla",
                 args: {
                     serie_fac: frm.doc.name
                 },
@@ -748,12 +754,16 @@ frappe.ui.form.on("Sales Invoice", {
                 }
             });
         });
+        */
 
         // Cuando el documento se actualiza, la funcion verificac de que exista un cae.
         // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
         // En caso no exista un cae mostrara el boton para generar la factura electronica
         // correspondiente a su serie.
         verificacionCAE('manual', frm, cdt, cdn);
+    },
+    validate: function (frm) {
+        generar_tabla_html(frm);
     },
     nit_face_customer: function (frm, cdt, cdn) {
         // if (frm.doc.nit_face_customer === null) {
