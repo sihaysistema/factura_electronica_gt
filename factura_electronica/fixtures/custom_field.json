@@ -4356,7 +4356,7 @@
   "modified": "2018-02-06 20:50:40.710369", 
   "name": "Purchase Invoice Item-facelec_p_tax_rate_per_uom_account", 
   "no_copy": 0, 
-  "options": "item_code.facelec_tax_rate_per_uom_selling_account", 
+  "options": "item_code.facelec_tax_rate_per_uom_purchase_account", 
   "permlevel": 0, 
   "precision": "", 
   "print_hide": 0, 
