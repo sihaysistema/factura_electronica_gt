@@ -402,6 +402,18 @@ frappe.ui.form.on("Purchase Invoice", {
     },
     validate: function (frm) {
         generar_tabla_html_factura_compra(frm);
+    },
+    on_submit: function (frm) {
+        frappe.call({
+            method: "factura_electronica.special_tax_pi.update_purchase_taxes_charges",
+            args: {
+                purchase_invoice_name: frm.doc.name
+            },
+            callback: function () {
+                // Recarga el documento para reflejar los cambios
+                frm.reload_doc();
+            }
+        });
     }
 });
 
