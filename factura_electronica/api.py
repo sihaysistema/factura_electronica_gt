@@ -286,24 +286,25 @@ def obtener_numero_resolucion(nombre_serie):
 @frappe.whitelist()
 def prueba_tabla(serie_fac):
     """Funcion alterntiva, toma datos ya guardados"""
-    headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("Base Value"), _("IVA"), _("Total")]
+    pass
+    # headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("Base Value"), _("IVA"), _("Total")]
 
-    try:
-        items_tax = frappe.db.get_values('Sales Invoice Item', filters={'parent': serie_fac},
-                                         fieldname=['item_name', 'item_code', 'facelec_tax_rate_per_uom',
-                                                    'qty', 'facelec_other_tax_amount', 'rate',
-                                                    'facelec_sales_tax_for_this_row', 'net_amount'], as_dict=1)
-    except:
-        frappe.msgprint(_('Fail'))
-    else:
-        # Retorna la tabla HTML lista para renderizar
-        return frappe.render_template(
-            "templates/other_tax_facelec.html", dict(
-                headers=headers,
-                items_tax=items_tax,
-                index=len(items_tax)
-            )
-        )
+    # try:
+    #     items_tax = frappe.db.get_values('Sales Invoice Item', filters={'parent': serie_fac},
+    #                                      fieldname=['item_name', 'item_code', 'facelec_tax_rate_per_uom',
+    #                                                 'qty', 'facelec_other_tax_amount', 'rate',
+    #                                                 'facelec_sales_tax_for_this_row', 'net_amount'], as_dict=1)
+    # except:
+    #     frappe.msgprint(_('Fail'))
+    # else:
+    #     # Retorna la tabla HTML lista para renderizar
+    #     return frappe.render_template(
+    #         "templates/other_tax_facelec.html", dict(
+    #             headers=headers,
+    #             items_tax=items_tax,
+    #             index=len(items_tax)
+    #         )
+    #     )
 
 @frappe.whitelist()
 def generar_tabla_html(tabla):
@@ -315,7 +316,26 @@ def generar_tabla_html(tabla):
 
     # # Retorna la tabla HTML lista para renderizar
     return frappe.render_template(
-        "templates/other_tax_facelec.html", dict(
+        "templates/sales_invoice_tax.html", dict(
+            headers=headers,
+            items_tax=mi_tabla,
+            index=longi
+        )
+    )
+
+@frappe.whitelist()
+def generar_tabla_html_factura_compra(tabla):
+    """Funcion para generar tabla html + jinja, para mostrar impuestos por
+        cada item de Purchase Invoice"""
+    headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"),
+               _("Base Value"), _("IVA"), _("Total")]
+
+    mi_tabla = json.loads(tabla)
+    longi = (len(mi_tabla))
+
+    # # Retorna la tabla HTML lista para renderizar
+    return frappe.render_template(
+        "templates/purchase_invoice_tax.html", dict(
             headers=headers,
             items_tax=mi_tabla,
             index=longi

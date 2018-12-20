@@ -1,0 +1,32 @@
+<div class="tax-break-up" style="overflow-x: auto;">
+    <table class="table table-bordered table-hover">
+        <thead>
+
+            <tr>
+                {% for key in headers %}
+                {% if loop.first %}
+                <th class="text-left">{{ key }}</th>
+                {% else %}
+                <th class="text-right">{{ key }}</th>
+                {% endif %}
+                {% endfor%}
+            </tr>
+
+        </thead>
+        <tbody>
+
+            {% for i in range(0, index) %}
+            <tr>
+                <td> {{ items_tax[i]["item_code"] }} </td>
+                <td class='text-right'> {{ items_tax[i]["facelec_tax_rate_per_uom"] }} </td>
+                <td class='text-right'> {{ items_tax[i]["qty"] }} </td>
+                <td class='text-right'> {{ items_tax[i]["facelec_other_tax_amount"] }} </td>
+                <td class='text-right'> {{ items_tax[i]["rate"] }} </td>
+                <td class='text-right'> {{ items_tax[i]["facelec_sales_tax_for_this_row"] }} </td>
+                <td class='text-right'> {{ items_tax[i]["net_amount"] }} </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+</div>

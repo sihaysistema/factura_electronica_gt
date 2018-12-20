@@ -267,6 +267,26 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
     });
 }
 
+// Funcion para generar tabla HTML + Jinja
+function generar_tabla_html_factura_compra(frm) {
+    // PURCHASE INVOICE
+    if (frm.doc.items.length > 0) {
+        const mi_array = frm.doc.items;
+        const mi_array_dos = Array.from(mi_array);
+        // console.log(mi_array_dos);
+        frappe.call({
+            method: "factura_electronica.api.generar_tabla_html_factura_compra",
+            args: {
+                tabla: JSON.stringify(mi_array_dos)
+            },
+            callback: function (data) {
+                frm.set_value('other_tax_facelec', data.message);
+                frm.refresh_field("other_tax_facelec");
+            }
+        });
+    }
+}
+
 frappe.ui.form.on("Purchase Invoice", {
     onload_post_render: function (frm, cdt, cdn) {
         // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
@@ -380,6 +400,9 @@ frappe.ui.form.on("Purchase Invoice", {
         pi_insertar_fila_otro_impuesto(frm, cdt, cdn);
         // Trigger antes de guardar
     },
+    validate: function (frm) {
+        generar_tabla_html_factura_compra(frm);
+    }
 });
 
 frappe.ui.form.on("Purchase Invoice Item", {

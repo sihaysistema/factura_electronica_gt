@@ -739,7 +739,7 @@ frappe.ui.form.on("Sales Invoice", {
         });
 
         /**
-        NOTA: Fucion alternativa para generar la tabla html + jinja de impuestos por item
+        NOTA: Funcion alternativa para generar la tabla html + jinja de impuestos por item
         frm.add_custom_button("Impuestos", function () {
             // Crear tabla HTML customizada con jinja, para reflejar impuestos por cada Item de Sales Invoice Item
             frappe.call({
