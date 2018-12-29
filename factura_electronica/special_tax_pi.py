@@ -12,8 +12,9 @@ sys.setdefaultencoding('utf-8')
 
 @frappe.whitelist()
 def update_purchase_taxes_charges(purchase_invoice_name):
-    '''Crear n registros en GL Entry, dependiendo del numero de cuentas-impuestos
-       detectadas, aplica cuando se valida una factura (Sales Invoice) '''
+   # TODO: Para la cuentas de impuestos especiales, se debe insertar en Purchase Taxes and Charges
+   # TODO: Ajustar los montos, para las cuentas y el total en la factura
+   # HOW?
     pass
     # if frappe.db.exists('Purchase Invoice', {'voucher_no': purchase_invoice_name}):
     #     # Obtiene datos de Sales Invoice
