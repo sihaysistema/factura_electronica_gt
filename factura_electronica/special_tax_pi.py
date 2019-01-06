@@ -41,3 +41,20 @@ def update_purchase_taxes_charges(purchase_invoice_name):
 
     #     except:
     #         frappe.msgprint(_('NO FUNCIONO :('))
+    # Otra forma para insertar datos
+    # TODO: OPCION 2
+    # calc_purchase_invoice = frappe.get_doc({
+    #     "doctype": "Purchase Taxes and Charges",
+    #     "add_deduct_tax": 'Valuation and Total',
+    #     "charge_type": 'Add',
+    #     "included_in_print_rate": 'Actual',
+    #     "rate": 4.60,
+    #     "tax_amount": '',
+    #     "tax_amount_after_discount_amount": '',
+    #     "total": '',
+    #     "base_tax_amount_after_discount_amount": '',
+    #     "base_tax_amount": '',
+    #     "description": '',
+    #     "cost_center": '',
+    #     "account_head": '',
+    # }).insert(ignore_permissions=True)
