@@ -17,7 +17,9 @@ def calculate_values_with_special_tax():
     pass
 
 @frappe.whitelist()
-def add_gl_entry_other_special_tax(invoice_name, accounts):
+def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
+'''El argumento de invoice_type  trae desde JavaScript si posible, algun diferenciador que indique que es un purchase invoice o Sales invoice'''
+'''def add_gl_entry_other_special_tax(invoice_name, accounts):'''
     '''Crear n registros en GL Entry, dependiendo del numero de cuentas-impuestos
        detectadas, aplica cuando se valida una factura (Sales Invoice) '''
     # Convierte el objeto recibido a diccionario
@@ -44,6 +46,8 @@ def add_gl_entry_other_special_tax(invoice_name, accounts):
                     # new_gl_entry_tax.docstatus = '1'
                     new_gl_entry_tax.voucher_no = invoice_name
                     new_gl_entry_tax.company = data_gl_entry[0]['company']
+                    # Validar que tipo de Invoice es: Purchase o Sales, basado en invoice_type
+                    # Asignar titulo correcto, bbasado en si es Sales Invoice o Purchase Invoice.
                     new_gl_entry_tax.voucher_type = 'Sales Invoice'
                     new_gl_entry_tax.is_advance = 'No'
                     new_gl_entry_tax.remarks = 'No Remarks'
@@ -53,6 +57,7 @@ def add_gl_entry_other_special_tax(invoice_name, accounts):
                     new_gl_entry_tax.credit = account_names[account_n]
                     new_gl_entry_tax.is_opening = 'No'
                     new_gl_entry_tax.posting_date = data_gl_entry[0]['due_date']
+                    # Verificar si hay que acreditar o debitar la cuentas dependiendo si es purchase o sales invoice
                     new_gl_entry_tax.credit_in_account_currency = account_names[account_n]
                     new_gl_entry_tax.save()
                 except:

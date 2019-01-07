@@ -829,7 +829,11 @@ frappe.ui.form.on("Sales Invoice", {
                 method: "factura_electronica.special_tax.add_gl_entry_other_special_tax",
                 args: {
                     invoice_name: frm.doc.name,
-                    accounts: cuentas_registradas
+                    accounts: cuentas_registradas,
+                    invoice_type: "Sales Invoice"
+                    /* OJO, El valor de este argumento debe ser "Sales Invoice" en sales_invoice.js
+                    En el caso de purchase_invoice.js el valor del argumento debe de ser: invoice_type: "Purchase Invoice"
+                    */
                 },
                 // El callback se ejecuta tras finalizar la ejecucion del script python del lado
                 // del servidor
