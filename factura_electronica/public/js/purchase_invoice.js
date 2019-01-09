@@ -403,17 +403,40 @@ frappe.ui.form.on("Purchase Invoice", {
     validate: function (frm) {
         generar_tabla_html_factura_compra(frm);
     },
-    on_submit: function (frm) {
-        frappe.call({
-            method: "factura_electronica.special_tax_pi.update_purchase_taxes_charges",
-            args: {
-                purchase_invoice_name: frm.doc.name
-            },
-            callback: function () {
-                // Recarga el documento para reflejar los cambios
-                frm.reload_doc();
-            }
+    on_submit: function (frm, cdt, cdn) {
+        // Ocurre cuando se presione el boton validar.
+        // Cuando se valida el documento, se hace la consulta al servidor por medio de frappe.call
+
+        // Creacion objeto vacio para guardar nombre y valor de las cuentas que se encuentren
+        let cuentas_registradas = {};
+
+        // Recorre la tabla hija en busca de cuentas
+        frm.doc.shs_pi_otros_impuestos.forEach((tax_row, index) => {
+            if (tax_row.account_head) {
+                // Agrega un nuevo valor al objeto (JSON-DICCIONARIO) con el
+                // nombre, valor de la cuenta
+                cuentas_registradas[tax_row.account_head] = tax_row.total;
+            };
         });
+        // console.log(cuentas_registradas);
+        // console.log(Object.keys(cuentas_registradas).length);
+
+        // Si existe por lo menos una cuenta, se ejecuta frappe.call
+        if (Object.keys(cuentas_registradas).length > 0) {
+            frappe.call({
+                method: "factura_electronica.special_tax.add_gl_entry_other_special_tax",
+                args: {
+                    invoice_name: frm.doc.name,
+                    accounts: cuentas_registradas,
+                    invoice_type: "Purchase Invoice"
+                },
+                // El callback se ejecuta tras finalizar la ejecucion del script python del lado
+                // del servidor
+                callback: function () {
+                    frm.reload_doc();
+                }
+            });
+        }
     }
 });
 
