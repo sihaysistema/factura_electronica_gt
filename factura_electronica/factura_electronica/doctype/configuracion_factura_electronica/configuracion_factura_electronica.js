@@ -7,6 +7,7 @@ frappe.ui.form.on('Configuracion Factura Electronica', {
 	refresh: function (frm) {
 		// en-US # Call the python method indicated
 		// es-GT # Llame al modulo python indicado
+		// Aplica para Sales Invoice
 		frappe.call({
 			// en-US # Call the series_sales_invoice  method.
 			// es-GT # Llame al metodo  series_sales_invoice.
@@ -17,6 +18,17 @@ frappe.ui.form.on('Configuracion Factura Electronica', {
 				frappe.meta.get_docfield('Configuracion Series', 'serie', cur_frm.doc.name).options = r.message
 				// en-US # Updates the current form field 'serie' with the previously obtained data
 				// es-GT # Actualiza el campo 'serie' del formulario actual, con la data obtenida anteriormente
+				cur_frm.refresh_field('serie');
+			}
+		});
+
+		// Aplica para Purchase Invoice
+		frappe.call({
+			method: "factura_electronica.factura_electronica.doctype.configuracion_factura_electronica.configuracion_factura_electronica.series_factura_especial",
+
+			callback: function (r) {
+				// console.log(r.message);
+				frappe.meta.get_docfield('Series Factura Especial', 'serie', cur_frm.doc.name).options = r.message
 				cur_frm.refresh_field('serie');
 			}
 		});

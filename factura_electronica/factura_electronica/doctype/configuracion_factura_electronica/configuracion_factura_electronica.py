@@ -28,3 +28,10 @@ def series_sales_invoice():
 	#out = naming_series[0] or (naming_series[1] if len(naming_series) > 1 else None)
 
 	return naming_series
+
+@frappe.whitelist()
+def series_factura_especial():
+	series = frappe.get_meta("Purchase Invoice").get_field("naming_series").options or ""
+	series = series.split('\n')
+
+	return series
