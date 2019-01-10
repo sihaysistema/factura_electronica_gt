@@ -309,8 +309,8 @@ def prueba_tabla(serie_fac):
 @frappe.whitelist()
 def generar_tabla_html(tabla):
     """Funcion para generar tabla html + jinja, para mostrar impuestos por cada item"""
-    headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("Base Value"), _("IVA"), _("Total")]
-
+    headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("+"),
+               _("Base Value"), _("+"), _("IVA"), _("="), _("Total")]
     mi_tabla = json.loads(tabla)
     longi = (len(mi_tabla))
 
@@ -327,8 +327,8 @@ def generar_tabla_html(tabla):
 def generar_tabla_html_factura_compra(tabla):
     """Funcion para generar tabla html + jinja, para mostrar impuestos por
         cada item de Purchase Invoice"""
-    headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"),
-               _("Base Value"), _("IVA"), _("Total")]
+    headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("+"),
+               _("Base Value"), _("+"), _("IVA"), _("="), _("Total")]
 
     mi_tabla = json.loads(tabla)
     longi = (len(mi_tabla))

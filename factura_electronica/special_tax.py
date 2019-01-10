@@ -123,7 +123,7 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
                 if not frappe.db.exists('GL Entry', {'account': account_n, 'voucher_no': invoice_name}):
                     try:
                         new_gl_entry_tax = frappe.new_doc("GL Entry")
-                        new_gl_entry_tax.fiscal_year = datetime.datetime.now().year # Sugerir agregar en config facelec?
+                        new_gl_entry_tax.fiscal_year = frappe.defaults.get_user_default("fiscal_year")
                         # new_gl_entry_tax.docstatus = '1'
                         new_gl_entry_tax.voucher_no = invoice_name
                         new_gl_entry_tax.company = data_gl_entry[0]['company']

@@ -1,18 +1,18 @@
 <div class="tax-break-up" style="overflow-x: auto;">
     <table class="table table-bordered table-hover">
         <thead>
-
-            <tr>
-                {% for key in headers %}
-                {% if loop.first %}
-                <th class="text-left">{{ key }}</th>
-                {% else %}
-                <th class="text-right">{{ key }}</th>
-                {% endif %}
-                {% endfor%}
-            </tr>
-
+        <th class="text-left">{{ headers[0] }}</th>
+                <th class="text-left">{{ headers[1] }}</th>
+                <th class="text-left">{{ headers[2] }}</th>
+                <th class="text-left" style="border-left-width: thick">{{ headers[3] }}</th>
+                <th class="text-left">{{ headers[4] }}</th>
+                <th class="text-left">{{ headers[5] }}</th>
+                <th class="text-left">{{ headers[6] }}</th>
+                <th class="text-left">{{ headers[7] }}</th>
+                <th class="text-left">{{ headers[8] }}</th>
+                <th class="text-left">{{ headers[9] }}</th>
         </thead>
+
         <tbody>
 
             {% for i in range(0, index) %}
@@ -20,9 +20,12 @@
                 <td> {{ items_tax[i]["item_code"] }} </td>
                 <td class='text-right'> {{ items_tax[i]["facelec_tax_rate_per_uom"] }} </td>
                 <td class='text-right'> {{ items_tax[i]["qty"] }} </td>
-                <td class='text-right'> {{ items_tax[i]["facelec_other_tax_amount"] }} </td>
-                <td class='text-right'> {{ items_tax[i]["facelec_gt_tax_net_fuel_amt"] }} </td>
+                <td class='text-right' style="border-left-width: thick"> {{ items_tax[i]["facelec_other_tax_amount"] }} </td>
+                <td class='text-center'> + </td>
+                <td class='text-right'> {{ items_tax[i]["facelec_gt_tax_net_fuel_amt"] + items_tax[i]["facelec_gt_tax_net_goods_amt"] + items_tax[i]["facelec_gt_tax_net_services_amt"]}} </td>
+                <td class='text-center'> + </td>
                 <td class='text-right'> {{ items_tax[i]["facelec_sales_tax_for_this_row"] }} </td>
+                <td class='text-center'> = </td>
                 <td class='text-right'> {{ items_tax[i]["amount"] }} </td>
             </tr>
             {% endfor %}
