@@ -446,16 +446,15 @@ frappe.ui.form.on("Purchase Invoice", {
         // borra la existente
         // carga la nueva
         // actualiza un campo read only de tipo chequecito que diga: "Factura Especial"
-        // TODO:
-        // frappe.call({
-        //     method: "factura_electronica.api.verificar",
-        //     args: {
-        //         serie: frm.doc.naming_series
-        //     },
-        //     callback: function () {
-        //         // frm.reload_doc();
-        //     }
-        // });
+        frappe.call({
+            method: "factura_electronica.api.verificar",
+            args: {
+                serie: frm.doc.naming_series
+            },
+            callback: function () {
+                // frm.reload_doc();
+            }
+        });
     }
 });
 
