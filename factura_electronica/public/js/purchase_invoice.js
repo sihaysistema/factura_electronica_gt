@@ -446,13 +446,24 @@ frappe.ui.form.on("Purchase Invoice", {
         // borra la existente
         // carga la nueva
         // actualiza un campo read only de tipo chequecito que diga: "Factura Especial"
+        console.log(frm.doc.naming_series);
+
         frappe.call({
-            method: "factura_electronica.api.verificar",
+            method: "factura_electronica.special_invoice.verificar_existencia_series",
             args: {
                 serie: frm.doc.naming_series
             },
-            callback: function () {
+            callback: function (r) {
                 // frm.reload_doc();
+                console.log(r.message);
+
+                // Limpia la tabla hija de Purchase Taxes and Charges
+                cur_frm.clear_table("taxes");
+                cur_frm.refresh_fields();
+
+                // Asigna el nombre de la plantilla de impuestos a utilizar configurada
+                frm.set_value('taxes_and_charges', r.message[2]);
+                frm.refresh_field("taxes_and_charges");
             }
         });
     }
