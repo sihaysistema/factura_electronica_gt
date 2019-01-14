@@ -335,9 +335,9 @@ frappe.ui.form.on("Quotation", {
         // es-GT: Habilitando escuchadores de eventos en el tipo de documento principal
         // When ANY key is released after being pressed
         cur_frm.fields_dict.customer.$input.on("keyup", function (evt) {
-            shs_quotation_calculation(frm, cdt, cdn);
-            quotation_each_item(frm, cdt, cdn);
-            refresh_field('qty');
+            // shs_quotation_calculation(frm, cdt, cdn);
+            // quotation_each_item(frm, cdt, cdn);
+            // refresh_field('qty');
         });
 
         // When mouse leaves the field
