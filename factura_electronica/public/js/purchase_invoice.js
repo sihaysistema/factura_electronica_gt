@@ -433,7 +433,7 @@ frappe.ui.form.on("Purchase Invoice", {
                 // El callback se ejecuta tras finalizar la ejecucion del script python del lado
                 // del servidor
                 callback: function () {
-                    frm.reload_doc();
+                    // frm.reload_doc();
                 }
             });
         }
@@ -457,13 +457,15 @@ frappe.ui.form.on("Purchase Invoice", {
                 // frm.reload_doc();
                 console.log(r.message);
 
-                // Limpia la tabla hija de Purchase Taxes and Charges
-                cur_frm.clear_table("taxes");
-                cur_frm.refresh_fields();
+                if (r.message != 'fail') {
+                    // Limpia la tabla hija de Purchase Taxes and Charges
+                    cur_frm.clear_table("taxes");
+                    cur_frm.refresh_fields();
 
-                // Asigna el nombre de la plantilla de impuestos a utilizar configurada
-                frm.set_value('taxes_and_charges', r.message[2]);
-                frm.refresh_field("taxes_and_charges");
+                    // Asigna el nombre de la plantilla de impuestos a utilizar configurada
+                    frm.set_value('taxes_and_charges', r.message[2]);
+                    frm.refresh_field("taxes_and_charges");
+                }
             }
         });
     }

@@ -37,4 +37,4 @@ def verificar_existencia_series(serie):
     else:
         # Mensaje alternativo
         # frappe.msgprint(_('No se encontraron series configuradas para Facturas Especiales'))
-        return 0
+        return 'fail'
