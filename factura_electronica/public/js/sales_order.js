@@ -137,9 +137,9 @@ frappe.ui.form.on("Sales Order", {
         // es-GT: Habilitando escuchadores de eventos en el tipo de documento principal
         // When ANY key is released after being pressed
         cur_frm.fields_dict.customer.$input.on("keyup", function (evt) {
-            shs_sales_order_calculation(frm, cdt, cdn);
-            sales_order_each_item(frm, cdt, cdn);
-            refresh_field('qty');
+            // shs_sales_order_calculation(frm, cdt, cdn);
+            // sales_order_each_item(frm, cdt, cdn);
+            // refresh_field('qty');
         });
 
         // When mouse leaves the field
