@@ -137,9 +137,9 @@ frappe.ui.form.on("Supplier Quotation", {
         // es-GT: Habilitando escuchadores de eventos en el tipo de documento principal
         // When ANY key is released after being pressed
         cur_frm.fields_dict.supplier.$input.on("keyup", function (evt) {
-            shs_supplier_quotation_calculation(frm, cdt, cdn);
-            supplier_quotation_each_item(frm, cdt, cdn);
-            refresh_field('qty');
+            // shs_supplier_quotation_calculation(frm, cdt, cdn);
+            // supplier_quotation_each_item(frm, cdt, cdn);
+            // refresh_field('qty');
         });
 
         // When mouse leaves the field
