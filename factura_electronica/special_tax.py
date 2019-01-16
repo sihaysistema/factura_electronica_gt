@@ -103,7 +103,7 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
                 # Obtiene datos de Sales Invoice
                 data_gl_entry = frappe.db.get_values('Sales Invoice', filters={'name': invoice_name},
                                                     fieldname=['company', 'customer_name', 'party_account_currency',
-                                                                'due_date', 'total', 'shs_total_otros_imp_incl'], as_dict=1)
+                                                                'posting_date', 'total', 'shs_total_otros_imp_incl'], as_dict=1)
                 # Obtiene el valor de iva utilizado en la factura de venta normalmente 12
                 tax_rate = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': invoice_name},
                                                 fieldname=['rate', 'account_head'], as_dict=1)
@@ -112,7 +112,7 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
                 # Obtiene datos de Purchase Invoice
                 data_gl_entry = frappe.db.get_values('Purchase Invoice', filters={'name': invoice_name},
                                                     fieldname=['company', 'supplier_name', 'party_account_currency',
-                                                                'due_date', 'total', 'shs_pi_total_otros_imp_incl'], as_dict=1)
+                                                                'posting_date', 'total', 'shs_pi_total_otros_imp_incl'], as_dict=1)
                 # Obtiene el valor de iva utilizado en la factura normalmente 12
                 tax_rate = frappe.db.get_values('Purchase Taxes and Charges', filters={'parent': invoice_name},
                                                 fieldname=['rate', 'account_head', 'cost_center'], as_dict=1)
@@ -145,7 +145,7 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
                             new_gl_entry_tax.cost_center = tax_rate[0]['cost_center']
                         
                         new_gl_entry_tax.is_opening = 'No'
-                        new_gl_entry_tax.posting_date = data_gl_entry[0]['due_date']
+                        new_gl_entry_tax.posting_date = data_gl_entry[0]['posting_date']
                         
                         new_gl_entry_tax.save()
                     except:
