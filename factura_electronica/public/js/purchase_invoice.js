@@ -299,6 +299,11 @@ frappe.ui.form.on("Purchase Invoice", {
             pi_each_item(frm, cdt, cdn);
         });
 
+        // frm.fields_dict.items.grid.wrapper.on('click focusout blur', 'input[data-fieldname="shs_amount_for_back_calc"][data-doctype="Purchase Invoice Item"]', function (e) {
+        //     shs_purchase_invoice_calculation(frm, cdt, cdn);
+        //     pi_each_item(frm, cdt, cdn);
+        // });
+
         // FIXME NO FUNCIONA CON TAB, SOLO HACIENDO CLICK Y ENTER.  Si se presiona TAB, SE BORRA!
 		/*frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]', function(e) {
 			console.log("Blurred away from the Item Code Field");
@@ -527,4 +532,58 @@ frappe.ui.form.on("Purchase Invoice Item", {
     }
 });
 
+
+frappe.ui.form.on("Purchase Invoice Item", {
+    shs_amount_for_back_calc: function (frm, cdt, cdn) {
+        frm.doc.items.forEach((row, index) => {
+            console.log(row.rate);
+            console.log(row.qty);
+            console.log(row.amount);
+            var a = row.rate;
+            var b = row.qty;
+            var c = row.amount;
+
+            //let test = flt(row.shs_amount_for_back_calc) - flt(c);
+            //let testB = test / 2;
+
+            // Usando metodologia GoalSeek.js
+            // https://github.com/adam-hanna/goalSeek.js/blob/master/goalSeek.js
+            // console.log(goalSeek({
+            //     Func: calculo_prueba,
+            //     aFuncParams: [b, a],
+            //     oFuncArgTarget: {
+            //         Position: 0
+            //     },
+            //     Goal: row.shs_amount_for_back_calc,
+            //     Tol: 0.001,
+            //     maxIter: 10000
+            // }));
+            let calcu = goalSeek({
+                Func: calculo_prueba,
+                aFuncParams: [b, a],
+                oFuncArgTarget: {
+                    Position: 0
+                },
+                Goal: row.shs_amount_for_back_calc,
+                Tol: 0.001,
+                maxIter: 10000
+            });
+            console.log(calcu);
+
+            frm.doc.items[index].qty = calcu;
+            frm.doc.items[index].amount = calcu * frm.doc.items[index].rate;
+            // frm.doc.items[index].qty = calcu;
+
+            // frm.set_value('qty', calcu);
+            frm.refresh_field("items");
+
+            pi_each_item(frm, cdt, cdn);
+            pi_insertar_fila_otro_impuesto(frm, cdt, cdn);
+        });
+    }
+});
+
+function calculo_prueba(a, b) {
+    return a * b;
+}
 /* ----------------------------------------------------------------------------------------------------------------- */
