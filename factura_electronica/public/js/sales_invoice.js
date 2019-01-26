@@ -949,12 +949,6 @@ frappe.ui.form.on("Sales Invoice Item", {
     rate: function (frm, cdt, cdn) {
         facelec_tax_calc_new(frm, cdt, cdn);
     },
-	/*onload_post_render: function(frm, cdt, cdn){
-		console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
-	}*/
-});
-
-frappe.ui.form.on("Sales Invoice Item", {
     shs_amount_for_back_calc: function (frm, cdt, cdn) {
         frm.doc.items.forEach((row, index) => {
             var a = row.rate;
@@ -993,6 +987,9 @@ frappe.ui.form.on("Sales Invoice Item", {
             frm.refresh_field("items");
         });
     }
+	/*onload_post_render: function(frm, cdt, cdn){
+		console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
+	}*/
 });
 
 function calculo_redondeo_pi(a, b) {

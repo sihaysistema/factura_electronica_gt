@@ -529,11 +529,7 @@ frappe.ui.form.on("Purchase Invoice Item", {
     },
     rate: function (frm, cdt, cdn) {
         shs_purchase_invoice_calculation(frm, cdt, cdn);
-    }
-});
-
-
-frappe.ui.form.on("Purchase Invoice Item", {
+    },
     shs_amount_for_back_calc: function (frm, cdt, cdn) {
         frm.doc.items.forEach((row, index) => {
             console.log(row.rate);
@@ -559,7 +555,7 @@ frappe.ui.form.on("Purchase Invoice Item", {
             //     maxIter: 10000
             // }));
             let calcu = goalSeek({
-                Func: calculo_prueba,
+                Func: redondeo_sales_invoice,
                 aFuncParams: [b, a],
                 oFuncArgTarget: {
                     Position: 0
@@ -583,7 +579,8 @@ frappe.ui.form.on("Purchase Invoice Item", {
     }
 });
 
-function calculo_prueba(a, b) {
+
+function redondeo_sales_invoice(a, b) {
     return a * b;
 }
 /* ----------------------------------------------------------------------------------------------------------------- */

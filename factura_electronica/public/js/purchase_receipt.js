@@ -216,11 +216,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
     },
     rate: function (frm, cdt, cdn) {
         shs_purchase_receipt_calculation(frm, cdt, cdn);
-    }
-});
-
-/* ----------------------------------------------------------------------------------------------------------------- */
-frappe.ui.form.on("Purchase Receipt Item", {
+    },
     shs_amount_for_back_calc: function (frm, cdt, cdn) {
         frm.doc.items.forEach((row, index) => {
             var a = row.rate;
@@ -260,6 +256,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
         });
     }
 });
+
 
 function redondeo_purchase_receipt(a, b) {
     return a * b;

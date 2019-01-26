@@ -216,11 +216,7 @@ frappe.ui.form.on("Delivery Note Item", {
     },
     rate: function (frm, cdt, cdn) {
         shs_delivery_note_calculation(frm, cdt, cdn);
-    }
-});
-
-/* ----------------------------------------------------------------------------------------------------------------- */
-frappe.ui.form.on("Delivery Note Item", {
+    },
     shs_amount_for_back_calc: function (frm, cdt, cdn) {
         frm.doc.items.forEach((row, index) => {
             var a = row.rate;
