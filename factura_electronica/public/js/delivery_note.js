@@ -136,11 +136,11 @@ frappe.ui.form.on("Delivery Note", {
         // en-US: Enabling event listeners in the main doctype
         // es-GT: Habilitando escuchadores de eventos en el tipo de documento principal
         // When ANY key is released after being pressed
-        cur_frm.fields_dict.customer.$input.on("keyup", function (evt) {
-            shs_delivery_note_calculation(frm, cdt, cdn);
-            delivery_note_each_item(frm, cdt, cdn);
-            refresh_field('qty');
-        });
+        // cur_frm.fields_dict.customer.$input.on("keyup", function (evt) {
+        //     shs_delivery_note_calculation(frm, cdt, cdn);
+        //     delivery_note_each_item(frm, cdt, cdn);
+        //     refresh_field('qty');
+        // });
 
         // When mouse leaves the field
         cur_frm.fields_dict.customer.$input.on("mouseleave blur focusout", function (evt) {
