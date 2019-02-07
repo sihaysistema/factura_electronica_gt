@@ -77,7 +77,7 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
 				// cur_frm.doc.facelec_gt_tax_fuel = total_fuel;
 				cur_frm.set_value('facelec_gt_tax_fuel', total_fuel);
 				frm.refresh_field("factelecis_fuel");
-				*/
+                */
             };
             if (item_row.facelec_is_good) {
                 frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
@@ -126,9 +126,19 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
 			// Seccion Guatemala Tax: Se asigna al campo de IVA de la seccion
 			// frm.doc.facelec_total_iva = full_tax_iva;
 			cur_frm.set_value('facelec_total_iva', full_tax_iva);
-			*/
+            */
+
+            var total_iva_factura = 0;
+            $.each(frm.doc.items || [], function (i, d) {
+                if (d.facelec_sales_tax_for_this_row) {
+                    total_iva_factura += flt(d.facelec_sales_tax_for_this_row);
+                };
+            });
+            console.log("El total de iva acumulado para la factura es: " + total_iva_factura);
+            cur_frm.set_value('shs_total_iva_fac', total_iva_factura);
         };
     });
+
 }
 
 // Sin necesidad de guardar el formulario.  Esto costo una buenas horas de trabajo!!
