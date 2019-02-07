@@ -26,7 +26,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
                                                         'modified', 'conversion_rate',
                                                         'total_taxes_and_charges', 'net_total',
                                                         'shipping_address_name', 'customer_address',
-                                                        'total', 'facelec_total_iva', 'currency'],
+                                                        'total', 'shs_total_iva_fac', 'currency'],
                                             as_dict=1)
 
         # Obtiene informacion de los campos de la tabla 'Sales Invoice Item'
@@ -361,7 +361,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
 
         # detalle impuesto de IVA, el total de iva en la operacion
         # detalleImpuestosIvaTag_Value = abs(float(sales_invoice[0]['total_taxes_and_charges']))
-        detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(float(sales_invoice[0]['facelec_total_iva'])))
+        detalleImpuestosIvaTag_Value = '{0:.2f}'.format(abs(float(sales_invoice[0]['shs_total_iva_fac'])))
 
         if (datos_configuracion[0]['regimen_2989']) == 0:
             regimen2989Tag_Value = 'false'
