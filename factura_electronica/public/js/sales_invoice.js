@@ -11,6 +11,7 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
     //console.log("ran facelec_tax_calc_new");
     // es-GT: Revisamos si ya quedo cargado y definido el rate (tasa) de impuesto en el DocType, el cual debe estar en la fila 0 de Sales Taxes & Charges.
     // es-GT: Si no ha sido definido, no se hace nada. Si ya fue definido, se asigna a una variable el valor que encuentre en la fila 0 de la tabla hija taxes.
+    var this_company_sales_tax_var;
     if (typeof (cur_frm.doc.taxes[0].rate) == "undefined") {
         //console.log("No se ha cargado impuesto, asi que no se hace nada.");
     } else {
@@ -153,16 +154,16 @@ function each_item(frm, cdt, cdn) {
         //console.log("Item, from the each_item function contains: " + item);
         //Esato dice: object, object
         //Importante
-        tax_before_calc = frm.doc.facelec_total_iva;
+        var tax_before_calc = frm.doc.facelec_total_iva;
         //console.log("El descuento total es:" + frm.doc.discount_amount);
         //console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
-        discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+        var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
         if (typeof (cur_frm.doc.taxes[0].rate) == "NaN") {
             //console.log("No hay descuento definido, calculando sin descuento.");
         } else {
             //console.log("El descuento parece ser un numero definido, calculando con descuento.");
             //console.log("El neto sin iva del descuento es" + discount_amount_net_value);
-            discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+            var discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
             //console.log("El IVA del descuento es:" + discount_amount_tax_value);
             frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
             //console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
@@ -308,7 +309,7 @@ function facelec_otros_impuestos_fila(frm, cdt, cdn) {
             frm.refresh_field('conversion_factor');
 
             if (cuenta) { // Si encuentra una cuenta con nombre procede
-                otro_impuesto = this_row_tax_amount;
+                var otro_impuesto = this_row_tax_amount;
                 //valor_con_iva = this_row_taxable_amount;
 
                 if (!(buscar_account(frm, cuenta))) { // Si no encuentra una cuenta, procede.
@@ -791,17 +792,17 @@ frappe.ui.form.on("Sales Invoice", {
     },
     discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
-        tax_before_calc = frm.doc.facelec_total_iva;
+        var tax_before_calc = frm.doc.facelec_total_iva;
         //console.log("El descuento total es:" + frm.doc.discount_amount);
         // es-GT: Este muestra el IVA que se calculo por medio de nuestra aplicación.
         //console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
-        discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+        var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
 
         if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) {
             //console.log("No hay descuento definido, calculando sin descuento.");
         } else {
             //console.log("El descuento parece ser un numero definido, calculando con descuento.");
-            discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+            var discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
             //console.log("El IVA del descuento es:" + discount_amount_tax_value);
             frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
             //console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
