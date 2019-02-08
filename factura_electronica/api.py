@@ -79,10 +79,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                                                     filters={'name': nombre_config_validada},
                                                     fieldname=['url_listener', 'descargar_pdf_factura_electronica',
                                                                'url_descarga_pdf'], as_dict=1)
-
-                # Funcion obtiene los datos necesarios y construye el xml
-                construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
-
+                status_xml = ''
+                try:
+                    # Funcion obtiene los datos necesarios y construye el xml
+                    status_xml = construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
+                except:
+                    frappe.msgprint(_(status_xml))
                 try:
                     # Si existe problemas al abrir archivo XML anteriormente generado
                     # mostrara un error.
@@ -486,3 +488,55 @@ def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
     # Si cumple, no existe configuracion validada
     if (validar_config[0] == 3):
         frappe.msgprint(_('No se encontró una configuración válida. Verifique que exista una configuración validada'))
+
+
+def data_sales_invoice(data):
+    '''Complementacion de calculos para SI'''
+    sales_invoice = data
+    # sale = frappe.get_doc('Sales Invoice Item', {'parent': 'PRUEBA-00004'})
+    # sale.items[0].qty = 6
+    # # # items = sale.items[0]
+    # # # items.qty = 6
+    # sale.save(ignore_permissions=True)
+    # items = sales_invoice.items
+    taxes = sales_invoice.taxes
+
+    rate_iva = taxes[0].rate
+    # items[0].item_code = 'palito-01'
+
+    # prueba = ''
+    try:
+        total_iva_factura = 0
+        #     # Calculos
+        for item in sales_invoice.items:
+            rate_per_uom = item.facelec_tax_rate_per_uom or 0
+
+            this_row_tax_amount = (item.qty) * rate_per_uom
+            this_row_taxable_amount = ((item.rate) * (item.qty)) - ((item.qty) * rate_per_uom)
+
+            item.facelec_other_tax_amount = rate_per_uom * ((item.qty) * 1)
+            item.facelec_amount_minus_excise_tax = ((item.qty) * (item.rate)) - ((item.qty) * rate_per_uom)
+
+            # # calculos para combustible
+            # if (item.facelecis_fuel):
+            #     item.facelec_gt_tax_net_fuel_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+            #     item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_fuel_amt) * (rate_iva / 100)
+
+            # # calculos para bienes
+            # if (item.facelec_is_good):
+            #     item.facelec_gt_tax_net_goods_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+            #     item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_goods_amt) * (rate_iva / 100)
+
+            # # calculos para servicios
+            # if (item.facelec_is_service):
+            item.facelec_gt_tax_net_services_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+            item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_services_amt) * (rate_iva / 1000)
+
+            for item_iva in sales_invoice.items:
+                total_iva_factura += (item_iva.facelec_sales_tax_for_this_row)
+
+        sales_invoice.shs_total_iva_fac = total_iva_factura
+    except:
+        return 'error en calculos'
+    else:
+        return sales_invoice
