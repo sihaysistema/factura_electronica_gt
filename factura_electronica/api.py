@@ -493,16 +493,11 @@ def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
 def data_sales_invoice(data):
     '''Complementacion de calculos para SI'''
     sales_invoice = data
-    # sale = frappe.get_doc('Sales Invoice Item', {'parent': 'PRUEBA-00004'})
-    # sale.items[0].qty = 6
-    # # # items = sale.items[0]
-    # # # items.qty = 6
-    # sale.save(ignore_permissions=True)
-    # items = sales_invoice.items
+
     taxes = sales_invoice.taxes
 
     rate_iva = taxes[0].rate
-    # items[0].item_code = 'palito-01'
+    # TODO: VERIFICAR SI RECIBE UN MONTO DE OTRA APP Y COMPARARLO
 
     # prueba = ''
     try:
