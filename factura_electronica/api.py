@@ -385,7 +385,7 @@ def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
                                                     filters={'name': nombre_config_validada},
                                                     fieldname=['url_listener', 'descargar_pdf_factura_electronica',
                                                                'url_descarga_pdf'], as_dict=1)
-                status = ''
+                status = 'palito test'
                 try:
                     # Funcion obtiene los datos necesarios y construye el xml
                     status = construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
