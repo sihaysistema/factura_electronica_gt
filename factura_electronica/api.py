@@ -392,90 +392,90 @@ def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
                 except:
                     return status
 
-                try:
-                    # Si existe problemas al abrir archivo XML anteriormente generado
-                    # mostrara un error.
-                    envio_datos = open('envio_request.xml', 'r').read()
-                except:
-                    # frappe.msgprint(_('Error al abrir los datos XML. Comuniquese al No.'))
-                    return 'Error abrir XML'
-                else:
-                    try:
-                        # Si existe un error en la captura de tiempo del momento de envio mostrara un error
-                        tiempo_enviado = datetime.now()
-                    except:
-                        # frappe.msgprint(_('Error: No se puede capturar el momento de envio. Comuniquese al No.'))
-                        return 'Error captura de tiempo'
-                    else:
-                        try:
-                            # Si existe un problema con la comunicacion a INFILE o se sobrepasa el tiempo de espera
-                            # Mostrara un error
-                            # 2018-01-23 Se valido claramente que funciona el envío al servidor de INFILE
-                            # URL de listener de INFILE FUNCIONA OK!!!
-                            url = str(url_configurada[0]['url_listener'])
-                            # CABECERAS: Indican el tipo de datos FUNCIONA OK!!!
-                            headers = {"content-type": "text/xml"}
-                            # FUNCIONA OK!!!
-                            response = requests.post(url, data=envio_datos, headers=headers, timeout=10)
-                            #respuesta = response.content
-                        except:
-                            # frappe.msgprint(_('Error en la Comunicacion al servidor de INFILE. Verifique al PBX: +502 2208-2208'))
-                            return 'Error Comunicacion a infile'
-                        else:
-                            try:
-                                # Si no se recibe ningun dato del servidor de INFILE mostrara el error
-                                # Guarda el contenido de la respuesta enviada por INFILE
-                                respuesta = response.content
-                            except:
-                                # frappe.msgprint(_('Error en la comunicacion no se recibieron datos de INFILE'))
-                                return 'Error no se recibieron datos de infile'
-                            else:
-                                try:
-                                    # xmltodic parsea la respuesta por parte de INFILE
-                                    documento_descripcion = xmltodict.parse(respuesta)
-                                    # En la descripcion se encuentra el mensaje, si el documento electronico se realizo con exito
-                                    descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
-                                except:
-                                    # frappe.msgprint(_('''Error: INFILE no pudo recibir los datos:''' + respuesta))
-                                    return 'Error Infile no pudo recibidir data'
-                                else:
-                                    # La funcion errores se encarga de verificar si existen errores o si la
-                                    # generacion de factura electronica fue exitosa
-                                    errores_diccionario = errores(descripciones)
+                # try:
+                #     # Si existe problemas al abrir archivo XML anteriormente generado
+                #     # mostrara un error.
+                #     envio_datos = open('envio_request.xml', 'r').read()
+                # except:
+                #     # frappe.msgprint(_('Error al abrir los datos XML. Comuniquese al No.'))
+                #     return 'Error abrir XML'
+                # else:
+                #     try:
+                #         # Si existe un error en la captura de tiempo del momento de envio mostrara un error
+                #         tiempo_enviado = datetime.now()
+                #     except:
+                #         # frappe.msgprint(_('Error: No se puede capturar el momento de envio. Comuniquese al No.'))
+                #         return 'Error captura de tiempo'
+                #     else:
+                #         try:
+                #             # Si existe un problema con la comunicacion a INFILE o se sobrepasa el tiempo de espera
+                #             # Mostrara un error
+                #             # 2018-01-23 Se valido claramente que funciona el envío al servidor de INFILE
+                #             # URL de listener de INFILE FUNCIONA OK!!!
+                #             url = str(url_configurada[0]['url_listener'])
+                #             # CABECERAS: Indican el tipo de datos FUNCIONA OK!!!
+                #             headers = {"content-type": "text/xml"}
+                #             # FUNCIONA OK!!!
+                #             response = requests.post(url, data=envio_datos, headers=headers, timeout=10)
+                #             #respuesta = response.content
+                #         except:
+                #             # frappe.msgprint(_('Error en la Comunicacion al servidor de INFILE. Verifique al PBX: +502 2208-2208'))
+                #             return 'Error Comunicacion a infile'
+                #         else:
+                #             try:
+                #                 # Si no se recibe ningun dato del servidor de INFILE mostrara el error
+                #                 # Guarda el contenido de la respuesta enviada por INFILE
+                #                 respuesta = response.content
+                #             except:
+                #                 # frappe.msgprint(_('Error en la comunicacion no se recibieron datos de INFILE'))
+                #                 return 'Error no se recibieron datos de infile'
+                #             else:
+                #                 try:
+                #                     # xmltodic parsea la respuesta por parte de INFILE
+                #                     documento_descripcion = xmltodict.parse(respuesta)
+                #                     # En la descripcion se encuentra el mensaje, si el documento electronico se realizo con exito
+                #                     descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
+                #                 except:
+                #                     # frappe.msgprint(_('''Error: INFILE no pudo recibir los datos:''' + respuesta))
+                #                     return 'Error Infile no pudo recibidir data'
+                #                 else:
+                #                     # La funcion errores se encarga de verificar si existen errores o si la
+                #                     # generacion de factura electronica fue exitosa
+                #                     errores_diccionario = errores(descripciones)
 
-                                    if (len(errores_diccionario) > 0):
-                                        try:
-                                            # Si el mensaje indica que la factura electronica se genero con exito se procede
-                                            # a guardar la respuesta de INFILE en la DB
-                                            if ((str(errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
+                #                     if (len(errores_diccionario) > 0):
+                #                         try:
+                #                             # Si el mensaje indica que la factura electronica se genero con exito se procede
+                #                             # a guardar la respuesta de INFILE en la DB
+                #                             if ((str(errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
 
-                                                cae_fac_electronica = guardar(respuesta, serie_original_factura, tiempo_enviado)
-                                                # frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
-                                                # el archivo rexpuest.xml se encuentra en la ruta, /home/frappe/frappe-bench/sites
+                #                                 cae_fac_electronica = guardar(respuesta, serie_original_factura, tiempo_enviado)
+                #                                 # frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
+                #                                 # el archivo rexpuest.xml se encuentra en la ruta, /home/frappe/frappe-bench/sites
 
-                                                with open('respuesta.xml', 'w') as recibidoxml:
-                                                    recibidoxml.write(respuesta)
-                                                    recibidoxml.close()
+                #                                 with open('respuesta.xml', 'w') as recibidoxml:
+                #                                     recibidoxml.write(respuesta)
+                #                                     recibidoxml.close()
 
-                                                # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
-                                                numero_dte_correcto = actualizartb(serie_original_factura)
-                                                # Funcion para descargar y guardar pdf factura electronica
-                                                descarga_pdf = guardar_pdf_servidor(numero_dte_correcto, cae_fac_electronica)
+                #                                 # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
+                #                                 numero_dte_correcto = actualizartb(serie_original_factura)
+                #                                 # Funcion para descargar y guardar pdf factura electronica
+                #                                 descarga_pdf = guardar_pdf_servidor(numero_dte_correcto, cae_fac_electronica)
 
-                                                # Este dato sera capturado por Js actualizando la url
-                                                return numero_dte_correcto
-                                        except:
-                                            # frappe.msgprint(_('''
-                                            # AVISOS <span class="label label-default" style="font-size: 16px">{}</span>
-                                            # '''.format(str(len(errores_diccionario))) + ' VERIFIQUE SU MANUAL'))
+                #                                 # Este dato sera capturado por Js actualizando la url
+                #                                 return numero_dte_correcto
+                #                         except:
+                #                             # frappe.msgprint(_('''
+                #                             # AVISOS <span class="label label-default" style="font-size: 16px">{}</span>
+                #                             # '''.format(str(len(errores_diccionario))) + ' VERIFIQUE SU MANUAL'))
 
-                                            # for llave in errores_diccionario:
-                                            #     frappe.msgprint(_('''
-                                            #     <span class="label label-warning" style="font-size: 14px">{}</span>
-                                            #     '''.format(str(llave)) + ' = ' + str(errores_diccionario[llave])))
+                #                             # for llave in errores_diccionario:
+                #                             #     frappe.msgprint(_('''
+                #                             #     <span class="label label-warning" style="font-size: 14px">{}</span>
+                #                             #     '''.format(str(llave)) + ' = ' + str(errores_diccionario[llave])))
 
-                                            # frappe.msgprint(_('NO GENERADA'))
-                                            return errores_diccionario
+                #                             # frappe.msgprint(_('NO GENERADA'))
+                #                             return errores_diccionario
 
             else:
                 frappe.msgprint(_('''La serie utilizada en esta factura no esta en la Configuracion de Factura Electronica.
