@@ -536,3 +536,6 @@ def data_sales_invoice(data):
         return 'error en calculos'
     else:
         return sales_invoice
+
+def test_pne():
+    return 'Saludos'
