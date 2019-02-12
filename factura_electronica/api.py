@@ -388,8 +388,8 @@ def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
                 status = 'palito test'
                 try:
                     # Funcion obtiene los datos necesarios y construye el xml
-                    # status = construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
-                    status = 'Saludos desde crear XML'
+                    status = construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
+                    # status = 'Saludos desde crear XML'
                 except:
                     return status
 
