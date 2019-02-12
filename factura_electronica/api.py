@@ -392,6 +392,8 @@ def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
                     # status = 'Saludos desde crear XML'
                 except:
                     return status
+                else:
+                    return status
 
                 # try:
                 #     # Si existe problemas al abrir archivo XML anteriormente generado
