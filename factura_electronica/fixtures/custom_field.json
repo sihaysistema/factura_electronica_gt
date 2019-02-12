@@ -8381,7 +8381,7 @@
   "in_list_view": 0, 
   "in_standard_filter": 0, 
   "insert_after": "items", 
-  "label": "shs_total_iva_fac", 
+  "label": "Total IVA Factura", 
   "modified": "2019-02-06 21:59:20.378145", 
   "name": "Sales Invoice-shs_total_iva_fac", 
   "no_copy": 0, 
