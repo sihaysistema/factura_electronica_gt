@@ -528,9 +528,9 @@ def data_sales_invoice(data):
             #     item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_goods_amt) * (rate_iva / 100)
 
             # # calculos para servicios
-            if (item.facelec_is_service):
-                item.facelec_gt_tax_net_services_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
-                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_services_amt) * (rate_iva / 1000)
+            # if (item.facelec_is_service):
+            item.facelec_gt_tax_net_services_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+            item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_services_amt) * (rate_iva / 1000)
 
             for item_iva in sales_invoice.items:
                 total_iva_factura += (item_iva.facelec_sales_tax_for_this_row)

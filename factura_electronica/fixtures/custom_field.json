@@ -731,7 +731,7 @@
   "docstatus": 0, 
   "doctype": "Custom Field", 
   "dt": "Sales Invoice", 
-  "fetch_from": null, 
+  "fetch_from": "customer.nit_face_customer", 
   "fieldname": "nit_face_customer", 
   "fieldtype": "Read Only", 
   "hidden": 0, 
