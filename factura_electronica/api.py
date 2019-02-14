@@ -12,6 +12,7 @@ from guardar_factura import actualizarTablas as actualizartb
 from valida_errores import encuentra_errores as errores
 from valida_errores import normalizar_texto
 from frappe.utils import get_site_name
+from crear_xml import construir_xml_m
 
 # Permite trabajar con acentos, ñ, simbolos, etc
 import os, sys
@@ -389,11 +390,12 @@ def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
                 try:
                     # Funcion obtiene los datos necesarios y construye el xml
                     status = construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
+                    # status = construir_xml_m(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
                     # status = 'Saludos desde crear XML'
                 except:
                     return status
                 # else:
-                #     return status
+                #     return frappe.msgprint((status))
 
                 try:
                     # Si existe problemas al abrir archivo XML anteriormente generado

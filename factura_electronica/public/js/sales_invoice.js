@@ -749,6 +749,21 @@ frappe.ui.form.on("Sales Invoice", {
             });
         });
 
+        // PARA PRUEBAS ALTERIVA XML
+        // frm.add_custom_button(__('PRUEBA XML'), function () {
+        //     frappe.call({
+        //         method: "factura_electronica.api.generar_factura_electronica_test",
+        //         args: {
+        //             serie_factura: frm.doc.name,
+        //             nombre_cliente: frm.doc.customer_name,
+        //             pre_se: frm.doc.naming_series,
+        //         },
+        //         callback: function () {
+        //             // frm.reload_doc();
+        //         }
+        //     });
+        // }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
+
         /**
         NOTA: Funcion alternativa para generar la tabla html + jinja de impuestos por item
         frm.add_custom_button("Impuestos", function () {
