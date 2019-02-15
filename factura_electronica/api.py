@@ -507,7 +507,7 @@ def data_sales_invoice(data):
     # prueba = ''
     try:
         total_iva_factura = 0
-        #     # Calculos
+        # Calculos
         for item in sales_invoice.items:
             rate_per_uom = item.facelec_tax_rate_per_uom or 0
 
@@ -517,7 +517,7 @@ def data_sales_invoice(data):
             item.facelec_other_tax_amount = rate_per_uom * ((item.qty) * 1)
             item.facelec_amount_minus_excise_tax = ((item.qty) * (item.rate)) - ((item.qty) * rate_per_uom)
 
-            # # calculos para combustible
+            # calculos para combustible
             # if (item.facelecis_fuel):
             #     item.facelec_gt_tax_net_fuel_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
             #     item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_fuel_amt) * (rate_iva / 100)
@@ -528,12 +528,12 @@ def data_sales_invoice(data):
             #     item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_goods_amt) * (rate_iva / 100)
 
             # # calculos para servicios
-            # if (item.facelec_is_service):
-            item.facelec_gt_tax_net_services_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
-            item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_services_amt) * (rate_iva / 1000)
+            if (item.facelec_is_service):
+                item.facelec_gt_tax_net_services_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_services_amt) * (rate_iva / 100)
 
-            for item_iva in sales_invoice.items:
-                total_iva_factura += (item_iva.facelec_sales_tax_for_this_row)
+        for item_iva in sales_invoice.items:
+            total_iva_factura += item_iva.facelec_sales_tax_for_this_row
 
         sales_invoice.shs_total_iva_fac = total_iva_factura
     except:
