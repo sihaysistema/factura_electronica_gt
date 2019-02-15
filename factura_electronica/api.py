@@ -346,8 +346,59 @@ def generar_tabla_html_factura_compra(tabla):
     )
 
 
-@frappe.whitelist()
-def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
+def data_sales_invoice(data):
+    '''Complementacion de calculos para SI'''
+    sales_invoice = data
+
+    taxes = sales_invoice.taxes
+
+    rate_iva = taxes[0].rate
+    # TODO: VERIFICAR SI RECIBE UN MONTO DE OTRA APP Y COMPARARLO
+
+    # prueba = ''
+    try:
+        total_iva_factura = 0
+        # Calculos
+        for item in sales_invoice.items:
+            rate_per_uom = item.facelec_tax_rate_per_uom or 0
+
+            this_row_tax_amount = (item.qty) * rate_per_uom
+            this_row_taxable_amount = ((item.rate) * (item.qty)) - ((item.qty) * rate_per_uom)
+
+            item.facelec_other_tax_amount = rate_per_uom * ((item.qty) * 1)
+            item.facelec_amount_minus_excise_tax = ((item.qty) * (item.rate)) - ((item.qty) * rate_per_uom)
+
+            # calculos para combustible
+            if (item.facelecis_fuel):
+                item.facelec_gt_tax_net_fuel_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_fuel_amt) * (rate_iva / 100)
+
+            # calculos para bienes
+            if (item.facelec_is_good):
+                item.facelec_gt_tax_net_goods_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_goods_amt) * (rate_iva / 100)
+
+            # # calculos para servicios
+            if (item.facelec_is_service):
+                item.facelec_gt_tax_net_services_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_services_amt) * (rate_iva / 100)
+
+        for item_iva in sales_invoice.items:
+            total_iva_factura += item_iva.facelec_sales_tax_for_this_row
+
+        sales_invoice.shs_total_iva_fac = total_iva_factura
+    except:
+        return 'error en calculos'
+    else:
+        return sales_invoice
+
+def test_pne():
+    return 'Saludos'
+
+
+# FACTURA ELECTRONICA API
+
+def generar_factura_electronica_api(serie_factura, nombre_cliente, pre_se):
     """Verifica que todo este correctamente configurado para realizar una peticion
     a INFILE para generar la factura electronica"""
 
@@ -360,18 +411,16 @@ def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
     # Si cumple, procede a validar y generar factura electronica
     if (validar_config[0] == 1):
         # Verifica si existe ya una factura electronica con la misma serie, evita duplicacion
-        if frappe.db.exists('Envios Facturas Electronicas', {'numero_dte': serie_original_factura}):
+        if frappe.db.exists('Envios Facturas Electronicas', {'serie_factura_original': serie_original_factura}):
             factura_electronica = frappe.db.get_values('Envios Facturas Electronicas',
-                                                    filters={'numero_dte': serie_original_factura},
-                                                    fieldname=['serie_factura_original', 'cae', 'numero_dte'],
-                                                    as_dict=1)
-            frappe.msgprint(_('''
-            <b>AVISO:</b> La Factura ya fue generada Anteriormente <b>{}</b>
-            '''.format(str(factura_electronica[0]['numero_dte']))))
+                                                       filters={'numero_dte': serie_original_factura},
+                                                       fieldname=['serie_factura_original', 'cae', 'numero_dte'],
+                                                       as_dict=1)
 
             dte_factura = str(factura_electronica[0]['numero_dte'])
 
-            return dte_factura
+            return 'La factura ya fue generada, numero de dte' + str(dte_factura)
+
         else:
             nombre_config_validada = str(validar_config[1])
             # Verificacion existencia series configuradas, en Configuracion Factura Electronica
@@ -390,8 +439,6 @@ def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
                 try:
                     # Funcion obtiene los datos necesarios y construye el xml
                     status = construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
-                    # status = construir_xml_m(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
-                    # status = 'Saludos desde crear XML'
                 except:
                     return status
                 # else:
@@ -455,7 +502,7 @@ def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
                                             if ((str(errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
 
                                                 cae_fac_electronica = guardar(respuesta, serie_original_factura, tiempo_enviado)
-                                                # frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
+
                                                 # el archivo rexpuest.xml se encuentra en la ruta, /home/frappe/frappe-bench/sites
 
                                                 with open('respuesta.xml', 'w') as recibidoxml:
@@ -493,53 +540,3 @@ def generar_factura_electronica_test(serie_factura, nombre_cliente, pre_se):
     # Si cumple, no existe configuracion validada
     if (validar_config[0] == 3):
         frappe.msgprint(_('No se encontró una configuración válida. Verifique que exista una configuración validada'))
-
-
-def data_sales_invoice(data):
-    '''Complementacion de calculos para SI'''
-    sales_invoice = data
-
-    taxes = sales_invoice.taxes
-
-    rate_iva = taxes[0].rate
-    # TODO: VERIFICAR SI RECIBE UN MONTO DE OTRA APP Y COMPARARLO
-
-    # prueba = ''
-    try:
-        total_iva_factura = 0
-        # Calculos
-        for item in sales_invoice.items:
-            rate_per_uom = item.facelec_tax_rate_per_uom or 0
-
-            this_row_tax_amount = (item.qty) * rate_per_uom
-            this_row_taxable_amount = ((item.rate) * (item.qty)) - ((item.qty) * rate_per_uom)
-
-            item.facelec_other_tax_amount = rate_per_uom * ((item.qty) * 1)
-            item.facelec_amount_minus_excise_tax = ((item.qty) * (item.rate)) - ((item.qty) * rate_per_uom)
-
-            # calculos para combustible
-            # if (item.facelecis_fuel):
-            #     item.facelec_gt_tax_net_fuel_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
-            #     item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_fuel_amt) * (rate_iva / 100)
-
-            # # calculos para bienes
-            # if (item.facelec_is_good):
-            #     item.facelec_gt_tax_net_goods_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
-            #     item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_goods_amt) * (rate_iva / 100)
-
-            # # calculos para servicios
-            if (item.facelec_is_service):
-                item.facelec_gt_tax_net_services_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
-                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_services_amt) * (rate_iva / 100)
-
-        for item_iva in sales_invoice.items:
-            total_iva_factura += item_iva.facelec_sales_tax_for_this_row
-
-        sales_invoice.shs_total_iva_fac = total_iva_factura
-    except:
-        return 'error en calculos'
-    else:
-        return sales_invoice
-
-def test_pne():
-    return 'Saludos'
