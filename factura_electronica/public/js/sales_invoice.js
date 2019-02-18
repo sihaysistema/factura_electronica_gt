@@ -693,7 +693,7 @@ frappe.ui.form.on("Sales Invoice", {
         });
         // This specific one is only for keyup events, to recalculate all. Only on blur will it refresh everything!
         // Do not refresh with each_item in Mouse leave OR keyup! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('keyup mouseleave focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Invoice Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('mouseleave focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Invoice Item"]', function (e) {
             //console.log("Key up, mouse leave or focus out from the Conversion Factor Field");
             // Trying to calc first, then refresh, or no refresh at all...
             facelec_tax_calc_new(frm, cdt, cdn);
@@ -899,11 +899,11 @@ frappe.ui.form.on("Sales Invoice", {
                     //console.log(data.message);
                     if (data.message === 'Manual') {
                         //console.log('Configuracion encontrada: MANUAL');
-						/* No es necesario tener activa esta parte, ya que cuando se ingresa a cualquier factura en el evento
-						refresh, hay una funcion que se encarga de comprobar de que se haya generado exitosamente la
-						factura electronica, en caso no sea asi, se mostrarán los botones correspondientes, para hacer
-						la generacion de la factura electronica manualmente.
-						generarFacturaBTN(frm, cdt, cdn); */
+                        /* No es necesario tener activa esta parte, ya que cuando se ingresa a cualquier factura en el evento
+                        refresh, hay una funcion que se encarga de comprobar de que se haya generado exitosamente la
+                        factura electronica, en caso no sea asi, se mostrarán los botones correspondientes, para hacer
+                        la generacion de la factura electronica manualmente.
+                        generarFacturaBTN(frm, cdt, cdn); */
                     }
                     if (data.message === 'Automatico') {
                         //console.log('Configuracion encontrada: AUTOMATICO');

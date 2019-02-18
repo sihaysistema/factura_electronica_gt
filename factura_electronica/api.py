@@ -40,6 +40,7 @@ def validar_configuracion():
     else:
         return (int(3), 'Error 3')
 
+
 @frappe.whitelist()
 def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
     """Verifica que todo este correctamente configurado para realizar una peticion
@@ -177,6 +178,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
     if (validar_config[0] == 3):
         frappe.msgprint(_('No se encontró una configuración válida. Verifique que exista una configuración validada'))
 
+
 @frappe.whitelist()
 def obtenerConfiguracionManualAutomatica():
     '''Verifica la configuracion guardada ya sea Automatica o Manual, aplica para la generacion de
@@ -203,6 +205,7 @@ def obtenerConfiguracionManualAutomatica():
     # Si la verificacion es igual a '3' no existe ninguna configuracion validada
     if (verificarModalidad[0] == 3):
         frappe.msgprint(_('No se encontró una configuración válida. Verifique que exista una configuración validada'))
+
 
 @frappe.whitelist()
 def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
@@ -265,6 +268,7 @@ def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
             # else:
             #     frappe.msgprint(_('EL PDF YA EXISTE ;)'))
 
+
 @frappe.whitelist()
 def get_data_tax_account(name_account_tax_gt):
     '''Funcion para obtener los datos de impuestos dependiendo el tipo de cuenta recibido'''
@@ -285,6 +289,7 @@ def obtener_numero_resolucion(nombre_serie):
                                                  fieldname=['numero_resolucion'], as_dict=1)
 
         return str(numero_resolucion[0]['numero_resolucion'])
+
 
 @frappe.whitelist()
 def prueba_tabla(serie_fac):
@@ -309,6 +314,7 @@ def prueba_tabla(serie_fac):
     #         )
     #     )
 
+
 @frappe.whitelist()
 def generar_tabla_html(tabla):
     """Funcion para generar tabla html + jinja, para mostrar impuestos por cada item"""
@@ -325,6 +331,7 @@ def generar_tabla_html(tabla):
             index=longi
         )
     )
+
 
 @frappe.whitelist()
 def generar_tabla_html_factura_compra(tabla):
@@ -347,7 +354,7 @@ def generar_tabla_html_factura_compra(tabla):
 
 
 def data_sales_invoice(data):
-    '''Complementacion de calculos para SI'''
+    '''Complementacion de calculos para Sales Invoice API'''
     sales_invoice = data
 
     taxes = sales_invoice.taxes
@@ -359,9 +366,10 @@ def data_sales_invoice(data):
     try:
         total_iva_factura = 0
         # Calculos
+        # TODO: COMPLEMENTAR CALCULOS PARA COMBUSTIBLES
         for item in sales_invoice.items:
+            # Aplica para impuestos, en caso sea diferente sera 0
             rate_per_uom = item.facelec_tax_rate_per_uom or 0
-
             this_row_tax_amount = (item.qty) * rate_per_uom
             this_row_taxable_amount = ((item.rate) * (item.qty)) - ((item.qty) * rate_per_uom)
 
@@ -392,15 +400,16 @@ def data_sales_invoice(data):
     else:
         return sales_invoice
 
+
 def test_pne():
+    'Funcion para pruebas'
     return 'Saludos'
 
 
 # FACTURA ELECTRONICA API
-
 def generar_factura_electronica_api(serie_factura, nombre_cliente, pre_se):
     """Verifica que todo este correctamente configurado para realizar una peticion
-    a INFILE para generar la factura electronica"""
+       a INFILE para generar la factura electronica"""
 
     serie_original_factura = str(serie_factura)
     nombre_del_cliente = str(nombre_cliente)
@@ -536,7 +545,7 @@ def generar_factura_electronica_api(serie_factura, nombre_cliente, pre_se):
 
     # Si cumple, existe mas de una configuracion validada
     if (validar_config[0] == 2):
-        frappe.msgprint(_('Existe más de una configuración para factura electrónica. Verifique que solo exista una validada'))
+        return 'Existe más de una configuración para factura electrónica. Verifique que solo exista una validada'
     # Si cumple, no existe configuracion validada
     if (validar_config[0] == 3):
-        frappe.msgprint(_('No se encontró una configuración válida. Verifique que exista una configuración validada'))
+        return 'No se encontró una configuración válida. Verifique que exista una configuración validada'
