@@ -682,7 +682,7 @@ frappe.ui.form.on("Sales Invoice", {
         });
         // This specific one is only for keyup events, to recalculate all. Only on blur will it refresh everything!
         // Do not refresh with each_item in Mouse leave OR keyup! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('keyup mouseleave focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Invoice Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('mouseleave focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Invoice Item"]', function (e) {
             //console.log("Key up, mouse leave or focus out from the Conversion Factor Field");
             // Trying to calc first, then refresh, or no refresh at all...
             facelec_tax_calc_new(frm, cdt, cdn);
