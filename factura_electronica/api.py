@@ -396,9 +396,9 @@ def data_sales_invoice(data):
 
         sales_invoice.shs_total_iva_fac = total_iva_factura
     except:
-        return 'error en calculos'
-    else:
-        return sales_invoice
+        return {'Calculos facelec': 'error en calculos'}
+    # else:
+    #     return sales_invoice
 
 
 def test_pne():
