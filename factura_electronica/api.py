@@ -481,7 +481,7 @@ def generar_factura_electronica_api(serie_factura, nombre_cliente, pre_se):
                             #respuesta = response.content
                         except:
                             # frappe.msgprint(_('Error en la Comunicacion al servidor de INFILE. Verifique al PBX: +502 2208-2208'))
-                            return 'Error Comunicacion a infile'
+                            return 'Error Comunicacion a infile, intentar de nuevo tiempo de espera agotado'
                         else:
                             try:
                                 # Si no se recibe ningun dato del servidor de INFILE mostrara el error
@@ -489,7 +489,7 @@ def generar_factura_electronica_api(serie_factura, nombre_cliente, pre_se):
                                 respuesta = response.content
                             except:
                                 # frappe.msgprint(_('Error en la comunicacion no se recibieron datos de INFILE'))
-                                return 'Error no se recibieron datos de infile'
+                                return 'Error no se recibieron datos de infile, intentar de nuevo, datos respuesta de infile no validos'
                             else:
                                 try:
                                     # xmltodic parsea la respuesta por parte de INFILE
@@ -524,24 +524,25 @@ def generar_factura_electronica_api(serie_factura, nombre_cliente, pre_se):
                                                 descarga_pdf = guardar_pdf_servidor(numero_dte_correcto, cae_fac_electronica)
 
                                                 # Este dato sera capturado por Js actualizando la url
-                                                return numero_dte_correcto, cae_fac_electronica
+                                                return {'DTE':numero_dte_correcto, 'CAE':cae_fac_electronica}
                                         except:
                                             # frappe.msgprint(_('''
                                             # AVISOS <span class="label label-default" style="font-size: 16px">{}</span>
                                             # '''.format(str(len(errores_diccionario))) + ' VERIFIQUE SU MANUAL'))
-
-                                            # for llave in errores_diccionario:
-                                            #     frappe.msgprint(_('''
-                                            #     <span class="label label-warning" style="font-size: 14px">{}</span>
-                                            #     '''.format(str(llave)) + ' = ' + str(errores_diccionario[llave])))
+                                            diccionario_errores = {}
+                                            for llave in errores_diccionario:
+                                                diccionario_errores[str(llave)] = str(errores_diccionario[llave])
+                                                # frappe.msgprint(_('''
+                                                # <span class="label label-warning" style="font-size: 14px">{}</span>
+                                                # '''.format(str(llave)) + ' = ' + str(errores_diccionario[llave])))
 
                                             # frappe.msgprint(_('NO GENERADA'))
-                                            return errores_diccionario
+                                            return diccionario_errores
 
             else:
-                frappe.msgprint(_('''La serie utilizada en esta factura no esta en la Configuracion de Factura Electronica.
+                return ('''La serie utilizada en esta factura no esta en la Configuracion de Factura Electronica.
                                     Por favor configura la serie <b>{0}</b> en <b>Configuracion Factura Electronica</b> e intenta de nuevo.
-                                    '''.format(prefijo_serie)))
+                                    '''.format(prefijo_serie))
 
     # Si cumple, existe mas de una configuracion validada
     if (validar_config[0] == 2):
