@@ -6,7 +6,7 @@ console.log("Se cargo exitosamente la aplicación de Factura Electrónica");
  * guardar hasta que se ingrese uno correcto, esto permite no tener errores con
  * INFILE y tener los datos correctos.
  */
-function valNit(nit, cus_supp, frm) {
+export function valNit(nit, cus_supp, frm) {
 	if (nit === "C/F" || nit === "c/f") {
 		frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
 	} else {
@@ -16,9 +16,9 @@ function valNit(nit, cus_supp, frm) {
 			for (var i = 0; i < nd[1].length; i++) {
 				add += ((((i - nd[1].length) * -1) + 1) * nd[1][i]);
 			}
-			nit_validado = ((11 - (add % 11)) % 11) == nd[2];
+			var nit_validado = ((11 - (add % 11)) % 11) == nd[2];
 		} else {
-			nit_validado = false;
+			var nit_validado = false;
 		}
 
 		if (nit_validado === false) {

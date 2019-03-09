@@ -1,3 +1,4 @@
+import { valNit } from './facelec.js';
 //console.log("Hello world desde Sales Invoice");
 
 /**
