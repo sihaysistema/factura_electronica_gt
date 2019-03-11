@@ -1,10 +1,9 @@
-import { valNit } from './facelec.js';
-//console.log("Hello world desde Sales Invoice");
-
 /**
  * Copyright (c) 2017, 2018 SHS and contributors
  * For license information, please see license.txt
  */
+
+import { valNit } from './facelec.js';
 
 /* 1 Funcion calculadora para Sales Invoice ------------------------------------------------------------------------ */
 function facelec_tax_calc_new(frm, cdt, cdn) {
@@ -13,9 +12,7 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
     // es-GT: Revisamos si ya quedo cargado y definido el rate (tasa) de impuesto en el DocType, el cual debe estar en la fila 0 de Sales Taxes & Charges.
     // es-GT: Si no ha sido definido, no se hace nada. Si ya fue definido, se asigna a una variable el valor que encuentre en la fila 0 de la tabla hija taxes.
     var this_company_sales_tax_var;
-    if (typeof (cur_frm.doc.taxes[0].rate) == "undefined") {
-        //console.log("No se ha cargado impuesto, asi que no se hace nada.");
-    } else {
+    if (cur_frm.doc.taxes[0].rate !== "undefined") {
         //console.log("Ahora que ya se especifico un cliente, ya existe impuesto en la hoja, por lo tanto, lo asignamos a una variable!");
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         //console.log("El IVA cargado es: " + this_company_sales_tax_var);
@@ -175,30 +172,6 @@ function each_item(frm, cdt, cdn) {
 }
 
 /* 2 --------------------------------------------------------------------------------------------------------------- */
-// Permite agregar filas en la posicion que le especifiquemos
-// NO UTILIZADO!!
-function agregar_fila(doc, table_name, doctype, position) {
-    // item bigger than length
-    if (position > doc[table_name].length) {
-        var row = frappe.model.add_child(doc, doctype, table_name);
-        return row;
-    }
-    // item less than first
-    else if (position < doc[table_name][0].idx) {
-        var row = frappe.model.add_child(doc, doctype, table_name);
-        row.idx = position;
-        return row;
-    }
-    // item in the middle
-    else {
-        for (var curr_pos = position; curr_pos < doc[table_name].length; curr_pos++) {
-            doc[table_name][curr_pos].idx += 1;
-        }
-        var row = frappe.model.add_child(doc, doctype, table_name);
-        row.idx = position;
-        return row;
-    }
-}
 
 /* 3 Funciones para otros impuestos IDP ... ------------------------------------------------------------------------ */
 /**
@@ -634,7 +607,7 @@ frappe.ui.form.on("Sales Invoice", {
         // FIXME FIXME FIXME
         // Objetivo, cuando se salga del campo mediante TAB, que quede registrado el producto.
         // estrategia 1:  Focus al campo de quantity?  NO SIRVE.  Como que hay OTRO campo antes, quizas la flechita de link?
-        frm.fields_dict.items.grid.wrapper.on('click focusout blur', 'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('focusout blur', 'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]', function (e) {
             //console.log("Clicked on the field Item Code");
 
             each_item(frm, cdt, cdn);
@@ -657,12 +630,12 @@ frappe.ui.form.on("Sales Invoice", {
             each_item(frm, cdt, cdn);
         });
         // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('mouseleave', 'input[data-fieldname="uom"][data-doctype="Sales Invoice Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="uom"][data-doctype="Sales Invoice Item"]', function (e) {
             //console.log("Mouse left the UOM field");
             facelec_tax_calc_new(frm, cdt, cdn);
         });
         // This part might seem counterintuitive, but it is the "next" field in tab order after item code, which helps for a "creative" strategy to update everything after pressing TAB out of the item code field.  FIXME
-        frm.fields_dict.items.grid.wrapper.on('focus', 'input[data-fieldname="item_name"][data-doctype="Sales Invoice Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="item_name"][data-doctype="Sales Invoice Item"]', function (e) {
             //console.log("Focusing with keyboard cursor through TAB on the Item Name Field");
             each_item(frm, cdt, cdn);
             facelec_otros_impuestos_fila(frm, cdt, cdn);
@@ -672,7 +645,7 @@ frappe.ui.form.on("Sales Invoice", {
             each_item(frm, cdt, cdn);
         });
         // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('mouseleave', 'input[data-fieldname="qty"][data-doctype="Sales Invoice Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="qty"][data-doctype="Sales Invoice Item"]', function (e) {
             //console.log("Mouse leaving from the Quantity Field");
             each_item(frm, cdt, cdn);
             facelec_tax_calc_new(frm, cdt, cdn);
@@ -694,7 +667,7 @@ frappe.ui.form.on("Sales Invoice", {
         });
         // This specific one is only for keyup events, to recalculate all. Only on blur will it refresh everything!
         // Do not refresh with each_item in Mouse leave OR keyup! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('mouseleave focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Invoice Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Invoice Item"]', function (e) {
             //console.log("Key up, mouse leave or focus out from the Conversion Factor Field");
             // Trying to calc first, then refresh, or no refresh at all...
             facelec_tax_calc_new(frm, cdt, cdn);

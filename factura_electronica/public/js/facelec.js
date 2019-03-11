@@ -22,7 +22,12 @@ export function valNit(nit, cus_supp, frm) {
 		}
 
 		if (nit_validado === false) {
-			msgprint('NIT de: <b>' + cus_supp + '</b>, no es correcto. Si no tiene disponible el NIT modifiquelo a <b>C/F</b>');
+			// msgprint('NIT de: <b>' + cus_supp + '</b>, no es correcto. Si no tiene disponible el NIT modifiquelo a <b>C/F</b>');
+			frappe.show_alert({
+				indicator: 'orange',
+				message: __(`NIT de ${cus_supp} no es correcto. Si no tiene disponible el NIT modifiquelo a C/F.`)
+			});
+
 			frm.disable_save(); // Desactiva y Oculta el boton de guardar en Sales Invoice
 		}
 		if (nit_validado === true) {
