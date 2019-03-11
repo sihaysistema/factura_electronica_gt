@@ -213,15 +213,17 @@ function sumar_otros_impuestos_shs(frm, cdt, cdn) {
 
         if (item_row_1.name === cdn) {
             if (item_row_1.facelec_tax_rate_per_uom_account) {
+                if (frm.doc.shs_otros_impuestos !== undefined) {
+                    frm.doc.shs_otros_impuestos.forEach((tax_row_2, index_2) => {
+                        if (tax_row_2.account_head === item_row_1.facelec_tax_rate_per_uom_account) {
+                            var totalizador = 0;
+                            totalizador = facelec_add_taxes(frm, tax_row_2.account_head)
+                            cur_frm.doc.shs_otros_impuestos[index_2].total = totalizador;
+                            shs_total_other_tax(frm);
+                        }
+                    });
+                }
 
-                frm.doc.shs_otros_impuestos.forEach((tax_row_2, index_2) => {
-                    if (tax_row_2.account_head === item_row_1.facelec_tax_rate_per_uom_account) {
-                        var totalizador = 0;
-                        totalizador = facelec_add_taxes(frm, tax_row_2.account_head)
-                        cur_frm.doc.shs_otros_impuestos[index_2].total = totalizador;
-                        shs_total_other_tax(frm);
-                    }
-                });
             }
         }
     });
@@ -341,28 +343,26 @@ function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
             // recorre shs_otros_impuestos
             //console.log('1. El nuevo total calculado es: ' + total);
             //console.log('1. El valor de la fila que se borra es: ' + otro_impuesto);
-            frm.doc.shs_otros_impuestos.forEach((tax_row, i2) => {
-                if (tax_row.account_head === tax_account_n) {
-                    cur_frm.doc.shs_otros_impuestos[i2].total = total;
-                    cur_frm.refresh_field("shs_otros_impuestos");
-                    shs_total_other_tax(frm);
-                    cur_frm.refresh_field("shs_otros_impuestos");
 
-                    if (!tax_row.total) {
-                        // console.log('SE ELIMINARA LA FILA ---------------->');
-                        // Elimina la fila con valor 0
-                        cur_frm.doc.shs_otros_impuestos.splice(cur_frm.doc.shs_otros_impuestos[i2], 1);
+            if (frm.doc.shs_otros_impuestos !== undefined) {
+                frm.doc.shs_otros_impuestos.forEach((tax_row, i2) => {
+                    if (tax_row.account_head === tax_account_n) {
+                        cur_frm.doc.shs_otros_impuestos[i2].total = total;
                         cur_frm.refresh_field("shs_otros_impuestos");
+                        shs_total_other_tax(frm);
+                        cur_frm.refresh_field("shs_otros_impuestos");
+
+                        if (!tax_row.total) {
+                            // console.log('SE ELIMINARA LA FILA ---------------->');
+                            // Elimina la fila con valor 0
+                            cur_frm.doc.shs_otros_impuestos.splice(cur_frm.doc.shs_otros_impuestos[i2], 1);
+                            cur_frm.refresh_field("shs_otros_impuestos");
+                        }
                     }
-                }
-            });
+                });
+            }
+
         }
-        //  else {
-        //     frm.doc.shs_otros_impuestos.forEach((tax_row, i2) => {
-
-        //     });
-        // }
-
     });
 
 }
@@ -723,39 +723,6 @@ frappe.ui.form.on("Sales Invoice", {
             });
         });
 
-        // PARA PRUEBAS ALTERIVA XML
-        // frm.add_custom_button(__('PRUEBA XML'), function () {
-        //     frappe.call({
-        //         method: "factura_electronica.api.generar_factura_electronica_test",
-        //         args: {
-        //             serie_factura: frm.doc.name,
-        //             nombre_cliente: frm.doc.customer_name,
-        //             pre_se: frm.doc.naming_series,
-        //         },
-        //         callback: function () {
-        //             // frm.reload_doc();
-        //         }
-        //     });
-        // }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
-
-        /**
-        NOTA: Funcion alternativa para generar la tabla html + jinja de impuestos por item
-        frm.add_custom_button("Impuestos", function () {
-            // Crear tabla HTML customizada con jinja, para reflejar impuestos por cada Item de Sales Invoice Item
-            frappe.call({
-                method: "factura_electronica.api.prueba_tabla",
-                args: {
-                    serie_fac: frm.doc.name
-                },
-                callback: function (r) {
-                    // console.log(r.message);
-                    frm.set_value('other_tax_facelec', r.message);
-                    frm.refresh_field("other_tax_facelec");
-                }
-            });
-        });
-        */
-
         // Cuando el documento se actualiza, la funcion verificac de que exista un cae.
         // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
         // En caso no exista un cae mostrara el boton para generar la factura electronica
@@ -766,15 +733,8 @@ frappe.ui.form.on("Sales Invoice", {
         generar_tabla_html(frm);
     },
     nit_face_customer: function (frm, cdt, cdn) {
-        // if (frm.doc.nit_face_customer === null) {
-        //     console.log('EL NIT ES NULL')
-        // }
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
         valNit(frm.doc.nit_face_customer, frm.doc.customer, frm);
-    },
-    taxes_and_charges: function (frm, cdt, cdn) {
-        // es-GT: Se corre aqui en caso se seleccione una tabla de impuestos nueva.
-        // facelec_otros_impuestos_fila(cur_frm, cdt,cdn); // NO SIRVE!!
     },
     additional_discount_percentage: function (frm, cdt, cdn) {
         // Pensando en colocar un trigger aqui para cuando se actualice el campo de descuento adicional
