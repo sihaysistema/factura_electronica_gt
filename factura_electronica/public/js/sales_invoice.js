@@ -681,14 +681,14 @@ frappe.ui.form.on("Sales Invoice", {
         // en-US: Enabling event listeners in the main doctype
         // es-GT: Habilitando escuchadores de eventos en el tipo de documento principal
         // When ANY key is released after being pressed
-        cur_frm.fields_dict.customer.$input.on("keyup", function (evt) {
+        cur_frm.fields_dict.customer.$input.on("blur", function (evt) {
             //console.log("Se acaba de soltar una tecla del campo customer");
             facelec_tax_calc_new(frm, cdt, cdn);
             each_item(frm, cdt, cdn);
             refresh_field('qty');
         });
         // When mouse leaves the field
-        cur_frm.fields_dict.customer.$input.on("mouseleave blur focusout", function (evt) {
+        cur_frm.fields_dict.customer.$input.on("blur focusout", function (evt) {
             //console.log("Salió del campo customercon mouseleave, blur, focusout");
             facelec_tax_calc_new(frm, cdt, cdn);
         });
