@@ -4,6 +4,7 @@
  */
 
 import { valNit } from './facelec.js';
+import { goalSeek } from './goalSeek.js';
 
 /* 1 Funcion calculadora para Sales Invoice ------------------------------------------------------------------------ */
 function facelec_tax_calc_new(frm, cdt, cdn) {

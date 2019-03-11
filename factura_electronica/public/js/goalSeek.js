@@ -1,4 +1,4 @@
-function goalSeek(oParams) {
+export function goalSeek(oParams) {
 	var g, Y, Y1, OldTarget;
 
 	oParams.Tol = (oParams.Tol || 0.001 * oParams.Goal || 0.1);
@@ -26,7 +26,7 @@ function goalSeek(oParams) {
 		for (var i = 0; i < oParams.maxIter; i++) {
 			//define the root of the function as the error
 			Y = oParams.Func.apply(oParams.This, oParams.aFuncParams) - oParams.Goal;
-			
+
 			//was our initial guess a good one?
 			if (Math.abs(Y) <= oParams.Tol) {
 				return getObjVal(oParams.aFuncParams[oParams.oFuncArgTarget.Position], oParams.oFuncArgTarget.propStr);
@@ -96,17 +96,17 @@ function goalSeek(oParams) {
 //answerer url: http://stackoverflow.com/users/2736119/bpmason1
 //license: http://creativecommons.org/licenses/by-sa/3.0/legalcode
 function setObjVal(Obj, propStr, Value) {
-    var Schema = Obj;  // a moving reference to internal objects within obj
-    var pList = propStr.split('.');
-    var Len = pList.length;
+	var Schema = Obj;  // a moving reference to internal objects within obj
+	var pList = propStr.split('.');
+	var Len = pList.length;
 
-    for(var i = 0; i < Len-1; i++) {
-        var Elem = pList[i];
-        if( !Schema[Elem] ) Schema[Elem] = {}
-        Schema = Schema[Elem];
-    };
+	for (var i = 0; i < Len - 1; i++) {
+		var Elem = pList[i];
+		if (!Schema[Elem]) Schema[Elem] = {}
+		Schema = Schema[Elem];
+	};
 
-    Schema[pList[Len-1]] = Value;
+	Schema[pList[Len - 1]] = Value;
 };
 
 //source (modified from original): http://stackoverflow.com/questions/4343028/in-javascript-test-for-property-deeply-nested-in-object-graph
@@ -114,12 +114,12 @@ function setObjVal(Obj, propStr, Value) {
 //answerer url: http://stackoverflow.com/users/230892/zach
 //license: http://creativecommons.org/licenses/by-sa/3.0/legalcode
 function getObjVal(Obj, propStr) {
-    var Parts = propStr.split(".");
-    var Cur = Obj;
+	var Parts = propStr.split(".");
+	var Cur = Obj;
 
-    for (var i=0; i<Parts.length; i++) {
-        Cur = Cur[Parts[i]];
-    };
+	for (var i = 0; i < Parts.length; i++) {
+		Cur = Cur[Parts[i]];
+	};
 
-    return Cur;
+	return Cur;
 };
