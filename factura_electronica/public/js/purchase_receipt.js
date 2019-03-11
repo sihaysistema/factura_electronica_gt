@@ -1,4 +1,5 @@
 import { valNit } from './facelec.js';
+import { goalSeek } from './goalSeek.js';
 
 // console.log("Hello world from Purchase Receipt");
 
@@ -253,6 +254,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
             console.log(calcu);
 
             frm.doc.items[index].qty = calcu;
+            frm.doc.items[index].stock_qty = calcu;
             frm.doc.items[index].amount = calcu * frm.doc.items[index].rate;
             frm.refresh_field("items");
         });

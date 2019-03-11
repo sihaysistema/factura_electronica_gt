@@ -1,4 +1,6 @@
 import { valNit } from './facelec.js';
+import { goalSeek } from './goalSeek.js';
+
 // console.log("Hello world from Delivery Note");
 /* Delivery Note (Nota de entrega) ------------------------------------------------------------------------------------------------------- */
 function delivery_note_each_item(frm, cdt, cdn) {
@@ -250,6 +252,7 @@ frappe.ui.form.on("Delivery Note Item", {
             console.log(calcu);
 
             frm.doc.items[index].qty = calcu;
+            frm.doc.items[index].stock_qty = calcu;
             frm.doc.items[index].amount = calcu * frm.doc.items[index].rate;
             frm.refresh_field("items");
         });

@@ -98,12 +98,12 @@ frappe.ui.form.on("Supplier Quotation", {
         });
 
         // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('mouseleave', 'input[data-fieldname="uom"][data-doctype="Supplier Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="uom"][data-doctype="Supplier Quotation Item"]', function (e) {
             shs_supplier_quotation_calculation(frm, cdt, cdn);
         });
 
         // This part might seem counterintuitive, but it is the "next" field in tab order after item code, which helps for a "creative" strategy to update everything after pressing TAB out of the item code field.  FIXME
-        frm.fields_dict.items.grid.wrapper.on('focus', 'input[data-fieldname="item_name"][data-doctype="Supplier Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="item_name"][data-doctype="Supplier Quotation Item"]', function (e) {
             supplier_quotation_each_item(frm, cdt, cdn);
         });
 
@@ -112,7 +112,7 @@ frappe.ui.form.on("Supplier Quotation", {
         });
 
         // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('mouseleave', 'input[data-fieldname="qty"][data-doctype="Supplier Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="qty"][data-doctype="Supplier Quotation Item"]', function (e) {
             supplier_quotation_each_item(frm, cdt, cdn);
             shs_supplier_quotation_calculation(frm, cdt, cdn);
         });
@@ -127,7 +127,7 @@ frappe.ui.form.on("Supplier Quotation", {
 
         // This specific one is only for keyup events, to recalculate all. Only on blur will it refresh everything!
         // Do not refresh with each_item in Mouse leave OR keyup! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('keyup mouseleave focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Supplier Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur mouseleave focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Supplier Quotation Item"]', function (e) {
             // Trying to calc first, then refresh, or no refresh at all...
             shs_supplier_quotation_calculation(frm, cdt, cdn);
             supplier_quotation_each_item(frm, cdt, cdn);
