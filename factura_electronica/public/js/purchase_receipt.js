@@ -1,3 +1,5 @@
+import { valNit } from './facelec.js';
+
 // console.log("Hello world from Purchase Receipt");
 
 /* Purchase Receipt (Recibo de Compra ------------------------------------------------------------------------------------------------------- */
@@ -163,9 +165,9 @@ frappe.ui.form.on("Purchase Receipt", {
     },
     discount_amount: function (frm) {
         // Trigger Monto de descuento
-        tax_before_calc = frm.doc.facelec_pr_total_iva;
+        var tax_before_calc = frm.doc.facelec_pr_total_iva;
         // es-GT: Este muestra el IVA que se calculo por medio de nuestra aplicación.
-        discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+        var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
 
         if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) {
         } else {
@@ -184,10 +186,10 @@ frappe.ui.form.on("Purchase Receipt Item", {
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
 
-        fix_gt_tax_fuel = 0;
-        fix_gt_tax_goods = 0;
-        fix_gt_tax_services = 0;
-        fix_gt_tax_iva = 0;
+        var fix_gt_tax_fuel = 0;
+        var fix_gt_tax_goods = 0;
+        var fix_gt_tax_services = 0;
+        var fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_pr_gt_tax_net_fuel_amt);
@@ -203,7 +205,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
     },
     item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
-        this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+        var this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         refresh_field('qty');
     },
     qty: function (frm, cdt, cdn) {
