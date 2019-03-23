@@ -226,21 +226,6 @@ frappe.ui.form.on("Purchase Receipt Item", {
             var b = row.qty;
             var c = row.amount;
 
-            //let test = flt(row.shs_amount_for_back_calc) - flt(c);
-            //let testB = test / 2;
-
-            // Usando metodologia GoalSeek.js
-            // https://github.com/adam-hanna/goalSeek.js/blob/master/goalSeek.js
-            // console.log(goalSeek({
-            //     Func: redondeo_purchase_receipt,
-            //     aFuncParams: [b, a],
-            //     oFuncArgTarget: {
-            //         Position: 0
-            //     },
-            //     Goal: row.shs_amount_for_back_calc,
-            //     Tol: 0.001,
-            //     maxIter: 10000
-            // }));
             let calcu = goalSeek({
                 Func: redondeo_purchase_receipt,
                 aFuncParams: [b, a],

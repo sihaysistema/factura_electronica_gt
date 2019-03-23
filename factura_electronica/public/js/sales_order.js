@@ -145,7 +145,7 @@ frappe.ui.form.on("Sales Order", {
         });
 
         // When mouse leaves the field
-        cur_frm.fields_dict.customer.$input.on("mouseleave blur focusout", function (evt) {
+        cur_frm.fields_dict.customer.$input.on("blur focusout", function (evt) {
             shs_sales_order_calculation(frm, cdt, cdn);
         });
 

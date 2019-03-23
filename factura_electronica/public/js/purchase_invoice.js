@@ -1,3 +1,6 @@
+import { valNit } from './facelec.js';
+import { goalSeek } from './goalSeek.js';
+
 //console.log("Hello world from Purchase Invoice");
 
 /* Purchase Invoice (Factura de Compra) ------------------------------------------------------------------------------------------------------- */
@@ -156,20 +159,24 @@ function pi_total_otros_impuestos_eliminacion(frm, tax_account_n, otro_impuesto)
         if (item_row.facelec_p_tax_rate_per_uom_account === tax_account_n) {
             var total = (pi_sumatoria_por_cuenta_items(frm, tax_account_n) - otro_impuesto);
             // recorre shs_pi_otros_impuestos
-            frm.doc.shs_pi_otros_impuestos.forEach((tax_row, i2) => {
-                if (tax_row.account_head === tax_account_n) {
-                    cur_frm.doc.shs_pi_otros_impuestos[i2].total = total;
-                    cur_frm.refresh_field("shs_pi_otros_impuestos");
-                    pi_total_de_otros_impuestos(frm);
-                    cur_frm.refresh_field("shs_pi_otros_impuestos");
 
-                    if (!tax_row.total) {
-                        // Elimina la fila con valor 0
-                        cur_frm.doc.shs_pi_otros_impuestos.splice(cur_frm.doc.shs_pi_otros_impuestos[i2], 1);
+            if (frm.doc.shs_pi_otros_impuestos !== undefined) {
+                frm.doc.shs_pi_otros_impuestos.forEach((tax_row, i2) => {
+                    if (tax_row.account_head === tax_account_n) {
+                        cur_frm.doc.shs_pi_otros_impuestos[i2].total = total;
                         cur_frm.refresh_field("shs_pi_otros_impuestos");
+                        pi_total_de_otros_impuestos(frm);
+                        cur_frm.refresh_field("shs_pi_otros_impuestos");
+
+                        if (!tax_row.total) {
+                            // Elimina la fila con valor 0
+                            cur_frm.doc.shs_pi_otros_impuestos.splice(cur_frm.doc.shs_pi_otros_impuestos[i2], 1);
+                            cur_frm.refresh_field("shs_pi_otros_impuestos");
+                        }
                     }
-                }
-            });
+                });
+            }
+
         }
     });
 
@@ -223,7 +230,7 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_p_gt_tax_net_fuel_amt = (item_row.facelec_p_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_p_sales_tax_for_this_row = (item_row.facelec_p_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
-                total_fuel = 0;
+                let total_fuel = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_p_is_fuel == true) {
                         total_fuel += flt(d.facelec_p_gt_tax_net_fuel_amt);
@@ -236,7 +243,7 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_p_gt_tax_net_goods_amt = (item_row.facelec_p_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_p_sales_tax_for_this_row = (item_row.facelec_p_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
-                total_goods = 0;
+                let total_goods = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_p_is_good == true) {
                         total_goods += flt(d.facelec_p_gt_tax_net_goods_amt);
@@ -249,7 +256,7 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_p_gt_tax_net_services_amt = (item_row.facelec_p_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_p_sales_tax_for_this_row = (item_row.facelec_p_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check servicios
-                total_servi = 0;
+                let total_servi = 0;
                 $.each(frm.doc.items || [], function (i, d) {
                     if (d.facelec_p_is_service == true) {
                         total_servi += flt(d.facelec_p_gt_tax_net_services_amt);
@@ -258,7 +265,7 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
                 frm.doc.facelec_p_gt_tax_services = total_servi;
             };
 
-            full_tax_iva = 0;
+            let full_tax_iva = 0;
             $.each(frm.doc.items || [], function (i, d) {
                 full_tax_iva += flt(d.facelec_p_sales_tax_for_this_row);
             });
@@ -387,9 +394,9 @@ frappe.ui.form.on("Purchase Invoice", {
     },
     discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
-        tax_before_calc = frm.doc.facelec_total_iva;;
+        var tax_before_calc = frm.doc.facelec_total_iva;;
         // es-GT: Este muestra el IVA que se calculo por medio de nuestra aplicación.
-        discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+        var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
 
         if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) {
         } else {
@@ -489,10 +496,10 @@ frappe.ui.form.on("Purchase Invoice Item", {
         // en-US: This trigger runs when removing a row.
         // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
 
-        fix_gt_tax_fuel = 0;
-        fix_gt_tax_goods = 0;
-        fix_gt_tax_services = 0;
-        fix_gt_tax_iva = 0;
+        var fix_gt_tax_fuel = 0;
+        var fix_gt_tax_goods = 0;
+        var fix_gt_tax_services = 0;
+        var fix_gt_tax_iva = 0;
 
         $.each(frm.doc.items || [], function (i, d) {
             fix_gt_tax_fuel += flt(d.facelec_p_gt_tax_net_fuel_amt);
@@ -508,7 +515,7 @@ frappe.ui.form.on("Purchase Invoice Item", {
     },
     item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
-        this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+        var this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         // console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
     },
@@ -532,9 +539,9 @@ frappe.ui.form.on("Purchase Invoice Item", {
     },
     shs_amount_for_back_calc: function (frm, cdt, cdn) {
         frm.doc.items.forEach((row, index) => {
-            console.log(row.rate);
-            console.log(row.qty);
-            console.log(row.amount);
+            // console.log(row.rate);
+            // console.log(row.qty);
+            // console.log(row.amount);
             var a = row.rate;
             var b = row.qty;
             var c = row.amount;
@@ -567,6 +574,7 @@ frappe.ui.form.on("Purchase Invoice Item", {
             console.log(calcu);
 
             frm.doc.items[index].qty = calcu;
+            frm.doc.items[index].stock_qty = calcu;
             frm.doc.items[index].amount = calcu * frm.doc.items[index].rate;
             // frm.doc.items[index].qty = calcu;
 
