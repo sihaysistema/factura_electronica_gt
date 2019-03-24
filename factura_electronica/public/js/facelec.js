@@ -7,6 +7,7 @@ console.log("Se cargo exitosamente la aplicación de Factura Electrónica");
  * INFILE y tener los datos correctos.
  */
 export function valNit(nit, cus_supp, frm) {
+	var nit_validado;
 	if (nit === "C/F" || nit === "c/f") {
 		frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
 	} else {
@@ -16,16 +17,17 @@ export function valNit(nit, cus_supp, frm) {
 			for (var i = 0; i < nd[1].length; i++) {
 				add += ((((i - nd[1].length) * -1) + 1) * nd[1][i]);
 			}
-			var nit_validado = ((11 - (add % 11)) % 11) == nd[2];
+			nit_validado = ((11 - (add % 11)) % 11) == nd[2];
 		} else {
-			var nit_validado = false;
+			nit_validado = false;
 		}
 
 		if (nit_validado === false) {
-			// msgprint('NIT de: <b>' + cus_supp + '</b>, no es correcto. Si no tiene disponible el NIT modifiquelo a <b>C/F</b>');
 			frappe.show_alert({
 				indicator: 'orange',
-				message: __(`NIT de ${cus_supp} no es correcto. Si no tiene disponible el NIT modifiquelo a C/F.`)
+				message: __(`
+				NIT de <a href= '#Form/Customer/${cus_supp}'><b>${cus_supp}</b></a> no es correcto. Si no tiene disponible el NIT modifiquelo a C/F.
+				`)
 			});
 
 			frm.disable_save(); // Desactiva y Oculta el boton de guardar en Sales Invoice
@@ -59,6 +61,18 @@ frappe.ui.form.on("Item", {
 	}
 });
 
+// Validador NIT para customer
+frappe.ui.form.on("Customer", {
+	nit_face_customer: function (frm) {
+		valNit(frm.doc.nit_face_customer, frm.doc.name, frm);
+	}
+});
+// Validador NIT para Supplier
+frappe.ui.form.on("Supplier", {
+	facelec_nit_proveedor: function (frm) {
+		valNit(frm.doc.facelec_nit_proveedor, frm.doc.name, frm);
+	}
+});
 /* en-US: INDIVIDUAL SOURCE CODE FROM .js FILES IN THIS DIRECTORY WILL BE ADDED WHEN DOING A BENCH BUILD
    es-GT: CODIGO FUENTE INDIVIDUAL DE ARCHIVOS .js EN ESTE DIRECTORIO SE AGREGARAN ABAJO AL HACER BENCH BUILD */
 

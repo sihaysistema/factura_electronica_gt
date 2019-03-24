@@ -134,7 +134,7 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                     total_iva_factura += flt(d.facelec_sales_tax_for_this_row);
                 };
             });
-            console.log("El total de iva acumulado para la factura es: " + total_iva_factura);
+            // console.log("El total de iva acumulado para la factura es: " + total_iva_factura);
             cur_frm.set_value('shs_total_iva_fac', total_iva_factura);
         };
     });
@@ -336,7 +336,7 @@ function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
 	/**
 	 * Se encarga de recalcular el total de otros impuestos cuando se elimina un item
 	 */
-    console.log('Otro Impuesto recibido es : ' + otro_impuesto);
+    // console.log('Otro Impuesto recibido es : ' + otro_impuesto);
     // recorre items
     frm.doc.items.forEach((item_row, i1) => {
         if (item_row.facelec_tax_rate_per_uom_account === tax_account_n) {
