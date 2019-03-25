@@ -289,22 +289,42 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
 
         # SEGUNDA PARTE
         # Agregar n items
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte'] = {}
+        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte'] = []
 
-        # Iterar los n items con for in
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['cantidad'] = '5'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['codigoProducto'] = 'Manejo-001'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['descripcionProducto'] = 'Eso es'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['detalleImpuestoIva'] = '5'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['importeExento'] = '5'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['importeNetoGravado'] = '5'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['importeOtrosImpuestos'] = '5'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['importeTotalOperacion'] = '5'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['montoBruto'] = '5'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['montoDescuento'] = '5'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['precioUnitario'] = '5'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['tipoProducto'] = '5'
-        data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte']['unidadMedida'] = '5'
+        n_productos = (len(sales_invoice_item))
+        if n_productos > 1:
+            for i in range(0, n_productos):
+                item_factura_json = {}
+                item_factura_json['cantidad'] = float(sales_invoice_item[i]['qty'])
+                item_factura_json['codigoProducto'] = str(sales_invoice_item[i]['item_code'])
+                item_factura_json['descripcionProducto'] = str((sales_invoice_item[i]['item_name']))
+                item_factura_json['detalleImpuestoIva'] = float((sales_invoice_item[i]['facelec_sales_tax_for_this_row']))
+                item_factura_json['importeExento'] = float((datos_configuracion[0]['importe_exento']))
+                item_factura_json['importeNetoGravado'] = abs(float((sales_invoice_item[i]['facelec_amount_minus_excise_tax'])))
+                item_factura_json['importeOtrosImpuestos'] = float((sales_invoice_item[i]['facelec_other_tax_amount']))
+                item_factura_json['importeTotalOperacion'] = abs(float((sales_invoice_item[i]['amount'])))
+                item_factura_json['montoBruto'] = '{0:.2f}'.format(float(((sales_invoice_item[i]['facelec_gt_tax_net_fuel_amt']) +
+                                                                    (sales_invoice_item[i]['facelec_gt_tax_net_goods_amt']) +
+                                                                    (sales_invoice_item[i]['facelec_gt_tax_net_services_amt']))))
+                item_factura_json['montoDescuento'] = float(sales_invoice_item[i]['discount_percentage'])
+                item_factura_json['precioUnitario'] = float(sales_invoice_item[i]['rate'])
+
+                # es-GT: Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien.
+                # en-US: Obtains directly from the db the stock field to be later verified as Service or Good.
+                detalle_stock = frappe.db.get_values('Item', filters={'item_code': str(sales_invoice_item[i]['item_code'])},
+                                                     fieldname=['is_stock_item'])
+                # Validacion de Bien o Servicio, en base a detalle de stock
+                if (int((detalle_stock[0][0])) == 0):
+                    tipoProductoTag_Value = 'S'
+                if (int((detalle_stock[0][0])) == 1):
+                    tipoProductoTag_Value = 'B'
+
+                item_factura_json['tipoProducto'] = tipoProductoTag_Value
+                item_factura_json['unidadMedida'] = unidadMedidaTag_Value = str(sales_invoice_item[i]['facelec_three_digit_uom_code'])
+
+                data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte'].append(item_factura_json)
+        else:
+            frappe.msgprint(_('Error, no se obtuvieron los items para la Factura'))
 
         # TERCERA PARTE
         data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleImpuestosIva'] = detalleImpuestosIvaTag_Value
