@@ -88,6 +88,7 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                             tax_amount_after_discount_amount=%(nuevo_monto)s  
                             WHERE parent=%(serie_original)s''', {'nuevo_monto': str(valor_iva), 'serie_original': invoice_name})
 
+
 @frappe.whitelist()
 def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
     account_names = eval(accounts)

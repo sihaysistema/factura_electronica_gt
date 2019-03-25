@@ -787,7 +787,7 @@ frappe.ui.form.on("Sales Invoice", {
             // con las ('cuentas encontradas
             //console.log('---------------------- se encontro por lo menos una cuenta--------------------');
             frappe.call({
-                method: "factura_electronica.special_tax.add_gl_entry_other_special_tax",
+                method: "factura_electronica.resources_facelec.special_tax.add_gl_entry_other_special_tax",
                 args: {
                     invoice_name: frm.doc.name,
                     accounts: cuentas_registradas,

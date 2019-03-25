@@ -66,4 +66,3 @@ def validar_configuracion():
 
     else:
         return (int(3), 'Error 3')
-

@@ -5,11 +5,14 @@ from frappe import _
 import requests
 import xmltodict, json
 from datetime import datetime, date
+from frappe.utils import get_site_name
 
 from resources_facelec.utilities_facelec import encuentra_errores as errores
 from resources_facelec.utilities_facelec import normalizar_texto, validar_configuracion
-
 from resources_facelec.facelec_generator import construir_xml
+
+from resources_facelec.facelec_db import guardar_factura_electronica as guardar
+from resources_facelec.facelec_db import actualizarTablas as actualizartb
 
 # Permite trabajar con acentos, ñ, simbolos, etc
 import os, sys
@@ -33,7 +36,7 @@ def peticion_factura_electronica(datos_xml, url_servicio):
         frappe.msgprint(_('''Tiempo de espera agotado para webservice, verificar conexion a internet
                           e intentar de nuevo'''))
 
-    # Si hay algun error en la respuesta, lo capturar y mostrara
+    # Si hay algun error en la respuesta, lo capturara y mostrara
     try:
         respuesta_webservice = response.content
     except:
@@ -58,9 +61,10 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
     nombre_del_cliente = str(nombre_cliente)
     prefijo_serie = str(pre_se)
 
+    # Verifica que exista una configuracion validada para Factura Electronicaa
     validar_config = validar_configuracion()
 
-    # Si cumple, pasa el proceso de generar factura electronica
+    # Si es igual a 1, hay una configuracion valida
     if validar_config[0] == 1:
         # Verifica si existe una factura con la misma serie, evita duplicadas
         if frappe.db.exists('Envios Facturas Electronicas', {'numero_dte': serie_original_factura}):
@@ -100,6 +104,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                     frappe.msgprint(_('Error crear xml para factura electronica'))
                 else:
                     url = str(url_configurada[0]['url_listener'])
+                    tiempo_enviado = datetime.now()
                     respuesta_infile = peticion_factura_electronica(xml_factura, url)
 
 
@@ -110,7 +115,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                     # En la descripcion se encuentra el mensaje, si el documento electronico se realizo con exito
                     descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
                 except:
-                    frappe.msgprint(_('''Error: INFILE no pudo recibir los datos:''' + respuesta_infile))
+                    frappe.msgprint(_('''Error: INFILE no pudo recibir los datos: ''' + respuesta_infile))
                 else:
                     # La funcion errores se encarga de verificar si existen errores o si la
                     # generacion de factura electronica fue exitosa
@@ -122,12 +127,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                             # a guardar la respuesta de INFILE en la DB
                             if ((str(errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
 
-                                cae_fac_electronica = guardar(respuesta, serie_original_factura, tiempo_enviado)
+                                cae_fac_electronica = guardar(respuesta_infile, serie_original_factura, tiempo_enviado)
                                 # frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
                                 # el archivo rexpuest.xml se encuentra en la ruta, /home/frappe/frappe-bench/sites
 
-                                with open('respuesta.xml', 'w') as recibidoxml:
-                                    recibidoxml.write(respuesta)
+                                with open('respuesta_infile.xml', 'w') as recibidoxml:
+                                    recibidoxml.write(respuesta_infile)
                                     recibidoxml.close()
 
                                 # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
@@ -153,10 +158,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                 frappe.msgprint(_('''La serie utilizada en esta factura no esta en la Configuracion de Factura Electronica.
                                     Por favor configura la serie <b>{0}</b> en <b>Configuracion Factura Electronica</b> e intenta de nuevo.
                                     '''.format(prefijo_serie)))
+
     elif validar_config[0] == 2:
-        pass
+        frappe.msgprint(_('Existe más de una configuración para factura electrónica. Verifique que solo exista una validada'))
+
     elif validar_config[0] == 3:
-        pass
+        frappe.msgprint(_('No se encontró una configuración válida. Verifique que exista una configuración validada'))
 
 
 
