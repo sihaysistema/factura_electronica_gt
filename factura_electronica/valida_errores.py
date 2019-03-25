@@ -27,6 +27,7 @@ def encuentra_errores(cadena):
 
     return (diccionarioError)
 
+
 def normalizar_texto(texto):
     """Funcion para normalizar texto a abc ingles, elimina acentos, ñ, simbolos y
        tag a entidades html para ser reconocidos y evitar el error Woodstox Parser

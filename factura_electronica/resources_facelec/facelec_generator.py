@@ -13,7 +13,7 @@ sys.setdefaultencoding('utf-8')
 
 
 def crear_xml_factura_electronica(datos_factura):
-    '''Se encarga de convertir una estructura JSON a XML
+    '''Se encarga de convertir JSON a XML
        Parametros:
        ----------
        * datos_factura (json) : Estructura JSON con la informacion para realizar
@@ -25,12 +25,13 @@ def crear_xml_factura_electronica(datos_factura):
     with open('envio_test.xml', 'w') as f:
         f.write(xml_string)
 
-    return 'OK'
+    return xml_string
+
 
 def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada):
     '''Funcion para construir el xml con los datos necesarios para hacer una peticion de generacion de factura electronica
        a INFILE. La construccion del xml es en 3 partes. Los parametros que recibe se utilizan como filtro para la busqueda
-       de datos en la base de datos para luego ser asignadas a variables y terminar construyendo el xml
+       de datos en la base de datos para luego ser asignadas a variables y terminar construyendo el xml.
        
        Parametros:
        ----------
@@ -134,6 +135,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
     except:
         frappe.msgprint(_('Error al obtener datos de la configuracion de factura electronica'))
 
+
     # VALIDAR INFORMACION Y GENERAR JSON TO XML
     try:
         tipo_doc = str(series_configuradas[0]['tipo_documento'])
@@ -158,7 +160,6 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
                 direccionComercialCompradorTag_Value = 'N/A'
             else:
                 direccionComercialCompradorTag_Value = str(normalizar_texto(datos_cliente[0]['address_line1'])) #.encode('utf-8')
-                # frappe.msgprint(_(direccionComercialCompradorTag_Value))
 
             # Verificacion Telefono Comprador, en caso no exista se asignara N/A
             if ((datos_cliente[0]['phone']) == ''):
@@ -209,7 +210,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
         # es-GT: Depende si una factura esta cancelada o es valida, **MODIFICAR PARA FUTURAS IMPLEMENTACIONES**
         # en-US: Depends if an invoice is canceled or is valid, ** MODIFY FOR FUTURE IMPLEMENTATIONS **
         estadoDocumentoTag_Value = str(series_configuradas[0]['estado_documento'])
-        fechaResolucionTag_Value = (series_configuradas[0]['fecha_resolucion'])
+        fechaResolucionTag_Value = str(series_configuradas[0]['fecha_resolucion'])
         numeroResolucionTag_Value = str(series_configuradas[0]['numero_resolucion']).replace('-', '')
         serieAutorizadaTag_Value = str(series_configuradas[0]['secuencia_infile'])
         serieDocumentoTag_Value = str(series_configuradas[0]['codigo_sat'])
@@ -265,6 +266,8 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
         nombreCompletoVendedorTag_Value = str(normalizar_texto(datos_empresa[0]['company_name']))
 
 
+        # Guardara los datos para factura electronica en un diccionario, que luego se convertir en JSON
+        # Para terminar como XML
         data_factura_json = {}
 
         # Estructura request INFILE
@@ -286,10 +289,11 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
 
 
         # SEGUNDA PARTE
-        # Agregar n items
+        # Array para items
         data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte'] = []
 
         n_productos = (len(sales_invoice_item))
+        # Si existe mas de un producto
         if n_productos > 1:
             for i in range(0, n_productos):
                 item_factura_json = {}
@@ -318,9 +322,11 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
                     tipoProductoTag_Value = 'B'
 
                 item_factura_json['tipoProducto'] = tipoProductoTag_Value
-                item_factura_json['unidadMedida'] = unidadMedidaTag_Value = str(sales_invoice_item[i]['facelec_three_digit_uom_code'])
+                item_factura_json['unidadMedida'] = str(sales_invoice_item[i]['facelec_three_digit_uom_code'])
 
+                # Agrega al array n items
                 data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte'].append(item_factura_json)
+
         else:
             item_factura_json = {}
             item_factura_json['cantidad'] = float(sales_invoice_item[0]['qty'])
@@ -340,7 +346,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
             # es-GT: Obtiene directamente de la db el campo de stock para luego ser verificado como Servicio o Bien.
             # en-US: Obtains directly from the db the stock field to be later verified as Service or Good.
             detalle_stock = frappe.db.get_values('Item', filters={'item_code': str(sales_invoice_item[0]['item_code'])},
-                                                    fieldname=['is_stock_item'])
+                                                 fieldname=['is_stock_item'])
             # Validacion de Bien o Servicio, en base a detalle de stock
             if (int((detalle_stock[0][0])) == 0):
                 tipoProductoTag_Value = 'S'
@@ -348,8 +354,9 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
                 tipoProductoTag_Value = 'B'
 
             item_factura_json['tipoProducto'] = tipoProductoTag_Value
-            item_factura_json['unidadMedida'] = unidadMedidaTag_Value = str(sales_invoice_item[0]['facelec_three_digit_uom_code'])
+            item_factura_json['unidadMedida'] = str(sales_invoice_item[0]['facelec_three_digit_uom_code'])
 
+            # Agrega el item al array
             data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['dte']['detalleDte'].append(item_factura_json)
 
 
@@ -392,8 +399,9 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
             salida.write(str((json.dumps(data_factura_json))))
             salida.close()
 
-        mensaje = crear_xml_factura_electronica(json.dumps(data_factura_json))
+        xml_factura_infile = crear_xml_factura_electronica(json.dumps(data_factura_json))
 
-        return mensaje
+        return xml_factura_infile
+
     except:
         frappe.msgprint(_('Error al validar los datos para generar factura electronica'))
