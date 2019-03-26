@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 import datetime
 
-from valida_errores import normalizar_texto
+from utilities_facelec import normalizar_texto
 
 # Permite trabajar con acentos, ñ, simbolos, etc
 import os, sys

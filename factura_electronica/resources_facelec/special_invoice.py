@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 
-from valida_errores import normalizar_texto
+from utilities_facelec import normalizar_texto
 
 # Permite trabajar con acentos, ñ, simbolos, etc
 import os, sys
