@@ -17,7 +17,16 @@ sys.setdefaultencoding('utf-8')
 # en-US: Saves the data received from infile in the 'Electronic Invoices' Table.
 # en-US: For every succesfully generated electronic invoice, a record is added to keep as confirmation.
 def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
-    '''Guarda los datos recibidos de infile en la tabla Envios Facturas Electronicas de la base de datos ERPNext'''
+    '''Guarda los datos recibidos de infile en la tabla Envios Facturas Electronicas
+       de la base de datos ERPNext
+
+       Parametros:
+       ----------
+       * datos_recibidos (xml) : Respuesta de INFILE con la data de factura electronica
+                                 generada
+       * serie_fact (str) : Serie utilizada para la factura original
+       * tiempo_envio (str) : timestamp capturado al momento de enviar
+    '''
     try:
         # es-GT: documento: con la libreria xmltodict, se convierte de XML a Diccionario, para acceder a los datos atraves de sus llaves.
         # es-GT: Se asigna a la variable 'documento'
@@ -110,7 +119,12 @@ def guardar_factura_electronica(datos_recibidos, serie_fact, tiempo_envio):
 
 def actualizarTablas(serieOriginalFac):
     """Funcion permite actualizar tablas en la base de datos, despues de haber generado
-    la factura electronica"""
+       la factura electronica
+
+       Parametros:
+       ----------
+       * serieOriginalFac (str) : Serie de factura original
+    """
     # Verifica que exista un documento en la tabla Envios Facturas Electronicas con el nombre de la serie original
     if frappe.db.exists('Envios Facturas Electronicas', {'serie_factura_original': serieOriginalFac}):
         factura_guardada = frappe.db.get_values('Envios Facturas Electronicas',

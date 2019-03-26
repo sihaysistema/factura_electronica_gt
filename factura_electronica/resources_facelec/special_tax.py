@@ -11,13 +11,23 @@ import os, sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+
 def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, invoice_name):
     '''Grand total, quitar sumatoria totoal shs otros imuestos, = neto para iva
-        se calcula sobre ese neto, y se va a ir a modificar en glentry para reflejar los cambios'''
+       se calcula sobre ese neto, y se va a ir a modificar en glentry para reflejar los cambios
+
+       Parametros:
+       ----------
+       * data_gl_entry (dict/array) : Datos de factura
+       * tax_rate (dict/array) : Datos de impuestos
+       * invice_type (str) : Sales Invoice or Purchase Invoice
+       * invoice_name (str) : Nombre de la factura
+    '''
 
     # Calculos actualizar impuesto Sales Invoice -- Purchase Invoice
     total = '{0:.2f}'.format(float(data_gl_entry[0]['total']))
     total_tasable = 0
+
     if invoice_type == 'Sales Invoice':
         total_tasable = '{0:.2f}'.format(float(data_gl_entry[0]['total'] - data_gl_entry[0]['shs_total_otros_imp_incl']))
     else:
@@ -91,6 +101,15 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
 
 @frappe.whitelist()
 def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
+    '''Agrega entradas a Gl Entry de facturas con la cuenta especial asignada.
+    
+    Parametros:
+    ----------
+    * invoice_name (str) : Nombre de la factura
+    * accounts (dict) : Diccionario de cuentas
+    * invoice_type (str) : Tipo de factura
+    '''
+
     account_names = eval(accounts)
 
     # Verificacion extra para recibir Sales Invoice o Purchase Invoice del Front End

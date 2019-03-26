@@ -166,7 +166,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
         frappe.msgprint(_('No se encontró una configuración válida. Verifique que exista una configuración validada'))
 
 
-
 @frappe.whitelist()
 def obtenerConfiguracionManualAutomatica():
     '''Verifica la configuracion guardada ya sea Automatica o Manual, aplica para la generacion de
@@ -197,7 +196,13 @@ def obtenerConfiguracionManualAutomatica():
 
 @frappe.whitelist()
 def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
-    '''Descarga factura en servidor y registra en base de datos'''
+    '''Descarga factura en servidor y registra en base de datos
+    
+    Parametros:
+    ----------
+    * nombre_archivo (str) : Nombre que describe el archivo
+    * cae_de_factura_electronica (str) : CAE
+    '''
 
     modalidad_configurada = validar_configuracion()
     nombre_de_sitio = get_site_name(frappe.local.site)
@@ -259,7 +264,12 @@ def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
 
 @frappe.whitelist()
 def get_data_tax_account(name_account_tax_gt):
-    '''Funcion para obtener los datos de impuestos dependiendo el tipo de cuenta recibido'''
+    '''Funcion para obtener los datos de impuestos dependiendo el tipo de cuenta recibido
+    
+       Parametros:
+       ----------
+       * name_account_tax_gt (str) : Nombre de la cuenta
+    '''
     if frappe.db.exists('Account', {'name': name_account_tax_gt}):
 
         datos_cuenta = frappe.db.get_values('Account', filters={'name': name_account_tax_gt},
@@ -272,6 +282,12 @@ def get_data_tax_account(name_account_tax_gt):
 
 @frappe.whitelist()
 def obtener_numero_resolucion(nombre_serie):
+    '''Retorna el numero de resolucion en base la serie de Configuracion Electronica
+    
+    Parametros:
+    ----------
+    * nombre_serie (str) : Nombre de la serie para filtrar
+    '''
     if frappe.db.exists('Configuracion Series', {'serie': nombre_serie, 'docstatus': 1}):
         numero_resolucion = frappe.db.get_values('Configuracion Series', filters={'serie': nombre_serie, 'docstatus': 1},
                                                  fieldname=['numero_resolucion'], as_dict=1)
@@ -305,7 +321,13 @@ def prueba_tabla(serie_fac):
 
 @frappe.whitelist()
 def generar_tabla_html(tabla):
-    """Funcion para generar tabla html + jinja, para mostrar impuestos por cada item"""
+    """Funcion para generar tabla html + jinja, para mostrar impuestos por cada item
+    
+    Parametros:
+    ----------
+    * tabla (json) : Json con la data que desibe los impuestos
+    """
+
     headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("+"),
                _("Base Value"), _("+"), _("IVA"), _("="), _("Total")]
     mi_tabla = json.loads(tabla)
@@ -324,7 +346,13 @@ def generar_tabla_html(tabla):
 @frappe.whitelist()
 def generar_tabla_html_factura_compra(tabla):
     """Funcion para generar tabla html + jinja, para mostrar impuestos por
-        cada item de Purchase Invoice"""
+       cada item de Purchase Invoice.
+
+       Parametros:
+       ----------
+       * tabla (json) : Json con la data que desibe los impuestos
+    """
+
     headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("+"),
                _("Base Value"), _("+"), _("IVA"), _("="), _("Total")]
 
@@ -342,7 +370,7 @@ def generar_tabla_html_factura_compra(tabla):
 
 
 def data_sales_invoice(data):
-    '''Complementacion de calculos para Sales Invoice API'''
+    '''Complementacion de calculos para Sales Invoice API PNE'''
     sales_invoice = data
 
     taxes = sales_invoice.taxes

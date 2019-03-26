@@ -705,9 +705,6 @@ frappe.ui.form.on("Sales Invoice", {
             facelec_otros_impuestos_fila(frm, cdt, cdn);
         });
     },
-    customer: function (frm, cdt, cdn) {
-        // Trigger Proveedor
-    },
     refresh: function (frm, cdt, cdn) {
         // Trigger refresh de pagina
         // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
