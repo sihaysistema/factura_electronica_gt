@@ -276,7 +276,7 @@ frappe.ui.form.on("Quotation", {
         // en-US: Enabling event listeners for child tables
         // es-GT: Habilitando escuchadores de eventos en las tablas hijas del tipo de documento principal
         // No corra KEY UP, KEY PRESS, KEY DOWN en este campo!   NO NO NO NO NONONO
-        frm.fields_dict.items.grid.wrapper.on('click focusout blur', 'input[data-fieldname="item_code"][data-doctype="Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('focusout blur', 'input[data-fieldname="item_code"][data-doctype="Quotation Item"]', function (e) {
             shs_quotation_calculation(frm, cdt, cdn);
             quotation_each_item(frm, cdt, cdn);
         });
@@ -296,12 +296,12 @@ frappe.ui.form.on("Quotation", {
         });
 
         // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('mouseleave', 'input[data-fieldname="uom"][data-doctype="Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="uom"][data-doctype="Quotation Item"]', function (e) {
             shs_quotation_calculation(frm, cdt, cdn);
         });
 
         // This part might seem counterintuitive, but it is the "next" field in tab order after item code, which helps for a "creative" strategy to update everything after pressing TAB out of the item code field.  FIXME
-        frm.fields_dict.items.grid.wrapper.on('focus', 'input[data-fieldname="item_name"][data-doctype="Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur ', 'input[data-fieldname="item_name"][data-doctype="Quotation Item"]', function (e) {
             quotation_each_item(frm, cdt, cdn);
             coti_insertar_fila_otro_impuesto(frm, cdt, cdn);
         });
@@ -311,7 +311,7 @@ frappe.ui.form.on("Quotation", {
         });
 
         // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('mouseleave', 'input[data-fieldname="qty"][data-doctype="Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="qty"][data-doctype="Quotation Item"]', function (e) {
             quotation_each_item(frm, cdt, cdn);
             shs_quotation_calculation(frm, cdt, cdn);
         });
@@ -326,34 +326,25 @@ frappe.ui.form.on("Quotation", {
 
         // This specific one is only for keyup events, to recalculate all. Only on blur will it refresh everything!
         // Do not refresh with each_item in Mouse leave OR keyup! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('keyup mouseleave focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Quotation Item"]', function (e) {
             // Trying to calc first, then refresh, or no refresh at all...
             shs_quotation_calculation(frm, cdt, cdn);
             quotation_each_item(frm, cdt, cdn);
             cur_frm.refresh_field("conversion_factor");
         });
 
-        // en-US: Enabling event listeners in the main doctype
-        // es-GT: Habilitando escuchadores de eventos en el tipo de documento principal
-        // When ANY key is released after being pressed
-        cur_frm.fields_dict.customer.$input.on("keyup", function (evt) {
-            // shs_quotation_calculation(frm, cdt, cdn);
-            // quotation_each_item(frm, cdt, cdn);
-            // refresh_field('qty');
-        });
-
         // When mouse leaves the field
-        cur_frm.fields_dict.customer.$input.on("mouseleave blur focusout", function (evt) {
+        cur_frm.fields_dict.customer.$input.on("blur focusout", function (evt) {
             shs_quotation_calculation(frm, cdt, cdn);
         });
 
         // Mouse clicks over the items field
-        cur_frm.fields_dict.items.$wrapper.on("click", function (evt) {
+        cur_frm.fields_dict.items.$wrapper.on("blur focusout", function (evt) {
             quotation_each_item(frm, cdt, cdn);
         });
 
         // Focusout from the field
-        cur_frm.fields_dict.taxes_and_charges.$input.on("focusout", function (evt) {
+        cur_frm.fields_dict.taxes_and_charges.$input.on("blur focusout", function (evt) {
             shs_quotation_calculation(frm, cdt, cdn);
             coti_insertar_fila_otro_impuesto(frm, cdt, cdn);
         });
