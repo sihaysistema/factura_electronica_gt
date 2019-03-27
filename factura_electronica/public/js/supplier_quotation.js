@@ -84,7 +84,7 @@ frappe.ui.form.on("Supplier Quotation", {
     onload_post_render: function (frm, cdt, cdn) {
         // en-US: Enabling event listeners for child tables
         // es-GT: Habilitando escuchadores de eventos en las tablas hijas del tipo de documento principal
-        frm.fields_dict.items.grid.wrapper.on('click focusout blur', 'input[data-fieldname="item_code"][data-doctype="Supplier Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('focusout blur', 'input[data-fieldname="item_code"][data-doctype="Supplier Quotation Item"]', function (e) {
             shs_supplier_quotation_calculation(frm, cdt, cdn);
             supplier_quotation_each_item(frm, cdt, cdn);
         });
@@ -93,7 +93,7 @@ frappe.ui.form.on("Supplier Quotation", {
             supplier_quotation_each_item(frm, cdt, cdn);
         });
 
-        frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="uom"][data-doctype="Supplier Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="uom"][data-doctype="Supplier Quotation Item"]', function (e) {
             supplier_quotation_each_item(frm, cdt, cdn);
         });
 
@@ -127,34 +127,25 @@ frappe.ui.form.on("Supplier Quotation", {
 
         // This specific one is only for keyup events, to recalculate all. Only on blur will it refresh everything!
         // Do not refresh with each_item in Mouse leave OR keyup! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('blur mouseleave focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Supplier Quotation Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Supplier Quotation Item"]', function (e) {
             // Trying to calc first, then refresh, or no refresh at all...
             shs_supplier_quotation_calculation(frm, cdt, cdn);
             supplier_quotation_each_item(frm, cdt, cdn);
             cur_frm.refresh_field("conversion_factor");
         });
 
-        // en-US: Enabling event listeners in the main doctype
-        // es-GT: Habilitando escuchadores de eventos en el tipo de documento principal
-        // When ANY key is released after being pressed
-        cur_frm.fields_dict.supplier.$input.on("keyup", function (evt) {
-            // shs_supplier_quotation_calculation(frm, cdt, cdn);
-            // supplier_quotation_each_item(frm, cdt, cdn);
-            // refresh_field('qty');
-        });
-
         // When mouse leaves the field
-        cur_frm.fields_dict.supplier.$input.on("mouseleave blur focusout", function (evt) {
+        cur_frm.fields_dict.supplier.$input.on("blur focusout", function (evt) {
             shs_supplier_quotation_calculation(frm, cdt, cdn);
         });
 
         // Mouse clicks over the items field
-        cur_frm.fields_dict.items.$wrapper.on("click", function (evt) {
+        cur_frm.fields_dict.items.$wrapper.on("blur", function (evt) {
             supplier_quotation_each_item(frm, cdt, cdn);
         });
 
         // Focusout from the field
-        cur_frm.fields_dict.taxes_and_charges.$input.on("focusout", function (evt) {
+        cur_frm.fields_dict.taxes_and_charges.$input.on("blur focusout", function (evt) {
             shs_supplier_quotation_calculation(frm, cdt, cdn);
         });
     },
