@@ -436,7 +436,7 @@ frappe.ui.form.on("Purchase Invoice", {
         // Si existe por lo menos una cuenta, se ejecuta frappe.call
         if (Object.keys(cuentas_registradas).length > 0) {
             frappe.call({
-                method: "factura_electronica.special_tax.add_gl_entry_other_special_tax",
+                method: "factura_electronica.resources_facelec.special_tax.add_gl_entry_other_special_tax",
                 args: {
                     invoice_name: frm.doc.name,
                     accounts: cuentas_registradas,
@@ -461,7 +461,7 @@ frappe.ui.form.on("Purchase Invoice", {
         console.log(frm.doc.naming_series);
 
         frappe.call({
-            method: "factura_electronica.special_invoice.verificar_existencia_series",
+            method: "factura_electronica.resources_facelec.special_invoice.verificar_existencia_series",
             args: {
                 serie: frm.doc.naming_series
             },
