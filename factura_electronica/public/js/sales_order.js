@@ -85,7 +85,7 @@ frappe.ui.form.on("Sales Order", {
     onload_post_render: function (frm, cdt, cdn) {
         // en-US: Enabling event listeners for child tables
         // es-GT: Habilitando escuchadores de eventos en las tablas hijas del tipo de documento principal
-        frm.fields_dict.items.grid.wrapper.on('click focusout blur', 'input[data-fieldname="item_code"][data-doctype="Sales Order Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('focusout blur', 'input[data-fieldname="item_code"][data-doctype="Sales Order Item"]', function (e) {
             shs_sales_order_calculation(frm, cdt, cdn);
             sales_order_each_item(frm, cdt, cdn);
         });
@@ -99,7 +99,7 @@ frappe.ui.form.on("Sales Order", {
         });
 
         // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('mouseleave', 'input[data-fieldname="uom"][data-doctype="Sales Order Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="uom"][data-doctype="Sales Order Item"]', function (e) {
             shs_sales_order_calculation(frm, cdt, cdn);
         });
 
@@ -113,13 +113,13 @@ frappe.ui.form.on("Sales Order", {
         });
 
         // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('mouseleave', 'input[data-fieldname="qty"][data-doctype="Sales Order Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="qty"][data-doctype="Sales Order Item"]', function (e) {
             sales_order_each_item(frm, cdt, cdn);
             shs_sales_order_calculation(frm, cdt, cdn);
         });
 
         // DO NOT USE Keyup, ??  FIXME FIXME FIXME FIXME FIXME  este hace calculos bien
-        frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Order Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Order Item"]', function (e) {
             //  IMPORTANT! IMPORTANT!  This is the one that gets the calculations correct!
             // Trying to calc first, then refresh, or no refresh at all...
             sales_order_each_item(frm, cdt, cdn);
@@ -128,20 +128,11 @@ frappe.ui.form.on("Sales Order", {
 
         // This specific one is only for keyup events, to recalculate all. Only on blur will it refresh everything!
         // Do not refresh with each_item in Mouse leave OR keyup! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('keyup mouseleave focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Order Item"]', function (e) {
+        frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Order Item"]', function (e) {
             // Trying to calc first, then refresh, or no refresh at all...
             shs_sales_order_calculation(frm, cdt, cdn);
             sales_order_each_item(frm, cdt, cdn);
             cur_frm.refresh_field("conversion_factor");
-        });
-
-        // en-US: Enabling event listeners in the main doctype
-        // es-GT: Habilitando escuchadores de eventos en el tipo de documento principal
-        // When ANY key is released after being pressed
-        cur_frm.fields_dict.customer.$input.on("keyup", function (evt) {
-            // shs_sales_order_calculation(frm, cdt, cdn);
-            // sales_order_each_item(frm, cdt, cdn);
-            // refresh_field('qty');
         });
 
         // When mouse leaves the field
@@ -150,7 +141,7 @@ frappe.ui.form.on("Sales Order", {
         });
 
         // Mouse clicks over the items field
-        cur_frm.fields_dict.items.$wrapper.on("click", function (evt) {
+        cur_frm.fields_dict.items.$wrapper.on("blur focusout", function (evt) {
             sales_order_each_item(frm, cdt, cdn);
         });
 
