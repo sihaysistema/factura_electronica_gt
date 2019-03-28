@@ -115,7 +115,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                     # En la descripcion se encuentra el mensaje, si el documento electronico se realizo con exito
                     descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
                 except:
-                    frappe.msgprint(_('''Error: INFILE no pudo recibir los datos: ''' + respuesta_infile))
+                    frappe.msgprint(_('''Error: INFILE no pudo recibir los datos: ''' + str(respuesta_infile)))
                 else:
                     # La funcion errores se encarga de verificar si existen errores o si la
                     # generacion de factura electronica fue exitosa
@@ -155,15 +155,20 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                             frappe.msgprint(_('NO GENERADA'))
 
             else:
-                frappe.msgprint(_('''La serie utilizada en esta factura no esta en la Configuracion de Factura Electronica.
-                                    Por favor configura la serie <b>{0}</b> en <b>Configuracion Factura Electronica</b> e intenta de nuevo.
-                                    '''.format(prefijo_serie)))
+                frappe.msgprint(_('''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
+                                    Por favor configura la serie <b>{0}</b> en 
+                                    <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>
+                                    e intenta de nuevo.
+                                  '''.format(prefijo_serie)))
 
     elif validar_config[0] == 2:
-        frappe.msgprint(_('Existe más de una configuración para factura electrónica. Verifique que solo exista una validada'))
+        frappe.msgprint(_('''Existe más de una configuración para factura electrónica.
+                             Verifique que solo exista una validada en
+                             <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>'''))
 
     elif validar_config[0] == 3:
-        frappe.msgprint(_('No se encontró una configuración válida. Verifique que exista una configuración validada'))
+        frappe.msgprint(_('''No se encontró una configuración válida. Verifique que exista una configuración validada en 
+                             <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>'''))
 
 
 @frappe.whitelist()
