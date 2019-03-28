@@ -401,6 +401,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
 
         xml_factura_infile = crear_xml_factura_electronica(json.dumps(data_factura_json))
 
+        # Retorna string XML a partir de JSON
         return xml_factura_infile
 
     except:
