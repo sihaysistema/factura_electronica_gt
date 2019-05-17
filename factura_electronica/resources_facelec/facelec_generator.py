@@ -185,7 +185,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
         else:
             nombreComercialCompradorTag_Value = str(normalizar_texto(sales_invoice[0]['customer_name']))
 
-        nitCompradorTag_Value = str(nit_cliente[0][0]).replace('-', '')
+        nitCompradorTag_Value = str((nit_cliente[0][0]).replace('-', '')).upper()
 
 
         # VERIFICACION DATOS CONFIGURACION FACTURA ELECTRONICA ------------------------------------------------
@@ -195,7 +195,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
         idDispositivoTag_Value = str(datos_configuracion[0]['id_dispositivo'])
         importeOtrosImpuestosTag_Value = float(datos_configuracion[0]['importe_otros_impuestos'])
         importeTotalExentoTag_Value = float(datos_configuracion[0]['importe_total_exento'])
-        nitGFACETag_Value = str(datos_configuracion[0]['nit_gface']).replace('-', '')
+        nitGFACETag_Value = str((datos_configuracion[0]['nit_gface']).replace('-', '')).upper()
         regimenISRTag_Value = str(datos_configuracion[0]['regimen_isr'])
         usuarioTag_Value = str(datos_configuracion[0]['usuario'])
         validadorTag_Value = str(datos_configuracion[0]['validador'])
@@ -261,7 +261,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
         except:
             frappe.msgprint(_('No se puede obtener direccion de la compania, por favor crearla'))
 
-        nitVendedorTag_Value = str(datos_empresa[0]['nit_face_company']).replace('-', '')
+        nitVendedorTag_Value = str((datos_empresa[0]['nit_face_company']).replace('-', '')).upper()
         nombreComercialRazonSocialVendedorTag_Value = str(normalizar_texto(datos_empresa[0]['company_name']))
         nombreCompletoVendedorTag_Value = str(normalizar_texto(datos_empresa[0]['company_name']))
 
