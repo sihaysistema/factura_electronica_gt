@@ -88,7 +88,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
 
         datos_cliente = frappe.db.get_values('Address', filters={'name': direccion_cliente},
                                              fieldname=['email_id', 'country', 'city',
-                                                       'address_line1', 'state',
+                                                       'address_line1', 'state', 'address_line2',
                                                        'phone', 'address_title', 'name'], as_dict=1)
     except:
         frappe.msgprint(_('''Error al obtener informacion del
@@ -100,7 +100,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
 
         direccion_empresa = frappe.db.get_values('Address', filters={'name': dir_empresa},
                                                 fieldname=['email_id', 'country', 'city',
-                                                          'address_line1', 'state',
+                                                          'address_line1', 'address_line2', 'state',
                                                           'phone', 'address_title',
                                                           'county'], as_dict=1)
     except:
@@ -160,7 +160,8 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
             if ((datos_cliente[0]['address_line1']) == ''):
                 direccionComercialCompradorTag_Value = 'N/A'
             else:
-                direccionComercialCompradorTag_Value = str(normalizar_texto(datos_cliente[0]['address_line1'])) #.encode('utf-8')
+                direccionComercialCompradorTag_Value = '{0} {1}'.format(str(normalizar_texto(datos_cliente[0]['address_line1'])),
+                                                                        str(normalizar_texto(datos_cliente[0]['address_line2']))) #.encode('utf-8')
 
             # Verificacion Telefono Comprador, en caso no exista se asignara N/A
             if ((datos_cliente[0]['phone']) == ''):
@@ -257,7 +258,8 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
         # VERICACION DATOS COMPANY -------------------------------------------------------------------------------
         try:
             departamentoVendedorTag_Value = str(normalizar_texto(direccion_empresa[0]['city']))
-            direccionComercialVendedorTag_Value = str(normalizar_texto(direccion_empresa[0]['address_line1']))
+            direccionComercialVendedorTag_Value = '{0} {1}'.format(str(normalizar_texto(direccion_empresa[0]['address_line1'])),
+                                                                   str(normalizar_texto(direccion_empresa[0]['address_line2'])))
             municipioVendedorTag_Value = str(normalizar_texto(direccion_empresa[0]['state']))
         except:
             frappe.msgprint(_('No se puede obtener direccion de la compania, por favor crearla'))
