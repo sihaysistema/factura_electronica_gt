@@ -23,8 +23,8 @@ def crear_xml_factura_electronica(datos_factura):
 
     # PARA DEBUG :)
     # Escribe la data_factura json a XML
-    # with open('envio_test.xml', 'w') as f:
-    #     f.write(xml_string)
+    with open('envio_test.xml', 'w') as f:
+        f.write(xml_string)
 
     return xml_string
 
@@ -141,6 +141,12 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
     try:
         tipo_doc = str(series_configuradas[0]['tipo_documento'])
 
+        direccion_linea2 = ''
+        if datos_cliente[0]['address_line2'] is None:
+            direccion_linea2 = ''
+        else:
+            direccion_linea2 = str(normalizar_texto(datos_cliente[0]['address_line2']))
+
         # VERIFICACION DATOS CLIENTES ------------------------------------------------------------------------
         if frappe.db.exists('Address', {'name': direccion_cliente}):
 
@@ -161,16 +167,16 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
                 direccionComercialCompradorTag_Value = 'N/A'
             else:
                 direccionComercialCompradorTag_Value = '{0} {1}'.format(str(normalizar_texto(datos_cliente[0]['address_line1'])),
-                                                                        str(normalizar_texto(datos_cliente[0]['address_line2'])) or '') #.encode('utf-8')
+                                                                        direccion_linea2) #.encode('utf-8')
 
             # Verificacion Telefono Comprador, en caso no exista se asignara N/A
-            if ((datos_cliente[0]['phone']) == ''):
+            if (datos_cliente[0]['phone'] == '') or (datos_cliente[0]['phone'] is None):
                 telefonoCompradorTag_Value = 'N/A'
             else:
                 telefonoCompradorTag_Value = str(datos_cliente[0]['phone'])
 
             # Verificacion Municipio Comprador, en caso no exista se asignara N/A
-            if ((datos_cliente[0]['state']) == ''):
+            if (datos_cliente[0]['state'] == '') or (datos_cliente[0]['state'] is None):
                 municipioCompradorTag_Value = 'N/A'
             else:
                 municipioCompradorTag_Value = str(normalizar_texto(datos_cliente[0]['state']))
@@ -259,7 +265,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
         try:
             departamentoVendedorTag_Value = str(normalizar_texto(direccion_empresa[0]['city']))
             direccionComercialVendedorTag_Value = '{0} {1}'.format(str(normalizar_texto(direccion_empresa[0]['address_line1'])),
-                                                                   str(normalizar_texto(direccion_empresa[0]['address_line2'])) or '')
+                                                                   direccion_linea2)
             municipioVendedorTag_Value = str(normalizar_texto(direccion_empresa[0]['state']))
         except:
             frappe.msgprint(_('No se puede obtener direccion de la compania, por favor crearla'))
