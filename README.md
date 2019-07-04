@@ -11,7 +11,7 @@ Electronic invoice generator for Guatemala, based on the Accounts and Stock modu
 
 A hired service is required to connect to their API.
 
-For installation details, features and mor einformation please visit the [wiki](https://github.com/sihaysistema/factura_electronica_gt/wiki)
+For installation details, features and more information please visit the [wiki](https://github.com/sihaysistema/factura_electronica_gt/wiki)
 
 ## Features
 
