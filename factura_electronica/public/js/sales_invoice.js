@@ -3,8 +3,12 @@
  * For license information, please see license.txt
  */
 
-import { valNit } from './facelec.js';
-import { goalSeek } from './goalSeek.js';
+import {
+    valNit
+} from './facelec.js';
+import {
+    goalSeek
+} from './goalSeek.js';
 
 /* 1 Funcion calculadora para Sales Invoice ------------------------------------------------------------------------ */
 function facelec_tax_calc_new(frm, cdt, cdn) {
@@ -65,7 +69,7 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
-				/*
+                /*
 				var total_fuel = 0;
 				$.each(frm.doc.items || [], function (i, d) {
 					// total_qty += flt(d.qty);
@@ -83,18 +87,18 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                 frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
-				/*
-				var total_goods = 0;
-				$.each(frm.doc.items || [], function (i, d) {
-					// total_qty += flt(d.qty);
-					if (d.facelec_is_good) {
-						total_goods += flt(d.facelec_gt_tax_net_goods_amt);
-					};
-				});
-				console.log("El total neto de bienes es:" + total_goods); // WORKS OK!
-				// cur_frm.doc.facelec_gt_tax_goods = total_goods;
-				cur_frm.set_value('facelec_gt_tax_goods', total_goods);
-				*/
+                /*
+                var total_goods = 0;
+                $.each(frm.doc.items || [], function (i, d) {
+                	// total_qty += flt(d.qty);
+                	if (d.facelec_is_good) {
+                		total_goods += flt(d.facelec_gt_tax_net_goods_amt);
+                	};
+                });
+                console.log("El total neto de bienes es:" + total_goods); // WORKS OK!
+                // cur_frm.doc.facelec_gt_tax_goods = total_goods;
+                cur_frm.set_value('facelec_gt_tax_goods', total_goods);
+                */
             };
             if (item_row.facelec_is_service) {
                 //console.log("The item you added is a SERVICE!" + item_row.facelec_is_service);// WORKS OK!
@@ -104,21 +108,21 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                 //frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
                 frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
                 frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
-				/*
-				var total_servi = 0;
-				$.each(frm.doc.items || [], function (i, d) {
-					if (d.facelec_is_service) {
-						total_servi += flt(d.facelec_gt_tax_net_services_amt);
-						console.log("se detecto cheque de servicio"); // WORKS!
-					};
-				});
-				console.log("El total neto de servicios es:" + total_servi); // WORKS OK!
-				// cur_frm.doc.facelec_gt_tax_services = total_servi;
-				cur_frm.set_value('facelec_gt_tax_services', total_servi);
-				*/
+                /*
+                var total_servi = 0;
+                $.each(frm.doc.items || [], function (i, d) {
+                	if (d.facelec_is_service) {
+                		total_servi += flt(d.facelec_gt_tax_net_services_amt);
+                		console.log("se detecto cheque de servicio"); // WORKS!
+                	};
+                });
+                console.log("El total neto de servicios es:" + total_servi); // WORKS OK!
+                // cur_frm.doc.facelec_gt_tax_services = total_servi;
+                cur_frm.set_value('facelec_gt_tax_services', total_servi);
+                */
             };
             // Para el calculo total de IVA, basado en la sumatoria de facelec_sales_tax_for_this_row de cada item
-			/*
+            /*
 			var full_tax_iva = 0;
 			$.each(frm.doc.items || [], function (i, d) {
 				full_tax_iva += flt(d.facelec_sales_tax_for_this_row);
@@ -333,9 +337,9 @@ function facelec_otros_impuestos_fila(frm, cdt, cdn) {
 }
 
 function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
-	/**
-	 * Se encarga de recalcular el total de otros impuestos cuando se elimina un item
-	 */
+    /**
+     * Se encarga de recalcular el total de otros impuestos cuando se elimina un item
+     */
     // console.log('Otro Impuesto recibido es : ' + otro_impuesto);
     // recorre items
     frm.doc.items.forEach((item_row, i1) => {
@@ -617,11 +621,11 @@ frappe.ui.form.on("Sales Invoice", {
         });
 
         // FIXME NO FUNCIONA CON TAB, SOLO HACIENDO CLICK Y ENTER.  Si se presiona TAB, SE BORRA!
-		/*frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]', function(e) {
-			console.log("Blurred away from the Item Code Field");
-			each_item(frm, cdt, cdn);
-			//facelec_tax_calc_new(frm, cdt, cdn);
-		});*/
+        /*frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]', function(e) {
+        	console.log("Blurred away from the Item Code Field");
+        	each_item(frm, cdt, cdn);
+        	//facelec_tax_calc_new(frm, cdt, cdn);
+        });*/
         frm.fields_dict.items.grid.wrapper.on('click', 'input[data-fieldname="uom"][data-doctype="Sales Invoice Item"]', function (e) {
             //console.log("Click on the UOM field");
             each_item(frm, cdt, cdn);
@@ -726,6 +730,25 @@ frappe.ui.form.on("Sales Invoice", {
         // En caso no exista un cae mostrara el boton para generar la factura electronica
         // correspondiente a su serie.
         verificacionCAE('manual', frm, cdt, cdn);
+
+        // Asignacion serie configurada para notas de credito
+        if (frm.doc.is_return) {
+            console.log('Es retorno');
+            cur_frm.set_df_property("naming_series", "read_only", 1);
+
+            frappe.call({
+                method: 'factura_electronica.api.obtener_serie_doc',
+                args: {
+                    opt: 'credit'
+                },
+                callback: function (r) {
+                    console.log(r.message);
+                    cur_frm.set_value('naming_series', r.message);
+                }
+            });
+        } else {
+            cur_frm.set_df_property("naming_series", "read_only", 0);
+        }
     },
     validate: function (frm) {
         generar_tabla_html(frm);
@@ -856,18 +879,66 @@ frappe.ui.form.on("Sales Invoice", {
             // del servidor
             callback: function (numero_resolucion) {
                 if (numero_resolucion.message === undefined) {
-                    cur_frm.set_value('shs_numero_resolucion', '');
+                    // cur_frm.set_value('shs_numero_resolucion', '');
                 } else {
                     cur_frm.set_value('shs_numero_resolucion', numero_resolucion.message);
                 }
             }
         });
+    },
+    es_nota_de_debito: function (frm) {
+        if (frm.doc.es_nota_de_debito) {
+            console.log('Es nota de debito');
+            cur_frm.set_df_property("naming_series", "read_only", 1);
+
+            frappe.call({
+                method: 'factura_electronica.api.obtener_serie_doc',
+                args: {
+                    opt: 'debit'
+                },
+                callback: function (r) {
+                    console.log(r.message);
+
+                    if (r.message) {
+                        // cur_frm.set_value('naming_series', '');
+                        cur_frm.set_value('naming_series', r.message);
+                    }
+                }
+            });
+        } else {
+            cur_frm.set_df_property("naming_series", "read_only", 0);
+        }
+    },
+    is_return: function (frm) {
+        // Asignacion serie configurada para notas de credito
+        if (frm.doc.is_return) {
+            console.log('Es retorno');
+            cur_frm.set_df_property("naming_series", "read_only", 1);
+
+            frappe.call({
+                method: 'factura_electronica.api.obtener_serie_doc',
+                args: {
+                    opt: 'credit'
+                },
+                callback: function (r) {
+                    console.log(r.message);
+                    if (r.message) {
+                        cur_frm.set_value('naming_series', '');
+                        cur_frm.set_value('naming_series', r.message);
+                    }
+
+                }
+            });
+        } else {
+            cur_frm.set_df_property("naming_series", "read_only", 0);
+            // cur_frm.set_value('naming_series', '');
+        }
     }
 });
 
 frappe.ui.form.on("Sales Invoice Item", {
-    items_add: function (frm, cdt, cdn) { },
-    items_move: function (frm, cdt, cdn) { },
+    items_add: function (frm, cdt, cdn) {},
+    items_move: function (frm, cdt, cdn) {},
     before_items_remove: function (frm, cdt, cdn) {
         frm.doc.items.forEach((item_row_1, index_1) => {
             if (item_row_1.name == cdn) {
@@ -946,9 +1017,9 @@ frappe.ui.form.on("Sales Invoice Item", {
             frm.refresh_field("items");
         });
     }
-	/*onload_post_render: function(frm, cdt, cdn){
-		console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
-	}*/
+    /*onload_post_render: function(frm, cdt, cdn){
+    	console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
+    }*/
 });
 
 function calculo_redondeo_pi(a, b) {

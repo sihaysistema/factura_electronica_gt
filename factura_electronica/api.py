@@ -684,3 +684,37 @@ def generar_factura_electronica_api(serie_factura, nombre_cliente, pre_se):
 
     elif validar_config[0] == 3:
         return 'No se encontró una configuración válida. Verifique que exista una configuración validada'
+
+
+@frappe.whitelist()
+def obtener_serie_doc(opt):
+    validar_config = validar_configuracion()
+
+    if validar_config[0] == 1:
+        nombre_config_validada = str(validar_config[1])
+
+        if opt == 'credit':
+            if frappe.db.exists('Configuracion Series', {'parent': nombre_config_validada,
+                                                         'is_credit_note': 1,
+                                                         'is_debit_note': 0}):
+
+                series_configuradas = frappe.db.get_values('Configuracion Series',
+                                                            filters={'parent': nombre_config_validada,
+                                                                     'is_credit_note': 1,
+                                                                     'is_debit_note': 0},
+                                                            fieldname=['serie'], as_dict=1)
+
+                return series_configuradas[0]['serie']
+
+        if opt == 'debit':
+            if frappe.db.exists('Configuracion Series', {'parent': nombre_config_validada,
+                                                         'is_debit_note': 1,
+                                                         'is_credit_note': 0}):
+
+                series_configuradas = frappe.db.get_values('Configuracion Series',
+                                                            filters={'parent': nombre_config_validada,
+                                                                     'is_debit_note': 1,
+                                                                     'is_credit_note': 0},
+                                                            fieldname=['serie'], as_dict=1)
+
+                return series_configuradas[0]['serie']
