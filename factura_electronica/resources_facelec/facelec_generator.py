@@ -248,7 +248,7 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
         fechaDocumentoTag_Value = str((sales_invoice[0]['creation']).isoformat())
 
         importeBrutoTag_Value = abs(float(sales_invoice[0]['net_total']))
-        importeDescuentoTag_Value = float(sales_invoice[0]['discount_amount'])
+        importeDescuentoTag_Value = abs(float(sales_invoice[0]['discount_amount']))
         importeNetoGravadoTag_Value = abs(float(sales_invoice[0]['grand_total']))
         montoTotalOperacionTag_Value = abs(float(sales_invoice[0]['grand_total']))
 
