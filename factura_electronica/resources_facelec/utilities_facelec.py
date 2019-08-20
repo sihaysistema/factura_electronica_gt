@@ -5,10 +5,6 @@ from frappe import _
 import unicodedata
 from xml.sax.saxutils import escape
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 
 def encuentra_errores(cadena):
     """Reemplazo múltiple de cadenas, para finalmente retornarlo como diccionario

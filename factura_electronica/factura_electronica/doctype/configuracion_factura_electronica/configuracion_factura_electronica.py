@@ -7,10 +7,6 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
-import sys
-reload(sys)  
-sys.setdefaultencoding('utf-8')
-
 class ConfiguracionFacturaElectronica(Document):
 	pass
 # es-GT: Se hace whitelist o abre permiso para permitir llamados Asincronicos desde el navegador del usuario

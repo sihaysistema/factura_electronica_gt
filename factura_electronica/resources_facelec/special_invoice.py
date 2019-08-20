@@ -5,11 +5,6 @@ from frappe import _
 
 from utilities_facelec import normalizar_texto
 
-# Permite trabajar con acentos, ñ, simbolos, etc
-import os, sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 
 @frappe.whitelist()
 def verificar_existencia_series(serie):

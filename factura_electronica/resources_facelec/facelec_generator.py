@@ -6,10 +6,6 @@ from datetime import datetime
 from utilities_facelec import normalizar_texto
 import json, xmltodict
 
-# Permite trabajar con acentos, ñ, simbolos, etc
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
 
 
 def crear_xml_factura_electronica(datos_factura):

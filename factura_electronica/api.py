@@ -14,11 +14,6 @@ from resources_facelec.facelec_generator import construir_xml
 from resources_facelec.facelec_db import guardar_factura_electronica as guardar
 from resources_facelec.facelec_db import actualizarTablas as actualizartb
 
-# Permite trabajar con acentos, ñ, simbolos, etc
-import os, sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 
 def peticion_factura_electronica(datos_xml, url_servicio):
     '''Realiza la peticion al webservice SOAP de INFILE

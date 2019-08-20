@@ -5,11 +5,6 @@ from frappe import _
 from datetime import datetime
 from valida_errores import normalizar_texto
 
-# Permite trabajar con acentos, ñ, simbolos, etc
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada):
     """Funcion para construir el xml con los datos necesarios para hacer una peticion de generacion de factura electronica
         a INFILE. La construccion del xml es en 3 partes. Los parametros que recibe se utilizan como filtro para la busqueda

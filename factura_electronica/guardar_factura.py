@@ -6,11 +6,6 @@ import xmltodict
 from datetime import datetime, date, time
 import os
 
-# Permite trabajar con acentos, ñ, simbolos, etc
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 # es-GT: Guarda los datos recibidos de infile en la Tabla 'Facturas Electronicas'.
 # en-US: Saves the data received from infile in the 'Electronic Invoices' Table.
 # es-GT: Cada factura electronica que se genere exitosamente, deja este registro como constancia.

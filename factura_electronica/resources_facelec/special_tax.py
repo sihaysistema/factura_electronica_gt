@@ -6,11 +6,6 @@ import datetime
 
 from utilities_facelec import normalizar_texto
 
-# Permite trabajar con acentos, ñ, simbolos, etc
-import os, sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 
 def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, invoice_name):
     '''Grand total, quitar sumatoria totoal shs otros imuestos, = neto para iva
