@@ -28,16 +28,14 @@ def encuentra_errores(cadena):
 def normalizar_texto(texto):
     """Funcion para normalizar texto a abc ingles, elimina acentos, ñ, simbolos y
        tag a entidades html para ser reconocidos y evitar el error Woodstox Parser
-       Java de INFILE. (Python 2.7)
+       Java de INFILE. (Python 3.6)
 
        Recibe como parametro un string y retorna un string normalizado"""
 
     string_normal = str(texto)
 
-    string_a_unicode = unicode(escape(string_normal), "utf-8")
-
     # Normalizacion de texto NFKD: modo abc ingles
-    string_normalizado = unicodedata.normalize('NFKD', string_a_unicode).encode('ASCII', 'ignore')
+    string_normalizado = unicodedata.normalize('NFKD', string_normal).encode('ASCII', 'ignore').decode("utf-8")
 
     return string_normalizado
 
