@@ -32,13 +32,13 @@ def peticion_factura_electronica(datos_xml, url_servicio):
         response = requests.post(url_servicio, data=datos_xml, headers=headers, timeout=15)
     except:
         frappe.msgprint(_('''Tiempo de espera agotado para webservice, verificar conexion a internet
-                          e intentar de nuevo'''))
+                          e intentar de nuevo: \n {}'''.format(frappe.get_traceback())))
 
     # Si hay algun error en la respuesta, lo capturara y mostrara
     try:
         respuesta_webservice = response.content
     except:
-        frappe.msgprint(_('Error en la comunicacion no se recibieron datos de INFILE'))
+        frappe.msgprint(_('Error en la comunicacion no se recibieron datos de INFILE: {}'.format(frappe.get_traceback())))
     else:
         return respuesta_webservice
 
@@ -99,7 +99,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                 try:
                     xml_factura = construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
                 except:
-                    frappe.msgprint(_('Error crear xml para factura electronica'))
+                    frappe.msgprint(_('Error crear xml para factura electronica: {}'.format(frappe.get_traceback())))
                 else:
                     url = str(url_configurada[0]['url_listener'])
                     tiempo_enviado = datetime.now()
@@ -115,7 +115,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                     # En la descripcion se encuentra el mensaje, si el documento electronico se realizo con exito
                     descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
                 except:
-                    frappe.msgprint(_('''Error: INFILE no pudo recibir los datos: ''' + str(respuesta_infile)))
+                    frappe.msgprint(_('''Error: INFILE no pudo recibir los datos: {0} \n {1}'''.format(str(respuesta_infile), frappe.get_traceback())))
                 else:
                     # La funcion errores se encarga de verificar si existen errores o si la
                     # generacion de factura electronica fue exitosa
@@ -152,7 +152,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                                 <span class="label label-warning" style="font-size: 14px">{}</span>
                                 '''.format(str(llave)) + ' = ' + str(errores_diccionario[llave])))
 
-                            frappe.msgprint(_('NO GENERADA'))
+                            frappe.msgprint(_('NO GENERADA: {}'.format(frappe.get_traceback())))
 
             else:
                 frappe.msgprint(_('''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
