@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 import datetime
 
-from utilities_facelec import normalizar_texto
+from factura_electronica.utils.utilities_facelec import normalizar_texto
 
 
 def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, invoice_name):

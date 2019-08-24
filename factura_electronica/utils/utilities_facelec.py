@@ -22,7 +22,7 @@ def encuentra_errores(cadena):
     except:
         diccionarioError = {'Mensaje': str(cadena)}
 
-    return (diccionarioError)
+    return diccionarioError
 
 
 def normalizar_texto(texto):

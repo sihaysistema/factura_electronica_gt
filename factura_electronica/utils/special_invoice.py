@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 
-from utilities_facelec import normalizar_texto
+from factura_electronica.utils.utilities_facelec import normalizar_texto
 
 
 @frappe.whitelist()

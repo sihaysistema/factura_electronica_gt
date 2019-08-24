@@ -7,12 +7,13 @@ import xmltodict, json
 from datetime import datetime, date
 from frappe.utils import get_site_name
 
-from resources_facelec.utilities_facelec import encuentra_errores as errores
-from resources_facelec.utilities_facelec import normalizar_texto, validar_configuracion
-from resources_facelec.facelec_generator import construir_xml
 
-from resources_facelec.facelec_db import guardar_factura_electronica as guardar
-from resources_facelec.facelec_db import actualizarTablas as actualizartb
+from factura_electronica.utils.utilities_facelec import encuentra_errores as errores
+from factura_electronica.utils.utilities_facelec import normalizar_texto, validar_configuracion
+from factura_electronica.utils.facelec_generator import construir_xml
+
+from factura_electronica.utils.facelec_db import guardar_factura_electronica as guardar
+from factura_electronica.utils.facelec_db import actualizarTablas as actualizartb
 
 
 def peticion_factura_electronica(datos_xml, url_servicio):
@@ -101,6 +102,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                     url = str(url_configurada[0]['url_listener'])
                     tiempo_enviado = datetime.now()
                     respuesta_infile = peticion_factura_electronica(xml_factura, url)
+                    with open('reci.xml', 'w') as f:
+                        f.write(str(respuesta_infile))
 
 
                 # VALIDACION RESPUESTA
@@ -127,7 +130,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                                 # el archivo rexpuest.xml se encuentra en la ruta, /home/frappe/frappe-bench/sites
 
                                 with open('respuesta_infile.xml', 'w') as recibidoxml:
-                                    recibidoxml.write(respuesta_infile)
+                                    recibidoxml.write(str(respuesta_infile))
                                     recibidoxml.close()
 
                                 # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
