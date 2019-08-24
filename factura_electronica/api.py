@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import frappe
-from frappe import _
 import requests
 import xmltodict, json
+
+from frappe import _
 from datetime import datetime, date
 from frappe.utils import get_site_name
-
 
 from factura_electronica.utils.utilities_facelec import encuentra_errores as errores
 from factura_electronica.utils.utilities_facelec import normalizar_texto, validar_configuracion
@@ -23,6 +24,7 @@ def peticion_factura_electronica(datos_xml, url_servicio):
        -----------
        * datos_xml (xml string) : Estructura XML con la data para factura
                                   electronica
+       Retornos: La respuesta de la peticion realizada a INFILE
     '''
     # Realizara la comunicacion al webservice
     try:
@@ -296,30 +298,6 @@ def obtener_numero_resolucion(nombre_serie):
                                                  fieldname=['numero_resolucion'], as_dict=1)
 
         return str(numero_resolucion[0]['numero_resolucion'])
-
-
-@frappe.whitelist()
-def prueba_tabla(serie_fac):
-    """Funcion alterntiva, toma datos ya guardados"""
-    pass
-    # headers = [_("Item"), _("Unit Tax"), _("Qty"), _("Total Tax"), _("Base Value"), _("IVA"), _("Total")]
-
-    # try:
-    #     items_tax = frappe.db.get_values('Sales Invoice Item', filters={'parent': serie_fac},
-    #                                      fieldname=['item_name', 'item_code', 'facelec_tax_rate_per_uom',
-    #                                                 'qty', 'facelec_other_tax_amount', 'rate',
-    #                                                 'facelec_sales_tax_for_this_row', 'net_amount'], as_dict=1)
-    # except:
-    #     frappe.msgprint(_('Fail'))
-    # else:
-    #     # Retorna la tabla HTML lista para renderizar
-    #     return frappe.render_template(
-    #         "templates/other_tax_facelec.html", dict(
-    #             headers=headers,
-    #             items_tax=items_tax,
-    #             index=len(items_tax)
-    #         )
-    #     )
 
 
 @frappe.whitelist()
