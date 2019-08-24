@@ -104,8 +104,9 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                     url = str(url_configurada[0]['url_listener'])
                     tiempo_enviado = datetime.now()
                     respuesta_infile = peticion_factura_electronica(xml_factura, url)
-                    with open('reci.xml', 'w') as f:
-                        f.write(str(respuesta_infile))
+                    # Usar para debug
+                    # with open('reci.xml', 'w') as f:
+                    #     f.write(str(respuesta_infile))
 
 
                 # VALIDACION RESPUESTA
@@ -131,9 +132,10 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                                 # frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
                                 # el archivo rexpuest.xml se encuentra en la ruta, /home/frappe/frappe-bench/sites
 
-                                with open('respuesta_infile.xml', 'w') as recibidoxml:
-                                    recibidoxml.write(str(respuesta_infile))
-                                    recibidoxml.close()
+                                # USAR PARA DEBUG
+                                # with open('respuesta_infile.xml', 'w') as recibidoxml:
+                                #     recibidoxml.write(str(respuesta_infile))
+                                #     recibidoxml.close()
 
                                 # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
                                 numero_dte_correcto = actualizartb(serie_original_factura)

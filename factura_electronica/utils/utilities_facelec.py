@@ -16,6 +16,7 @@ def encuentra_errores(cadena):
         diccionario = regex.sub(lambda x: str(reemplazo[x.string[x.start() :x.end()]]), cadena)
         diccionarioError = eval(diccionario)
 
+        # Guarda en un archiv json el registro de los ultimos errores ocurridos
         with open('registro_errores.json', 'w') as registro_error:
             registro_error.write(diccionario)
             registro_error.close()

@@ -18,8 +18,8 @@ def crear_xml_factura_electronica(datos_factura):
 
     # PARA DEBUG :)
     # Escribe la data_factura json a XML
-    with open('envio_test.xml', 'w') as f:
-        f.write(xml_string)
+    # with open('envio_test.xml', 'w') as f:
+    #     f.write(xml_string)
 
     return xml_string
 
@@ -400,9 +400,9 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
         data_factura_json['S:Envelope']['S:Body']['ns2:registrarDte']['dte']['validador'] = validadorTag_Value
 
         # PARA DEBUG: escribe el resultado JSON en un archivo
-        with open('envio_test.json', 'w') as salida:
-            salida.write(str((json.dumps(data_factura_json))))
-            salida.close()
+        # with open('envio_test.json', 'w') as salida:
+        #     salida.write(str((json.dumps(data_factura_json))))
+        #     salida.close()
 
         xml_factura_infile = crear_xml_factura_electronica(json.dumps(data_factura_json))
 
