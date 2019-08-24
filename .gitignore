@@ -3,6 +3,8 @@
 *.egg-info
 *.swp
 tags
+factura_electronica/public/js/facelec.min.js
+factura_electronica/public/js/facelec.min.js.map
 factura_electronica/docs/current
 .vscode/
 .vs/
