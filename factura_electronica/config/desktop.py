@@ -5,13 +5,16 @@ from __future__ import unicode_literals
 from frappe import _
 # en-US # Defines the icon attributes for the ERPNext Desktop icon.
 # es-GT # Define los atributos para el icono del escritorio virtual ERPNext.
+
 def get_data():
 	return [
 		{
 			"module_name": "Factura Electronica",
+			"category": "Modules",
+			"label": _("Factura Electronica"),
 			"color": "#112C5E",
 			"icon": "octicon octicon-desktop-download",
 			"type": "module",
-			"label": _("Factura Electronica")
+			"description": "Dive into the basics for your organisation's needs.",
 		}
 	]
