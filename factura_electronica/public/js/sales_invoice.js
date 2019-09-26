@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017, 2018 SHS and contributors
+ * Copyright (c) 2017, 2018, 2019 SHS and contributors
  * For license information, please see license.txt
  */
 
