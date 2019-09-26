@@ -38,7 +38,9 @@
   "llave_pfx",
   "codigo",
   "column_break_32",
-  "alias"
+  "alias",
+  "configuracion_series_fel_section",
+  "series_fel"
  ],
  "fields": [
   {
@@ -71,20 +73,18 @@
    "depends_on": "eval:doc.regimen === 'GFACE';",
    "fieldname": "datos_proveedor_factura_electronica",
    "fieldtype": "Section Break",
-   "label": "DATOS PROVEEDOR FACTURA ELECTRONICA"
+   "label": "DATOS PROVEEDOR FACTURA ELECTRONICA GFACE"
   },
   {
    "fieldname": "clave",
    "fieldtype": "Data",
-   "label": "Clave",
-   "reqd": 1
+   "label": "Clave"
   },
   {
    "fieldname": "usuario",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Usuario",
-   "reqd": 1
+   "label": "Usuario"
   },
   {
    "fieldname": "shs_confguracion",
@@ -94,67 +94,59 @@
    "bold": 1,
    "fieldname": "url_listener",
    "fieldtype": "Data",
-   "label": "URL Web Service",
-   "reqd": 1
+   "label": "URL Web Service"
   },
   {
    "fieldname": "validador",
    "fieldtype": "Data",
-   "label": "Validador",
-   "reqd": 1
+   "label": "Validador"
   },
   {
    "depends_on": "eval:doc.regimen === 'GFACE';",
    "fieldname": "configuracion_de_series",
    "fieldtype": "Section Break",
-   "label": "Configuracion de Series"
+   "label": "Configuracion de Series GFACE"
   },
   {
    "bold": 1,
    "fieldname": "configuracion_series",
    "fieldtype": "Table",
-   "label": "Configuracion Series",
-   "options": "Configuracion Series",
-   "reqd": 1
+   "label": "Configuracion Series GFACE",
+   "options": "Configuracion Series"
   },
   {
    "depends_on": "eval:doc.regimen === 'GFACE';",
    "fieldname": "datos_establecimiento",
    "fieldtype": "Section Break",
-   "label": "DATOS ESTABLECIMIENTO"
+   "label": "DATOS ESTABLECIMIENTO GFACE"
   },
   {
    "fieldname": "codigo_establecimiento",
    "fieldtype": "Data",
    "label": "Codigo Establecimiento",
-   "length": 4,
-   "reqd": 1
+   "length": 4
   },
   {
    "fieldname": "descripcion_otro_impuesto",
    "fieldtype": "Data",
    "label": "Descripcion Otro Impuesto",
-   "length": 100,
-   "reqd": 1
+   "length": 100
   },
   {
    "fieldname": "importe_exento",
    "fieldtype": "Data",
-   "label": "Importe Exento",
-   "reqd": 1
+   "label": "Importe Exento"
   },
   {
    "fieldname": "importe_otros_impuestos",
    "fieldtype": "Data",
-   "label": "Importe Otros Impuestos",
-   "reqd": 1
+   "label": "Importe Otros Impuestos"
   },
   {
    "fieldname": "id_dispositivo",
    "fieldtype": "Data",
    "label": "ID Dispositivo",
-   "length": 3,
-   "reqd": 1
+   "length": 3
   },
   {
    "fieldname": "datos_estab",
@@ -163,14 +155,12 @@
   {
    "fieldname": "nit_gface",
    "fieldtype": "Data",
-   "label": "NIT GFACE",
-   "reqd": 1
+   "label": "NIT GFACE"
   },
   {
    "fieldname": "importe_total_exento",
    "fieldtype": "Data",
-   "label": "Importe Total Exento",
-   "reqd": 1
+   "label": "Importe Total Exento"
   },
   {
    "default": "0",
@@ -184,8 +174,7 @@
    "fieldtype": "Select",
    "label": "Regimen ISR",
    "length": 20,
-   "options": "RET_DEFINITIVA\nNO_RET_DEFINITIVA",
-   "reqd": 1
+   "options": "RET_DEFINITIVA\nNO_RET_DEFINITIVA"
   },
   {
    "fieldname": "amended_from",
@@ -208,8 +197,7 @@
    "fieldname": "plantilla_impuestos",
    "fieldtype": "Link",
    "label": "Plantilla Impuestos",
-   "options": "Purchase Taxes and Charges Template",
-   "reqd": 1
+   "options": "Purchase Taxes and Charges Template"
   },
   {
    "fieldname": "series_facturas_especiales",
@@ -221,11 +209,11 @@
    "fieldname": "regimen",
    "fieldtype": "Select",
    "label": "Regimen",
-   "options": "GFACE\nFEL",
+   "options": "\nGFACE\nFEL",
    "reqd": 1
   },
   {
-   "collapsible_depends_on": "eval:doc.regimen === 'FEL':",
+   "depends_on": "eval:doc.regimen === 'FEL';",
    "fieldname": "datos_fel_section",
    "fieldtype": "Section Break",
    "label": "DATOS FEL"
@@ -248,11 +236,23 @@
    "fieldname": "alias",
    "fieldtype": "Data",
    "label": "Alias"
+  },
+  {
+   "depends_on": "eval:doc.regimen === 'FEL';",
+   "fieldname": "configuracion_series_fel_section",
+   "fieldtype": "Section Break",
+   "label": "Configuracion Series FEL"
+  },
+  {
+   "fieldname": "series_fel",
+   "fieldtype": "Table",
+   "label": "Series FEL",
+   "options": "Configuracion Series FEL"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2019-09-25 12:38:30.328347",
+ "modified": "2019-09-25 19:08:53.533645",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
