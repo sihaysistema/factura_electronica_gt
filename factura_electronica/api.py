@@ -17,6 +17,7 @@ from factura_electronica.utils.facelec_db import guardar_factura_electronica as 
 from factura_electronica.utils.facelec_db import actualizarTablas as actualizartb
 from factura_electronica.utils.fel_generator import generar_fac_fel
 
+
 def peticion_factura_electronica(datos_xml, url_servicio):
     '''Realiza la peticion al webservice SOAP de INFILE
 
@@ -157,8 +158,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
 
                                 frappe.msgprint(_('NO GENERADA: {}'.format(frappe.get_traceback())))
 
-            
-                            # Verificacion regimen FEL
 
                 else:
                     frappe.msgprint(_('''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
@@ -167,6 +166,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                                         e intenta de nuevo.
                                     '''.format(prefijo_serie)))
 
+            # Verificacion regimen FEL
             if validar_config[2] == 'FEL':
                 frappe.msgprint(_('FEL'))
                 if frappe.db.exists('Configuracion Series FEL', {'parent': nombre_config_validada, 'serie': prefijo_serie}):
@@ -179,11 +179,17 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                                                         fieldname=['url_listener', 'descargar_pdf_factura_electronica',
                                                                 'url_descarga_pdf'], as_dict=1)
                     try:
-                        generar_fac_fel(serie_original_factura, nombre_del_cliente, nombre_config_validada)
+                        generar_fac_fel(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_configuradas_fel)
                     except:
                         frappe.msgprint(_('error :('))
                     else:
                         frappe.msgprint(_('OK'))
+                else:
+                    frappe.msgprint(_('''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
+                                        Por favor configura la serie <b>{0}</b> en 
+                                        <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>
+                                        e intenta de nuevo.
+                                    '''.format(prefijo_serie)))
 
     elif validar_config[0] == 2:
         frappe.msgprint(_('''Existe más de una configuración para factura electrónica.
@@ -422,157 +428,7 @@ def data_sales_invoice(data):
     #     return sales_invoice
 
 
-def test_pne():
-    'Funcion para pruebas'
-    return 'Saludos'
-
-
 # FACTURA ELECTRONICA API
-def generar_factura_electronica_api_old_ok(serie_factura, nombre_cliente, pre_se):
-    """Verifica que todo este correctamente configurado para realizar una peticion
-       a INFILE para generar la factura electronica"""
-
-    serie_original_factura = str(serie_factura)
-    nombre_del_cliente = str(nombre_cliente)
-    prefijo_serie = str(pre_se)
-    
-    validar_config = validar_configuracion()
-
-    # Si cumple, procede a validar y generar factura electronica
-    if (validar_config[0] == 1):
-        # Verifica si existe ya una factura electronica con la misma serie, evita duplicacion
-        if frappe.db.exists('Envios Facturas Electronicas', {'serie_factura_original': serie_original_factura}):
-            factura_electronica = frappe.db.get_values('Envios Facturas Electronicas',
-                                                       filters={'numero_dte': serie_original_factura},
-                                                       fieldname=['serie_factura_original', 'cae', 'numero_dte'],
-                                                       as_dict=1)
-
-            dte_factura = str(factura_electronica[0]['numero_dte'])
-
-            return 'La factura ya fue generada, numero de dte' + str(dte_factura)
-
-        else:
-            nombre_config_validada = str(validar_config[1])
-            # Verificacion existencia series configuradas, en Configuracion Factura Electronica
-            if frappe.db.exists('Configuracion Series', {'parent': nombre_config_validada, 'serie': prefijo_serie}):
-                series_configuradas = frappe.db.get_values('Configuracion Series',
-                                                            filters={'parent': nombre_config_validada, 'serie': prefijo_serie},
-                                                            fieldname=['fecha_resolucion', 'estado_documento',
-                                                                        'tipo_documento', 'serie', 'secuencia_infile',
-                                                                        'numero_resolucion', 'codigo_sat'], as_dict=1)
-
-                url_configurada = frappe.db.get_values('Configuracion Factura Electronica',
-                                                    filters={'name': nombre_config_validada},
-                                                    fieldname=['url_listener', 'descargar_pdf_factura_electronica',
-                                                               'url_descarga_pdf'], as_dict=1)
-                status = 'palito test'
-                try:
-                    # Funcion obtiene los datos necesarios y construye el xml
-                    status = construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
-                except:
-                    return status
-                # else:
-                #     return frappe.msgprint((status))
-
-                try:
-                    # Si existe problemas al abrir archivo XML anteriormente generado
-                    # mostrara un error.
-                    envio_datos = open('envio_request.xml', 'r').read()
-                except:
-                    # frappe.msgprint(_('Error al abrir los datos XML. Comuniquese al No.'))
-                    return 'Error abrir XML'
-                else:
-                    try:
-                        # Si existe un error en la captura de tiempo del momento de envio mostrara un error
-                        tiempo_enviado = datetime.now()
-                    except:
-                        # frappe.msgprint(_('Error: No se puede capturar el momento de envio. Comuniquese al No.'))
-                        return 'Error captura de tiempo'
-                    else:
-                        try:
-                            # Si existe un problema con la comunicacion a INFILE o se sobrepasa el tiempo de espera
-                            # Mostrara un error
-                            # 2018-01-23 Se valido claramente que funciona el envío al servidor de INFILE
-                            # URL de listener de INFILE FUNCIONA OK!!!
-                            url = str(url_configurada[0]['url_listener'])
-                            # CABECERAS: Indican el tipo de datos FUNCIONA OK!!!
-                            headers = {"content-type": "text/xml"}
-                            # FUNCIONA OK!!!
-                            response = requests.post(url, data=envio_datos, headers=headers, timeout=10)
-                            #respuesta = response.content
-                        except:
-                            # frappe.msgprint(_('Error en la Comunicacion al servidor de INFILE. Verifique al PBX: +502 2208-2208'))
-                            return 'Error Comunicacion a infile, intentar de nuevo tiempo de espera agotado'
-                        else:
-                            try:
-                                # Si no se recibe ningun dato del servidor de INFILE mostrara el error
-                                # Guarda el contenido de la respuesta enviada por INFILE
-                                respuesta = response.content
-                            except:
-                                # frappe.msgprint(_('Error en la comunicacion no se recibieron datos de INFILE'))
-                                return 'Error no se recibieron datos de infile, intentar de nuevo, datos respuesta de infile no validos'
-                            else:
-                                try:
-                                    # xmltodic parsea la respuesta por parte de INFILE
-                                    documento_descripcion = xmltodict.parse(respuesta)
-                                    # En la descripcion se encuentra el mensaje, si el documento electronico se realizo con exito
-                                    descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
-                                except:
-                                    # frappe.msgprint(_('''Error: INFILE no pudo recibir los datos:''' + respuesta))
-                                    return 'Error Infile no pudo recibidir data'
-                                else:
-                                    # La funcion errores se encarga de verificar si existen errores o si la
-                                    # generacion de factura electronica fue exitosa
-                                    errores_diccionario = errores(descripciones)
-
-                                    if (len(errores_diccionario) > 0):
-                                        try:
-                                            # Si el mensaje indica que la factura electronica se genero con exito se procede
-                                            # a guardar la respuesta de INFILE en la DB
-                                            if ((str(errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
-
-                                                cae_fac_electronica = guardar(respuesta, serie_original_factura, tiempo_enviado)
-
-                                                # el archivo rexpuest.xml se encuentra en la ruta, /home/frappe/frappe-bench/sites
-
-                                                with open('respuesta.xml', 'w') as recibidoxml:
-                                                    recibidoxml.write(respuesta)
-                                                    recibidoxml.close()
-
-                                                # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
-                                                numero_dte_correcto = actualizartb(serie_original_factura)
-                                                # Funcion para descargar y guardar pdf factura electronica
-                                                descarga_pdf = guardar_pdf_servidor(numero_dte_correcto, cae_fac_electronica)
-
-                                                # Este dato sera capturado por Js actualizando la url
-                                                return {'DTE':numero_dte_correcto, 'CAE':cae_fac_electronica}
-                                        except:
-                                            # frappe.msgprint(_('''
-                                            # AVISOS <span class="label label-default" style="font-size: 16px">{}</span>
-                                            # '''.format(str(len(errores_diccionario))) + ' VERIFIQUE SU MANUAL'))
-                                            diccionario_errores = {}
-                                            for llave in errores_diccionario:
-                                                diccionario_errores[str(llave)] = str(errores_diccionario[llave])
-                                                # frappe.msgprint(_('''
-                                                # <span class="label label-warning" style="font-size: 14px">{}</span>
-                                                # '''.format(str(llave)) + ' = ' + str(errores_diccionario[llave])))
-
-                                            # frappe.msgprint(_('NO GENERADA'))
-                                            return diccionario_errores
-
-            else:
-                return ('''La serie utilizada en esta factura no esta en la Configuracion de Factura Electronica.
-                                    Por favor configura la serie <b>{0}</b> en <b>Configuracion Factura Electronica</b> e intenta de nuevo.
-                                    '''.format(prefijo_serie))
-
-    # Si cumple, existe mas de una configuracion validada
-    if (validar_config[0] == 2):
-        return 'Existe más de una configuración para factura electrónica. Verifique que solo exista una validada'
-    # Si cumple, no existe configuracion validada
-    if (validar_config[0] == 3):
-        return 'No se encontró una configuración válida. Verifique que exista una configuración validada'
-
-
 def generar_factura_electronica_api(serie_factura, nombre_cliente, pre_se):
     '''Funcion API PNE para generar Facturas Electronicas REST-API'''
     '''Verifica que todos los datos esten correctos para realizar una
