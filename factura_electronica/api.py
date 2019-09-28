@@ -15,7 +15,7 @@ from factura_electronica.utils.facelec_generator import construir_xml
 
 from factura_electronica.utils.facelec_db import guardar_factura_electronica as guardar
 from factura_electronica.utils.facelec_db import actualizarTablas as actualizartb
-
+from factura_electronica.utils.fel_generator import generar_fac_fel
 
 def peticion_factura_electronica(datos_xml, url_servicio):
     '''Realiza la peticion al webservice SOAP de INFILE
@@ -81,21 +81,22 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
         else:  # Si no existe se creara
             nombre_config_validada = str(validar_config[1])
 
-            # VERIFICACION EXISTENCIA SERIES CONFIGURADAS, EN CONFIGURACION FACTURA ELECTRONICA
-            if frappe.db.exists('Configuracion Series', {'parent': nombre_config_validada, 'serie': prefijo_serie}):
-                series_configuradas = frappe.db.get_values('Configuracion Series',
-                                                            filters={'parent': nombre_config_validada, 'serie': prefijo_serie},
-                                                            fieldname=['fecha_resolucion', 'estado_documento',
-                                                                        'tipo_documento', 'serie', 'secuencia_infile',
-                                                                        'numero_resolucion', 'codigo_sat'], as_dict=1)
+            if validar_config[2] == 'GFACE':
+                # VERIFICACION EXISTENCIA SERIES CONFIGURADAS, EN CONFIGURACION FACTURA ELECTRONICA
+                if frappe.db.exists('Configuracion Series', {'parent': nombre_config_validada, 'serie': prefijo_serie}):
+                    series_configuradas = frappe.db.get_values('Configuracion Series',
+                                                                filters={'parent': nombre_config_validada, 'serie': prefijo_serie},
+                                                                fieldname=['fecha_resolucion', 'estado_documento',
+                                                                            'tipo_documento', 'serie', 'secuencia_infile',
+                                                                            'numero_resolucion', 'codigo_sat'], as_dict=1)
 
-                url_configurada = frappe.db.get_values('Configuracion Factura Electronica',
-                                                    filters={'name': nombre_config_validada},
-                                                    fieldname=['url_listener', 'descargar_pdf_factura_electronica',
-                                                              'url_descarga_pdf'], as_dict=1)
 
-                # Verificacion regimen GFACE
-                if validar_config[2] is 'GFACE':
+                    url_configurada = frappe.db.get_values('Configuracion Factura Electronica',
+                                                        filters={'name': nombre_config_validada},
+                                                        fieldname=['url_listener', 'descargar_pdf_factura_electronica',
+                                                                'url_descarga_pdf'], as_dict=1)
+
+                    # Verificacion regimen GFACE
                     # CONTRUCCION XML Y PETICION A WEBSERVICE
                     try:
                         xml_factura = construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
@@ -108,7 +109,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                         # Usar para debug
                         # with open('reci.xml', 'w') as f:
                         #     f.write(str(respuesta_infile))
-
 
                     # VALIDACION RESPUESTA
                     try:
@@ -157,18 +157,33 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
 
                                 frappe.msgprint(_('NO GENERADA: {}'.format(frappe.get_traceback())))
 
-                # Verificacion regimen FEL
-                if validar_config[2] is 'FEL':
+            
+                            # Verificacion regimen FEL
+
+                else:
+                    frappe.msgprint(_('''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
+                                        Por favor configura la serie <b>{0}</b> en 
+                                        <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>
+                                        e intenta de nuevo.
+                                    '''.format(prefijo_serie)))
+
+            if validar_config[2] == 'FEL':
+                frappe.msgprint(_('FEL'))
+                if frappe.db.exists('Configuracion Series FEL', {'parent': nombre_config_validada, 'serie': prefijo_serie}):
+                    series_configuradas_fel = frappe.db.get_values('Configuracion Series FEL',
+                                                                    filters={'parent': nombre_config_validada, 'serie': prefijo_serie},
+                                                                    fieldname=['tipo_documento'], as_dict=1)
+
+                    url_configurada = frappe.db.get_values('Configuracion Factura Electronica',
+                                                        filters={'name': nombre_config_validada},
+                                                        fieldname=['url_listener', 'descargar_pdf_factura_electronica',
+                                                                'url_descarga_pdf'], as_dict=1)
                     try:
-                        status_fel = generar_fac_fel()
+                        generar_fac_fel(serie_original_factura, nombre_del_cliente, nombre_config_validada)
                     except:
                         frappe.msgprint(_('error :('))
-            else:
-                frappe.msgprint(_('''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
-                                    Por favor configura la serie <b>{0}</b> en 
-                                    <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>
-                                    e intenta de nuevo.
-                                  '''.format(prefijo_serie)))
+                    else:
+                        frappe.msgprint(_('OK'))
 
     elif validar_config[0] == 2:
         frappe.msgprint(_('''Existe más de una configuración para factura electrónica.

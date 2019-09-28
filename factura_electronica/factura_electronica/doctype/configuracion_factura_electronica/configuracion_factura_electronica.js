@@ -22,6 +22,15 @@ frappe.ui.form.on('Configuracion Factura Electronica', {
 			}
 		});
 
+		// Aplica para series FEL
+		frappe.call({
+			method: "factura_electronica.factura_electronica.doctype.configuracion_factura_electronica.configuracion_factura_electronica.series_sales_invoice",
+			callback: function (r) {
+				frappe.meta.get_docfield('Configuracion Series FEL', 'serie', cur_frm.doc.name).options = r.message
+				cur_frm.refresh_field('serie');
+			}
+		});
+
 		// Aplica para Purchase Invoice
 		frappe.call({
 			method: "factura_electronica.factura_electronica.doctype.configuracion_factura_electronica.configuracion_factura_electronica.series_factura_especial",

@@ -54,7 +54,7 @@ def validar_configuracion():
                                                    filters={'docstatus': 1},
                                                    fieldname=['name', 'regimen'], as_dict=1)
         if (len(configuracion_valida) == 1):
-            return (int(1), str(configuracion_valida[0]['name']), configuracion_valida[0]['regimen'])
+            return (int(1), str(configuracion_valida[0]['name']), str(configuracion_valida[0]['regimen']))
 
         elif (len(configuracion_valida) > 1):
             return (int(2), 'Error 2')
