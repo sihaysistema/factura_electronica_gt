@@ -191,7 +191,7 @@ def preparar_data(data_fac, series_fel):
     if n_prod > 1:
         for i in range(0, n_prod):
             item = {
-                '@BienOServicio': 'B',
+                # '@BienOServicio': 'B',
                 '@NumeroLinea': i,
                 'dte:Cantidad': float(data_fac['sales_invoice_item'][i]['qty']),
                 'dte:UnidadMedida': data_fac['sales_invoice_item'][i]['facelec_three_digit_uom_code'],
@@ -201,106 +201,68 @@ def preparar_data(data_fac, series_fel):
                 'dte:Descuento': float(data_fac['sales_invoice_item'][i]['discount_percentage']),
                 'dte:Impuestos': {
                     'dte:Impuesto': {
-                        'dte:NombreCorto': 'IVA',
-                        'dte:CodigoUnidadGravable': '1',
-                        'dte:MontoGravable': '8400.0000',
-                        'dte:MontoImpuesto': '1008.0000'
+                        'dte:NombreCorto': 'IVA', # TODO: que otros impuestos?
+                        'dte:CodigoUnidadGravable': '1', # TODO: ?
+                        'dte:MontoGravable': float(data_fac['sales_invoice_item'][i]['facelec_amount_minus_excise_tax']),
+                        'dte:MontoImpuesto': float(data_fac['sales_invoice_item'][i]['facelec_sales_tax_for_this_row'])
                     }
                 },
                 'dte:Total': float(abs(data_fac['sales_invoice_item'][i]['amount']))
             }
-            
 
+            detalle_stock = frappe.db.get_values('Item', filters={'item_code': data_fac['sales_invoice_item'][i]['item_code']},
+                                                     fieldname=['is_stock_item'])
+            # Validacion de Bien o Servicio, en base a detalle de stock
+            if (int((detalle_stock[0][0])) == 0):
+                item['@BienOServicio'] = 'S'
+            if (int((detalle_stock[0][0])) == 1):
+                item['@BienOServicio'] = 'B'
+
+            items_factura.append(item)
+    else:
+        item = {
+            # '@BienOServicio': 'B',
+            '@NumeroLinea': i,
+            'dte:Cantidad': float(data_fac['sales_invoice_item'][0]['qty']),
+            'dte:UnidadMedida': data_fac['sales_invoice_item'][0]['facelec_three_digit_uom_code'],
+            'dte:Descripcion': data_fac['sales_invoice_item'][0]['item_name'],
+            'dte:PrecioUnitario': float(data_fac['sales_invoice_item'][0][rate]),
+            'dte:Precio': float(data_fac['sales_invoice_item'][0]['rate']),
+            'dte:Descuento': float(data_fac['sales_invoice_item'][0]['discount_percentage']),
+            'dte:Impuestos': {
+                'dte:Impuesto': {
+                    'dte:NombreCorto': 'IVA', # TODO: que otros impuestos?
+                    'dte:CodigoUnidadGravable': '1', # TODO: ?
+                    'dte:MontoGravable': float(data_fac['sales_invoice_item'][0]['facelec_amount_minus_excise_tax']),
+                    'dte:MontoImpuesto': float(data_fac['sales_invoice_item'][0]['facelec_sales_tax_for_this_row'])
+                }
+            },
+            'dte:Total': float(abs(data_fac['sales_invoice_item'][0]['amount']))
+        }
+
+        detalle_stock = frappe.db.get_values('Item', filters={'item_code': data_fac['sales_invoice_item'][0]['item_code']},
+                                                     fieldname=['is_stock_item'])
+        # Validacion de Bien o Servicio, en base a detalle de stock
+        if (int((detalle_stock[0][0])) == 0):
+            item['@BienOServicio'] = 'S'
+        if (int((detalle_stock[0][0])) == 1):
+            item['@BienOServicio'] = 'B'
+
+        items_factura.append(item)
 
     items = {
-        'dte:Item': [
-            {
-                '@BienOServicio': 'B',
-                '@NumeroLinea': '1',
-                'dte:Cantidad': '196.000',
-                'dte:UnidadMedida': 'CJ',
-                'dte:Descripcion': '100120406-HIG ROSAL VERDE 2P 12X4',
-                'dte:PrecioUnitario': '60.0000',
-                'dte:Precio': '11760.0000',
-                'dte:Descuento': '2352.0000',
-                'dte:Impuestos': {
-                    'dte:Impuesto': {
-                        'dte:NombreCorto': 'IVA',
-                        'dte:CodigoUnidadGravable': '1',
-                        'dte:MontoGravable': '8400.0000',
-                        'dte:MontoImpuesto': '1008.0000'
-                    }
-                },
-                'dte:Total': '9408.0000'
-            },
-            {
-                '@BienOServicio': 'B',
-                '@NumeroLinea': '2',
-                'dte:Cantidad': '196.000',
-                'dte:UnidadMedida': 'CJ',
-                'dte:Descripcion': '100120407-HIG ROSAL VINOTINTO 2P 12X4',
-                'dte:PrecioUnitario': '96.0000',
-                'dte:Precio': '18816.0000',
-                'dte:Descuento': '3763.1999',
-                'dte:Impuestos': {
-                    'dte:Impuesto': {
-                        'dte:NombreCorto': 'IVA',
-                        'dte:CodigoUnidadGravable': '1',
-                        'dte:MontoGravable': '13440.0000',
-                        'dte:MontoImpuesto': '1612.8000'
-                    }
-                },
-                'dte:Total': '15052.8000'
-            },
-            {
-                '@BienOServicio': 'B',
-                '@NumeroLinea': '3',
-                'dte:Cantidad': '242.000',
-                'dte:UnidadMedida': 'CJ',
-                'dte:Descripcion': '101910101-HIG NUBE BLANCA 1000H 1P 24X1',
-                'dte:PrecioUnitario': '96.0000',
-                'dte:Precio': '23232.0000',
-                'dte:Descuento': '4646.3999',
-                'dte:Impuestos': {
-                    'dte:Impuesto': {
-                        'dte:NombreCorto': 'IVA',
-                        'dte:CodigoUnidadGravable': '1',
-                        'dte:MontoGravable': '16594.2851',
-                        'dte:MontoImpuesto': '1991.3148'
-                    }
-                },
-                'dte:Total': '18585.6000'
-            },
-            {
-                '@BienOServicio': 'B',
-                '@NumeroLinea': '4',
-                'dte:Cantidad': '10.000',
-                'dte:UnidadMedida': 'CJ',
-                'dte:Descripcion': '301920102-TOA NUBE BLANCA 60H 2P 24X1',
-                'dte:PrecioUnitario': '105.6000',
-                'dte:Precio': '1056.0000',
-                'dte:Descuento': '211.1999',
-                'dte:Impuestos': {
-                    'dte:Impuesto': {
-                        'dte:NombreCorto': 'IVA',
-                        'dte:CodigoUnidadGravable': '1',
-                        'dte:MontoGravable': '754.2851',
-                        'dte:MontoImpuesto': '90.5148'
-                    }
-                },
-                'dte:Total': '844.8000'
-            }
-        ]
+        'dte:Item': items_factura
     }
 
     totales = {
         'dte:TotalImpuestos': {
             'dte:TotalImpuesto': {
                 '@NombreCorto': 'IVA',
-                '@TotalMontoImpuesto': '4702.63'
+                '@TotalMontoImpuesto': '{0:.2f}'.format(abs(data_fac['sales_invoice'] \
+                                                            [0]['shs_total_iva_fac']))
             }
         },
-        'dte:GranTotal': '43891.20'
+        'dte:GranTotal': abs(float(data_fac['sales_invoice'][0]['grand_total']))
     }
 
     base_petiion = {
@@ -322,7 +284,7 @@ def preparar_data(data_fac, series_fel):
                         'dte:Receptor': receptor,
                         'dte:Frases': frases,
                         'dte:Items': items,
-                        'dte:Totales': 
+                        'dte:Totales': totales
                     }
                 }
             }
