@@ -15,7 +15,7 @@ from factura_electronica.utils.facelec_generator import construir_xml
 
 from factura_electronica.utils.facelec_db import guardar_factura_electronica as guardar
 from factura_electronica.utils.facelec_db import actualizarTablas as actualizartb
-from factura_electronica.utils.fel_generator import generar_fac_fel
+from factura_electronica.utils.fel_generator import FacturaElectronicaFEL
 
 
 def peticion_factura_electronica(datos_xml, url_servicio):
@@ -179,7 +179,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                                                         fieldname=['url_listener', 'descargar_pdf_factura_electronica',
                                                                 'url_descarga_pdf'], as_dict=1)
                     try:
-                        generar_fac_fel(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_configuradas_fel)
+                        # generar_fac_fel(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_configuradas_fel)
+                        factura_electronica = FacturaElectronicaFEL(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_configuradas_fel)
                     except:
                         frappe.msgprint(_('error :('))
                     else:

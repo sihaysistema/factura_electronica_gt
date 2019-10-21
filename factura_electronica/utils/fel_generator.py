@@ -8,285 +8,238 @@ import json, xmltodict
 import base64
 
 
-def generar_fac_fel(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_fel):
-    '''Funcion maestra para crear factura electronica para el regimen FEL'''
+class FacturaElectronicaFEL:
+    def __init__(self, serie, cliente, conf_name, series_conf):
+        self.d_general = {}
+        self.d_emisor = {}
+        self.d_receptor = {}
+        self.d_frases = {}
+        self.d_items = {}
+        self.d_totales = {}
+        self.d_firma = {}
+        self.serie_factura = str(serie)  # Serie original de la factura
+        self.nombre_config = str(conf_name)  # Nombre doc configuracion para factura electronica
+        self.nombre_cliente = str(cliente)  # Nombre cliente en factura
+        self.series_facelec = str(series_conf)  # Series para factura electronica
 
-    # data_peticion = preparar_data(obtener_data(serie_original_factura))
-    data_factura = obtener_data(serie_original_factura, nombre_del_cliente, nombre_config_validada)
-    status = preparar_data(data_factura, series_fel)
-    return status
+    def construir_peticion(self):
+        # Verifica que todas las partes que conforman la peticion sean correctas
+        e_validador = self.validador_data()
 
-
-@frappe.whitelist()
-def obtener_data(serie_original_factura, nombre_del_cliente, nombre_config_validada):
-    # Obtener data emisor
-    # OBTENCION DATA NECESARIA PARA GENERAR JSON TO XML
-
-    data_fac = {}
-
-    # Obtiene informacion de los campos de la tabla 'Sales Invoice'
-    try:
-        sales_invoice = frappe.db.get_values('Sales Invoice',
-                                             filters={'name': serie_original_factura},
-                                             fieldname=['name', 'grand_total', 'customer_name', 'company',
-                                                       'company_address', 'naming_series', 'creation',
-                                                       'status', 'discount_amount', 'docstatus',
-                                                       'modified', 'conversion_rate',
-                                                       'total_taxes_and_charges', 'net_total',
-                                                       'shipping_address_name', 'customer_address',
-                                                       'total', 'shs_total_iva_fac', 'currency'], as_dict=1)
-    except:
-        return 'Error al obtener datos de la factura {}: {}'.format(serie_original_factura, frappe.get_traceback())
-    else:
-        data_fac['sales_invoice'] = sales_invoice
-
-    # Obtiene informacion de los campos de la tabla 'Sales Invoice Item'
-    try:
-        sales_invoice_item = frappe.db.get_values('Sales Invoice Item',
-                                                  filters={'parent': serie_original_factura},
-                                                  fieldname=['item_name', 'qty', 'posting_date',
-                                                            'item_code', 'description',
-                                                            'net_amount', 'base_net_amount',
-                                                            'discount_percentage', 'posting_time',
-                                                            'net_rate', 'stock_uom',
-                                                            'serial_no', 'item_group',
-                                                            'rate', 'amount',
-                                                            'facelec_sales_tax_for_this_row',
-                                                            'facelec_amount_minus_excise_tax',
-                                                            'facelec_other_tax_amount',
-                                                            'facelec_three_digit_uom_code',
-                                                            'facelec_gt_tax_net_fuel_amt',
-                                                            'facelec_gt_tax_net_goods_amt',
-                                                            'facelec_gt_tax_net_services_amt'], as_dict=1)
-    except:
-        return 'Error al obtener datos de los items de la factura {}: {}'.format(serie_original_factura, frappe.get_traceback())
-    else:
-        data_fac['sales_invoice_item'] = sales_invoice_item
-
-    # Obtiene datos de los campos de la tabla 'Address' informacion de los clientes
-    try:
-        direccion_cliente = sales_invoice[0]['customer_address']
-        datos_cliente = frappe.db.get_values('Address', filters={'name': direccion_cliente},
-                                             fieldname=['email_id', 'country', 'city',
-                                                       'address_line1', 'state', 'address_line2',
-                                                       'phone', 'address_title', 'name', 'pincode'], as_dict=1)
-    except:
-        return '''Error al obtener informacion del
-                  cliente {0} de la factura \
-                  {1}: {2}'''.format(nombre_del_cliente, serie_original_factura, frappe.get_traceback())
-    else:
-        data_fac['direccion_cliente'] = direccion_cliente
-        data_fac['datos_cliente'] = datos_cliente
-
-    # Obtiene datos de direccion de la compañia de la tabla 'Address'
-    try:
-        dir_empresa = sales_invoice[0]['company_address']
-        direccion_empresa = frappe.db.get_values('Address', filters={'name': dir_empresa},
-                                                fieldname=['email_id', 'country', 'city',
-                                                          'address_line1', 'address_line2', 'state',
-                                                          'phone', 'address_title',
-                                                          'county', 'pincode'], as_dict=1)
-    except:
-        return '''Error al obtener informacion de la
-                  compania de la factura {}: {}'''.format(serie_original_factura, frappe.get_traceback())
-    else:
-        data_fac['direccion_empresa'] = direccion_empresa
-
-    # Obtiene datos de los campos de la tabla 'Company'
-    try:
-        datos_empresa = frappe.db.get_values('Company', filters={'name': sales_invoice[0]['company']},
-                                            fieldname=['company_name', 'default_currency', 'country',
-                                                      'nit_face_company'], as_dict=1)
-    except:
-        return '''Error al obtener datos de la compania, verifique que tenga una direcccion, NIT
-                  validos: {}'''.format(frappe.get_traceback())
-    else:
-        data_fac['datos_empresa'] = datos_empresa
-
-    # Obtiene datos de los campos de la tabla 'Customer'
-    try:
-        nit_cliente = frappe.db.get_values('Customer', filters={'name': nombre_del_cliente},
-                                            fieldname='nit_face_customer')
-    except:
-        return 'Error al obtener nit del cliente {}: {}'.format(nombre_del_cliente, frappe.get_traceback())
-    else:
-        data_fac['nit_cliente'] = nit_cliente
-
-    # Obtiene datos de los campos de la tabla 'Configuracion Factura Electronica'
-    try:
-        datos_configuracion = frappe.db.get_values('Configuracion Factura Electronica',
-                                                  filters={'name': str(nombre_config_validada)},
-                                                  fieldname=['descripcion_otro_impuesto', 'importe_exento',
-                                                            'id_dispositivo', 'validador', 'clave',
-                                                            'codigo_establecimiento', 'importe_otros_impuestos',
-                                                            'regimen_2989', 'usuario', 'regimen_isr',
-                                                            'nit_gface', 'importe_total_exento',
-                                                            'url_listener'], as_dict=1)
-    except:
-        return 'Error al obtener datos de la configuracion de factura electronica: {}'.format(frappe.get_traceback())
-    else:
-        data_fac['datos_configuracion'] = datos_configuracion
-
-    # return data_fac
-    with open('obt_data.json', 'w') as f:
-        f.write(json.dumps(str(data_fac), indent=2))
-
-    return data_fac
-
-
-def preparar_data(data_fac, series_fel):
-    '''Funcion encargada de asignar la data correspondiente a la peticion necesaria para INFILE'''
-
-    # Datos generales de la factura
-    datos_generales = {
-        '@CodigoMoneda': data_fac['sales_invoice'][0]['currency'], #'GTQ',
-        '@FechaHoraEmision': (data_fac['sales_invoice'][0]['posting_date'] + 'T' + \
-                              data_fac['sales_invoice'][0]['posting_time']), #'2019-09-10T16:26:46-06:00',
-        '@Tipo': series_fel[0]['tipo_documento']
-    }
-
-    # Datos configuracion del emisor
-    emisor = {
-        '@AfiliacionIVA': 'GEN', # TODO: ?
-        '@CodigoEstablecimiento': data_fac['datos_configuracion'][0]['codigo_establecimiento'],
-        '@CorreoEmisor': data_fac['direccion_empresa'][0]['email_id'],
-        '@NITEmisor': data_fac['datos_empresa'][0]['nit_face_company'],
-        '@NombreComercial': data_fac['datos_empresa'][0]['company_name'],
-        '@NombreEmisor': data_fac['datos_empresa'][0]['company_name'],
-        'dte:DireccionEmisor': {
-            'dte:Direccion': data_fac['direccion_empresa'][0]['address_line1'],
-            'dte:CodigoPostal': data_fac['direccion_empresa'][0]['pincode'],
-            'dte:Municipio': data_fac['direccion_empresa'][0]['state'],
-            'dte:Departamento': data_fac['direccion_empresa'][0]['city'],
-            'dte:Pais': data_fac['direccion_empresa'][0]['country']
-        }
-    }
-
-    # Datos del cliente facturado
-    receptor = {
-        '@CorreoReceptor': data_fac['datos_cliente'][0]['email_id'],
-        '@IDReceptor': '76365204', # TODO: ?
-        '@NombreReceptor': data_fac['sales_invoice'][0]['customer_name'],
-        'dte:DireccionReceptor': {
-            'dte:Direccion': data_fac['datos_cliente'][0]['address_line1'],
-            'dte:CodigoPostal': data_fac['datos_cliente'][0]['pincode'],
-            'dte:Municipio': data_fac['datos_cliente'][0]['state'],
-            'dte:Departamento': data_fac['datos_cliente'][0]['city'],
-            'dte:Pais': data_fac['datos_cliente'][0]['country'] # 'GT'
-        }
-    }
-
-    # TODO: PENDIENTE DOCS?
-    frases = {
-        'dte:Frase': {
-            '@CodigoEscenario': '1',
-            '@TipoFrase': '1'
-        }
-    }
-
-    # Items y sus detalles incluidos en la factura
-    n_prod = len(data_fac['sales_invoice_item'])
-    items_factura = []
-
-    if n_prod > 1:
-        for i in range(0, n_prod):
-            item = {
-                # '@BienOServicio': 'B',
-                '@NumeroLinea': i,
-                'dte:Cantidad': float(data_fac['sales_invoice_item'][i]['qty']),
-                'dte:UnidadMedida': data_fac['sales_invoice_item'][i]['facelec_three_digit_uom_code'],
-                'dte:Descripcion': data_fac['sales_invoice_item'][i]['item_name'],
-                'dte:PrecioUnitario': float(data_fac['sales_invoice_item'][i][rate]),
-                'dte:Precio': float(data_fac['sales_invoice_item'][i]['rate']),
-                'dte:Descuento': float(data_fac['sales_invoice_item'][i]['discount_percentage']),
-                'dte:Impuestos': {
-                    'dte:Impuesto': {
-                        'dte:NombreCorto': 'IVA', # TODO: que otros impuestos?
-                        'dte:CodigoUnidadGravable': '1', # TODO: ?
-                        'dte:MontoGravable': float(data_fac['sales_invoice_item'][i]['facelec_amount_minus_excise_tax']),
-                        'dte:MontoImpuesto': float(data_fac['sales_invoice_item'][i]['facelec_sales_tax_for_this_row'])
-                    }
-                },
-                'dte:Total': float(abs(data_fac['sales_invoice_item'][i]['amount']))
+        if e_validador == True:
+            # Base de la paticion para luego ser convertida a xml y enviada a INFILE-SAT
+            base_peticion = {
+                "dte:GTDocumento": {
+                    "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
+                    "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                    "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
+                    "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                    "@Version": "0.4",
+                    "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                    "dte:SAT": {
+                        "@ClaseDocumento": "dte",
+                        "dte:DTE": {
+                            "@ID": "DatosCertificados",
+                            "dte:DatosEmision": {
+                                "@ID": "DatosEmision",
+                                "dte:DatosGenerales": self.d_general,
+                                "dte:Emisor": self.d_emisor,
+                                "dte:Receptor": self.d_receptor,
+                                "dte:Frases": self.d_frases,
+                                "dte:Items": self.d_items,
+                                "dte:Totales": self.d_totales 
+                            }
+                        }
+                    },
+                    "ds:Signature": self.d_firma
+                }
             }
+        else:
+            pass
 
-            detalle_stock = frappe.db.get_values('Item', filters={'item_code': data_fac['sales_invoice_item'][i]['item_code']},
-                                                     fieldname=['is_stock_item'])
-            # Validacion de Bien o Servicio, en base a detalle de stock
-            if (int((detalle_stock[0][0])) == 0):
-                item['@BienOServicio'] = 'S'
-            if (int((detalle_stock[0][0])) == 1):
-                item['@BienOServicio'] = 'B'
+    def validador_data(self):
+        # Validacion y generacion seccion datos generales
+        pass
 
-            items_factura.append(item)
-    else:
-        item = {
-            # '@BienOServicio': 'B',
-            '@NumeroLinea': i,
-            'dte:Cantidad': float(data_fac['sales_invoice_item'][0]['qty']),
-            'dte:UnidadMedida': data_fac['sales_invoice_item'][0]['facelec_three_digit_uom_code'],
-            'dte:Descripcion': data_fac['sales_invoice_item'][0]['item_name'],
-            'dte:PrecioUnitario': float(data_fac['sales_invoice_item'][0][rate]),
-            'dte:Precio': float(data_fac['sales_invoice_item'][0]['rate']),
-            'dte:Descuento': float(data_fac['sales_invoice_item'][0]['discount_percentage']),
-            'dte:Impuestos': {
-                'dte:Impuesto': {
-                    'dte:NombreCorto': 'IVA', # TODO: que otros impuestos?
-                    'dte:CodigoUnidadGravable': '1', # TODO: ?
-                    'dte:MontoGravable': float(data_fac['sales_invoice_item'][0]['facelec_amount_minus_excise_tax']),
-                    'dte:MontoImpuesto': float(data_fac['sales_invoice_item'][0]['facelec_sales_tax_for_this_row'])
+
+        
+        # Datos de la factura ERP
+
+        # Datos del cliente
+
+        # Datos de la empresa
+
+        # Configuraciones Factura Electronica
+
+    def validador_respuetas(self):
+        pass
+
+    def datos_generales(self):
+        try:
+            self.d_general = {
+                "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'currency'),
+                "@FechaHoraEmision": str(datetime.now().utcnow()),  # "2018-11-01T16:33:47Z",
+                "@Tipo": "FACT"
+            }
+        except:
+            return 'Error en obtener data para datos generales: '+str(frappe.get_traceback())
+        else:
+            return True
+
+    def emisor(self):
+        '''Funcion encargada de obtener y asignar data del Emisor'''
+        try:
+            # Obtencion data de EMISOR
+            dat_fac = frappe.db.get_values('Sales Invoice',
+                                        filters={'name': self.serie_factura}
+                                        fieldname=['company', 'company_address'],
+                                        as_dict=1)
+
+            # Intentara obtener data de direccion compania, si no hay mostrara error
+            try:
+                dat_direccion = frappe.db.get_values('Address',
+                                                    filters={'name': dat_fac[0]['company_address']},
+                                                    fieldname=['address_line1', 'address_line2', 'email_id', 'pincode',
+                                                            'state', 'city', 'country'], as_dict=1)
+            except:
+                return 'No se pudo obtener data de direccion de la compania, verificar que exista una direccion con data en los campos <b>address_line1, email_id, pincode, state, city, country</b>'
+
+            dat_compania = frappe.db.get_values('Company',
+                                                filters={'name': dat_fac[0]['company']}
+                                                fieldname=['company_name', 'nit_face_company'],
+                                                as_dict=1)
+
+            # Validacion data
+            for dire in dat_direccion[0]:
+                if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
+                    return 'No se puede completar la operacion ya que el campo {} de la direccion de compania no tiene data, por favor asignarle un valor e intentar de nuevo'.format(str(dire))
+
+            # Asignacion data
+            self.d_emisor = {
+                "@AfiliacionIVA": "GEN",
+                "@CodigoEstablecimiento": frappe.db.get_value('Configuracion Factura Electronica',
+                                                            {'name': self.nombre_config}, 'codigo_establecimiento')  #"1",
+                "@CorreoEmisor": dat_direccion[0]['email_id'],
+                "@NITEmisor": dat_compania[0]['nit_face_company'],
+                "@NombreComercial": dat_compania[0]['company_name'],
+                "@NombreEmisor": dat_compania[0]['company_name'],
+                "dte:DireccionEmisor": {
+                    "dte:Direccion": dat_direccion[0]['address_line1'] + ' - ' + dat_direccion[0]['address_line2'],
+                    "dte:CodigoPostal": dat_direccion[0]['pincode'],
+                    "dte:Municipio": dat_direccion[0]['state'],
+                    "dte:Departamento": dat_direccion[0]['city'],
+                    "dte:Pais": dat_direccion[0]['country']
+                }
+            }
+        except:
+            return 'Error no se puede completar la operacion por: '+str(frappe.get_traceback())
+        else:
+            return True
+
+    def receptor(self):
+        '''Funcion encargada de obtener y asignar data del Receptor/Cliente'''
+        try:
+            # Obtencion data de RECEPTOR
+            dat_fac = frappe.db.get_values('Sales Invoice',
+                                           filters={'name': self.serie_factura}
+                                           fieldname=['nit_face_customer', 'customer_address'],
+                                           as_dict=1)
+
+            # Intentara obtener data de direccion cliente, si no hay mostrara error
+            try:
+                dat_direccion = frappe.db.get_values('Address',
+                                                    filters={'name': dat_fac[0]['customer_address']},
+                                                    fieldname=['address_line1', 'address_line2', 'email_id', 'pincode',
+                                                               'state', 'city', 'country'], as_dict=1)
+            except:
+                return 'No se pudo obtener data de direccion de la compania, verificar que exista una direccion con data en los campos <b>address_line1, email_id, pincode, state, city, country</b>'
+
+            # Validacion data
+            for dire in dat_direccion[0]:
+                if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
+                    return 'No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no tiene data, por favor asignarle un valor e intentar de nuevo'.format(str(dire), self.nombre_cliente)
+
+            self.d_receptor = {
+                "@CorreoReceptor": dat_direccion[0]['email_id'],
+                "@IDReceptor": dat_fac[0]['nit_face_customer'],  # NIT
+                "@NombreReceptor": str(self.nombre_cliente),
+                "dte:DireccionReceptor": {
+                    "dte:Direccion": dat_direccion[0]['address_line1']+', '+dat_direccion[0]['address_line2'],
+                    "dte:CodigoPostal": dat_direccion[0]['pincode'],
+                    "dte:Municipio": dat_direccion[0]['state'],
+                    "dte:Departamento": dat_direccion[0]['city'],
+                    "dte:Pais": dat_direccion[0]['country']
+                }
+            }
+        except:
+            return 'Error no se puede completar la operacion por: '+str(frappe.get_traceback())
+        else:
+            return True
+
+    def frases(self):
+        self.d_frases = {
+            "dte:Frase": {
+                "@CodigoEscenario": "1",
+                "@TipoFrase": "1"
+            }
+        }
+
+    def items(self):
+        self.d_items = {
+            "dte:Item": [{
+                    "@BienOServicio": "E",
+                    "@NumeroLinea": "1",
+                    "dte:Cantidad": "2",
+                    "dte:UnidadMedida": "UND",
+                    "dte:Descripcion": "Prueba de esquema",
+                    "dte:PrecioUnitario": "625.00",
+                    "dte:Precio": "1250.00",
+                    "dte:Descuento": "0.00",
+                    "dte:Impuestos": {
+                        "dte:Impuesto": {
+                            "dte:NombreCorto": "IVA",
+                            "dte:CodigoUnidadGravable": "1",
+                            "dte:MontoGravable": "1116.07",
+                            "dte:MontoImpuesto": "133.95"
+                        }
+                    },
+                    "dte:Total": "1250.00"
+                },
+                {
+                    "@BienOServicio": "E",
+                    "@NumeroLinea": "1",
+                    "dte:Cantidad": "2",
+                    "dte:UnidadMedida": "UND",
+                    "dte:Descripcion": "Prueba de esquema",
+                    "dte:PrecioUnitario": "0.00",
+                    "dte:Precio": "0.00",
+                    "dte:Descuento": "0.00",
+                    "dte:Impuestos": {
+                        "dte:Impuesto": {
+                            "dte:NombreCorto": "IVA",
+                            "dte:CodigoUnidadGravable": "2",
+                            "dte:MontoGravable": "0.07",
+                            "dte:MontoImpuesto": "0.95"
+                        }
+                    },
+                    "dte:Total": "0.00"
+                }
+            ]
+        }
+
+    def totales(self):
+        self.d_totales = {
+            "dte:TotalImpuestos": {
+                "dte:TotalImpuesto": {
+                    "@NombreCorto": "IVA",
+                    "@TotalMontoImpuesto": "133.93"
                 }
             },
-            'dte:Total': float(abs(data_fac['sales_invoice_item'][0]['amount']))
+            "dte:GranTotal": "1250.00"
         }
 
-        detalle_stock = frappe.db.get_values('Item', filters={'item_code': data_fac['sales_invoice_item'][0]['item_code']},
-                                                     fieldname=['is_stock_item'])
-        # Validacion de Bien o Servicio, en base a detalle de stock
-        if (int((detalle_stock[0][0])) == 0):
-            item['@BienOServicio'] = 'S'
-        if (int((detalle_stock[0][0])) == 1):
-            item['@BienOServicio'] = 'B'
-
-        items_factura.append(item)
-
-    items = {
-        'dte:Item': items_factura
-    }
-
-    totales = {
-        'dte:TotalImpuestos': {
-            'dte:TotalImpuesto': {
-                '@NombreCorto': 'IVA',
-                '@TotalMontoImpuesto': '{0:.2f}'.format(abs(data_fac['sales_invoice'] \
-                                                            [0]['shs_total_iva_fac']))
-            }
-        },
-        'dte:GranTotal': abs(float(data_fac['sales_invoice'][0]['grand_total']))
-    }
-
-    base_petiion = {
-        'dte:GTDocumento': {
-            '@xmlns:ds': 'http://www.w3.org/2000/09/xmldsig#',
-            '@xmlns:dte': 'http://www.sat.gob.gt/dte/fel/0.1.0',
-            '@xmlns:n1': 'http://www.altova.com/samplexml/other-namespace',
-            '@xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-            '@Version': '0.4',
-            '@xsi:schemaLocation': 'http://www.sat.gob.gt/dte/fel/0.1.0 ',
-            'dte:SAT': {
-                '@ClaseDocumento': 'dte',
-                'dte:DTE': {
-                    '@ID': 'DatosCertificados',
-                    'dte:DatosEmision': {
-                        '@ID': 'DatosEmision',
-                        'dte:DatosGenerales': datos_generales,
-                        'dte:Emisor': emisor,
-                        'dte:Receptor': receptor,
-                        'dte:Frases': frases,
-                        'dte:Items': items,
-                        'dte:Totales': totales
-                    }
-                }
-            }
-        }
-    }
+    def firma(self):
+        pass
+    
+    def solicitar_factura_electronica(self):
+        pass
