@@ -50,26 +50,64 @@ class FacturaElectronicaFEL:
                                 "dte:Totales": self.d_totales 
                             }
                         }
-                    },
-                    "ds:Signature": self.d_firma
+                    }
+                    # "ds:Signature": self.d_firma
                 }
             }
+            try:
+                # To XML
+                xmlString = xmltodict.unparse(base_peticion, pretty=True)
+                with open('mario.xml', 'w') as f:
+                    f.write(xmlString)
+
+                # A base64
+                encodedBytes = base64.b64encode(xmlString.encode("utf-8"))
+                encodedStr = str(encodedBytes, "utf-8")
+
+                reqfel = { 
+                    "llave": , #  LLAVE
+                    "archivo": encodedStr
+                    "codigo": , # Número interno de cada transacción
+                    "alias":  usuario, # USUARIO
+                    "es_anulacion":  # "N" si es certificacion y "S" si es anulacion
+                }
+
+            except:
+                return 'Error: '+str(frappe.get_traceback())
+            else:
+                return 'OK'
+
         else:
-            pass
+            return e_validador
 
     def validador_data(self):
         # Validacion y generacion seccion datos generales
-        pass
-
-
         
-        # Datos de la factura ERP
+        estado_dg = self.datos_generales()
+        if estado_dg != True:
+            return estado_dg
 
-        # Datos del cliente
+        estado_e = self.emisor()
+        if estado_e != True:
+            return estado_e
 
-        # Datos de la empresa
+        estado_r = self.receptor()
+        if estado_r != True:
+            return estado_r
 
-        # Configuraciones Factura Electronica
+        estado_f = self.frases()
+        if estado_f != True:
+            return estado_f
+
+        estado_i = self.items()
+        if estado_f != True:
+            return estado_f
+
+        estado_t = self.totales()
+        if estado_f != True:
+            return estado_f
+
+        return True
 
     def validador_respuetas(self):
         pass
@@ -91,7 +129,7 @@ class FacturaElectronicaFEL:
         try:
             # Obtencion data de EMISOR
             dat_fac = frappe.db.get_values('Sales Invoice',
-                                        filters={'name': self.serie_factura}
+                                        filters={'name': self.serie_factura},
                                         fieldname=['company', 'company_address'],
                                         as_dict=1)
 
@@ -105,7 +143,7 @@ class FacturaElectronicaFEL:
                 return 'No se pudo obtener data de direccion de la compania, verificar que exista una direccion con data en los campos <b>address_line1, email_id, pincode, state, city, country</b>'
 
             dat_compania = frappe.db.get_values('Company',
-                                                filters={'name': dat_fac[0]['company']}
+                                                filters={'name': dat_fac[0]['company']},
                                                 fieldname=['company_name', 'nit_face_company'],
                                                 as_dict=1)
 
@@ -118,7 +156,7 @@ class FacturaElectronicaFEL:
             self.d_emisor = {
                 "@AfiliacionIVA": "GEN",
                 "@CodigoEstablecimiento": frappe.db.get_value('Configuracion Factura Electronica',
-                                                            {'name': self.nombre_config}, 'codigo_establecimiento')  #"1",
+                                                            {'name': self.nombre_config}, 'codigo_establecimiento'),  #"1",
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
                 "@NITEmisor": dat_compania[0]['nit_face_company'],
                 "@NombreComercial": dat_compania[0]['company_name'],
@@ -141,7 +179,7 @@ class FacturaElectronicaFEL:
         try:
             # Obtencion data de RECEPTOR
             dat_fac = frappe.db.get_values('Sales Invoice',
-                                           filters={'name': self.serie_factura}
+                                           filters={'name': self.serie_factura},
                                            fieldname=['nit_face_customer', 'customer_address'],
                                            as_dict=1)
 
@@ -183,6 +221,8 @@ class FacturaElectronicaFEL:
                 "@TipoFrase": "1"
             }
         }
+
+        return True
 
     def items(self):
         try:
@@ -278,7 +318,7 @@ class FacturaElectronicaFEL:
     def totales(self):
         try:
             dat_fac = frappe.db.get_values('Sales Invoice',
-                                           filters={'name': self.serie_factura}
+                                           filters={'name': self.serie_factura},
                                            fieldname=['grand_total', 'shs_total_iva_fac'],
                                            as_dict=1)
             self.d_totales = {
@@ -299,4 +339,18 @@ class FacturaElectronicaFEL:
         pass
     
     def solicitar_factura_electronica(self):
-        pass
+        # Realizara la comunicacion al webservice
+        try:
+            headers = {"content-type": "json/xml"}
+            response = requests.post(url_servicio, data=datos_xml, headers=headers, timeout=15)
+        except:
+            frappe.msgprint(_('''Tiempo de espera agotado para webservice, verificar conexion a internet
+                            e intentar de nuevo: \n {}'''.format(frappe.get_traceback())))
+
+        # Si hay algun error en la respuesta, lo capturara y mostrara
+        try:
+            respuesta_webservice = response.content
+        except:
+            frappe.msgprint(_('Error en la comunicacion no se recibieron datos de INFILE: {}'.format(frappe.get_traceback())))
+        else:
+            return respuesta_webservice
