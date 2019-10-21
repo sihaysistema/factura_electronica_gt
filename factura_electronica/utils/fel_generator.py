@@ -185,58 +185,115 @@ class FacturaElectronicaFEL:
         }
 
     def items(self):
-        self.d_items = {
-            "dte:Item": [{
-                    "@BienOServicio": "E",
-                    "@NumeroLinea": "1",
-                    "dte:Cantidad": "2",
-                    "dte:UnidadMedida": "UND",
-                    "dte:Descripcion": "Prueba de esquema",
-                    "dte:PrecioUnitario": "625.00",
-                    "dte:Precio": "1250.00",
-                    "dte:Descuento": "0.00",
-                    "dte:Impuestos": {
-                        "dte:Impuesto": {
-                            "dte:NombreCorto": "IVA",
-                            "dte:CodigoUnidadGravable": "1",
-                            "dte:MontoGravable": "1116.07",
-                            "dte:MontoImpuesto": "133.95"
-                        }
-                    },
-                    "dte:Total": "1250.00"
-                },
-                {
-                    "@BienOServicio": "E",
-                    "@NumeroLinea": "1",
-                    "dte:Cantidad": "2",
-                    "dte:UnidadMedida": "UND",
-                    "dte:Descripcion": "Prueba de esquema",
-                    "dte:PrecioUnitario": "0.00",
-                    "dte:Precio": "0.00",
-                    "dte:Descuento": "0.00",
-                    "dte:Impuestos": {
-                        "dte:Impuesto": {
-                            "dte:NombreCorto": "IVA",
-                            "dte:CodigoUnidadGravable": "2",
-                            "dte:MontoGravable": "0.07",
-                            "dte:MontoImpuesto": "0.95"
-                        }
-                    },
-                    "dte:Total": "0.00"
-                }
-            ]
-        }
+        try:
+            items_ok = []
+            # Obtencion item de factura
+            dat_items = frappe.db.get_values('Sales Invoice Item',
+                                            filters = {'parent': self.serie_factura},
+                                            fieldname = ['item_name', 'qty',
+                                                        'item_code', 'description',
+                                                        'net_amount', 'base_net_amount',
+                                                        'discount_percentage',
+                                                        'discount_amount',
+                                                        'net_rate', 'stock_uom',
+                                                        'serial_no', 'item_group',
+                                                        'rate', 'amount',
+                                                        'facelec_sales_tax_for_this_row',
+                                                        'facelec_amount_minus_excise_tax',
+                                                        'facelec_other_tax_amount',
+                                                        'facelec_three_digit_uom_code',
+                                                        'facelec_gt_tax_net_fuel_amt',
+                                                        'facelec_gt_tax_net_goods_amt',
+                                                        'facelec_gt_tax_net_services_amt'], as_dict = 1)
+
+            # Verificacion cantidad de items
+            if len(dat_items) > 1:
+                for i in range(0, len(dat_items)):
+                    obj_item = {}
+
+                    detalle_stock = frappe.db.get_value('Item', {'name': dat_items[i]['item_code']}, 'is_stock_item')
+                    # Validacion de Bien o Servicio, en base a detalle de stock
+                    if (int(detalle_stock) == 0):
+                        obj_item["@BienOServicio"] = 'S'
+
+                    if (int(detalle_stock) == 1):
+                        obj_item["@BienOServicio"] = 'B'
+
+                    obj_item["@NumeroLinea"] = "1"
+                    obj_item["dte:Cantidad"] = dat_items[i]['qty']
+                    obj_item["dte:UnidadMedida"] = dat_items[i]['facelec_three_digit_uom_code']
+                    obj_item["dte:Descripcion"] = dat_items[i]['description']
+                    obj_item["dte:PrecioUnitario"] = dat_items[i]['rate']
+                    obj_item["dte:Precio"] = dat_items[i]['rate']
+                    obj_item["dte:Descuento"] = dat_items[i]['discount_amount']
+                    obj_item["dte:Impuestos"] = {}
+                    obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
+
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = 'IVA'
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = '1'
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = float(dat_items[i]['grand_total'])
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = float(dat_items[i]['facelec_sales_tax_for_this_row'])
+
+                    obj_item["dte:Total"] = float(dat_items[i]['grand_total']) + float(dat_items[i]['facelec_sales_tax_for_this_row'])
+                
+                    items_ok.append(obj_item)
+            else:
+                obj_item = {}
+
+                detalle_stock = frappe.db.get_value('Item', {'name': dat_items[0]['item_code']}, 'is_stock_item')
+                # Validacion de Bien o Servicio, en base a detalle de stock
+                if (int(detalle_stock) == 0):
+                    obj_item["@BienOServicio"] = 'S'
+
+                if (int(detalle_stock) == 1):
+                    obj_item["@BienOServicio"] = 'B'
+
+                obj_item["@NumeroLinea"] = "1"
+                obj_item["dte:Cantidad"] = dat_items[0]['qty']
+                obj_item["dte:UnidadMedida"] = dat_items[0]['facelec_three_digit_uom_code']
+                obj_item["dte:Descripcion"] = dat_items[0]['description']
+                obj_item["dte:PrecioUnitario"] = dat_items[0]['rate']
+                obj_item["dte:Precio"] = dat_items[0]['rate']
+                obj_item["dte:Descuento"] = dat_items[0]['discount_amount']
+                obj_item["dte:Impuestos"] = {}
+                obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
+
+                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = 'IVA'
+                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = '1'
+                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = float(dat_items[0]['grand_total'])
+                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = float(dat_items[0]['facelec_sales_tax_for_this_row'])
+
+                obj_item["dte:Total"] = float(dat_items[i]['grand_total']) + float(dat_items[0]['facelec_sales_tax_for_this_row'])
+            
+                items_ok.append(obj_item)
+
+            self.d_items = {
+                "dte:Item": items_ok
+            }
+        except:
+            return 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
+        else:
+            return True
 
     def totales(self):
-        self.d_totales = {
-            "dte:TotalImpuestos": {
-                "dte:TotalImpuesto": {
-                    "@NombreCorto": "IVA",
-                    "@TotalMontoImpuesto": "133.93"
-                }
-            },
-            "dte:GranTotal": "1250.00"
-        }
+        try:
+            dat_fac = frappe.db.get_values('Sales Invoice',
+                                           filters={'name': self.serie_factura}
+                                           fieldname=['grand_total', 'shs_total_iva_fac'],
+                                           as_dict=1)
+            self.d_totales = {
+                "dte:TotalImpuestos": {
+                    "dte:TotalImpuesto": {
+                        "@NombreCorto": "IVA",
+                        "@TotalMontoImpuesto": dat_fac[0]['grand_total']
+                    }
+                },
+                "dte:GranTotal": dat_fac[0]['shs_total_iva_fac']
+            }
+        except:
+            return 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
+        else:
+            return True
 
     def firma(self):
         pass
