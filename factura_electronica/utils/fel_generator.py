@@ -64,13 +64,13 @@ class FacturaElectronicaFEL:
                 encodedBytes = base64.b64encode(xmlString.encode("utf-8"))
                 encodedStr = str(encodedBytes, "utf-8")
 
-                reqfel = { 
-                    "llave": , #  LLAVE
-                    "archivo": encodedStr
-                    "codigo": , # Número interno de cada transacción
-                    "alias":  usuario, # USUARIO
-                    "es_anulacion":  # "N" si es certificacion y "S" si es anulacion
-                }
+                estado_firma = self.firmar_data(encodedStr)
+
+                if estado_firma[0] == True:
+                    estado_fel = self.solicitar_factura_electronica(estado_firma[1])
+                    if estado_fel[0] == True:
+                        return estado_fel
+
 
             except:
                 return 'Error: '+str(frappe.get_traceback())
@@ -335,22 +335,49 @@ class FacturaElectronicaFEL:
         else:
             return True
 
-    def firma(self):
-        pass
-    
-    def solicitar_factura_electronica(self):
+    def firmar_data(self, encodata):
+        try:
+            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
+                                      'url_firma')
+            codigo = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
+                                         'codigo')
+            alias = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
+                                        'alias')
+            anulacion = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
+                                            'es_anulacion')
+            llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
+                                        'llave_pfx')
+            reqfel = { 
+                "llave": llave, # LLAVE
+                "archivo": encodata  # En base64
+                "codigo": codigo, # Número interno de cada transacción
+                "alias":  alias, # USUARIO
+                "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
+            }
+
+            headers = {"content-type": "application/json"}
+            response = requests.post(url, data=reqfel, headers=headers)
+        except:
+            return 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
+        else:
+            return True, response.content
+
+    def solicitar_factura_electronica(self, firmado):
         # Realizara la comunicacion al webservice
         try:
-            headers = {"content-type": "json/xml"}
-            response = requests.post(url_servicio, data=datos_xml, headers=headers, timeout=15)
-        except:
-            frappe.msgprint(_('''Tiempo de espera agotado para webservice, verificar conexion a internet
-                            e intentar de nuevo: \n {}'''.format(frappe.get_traceback())))
+            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
+                                      'url_firma')
 
-        # Si hay algun error en la respuesta, lo capturara y mostrara
-        try:
-            respuesta_webservice = response.content
+            req_dte = {
+                "nit_emisor": frappe.db.get_value('Sales Invoice', {'name': self.serie_factura},
+                                                  'nit_face_customer'),
+                "correo_copia": "m.monroyc22@gmail.com",
+                "xml_dte": firmado
+            }
+
+            headers = {"content-type": "application/json"}
+            response = requests.post(url, data=req_dte, headers=headers)
         except:
-            frappe.msgprint(_('Error en la comunicacion no se recibieron datos de INFILE: {}'.format(frappe.get_traceback())))
+            return 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
         else:
-            return respuesta_webservice
+            return True, response.content

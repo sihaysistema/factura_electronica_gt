@@ -39,6 +39,8 @@
   "codigo",
   "column_break_32",
   "alias",
+  "url_firma",
+  "url_dte",
   "configuracion_series_fel_section",
   "series_fel"
  ],
@@ -247,11 +249,21 @@
    "fieldtype": "Table",
    "label": "Series FEL",
    "options": "Configuracion Series FEL"
+  },
+  {
+   "fieldname": "url_dte",
+   "fieldtype": "Data",
+   "label": "URL DTE"
+  },
+  {
+   "fieldname": "url_firma",
+   "fieldtype": "Data",
+   "label": "URL Firma"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2019-09-26 23:08:18.513829",
+ "modified": "2019-10-21 18:34:52.421989",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
