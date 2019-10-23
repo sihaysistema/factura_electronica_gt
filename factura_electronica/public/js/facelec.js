@@ -84,16 +84,16 @@ frappe.ui.form.on("Supplier", {
     }
 });
 
-frappe.ui.form.on("Company", {
-    nit_face_company: function (frm) {
-        valNit(frm.doc.nit_face_company, frm.doc.name, frm);
-        frm.set_value('tax_id', frm.doc.nit_face_company);
-    },
-    tax_id: function (frm) {
-        valNit(frm.doc.tax_id, frm.doc.name, frm);
-        frm.set_value('nit_face_company', frm.doc.tax_id);
-    }
-});
+// frappe.ui.form.on("Company", {
+//     nit_face_company: function (frm) {
+//         valNit(frm.doc.nit_face_company, frm.doc.name, frm);
+//         frm.set_value('tax_id', frm.doc.nit_face_company);
+//     },
+//     tax_id: function (frm) {
+//         valNit(frm.doc.tax_id, frm.doc.name, frm);
+//         frm.set_value('nit_face_company', frm.doc.tax_id);
+//     }
+// });
 /* en-US: INDIVIDUAL SOURCE CODE FROM .js FILES IN THIS DIRECTORY WILL BE ADDED WHEN DOING A BENCH BUILD
    es-GT: CODIGO FUENTE INDIVIDUAL DE ARCHIVOS .js EN ESTE DIRECTORIO SE AGREGARAN ABAJO AL HACER BENCH BUILD */
 

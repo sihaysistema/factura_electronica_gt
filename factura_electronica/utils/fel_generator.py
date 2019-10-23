@@ -6,7 +6,7 @@ from datetime import datetime
 from factura_electronica.utils.utilities_facelec import normalizar_texto
 import json, xmltodict
 import base64
-
+import requests
 
 class FacturaElectronicaFEL:
     def __init__(self, serie, cliente, conf_name, series_conf):
@@ -63,19 +63,26 @@ class FacturaElectronicaFEL:
                 # A base64
                 encodedBytes = base64.b64encode(xmlString.encode("utf-8"))
                 encodedStr = str(encodedBytes, "utf-8")
-
+                with open('codificado.txt', 'w') as f:
+                        f.write(encodedStr)
+                # frappe.msgprint(_(str(encodedStr)))
                 estado_firma = self.firmar_data(encodedStr)
 
                 if estado_firma[0] == True:
-                    estado_fel = self.solicitar_factura_electronica(estado_firma[1])
-                    if estado_fel[0] == True:
-                        return estado_fel
-
+                    with open('firmado.json', 'w') as f:
+                        f.write(str(estado_firma[1]))
+                    frappe.msgprint(_(str(estado_firma[1])))
+                    # estado_fel = self.solicitar_factura_electronica(estado_firma[1])
+                    # if estado_fel[0] == True:
+                    #     return estado_fel
+                else:
+                    return 'No se logro firmar el documento: '+str(estado_firma)
 
             except:
                 return 'Error: '+str(frappe.get_traceback())
             else:
-                return 'OK'
+                # return 'OK'
+                pass
 
         else:
             return e_validador
@@ -146,12 +153,13 @@ class FacturaElectronicaFEL:
                                                 filters={'name': dat_fac[0]['company']},
                                                 fieldname=['company_name', 'nit_face_company'],
                                                 as_dict=1)
-
-            # Validacion data
-            for dire in dat_direccion[0]:
-                if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
-                    return 'No se puede completar la operacion ya que el campo {} de la direccion de compania no tiene data, por favor asignarle un valor e intentar de nuevo'.format(str(dire))
-
+            if len(dat_direccion) > 0:
+                # Validacion data
+                for dire in dat_direccion[0]:
+                    if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
+                        return 'No se puede completar la operacion ya que el campo {} de la direccion de compania no tiene data, por favor asignarle un valor e intentar de nuevo'.format(str(dire))
+            else:
+                return 'No se encontro ninguna direccion para la compania, verificar que exista una e intentar de nuevo'
             # Asignacion data
             self.d_emisor = {
                 "@AfiliacionIVA": "GEN",
@@ -192,10 +200,13 @@ class FacturaElectronicaFEL:
             except:
                 return 'No se pudo obtener data de direccion de la compania, verificar que exista una direccion con data en los campos <b>address_line1, email_id, pincode, state, city, country</b>'
 
-            # Validacion data
-            for dire in dat_direccion[0]:
-                if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
-                    return 'No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no tiene data, por favor asignarle un valor e intentar de nuevo'.format(str(dire), self.nombre_cliente)
+            if len(dat_direccion) > 0:
+                # Validacion data
+                for dire in dat_direccion[0]:
+                    if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
+                        return 'No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no tiene data, por favor asignarle un valor e intentar de nuevo'.format(str(dire), self.nombre_cliente)
+            else:
+                return 'No se encontro ninguna direccion para el cliente, verificar que exista una e intentar de nuevo'
 
             self.d_receptor = {
                 "@CorreoReceptor": dat_direccion[0]['email_id'],
@@ -349,14 +360,14 @@ class FacturaElectronicaFEL:
                                         'llave_pfx')
             reqfel = { 
                 "llave": llave, # LLAVE
-                "archivo": encodata  # En base64
-                "codigo": codigo, # Número interno de cada transacción
+                "archivo": str(encodata),  # En base64
+                # "codigo": codigo, # Número interno de cada transacción
                 "alias":  alias, # USUARIO
                 "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
             }
 
             headers = {"content-type": "application/json"}
-            response = requests.post(url, data=reqfel, headers=headers)
+            response = requests.post(url, data=json.dumps(reqfel), headers=headers)
         except:
             return 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
         else:

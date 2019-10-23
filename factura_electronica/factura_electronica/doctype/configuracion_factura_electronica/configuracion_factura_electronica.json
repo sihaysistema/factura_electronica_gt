@@ -37,6 +37,7 @@
   "datos_fel_section",
   "llave_pfx",
   "codigo",
+  "es_anulacion",
   "column_break_32",
   "alias",
   "url_firma",
@@ -259,11 +260,16 @@
    "fieldname": "url_firma",
    "fieldtype": "Data",
    "label": "URL Firma"
+  },
+  {
+   "fieldname": "es_anulacion",
+   "fieldtype": "Data",
+   "label": "Es Anulacion"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2019-10-21 18:34:52.421989",
+ "modified": "2019-10-22 23:32:43.502777",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
@@ -388,54 +394,6 @@
    "read": 1,
    "report": 1,
    "role": "Fulfillment User",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Non Profit Manager",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Non Profit Member",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Agriculture User",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Agriculture Manager",
    "share": 1,
    "write": 1
   }
