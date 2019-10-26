@@ -55,6 +55,9 @@ class FacturaElectronicaFEL:
                 }
             }
             try:
+                with open('base_sjon.json', 'w') as f:
+                    f.write(json.dumps(base_peticion, indent=2))
+
                 # To XML
                 xmlString = xmltodict.unparse(base_peticion, pretty=True)
                 with open('mario.xml', 'w') as f:
@@ -66,17 +69,17 @@ class FacturaElectronicaFEL:
                 with open('codificado.txt', 'w') as f:
                         f.write(encodedStr)
                 # frappe.msgprint(_(str(encodedStr)))
-                estado_firma = self.firmar_data(encodedStr)
+                # estado_firma = self.firmar_data(encodedStr)
 
-                if estado_firma[0] == True:
-                    with open('firmado.json', 'w') as f:
-                        f.write(str(estado_firma[1]))
-                    frappe.msgprint(_(str(estado_firma[1])))
+                # if estado_firma[0] == True:
+                #     with open('firmado.json', 'w') as f:
+                #         f.write(str(estado_firma[1]))
+                #     frappe.msgprint(_(str(estado_firma[1])))
                     # estado_fel = self.solicitar_factura_electronica(estado_firma[1])
                     # if estado_fel[0] == True:
                     #     return estado_fel
-                else:
-                    return 'No se logro firmar el documento: '+str(estado_firma)
+                # else:
+                #     return 'No se logro firmar el documento: '+str(estado_firma)
 
             except:
                 return 'Error: '+str(frappe.get_traceback())
@@ -107,12 +110,12 @@ class FacturaElectronicaFEL:
             return estado_f
 
         estado_i = self.items()
-        if estado_f != True:
-            return estado_f
+        if estado_i != True:
+            return estado_i
 
         estado_t = self.totales()
-        if estado_f != True:
-            return estado_f
+        if estado_t != True:
+            return estado_t
 
         return True
 
@@ -237,11 +240,12 @@ class FacturaElectronicaFEL:
 
     def items(self):
         try:
+            i_fel = {}
             items_ok = []
             # Obtencion item de factura
             dat_items = frappe.db.get_values('Sales Invoice Item',
-                                            filters = {'parent': self.serie_factura},
-                                            fieldname = ['item_name', 'qty',
+                                            filters={'parent': str(self.serie_factura)},
+                                            fieldname=['item_name', 'qty',
                                                         'item_code', 'description',
                                                         'net_amount', 'base_net_amount',
                                                         'discount_percentage',
@@ -255,11 +259,13 @@ class FacturaElectronicaFEL:
                                                         'facelec_three_digit_uom_code',
                                                         'facelec_gt_tax_net_fuel_amt',
                                                         'facelec_gt_tax_net_goods_amt',
-                                                        'facelec_gt_tax_net_services_amt'], as_dict = 1)
+                                                        'facelec_gt_tax_net_services_amt'], as_dict=True)
 
             # Verificacion cantidad de items
-            if len(dat_items) > 1:
-                for i in range(0, len(dat_items)):
+            longitems = len(dat_items)
+            if longitems > 1:
+                contador = 0
+                for i in range(0, longitems):
                     obj_item = {}
 
                     detalle_stock = frappe.db.get_value('Item', {'name': dat_items[i]['item_code']}, 'is_stock_item')
@@ -270,7 +276,8 @@ class FacturaElectronicaFEL:
                     if (int(detalle_stock) == 1):
                         obj_item["@BienOServicio"] = 'B'
 
-                    obj_item["@NumeroLinea"] = "1"
+                    contador += 1
+                    obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = dat_items[i]['qty']
                     obj_item["dte:UnidadMedida"] = dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = dat_items[i]['description']
@@ -282,10 +289,10 @@ class FacturaElectronicaFEL:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = 'IVA'
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = '1'
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = float(dat_items[i]['grand_total'])
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = float(dat_items[i]['facelec_amount_minus_excise_tax'])
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = float(dat_items[i]['facelec_sales_tax_for_this_row'])
 
-                    obj_item["dte:Total"] = float(dat_items[i]['grand_total']) + float(dat_items[i]['facelec_sales_tax_for_this_row'])
+                    obj_item["dte:Total"] = (float(dat_items[0]['facelec_amount_minus_excise_tax']) - float(dat_items[0]['discount_amount'])) + float(dat_items[0]['facelec_sales_tax_for_this_row'])
                 
                     items_ok.append(obj_item)
             else:
@@ -311,16 +318,16 @@ class FacturaElectronicaFEL:
 
                 obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = 'IVA'
                 obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = '1'
-                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = float(dat_items[0]['grand_total'])
+                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = float(dat_items[0]['facelec_amount_minus_excise_tax'])
                 obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = float(dat_items[0]['facelec_sales_tax_for_this_row'])
 
-                obj_item["dte:Total"] = float(dat_items[i]['grand_total']) + float(dat_items[0]['facelec_sales_tax_for_this_row'])
+                obj_item["dte:Total"] = (float(dat_items[0]['facelec_amount_minus_excise_tax']) - float(dat_items[0]['discount_amount'])) + float(dat_items[0]['facelec_sales_tax_for_this_row'])
             
                 items_ok.append(obj_item)
 
-            self.d_items = {
-                "dte:Item": items_ok
-            }
+            i_fel = {"dte:Item": items_ok}
+            self.d_items = i_fel
+
         except:
             return 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
         else:
@@ -336,10 +343,10 @@ class FacturaElectronicaFEL:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": "IVA",
-                        "@TotalMontoImpuesto": dat_fac[0]['grand_total']
+                        "@TotalMontoImpuesto": dat_fac[0]['shs_total_iva_fac']
                     }
                 },
-                "dte:GranTotal": dat_fac[0]['shs_total_iva_fac']
+                "dte:GranTotal": dat_fac[0]['grand_total']
             }
         except:
             return 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
