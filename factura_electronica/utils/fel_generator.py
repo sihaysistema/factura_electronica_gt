@@ -7,6 +7,7 @@ from factura_electronica.utils.utilities_facelec import normalizar_texto
 import json, xmltodict
 import base64
 import requests
+import datetime
 
 class FacturaElectronicaFEL:
     def __init__(self, serie, cliente, conf_name, series_conf):
@@ -55,31 +56,39 @@ class FacturaElectronicaFEL:
                 }
             }
             try:
-                with open('base_sjon.json', 'w') as f:
-                    f.write(json.dumps(base_peticion, indent=2))
+                # with open('base_sjon.json', 'w') as f:
+                #     f.write(json.dumps(base_peticion, indent=2))
 
                 # To XML
                 xmlString = xmltodict.unparse(base_peticion, pretty=True)
                 with open('mario.xml', 'w') as f:
                     f.write(xmlString)
 
-                # A base64
+                # To base64
                 encodedBytes = base64.b64encode(xmlString.encode("utf-8"))
                 encodedStr = str(encodedBytes, "utf-8")
                 with open('codificado.txt', 'w') as f:
                         f.write(encodedStr)
                 # frappe.msgprint(_(str(encodedStr)))
-                # estado_firma = self.firmar_data(encodedStr)
 
-                # if estado_firma[0] == True:
-                #     with open('firmado.json', 'w') as f:
-                #         f.write(str(estado_firma[1]))
-                #     frappe.msgprint(_(str(estado_firma[1])))
-                    # estado_fel = self.solicitar_factura_electronica(estado_firma[1])
-                    # if estado_fel[0] == True:
-                    #     return estado_fel
-                # else:
-                #     return 'No se logro firmar el documento: '+str(estado_firma)
+                estado_firma = self.firmar_data(encodedStr)
+
+                if estado_firma[0] == True:
+                    with open('firmado.json', 'w') as f:
+                        f.write(estado_firma[1])
+
+                    # frappe.msgprint(_(str(estado_firma[1])))
+
+                    estado_fel = self.solicitar_factura_electronica(json.loads(estado_firma[1]))
+                    if estado_fel[0] == True:
+                        with open('ok_fel.json', 'w') as f:
+                            f.write(estado_fel[1])
+                            frappe.msgprint(_('OK'))
+                        return estado_fel
+                    else:
+                        return estado_fel
+                else:
+                    return 'No se logro firmar el documento: '+str(estado_firma)
 
             except:
                 return 'Error: '+str(frappe.get_traceback())
@@ -126,7 +135,7 @@ class FacturaElectronicaFEL:
         try:
             self.d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'currency'),
-                "@FechaHoraEmision": str(datetime.now().utcnow()),  # "2018-11-01T16:33:47Z",
+                "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
                 "@Tipo": "FACT"
             }
         except:
@@ -169,7 +178,7 @@ class FacturaElectronicaFEL:
                 "@CodigoEstablecimiento": frappe.db.get_value('Configuracion Factura Electronica',
                                                             {'name': self.nombre_config}, 'codigo_establecimiento'),  #"1",
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
-                "@NITEmisor": dat_compania[0]['nit_face_company'],
+                "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', ''),
                 "@NombreComercial": dat_compania[0]['company_name'],
                 "@NombreEmisor": dat_compania[0]['company_name'],
                 "dte:DireccionEmisor": {
@@ -177,7 +186,7 @@ class FacturaElectronicaFEL:
                     "dte:CodigoPostal": dat_direccion[0]['pincode'],
                     "dte:Municipio": dat_direccion[0]['state'],
                     "dte:Departamento": dat_direccion[0]['city'],
-                    "dte:Pais": dat_direccion[0]['country']
+                    "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper()
                 }
             }
         except:
@@ -213,14 +222,14 @@ class FacturaElectronicaFEL:
 
             self.d_receptor = {
                 "@CorreoReceptor": dat_direccion[0]['email_id'],
-                "@IDReceptor": dat_fac[0]['nit_face_customer'],  # NIT
+                "@IDReceptor": (dat_fac[0]['nit_face_customer']).replace('-', ''),  # NIT
                 "@NombreReceptor": str(self.nombre_cliente),
                 "dte:DireccionReceptor": {
                     "dte:Direccion": dat_direccion[0]['address_line1']+', '+dat_direccion[0]['address_line2'],
                     "dte:CodigoPostal": dat_direccion[0]['pincode'],
                     "dte:Municipio": dat_direccion[0]['state'],
                     "dte:Departamento": dat_direccion[0]['city'],
-                    "dte:Pais": dat_direccion[0]['country']
+                    "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper()
                 }
             }
         except:
@@ -282,17 +291,17 @@ class FacturaElectronicaFEL:
                     obj_item["dte:UnidadMedida"] = dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = dat_items[i]['description']
                     obj_item["dte:PrecioUnitario"] = dat_items[i]['rate']
-                    obj_item["dte:Precio"] = dat_items[i]['rate']
+                    obj_item["dte:Precio"] = dat_items[i]['amount']
                     obj_item["dte:Descuento"] = dat_items[i]['discount_amount']
                     obj_item["dte:Impuestos"] = {}
                     obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = 'IVA'
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = '1'
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = float(dat_items[i]['facelec_amount_minus_excise_tax'])
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = (float(dat_items[i]['facelec_gt_tax_net_fuel_amt']) + float(dat_items[i]['facelec_gt_tax_net_goods_amt']) + float(dat_items[i]['facelec_gt_tax_net_services_amt'])) - float(dat_items[i]['discount_amount']) #float(dat_items[i]['facelec_amount_minus_excise_tax'])
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = float(dat_items[i]['facelec_sales_tax_for_this_row'])
 
-                    obj_item["dte:Total"] = (float(dat_items[0]['facelec_amount_minus_excise_tax']) - float(dat_items[0]['discount_amount'])) + float(dat_items[0]['facelec_sales_tax_for_this_row'])
+                    obj_item["dte:Total"] = (float(dat_items[i]['facelec_amount_minus_excise_tax']) - float(dat_items[i]['discount_amount'])) # Se suman otr impuestos+ float(dat_items[i]['facelec_sales_tax_for_this_row'])
                 
                     items_ok.append(obj_item)
             else:
@@ -311,17 +320,17 @@ class FacturaElectronicaFEL:
                 obj_item["dte:UnidadMedida"] = dat_items[0]['facelec_three_digit_uom_code']
                 obj_item["dte:Descripcion"] = dat_items[0]['description']
                 obj_item["dte:PrecioUnitario"] = dat_items[0]['rate']
-                obj_item["dte:Precio"] = dat_items[0]['rate']
+                obj_item["dte:Precio"] = dat_items[0]['amount']
                 obj_item["dte:Descuento"] = dat_items[0]['discount_amount']
                 obj_item["dte:Impuestos"] = {}
                 obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
 
                 obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = 'IVA'
                 obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = '1'
-                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = float(dat_items[0]['facelec_amount_minus_excise_tax'])
+                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = (float(dat_items[0]['facelec_gt_tax_net_fuel_amt']) + float(dat_items[0]['facelec_gt_tax_net_goods_amt']) + float(dat_items[0]['facelec_gt_tax_net_services_amt'])) - float(dat_items[0]['discount_amount']) # precio - descuento/1.12
                 obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = float(dat_items[0]['facelec_sales_tax_for_this_row'])
 
-                obj_item["dte:Total"] = (float(dat_items[0]['facelec_amount_minus_excise_tax']) - float(dat_items[0]['discount_amount'])) + float(dat_items[0]['facelec_sales_tax_for_this_row'])
+                obj_item["dte:Total"] = (float(dat_items[0]['facelec_amount_minus_excise_tax']) - float(dat_items[0]['discount_amount'])) # Se suma otros impuestos + float(dat_items[0]['facelec_sales_tax_for_this_row'])
             
                 items_ok.append(obj_item)
 
@@ -378,24 +387,33 @@ class FacturaElectronicaFEL:
         except:
             return 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
         else:
-            return True, response.content
+            return True, (response.content).decode('utf-8')
 
     def solicitar_factura_electronica(self, firmado):
         # Realizara la comunicacion al webservice
         try:
-            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
-                                      'url_firma')
+            data_fac = frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'company')
+            nit_company = frappe.db.get_value('Company', {'name': data_fac}, 'nit_face_company')
+
+            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'url_dte')
+            user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'alias')
+            llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'llave_ws')
+            ident = self.serie_factura
 
             req_dte = {
-                "nit_emisor": frappe.db.get_value('Sales Invoice', {'name': self.serie_factura},
-                                                  'nit_face_customer'),
+                "nit_emisor": nit_company,
                 "correo_copia": "m.monroyc22@gmail.com",
-                "xml_dte": firmado
+                "xml_dte": firmado["archivo"]
             }
 
-            headers = {"content-type": "application/json"}
-            response = requests.post(url, data=req_dte, headers=headers)
+            headers = {
+                "content-type": "application/json",
+                "usuario": user,
+                "llave": llave,
+                "identificador": ident
+            }
+            response = requests.post(url, data=json.dumps(req_dte), headers=headers)
         except:
             return 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
         else:
-            return True, response.content
+            return True, (response.content).decode('utf-8')
