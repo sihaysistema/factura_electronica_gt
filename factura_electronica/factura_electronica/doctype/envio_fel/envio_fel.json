@@ -1,0 +1,356 @@
+{
+ "autoname": "field:uuid",
+ "creation": "2019-11-04 20:25:41.140517",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "detalles_fel_column",
+  "resultado",
+  "fecha",
+  "origen",
+  "descripcion",
+  "control_emision_section",
+  "saldo",
+  "column_break_8",
+  "creditos",
+  "alertas_infile_section",
+  "alertas",
+  "descripcion_alertas_infile",
+  "alertas_sat",
+  "descripcion_alertas_sat",
+  "cantidad_errores",
+  "descripcion_errores",
+  "detalles_factura_electronica_generada_section",
+  "informacion_adicional",
+  "uuid",
+  "serie",
+  "numero",
+  "xml_certificado",
+  "registro_tiempo",
+  "registro_tiempo_section",
+  "enviado",
+  "column_break_26",
+  "recibido"
+ ],
+ "fields": [
+  {
+   "collapsible": 1,
+   "fieldname": "detalles_fel_column",
+   "fieldtype": "Section Break",
+   "in_preview": 1,
+   "label": "Detalles FEL"
+  },
+  {
+   "fieldname": "resultado",
+   "fieldtype": "Data",
+   "label": "Resultado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fecha",
+   "fieldtype": "Datetime",
+   "label": "Fecha"
+  },
+  {
+   "fieldname": "origen",
+   "fieldtype": "Text",
+   "label": "Origen"
+  },
+  {
+   "fieldname": "descripcion",
+   "fieldtype": "Text",
+   "label": "Descripcion",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "control_emision_section",
+   "fieldtype": "Section Break",
+   "label": "Control Emision"
+  },
+  {
+   "fieldname": "saldo",
+   "fieldtype": "Currency",
+   "label": "Saldo"
+  },
+  {
+   "fieldname": "column_break_8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "creditos",
+   "fieldtype": "Currency",
+   "label": "Creditos"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "alertas_infile_section",
+   "fieldtype": "Section Break",
+   "label": "Alertas INFILE/SAT"
+  },
+  {
+   "fieldname": "alertas",
+   "fieldtype": "Data",
+   "label": "Alertas"
+  },
+  {
+   "fieldname": "descripcion_alertas_infile",
+   "fieldtype": "Text",
+   "label": "Descripcion Alertas INFILE"
+  },
+  {
+   "fieldname": "alertas_sat",
+   "fieldtype": "Data",
+   "label": "Alertas SAT"
+  },
+  {
+   "fieldname": "descripcion_alertas_sat",
+   "fieldtype": "Text",
+   "label": "Descripcion Alertas SAT"
+  },
+  {
+   "fieldname": "cantidad_errores",
+   "fieldtype": "Data",
+   "label": "Cantidad Errores"
+  },
+  {
+   "fieldname": "descripcion_errores",
+   "fieldtype": "Text",
+   "label": "Descripcion Errores"
+  },
+  {
+   "fieldname": "informacion_adicional",
+   "fieldtype": "Text",
+   "label": "Informacion Adicional"
+  },
+  {
+   "fieldname": "uuid",
+   "fieldtype": "Data",
+   "label": "UUID",
+   "unique": 1
+  },
+  {
+   "fieldname": "serie",
+   "fieldtype": "Data",
+   "label": "Serie"
+  },
+  {
+   "fieldname": "numero",
+   "fieldtype": "Data",
+   "label": "Numero"
+  },
+  {
+   "fieldname": "xml_certificado",
+   "fieldtype": "Code",
+   "label": "XML Certificado"
+  },
+  {
+   "bold": 1,
+   "fieldname": "registro_tiempo",
+   "fieldtype": "Section Break",
+   "label": "REGISTRO TIEMPO"
+  },
+  {
+   "fieldname": "registro_tiempo_section",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "enviado",
+   "fieldtype": "Read Only",
+   "label": "Enviado"
+  },
+  {
+   "fieldname": "recibido",
+   "fieldtype": "Read Only",
+   "label": "Recibido"
+  },
+  {
+   "fieldname": "detalles_factura_electronica_generada_section",
+   "fieldtype": "Section Break",
+   "label": "Detalles Factura Electronica Generada"
+  },
+  {
+   "fieldname": "column_break_26",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "modified": "2019-11-04 20:33:50.872850",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Envio FEL",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Master Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Projects User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Projects Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Customer",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Fulfillment User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Non Profit Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Non Profit Member",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agriculture User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agriculture Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
+}

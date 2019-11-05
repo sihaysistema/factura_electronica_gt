@@ -25,6 +25,12 @@ def get_data():
 					"name": "Envios Facturas Electronicas",
 					"description": _("Encuentre todas las facturas generadas detalladamente."),
 					"onboard": 1,
+				},
+				{
+					"type": "doctype",
+					"name": "Envio FEL",
+					"description": _("Registro estado de las peticion FEL"),
+					"onboard": 1
 				}
 			]
 		}
