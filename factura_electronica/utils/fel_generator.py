@@ -21,9 +21,10 @@ class FacturaElectronicaFEL:
         self.serie_factura = str(serie)  # Serie original de la factura
         self.nombre_config = str(conf_name)  # Nombre doc configuracion para factura electronica
         self.nombre_cliente = str(cliente)  # Nombre cliente en factura
-        self.series_facelec = str(series_conf)  # Series para factura electronica
+        self.serie_facelec_fel = str(series_conf)  # Series para factura electronica
 
     def construir_peticion(self):
+        '''Funcion encargada de construir XML peticion a partir de JSON'''
         # Verifica que todas las partes que conforman la peticion sean correctas
         e_validador = self.validador_data()
 
@@ -52,7 +53,6 @@ class FacturaElectronicaFEL:
                             }
                         }
                     }
-                    # "ds:Signature": self.d_firma
                 }
             }
             try:
@@ -69,15 +69,14 @@ class FacturaElectronicaFEL:
                 encodedStr = str(encodedBytes, "utf-8")
                 with open('codificado.txt', 'w') as f:
                         f.write(encodedStr)
-                # frappe.msgprint(_(str(encodedStr)))
 
+                # Hace peticion para firmar xml encoded base64
                 estado_firma = self.firmar_data(encodedStr)
 
+                # Si la firma se hace exitosamente
                 if estado_firma[0] == True:
                     with open('firmado.json', 'w') as f:
                         f.write(estado_firma[1])
-
-                    # frappe.msgprint(_(str(estado_firma[1])))
 
                     estado_fel = self.solicitar_factura_electronica(json.loads(estado_firma[1]))
                     if estado_fel[0] == True:
@@ -92,16 +91,15 @@ class FacturaElectronicaFEL:
 
             except:
                 return 'Error: '+str(frappe.get_traceback())
-            else:
-                # return 'OK'
-                pass
 
         else:
             return e_validador
 
     def validador_data(self):
+        '''Funcion encargada de validar la data que construye la peticion a INFILE,
+           Si existe por lo menos un error retornara la descripcion'''
+
         # Validacion y generacion seccion datos generales
-        
         estado_dg = self.datos_generales()
         if estado_dg != True:
             return estado_dg
@@ -133,10 +131,11 @@ class FacturaElectronicaFEL:
 
     def datos_generales(self):
         try:
+            tipo = frappe.db.get_value()
             self.d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'currency'),
                 "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@Tipo": "FACT"
+                "@Tipo": self.serie_facelec_fel
             }
         except:
             return 'Error en obtener data para datos generales: '+str(frappe.get_traceback())
@@ -144,7 +143,7 @@ class FacturaElectronicaFEL:
             return True
 
     def emisor(self):
-        '''Funcion encargada de obtener y asignar data del Emisor'''
+        '''Funcion encargada de obtener y asignar data del Emisor/Company'''
         try:
             # Obtencion data de EMISOR
             dat_fac = frappe.db.get_values('Sales Invoice',
@@ -238,6 +237,7 @@ class FacturaElectronicaFEL:
             return True
 
     def frases(self):
+        # TODO: Consultar todas las posibles combinaciones disponibles
         self.d_frases = {
             "dte:Frase": {
                 "@CodigoEscenario": "1",
@@ -248,6 +248,7 @@ class FacturaElectronicaFEL:
         return True
 
     def items(self):
+        '''Funcion encargada de asignar correctamente los items'''
         try:
             i_fel = {}
             items_ok = []

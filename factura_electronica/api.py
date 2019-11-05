@@ -430,7 +430,7 @@ def data_sales_invoice(data):
     #     return sales_invoice
 
 
-# FACTURA ELECTRONICA API
+# FACTURA ELECTRONICA API OLD GFACE
 def generar_factura_electronica_api(serie_factura, nombre_cliente, pre_se):
     '''Funcion API PNE para generar Facturas Electronicas REST-API'''
     '''Verifica que todos los datos esten correctos para realizar una
@@ -576,3 +576,8 @@ def obtener_serie_doc(opt):
                                                             fieldname=['serie'], as_dict=1)
 
                 return series_configuradas[0]['serie']
+
+
+class FelConectorApi:
+    def __init__(self, datos_factura):
+        pass
