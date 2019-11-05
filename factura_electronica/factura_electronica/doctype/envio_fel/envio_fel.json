@@ -49,7 +49,7 @@
   },
   {
    "fieldname": "fecha",
-   "fieldtype": "Datetime",
+   "fieldtype": "Data",
    "label": "Fecha"
   },
   {
@@ -175,7 +175,7 @@
    "fieldtype": "Column Break"
   }
  ],
- "modified": "2019-11-04 20:33:50.872850",
+ "modified": "2019-11-05 16:30:40.286970",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Envio FEL",

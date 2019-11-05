@@ -80,9 +80,12 @@ class FacturaElectronicaFEL:
 
                     estado_fel = self.solicitar_factura_electronica(json.loads(estado_firma[1]))
                     if estado_fel[0] == True:
+
+                        uuid_fel = self.validador_respuestas(estado_fel[1])
                         with open('ok_fel.json', 'w') as f:
                             f.write(estado_fel[1])
-                            frappe.msgprint(_('OK'))
+                            frappe.msgprint(_(uuid_fel))
+
                         return estado_fel
                     else:
                         return estado_fel
@@ -126,16 +129,62 @@ class FacturaElectronicaFEL:
 
         return True
 
-    def validador_respuetas(self):
-        pass
+    def validador_respuestas(self, msj_fel):
+        try:
+            mensajes = json.loads(msj_fel)
+            # Verifica que no existan errores
+            if mensajes['resultado'] == True and mensajes['cantidad_errores'] == 0:
+                # Se encarga de guardar las respuestas de INFILE-SAT esto para llevar registro
+                status_saved = self.guardar_respuesta(mensajes)
+                if status_saved != True:
+                    return status_saved
+
+                return mensajes['uuid']
+        except:
+            return 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())
+
+    def guardar_respuesta(self, mensajes):
+        try:
+            resp_fel = frappe.new_doc("Envio FEL")
+            resp_fel.resultado = mensajes['resultado']
+            resp_fel.fecha = mensajes['fecha']
+            resp_fel.origen = mensajes['origen']
+            resp_fel.descripcion = mensajes['descripcion']
+
+            if "control_emision" in mensajes:
+                resp_fel.saldo = mensajes['control_emision']['Saldo']
+                resp_fel.creditos = mensajes['control_emision']['Creditos']
+
+            resp_fel.alertas = mensajes['alertas_infile']
+            resp_fel.descripcion_alertas_infile = str(mensajes['descripcion_alertas_infile'])
+            resp_fel.alertas_sat = mensajes['alertas_sat']
+            resp_fel.descripcion_alertas_sat = str(mensajes['descripcion_alertas_sat'])
+            resp_fel.cantidad_errores = mensajes['cantidad_errores']
+            resp_fel.descripcion_errores = str(mensajes['descripcion_errores'])
+
+            if "informacion_adicional" in mensajes:
+                resp_fel.informacion_adicional = mensajes['informacion_adicional']
+
+            resp_fel.uuid = mensajes['uuid']
+            resp_fel.serie = mensajes['serie']
+            resp_fel.numero = mensajes['numero']
+
+            decodedBytes = base64.b64decode(mensajes['xml_certificado'])
+            decodedStr = str(decodedBytes, "utf-8")
+            resp_fel.xml_certificado = decodedStr
+
+            resp_fel.save()
+        except:
+            return 'Error al tratar de guardar la rspuesta: '+str(frappe.get_traceback())
+        else:
+            return True
 
     def datos_generales(self):
         try:
-            tipo = frappe.db.get_value()
             self.d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'currency'),
                 "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@Tipo": self.serie_facelec_fel
+                "@Tipo": 'FACT'  #self.serie_facelec_fel
             }
         except:
             return 'Error en obtener data para datos generales: '+str(frappe.get_traceback())

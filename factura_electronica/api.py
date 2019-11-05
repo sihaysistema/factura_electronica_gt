@@ -168,7 +168,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
 
             # Verificacion regimen FEL
             if validar_config[2] == 'FEL':
-                frappe.msgprint(_('FEL'))
+                # frappe.msgprint(_('FEL'))
                 if frappe.db.exists('Configuracion Series FEL', {'parent': nombre_config_validada, 'serie': prefijo_serie}):
                     series_configuradas_fel = frappe.db.get_values('Configuracion Series FEL',
                                                                     filters={'parent': nombre_config_validada, 'serie': prefijo_serie},
