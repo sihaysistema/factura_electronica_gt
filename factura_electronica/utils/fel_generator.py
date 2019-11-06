@@ -24,7 +24,7 @@ class FacturaElectronicaFEL:
         self.serie_facelec_fel = str(series_conf)  # Series para factura electronica
 
     def construir_peticion(self):
-        '''Funcion encargada de construir XML peticion a partir de JSON'''
+        '''Funcion principal encargada de construir XML peticion a partir de JSON y manejar la solicitud de facelec'''
         # Verifica que todas las partes que conforman la peticion sean correctas
         e_validador = self.validador_data()
 
@@ -55,10 +55,8 @@ class FacturaElectronicaFEL:
                     }
                 }
             }
-            try:
-                # with open('base_sjon.json', 'w') as f:
-                #     f.write(json.dumps(base_peticion, indent=2))
 
+            try:
                 # To XML
                 xmlString = xmltodict.unparse(base_peticion, pretty=True)
                 with open('mario.xml', 'w') as f:
@@ -67,8 +65,8 @@ class FacturaElectronicaFEL:
                 # To base64
                 encodedBytes = base64.b64encode(xmlString.encode("utf-8"))
                 encodedStr = str(encodedBytes, "utf-8")
-                with open('codificado.txt', 'w') as f:
-                        f.write(encodedStr)
+                # with open('codificado.txt', 'w') as f:
+                #         f.write(encodedStr)
 
                 # Hace peticion para firmar xml encoded base64
                 estado_firma = self.firmar_data(encodedStr)
@@ -82,9 +80,13 @@ class FacturaElectronicaFEL:
                     if estado_fel[0] == True:
 
                         uuid_fel = self.validador_respuestas(estado_fel[1])
-                        with open('ok_fel.json', 'w') as f:
-                            f.write(estado_fel[1])
-                            frappe.msgprint(_(uuid_fel))
+                        if uuid_fel['status'] == 'OK':
+                            with open('ok_fel.json', 'w') as f:
+                                f.write(estado_fel[1])
+
+                            return uuid_fel['numero_autorizacion']
+
+                        # Funcion encargada de actualizar todos los registros enlazados a la factura original
 
                         return estado_fel
                     else:
@@ -130,6 +132,7 @@ class FacturaElectronicaFEL:
         return True
 
     def validador_respuestas(self, msj_fel):
+        '''Funcion encargada de verificar las respuestas de INFILE-SAT'''
         try:
             mensajes = json.loads(msj_fel)
             # Verifica que no existan errores
@@ -139,17 +142,21 @@ class FacturaElectronicaFEL:
                 if status_saved != True:
                     return status_saved
 
-                return mensajes['uuid']
+                return {'status': 'OK', 'numero_autorizacion': mensajes['uuid']}
+            else:
+                return {'status': 'ERROR', 'numero_errores': str(mensajes['cantidad_errores']), 'detalles_errores': str(mensajes['descripcion_errores'])}
         except:
-            return 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())
+            return {'status': 'ERROR', 'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
 
     def guardar_respuesta(self, mensajes):
+        '''Funcion encargada guardar registro con respuestas de INFILE-SAT'''
         try:
             resp_fel = frappe.new_doc("Envio FEL")
             resp_fel.resultado = mensajes['resultado']
             resp_fel.fecha = mensajes['fecha']
             resp_fel.origen = mensajes['origen']
             resp_fel.descripcion = mensajes['descripcion']
+            resp_fel.serie_factura_original = self.serie_factura
 
             if "control_emision" in mensajes:
                 resp_fel.saldo = mensajes['control_emision']['Saldo']
@@ -440,6 +447,7 @@ class FacturaElectronicaFEL:
             return True, (response.content).decode('utf-8')
 
     def solicitar_factura_electronica(self, firmado):
+        '''Funcion encargada de solicitar factura electronica al WS'''
         # Realizara la comunicacion al webservice
         try:
             data_fac = frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'company')
@@ -467,3 +475,143 @@ class FacturaElectronicaFEL:
             return 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
         else:
             return True, (response.content).decode('utf-8')
+
+    def actualizar_registros(self):
+        """Funcion permite actualizar tablas en la base de datos, despues de haber generado
+       la factura electronica
+
+       Parametros:
+       ----------
+       * serieOriginalFac (str) : Serie de factura original
+        """
+        # Verifica que exista un documento en la tabla Envios Facturas Electronicas con el nombre de la serie original
+        if frappe.db.exists('Envios FEL', {'serie_factura_original': self.serie_factura}):
+            factura_guardada = frappe.db.get_values('Envios FEL',
+                                                    filters={'serie_factura_original': self.serie_factura},
+                                                    fieldname=['numero_dte', 'cae', 'serie_factura_original'], as_dict=1)
+            # Esta seccion se encarga de actualizar la serie, con una nueva que es serie y numero
+            # buscara en las tablas donde exista una coincidencia actualizando con la nueva serie
+            try:
+                # serieDte: guarda el numero DTE retornado por INFILE, se utilizara para reemplazar el nombre de la serie de la
+                # factura que lo generó.
+                serieDte = str(factura_guardada[0]['numero_dte'])
+                # serie_fac_original: Guarda la serie original de la factura.
+                serie_fac_original = serieOriginalFac
+
+                # Actualizacion de tablas que son modificadas directamente.
+                # 01 - tabSales Invoice
+                frappe.db.sql('''UPDATE `tabSales Invoice`
+                                SET name=%(name)s,
+                                    cae_factura_electronica=%(cae_correcto)s,
+                                    serie_original_del_documento=%(serie_orig_correcta)s
+                                WHERE name=%(serieFa)s
+                                ''', {'name':serieDte, 'cae_correcto': factura_guardada[0]['cae'],
+                                    'serie_orig_correcta': serie_fac_original, 'serieFa':serie_fac_original})
+
+                # 02 - tabSales Invoice Item
+                frappe.db.sql('''UPDATE `tabSales Invoice Item` SET parent=%(name)s
+                                WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+                # 03 - tabGL Entry
+                frappe.db.sql('''UPDATE `tabGL Entry` SET voucher_no=%(name)s, against_voucher=%(name)s
+                                WHERE voucher_no=%(serieFa)s AND against_voucher=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+                frappe.db.sql('''UPDATE `tabGL Entry` SET voucher_no=%(name)s, docstatus=1
+                                WHERE voucher_no=%(serieFa)s AND against_voucher IS NULL''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+                # Actualizacion de tablas que pueden ser modificadas desde Sales Invoice
+                # Verificara tabla por tabla en busca de un valor existe, en caso sea verdadero actualizara,
+                # en caso no encuentre nada no hara nada
+                # 04 - tabSales Taxes and Charges
+                if frappe.db.exists('Sales Taxes and Charges', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSales Taxes and Charges` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+                if frappe.db.exists('Otros Impuestos Factura Electronica', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabOtros Impuestos Factura Electronica` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+
+                # Pago programado
+                # 05 - tabPayment Schedule
+                if frappe.db.exists('Payment Schedule', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabPayment Schedule` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+
+                # subscripcion
+                # 06 - tabSubscription
+                if frappe.db.exists('Subscription', {'reference_document': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSubscription` SET reference_document=%(name)s
+                                    WHERE reference_document=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+
+                # Entrada del libro mayor de inventarios
+                # 07 - tabStock Ledger Entry
+                if frappe.db.exists('Stock Ledger Entry', {'voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabStock Ledger Entry` SET voucher_no=%(name)s
+                                    WHERE voucher_no=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+
+                # Hoja de tiempo de factura de ventas
+                # 08 - tabSales Invoice Timesheet
+                if frappe.db.exists('Sales Invoice Timesheet', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSales Invoice Timesheet` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+
+                # Equipo Ventas
+                # 09 - tabSales Team
+                if frappe.db.exists('Sales Team', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSales Team` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+                # Packed Item
+                # 10 - tabPacked Item
+                if frappe.db.exists('Packed Item', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabPacked Item` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+                # Sales Invoice Advance - Anticipos a facturas
+                # 11 - tabSales Invoice Advance
+                if frappe.db.exists('Sales Invoice Advance', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSales Invoice Advance` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+
+                # Sales Invoice Payment - Pagos sobre a facturas
+                # 12 - tabSales Invoice Payment
+                if frappe.db.exists('Sales Invoice Payment', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSales Invoice Payment` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+
+                # Payment Entry Reference -
+                # 13 - tabPayment Entry Reference
+                if frappe.db.exists('Payment Entry Reference', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSales Invoice Payment` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+                # Sales Order
+                # 15 - tabSales Order
+                if frappe.db.exists('Sales Order', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSales Order` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+                # Parece que este no enlaza directamente con sales invoice es el sales invoice que enlaza con este.
+                # Delivery Note
+                # 16 - tabDelivery Note
+                if frappe.db.exists('Delivery Note', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabDelivery Note` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+
+                frappe.db.commit()
+
+            except:
+                # En caso exista un error al renombrar la factura retornara el mensaje con el error
+                frappe.msgprint(_('Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'))
+            else:
+                # Si los datos se Guardan correctamente, se retornara el Numero Dte generado, que sera capturado por api.py
+                # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
+                return str(factura_guardada[0]['numero_dte'])
+

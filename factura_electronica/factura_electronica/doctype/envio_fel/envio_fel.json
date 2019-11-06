@@ -7,6 +7,7 @@
  "field_order": [
   "detalles_fel_column",
   "resultado",
+  "serie_factura_original",
   "fecha",
   "origen",
   "descripcion",
@@ -173,9 +174,14 @@
   {
    "fieldname": "column_break_26",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "serie_factura_original",
+   "fieldtype": "Data",
+   "label": "Serie Factura Original"
   }
  ],
- "modified": "2019-11-05 16:30:40.286970",
+ "modified": "2019-11-05 18:45:19.047067",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Envio FEL",
