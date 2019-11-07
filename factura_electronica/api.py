@@ -182,10 +182,12 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                         # generar_fac_fel(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_configuradas_fel)
                         factura_electronica = FacturaElectronicaFEL(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_configuradas_fel)
                         est = factura_electronica.construir_peticion()
+                        frappe.msgprint(_('Ok Generada'+str(est)))
+                        return est
                     except:
                         frappe.msgprint(_('No se puedo generar la factura electronica: '+(est)))
-                    else:
-                        frappe.msgprint(_(est))
+                    # else:
+                    #     frappe.msgprint(_(est))
                 else:
                     frappe.msgprint(_('''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
                                         Por favor configura la serie <b>{0}</b> en 

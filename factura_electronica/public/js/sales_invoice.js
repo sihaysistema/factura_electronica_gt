@@ -725,26 +725,6 @@ frappe.ui.form.on("Sales Invoice", {
             });
         });
 
-        frm.add_custom_button(__('FEL'), function () {
-            // frm.reload(); permite hacer un refresh de todo el documento
-            // frm.reload_doc();
-            let serie_de_factura = frm.doc.name;
-            // Guarda la url actual
-            let mi_url = window.location.href;
-            frappe.call({
-                method: "factura_electronica.api.generar_factura_electronica",
-                args: {
-                    serie_factura: frm.doc.name,
-                    nombre_cliente: frm.doc.customer,
-                    pre_se: frm.doc.naming_series
-                },
-                // El callback recibe como parametro el dato retornado por el script python del lado del servidor
-                callback: function (data) {
-                    console.log(data.message);
-                }
-            });
-        }).addClass("btn-primary");
-
         // Cuando el documento se actualiza, la funcion verificac de que exista un cae.
         // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
         // En caso no exista un cae mostrara el boton para generar la factura electronica

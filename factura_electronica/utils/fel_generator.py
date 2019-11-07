@@ -83,19 +83,29 @@ class FacturaElectronicaFEL:
 
                         # Si la respuesta es OK
                         uuid_fel = self.validador_respuestas(estado_fel[1])
+
+                        # Si la respuesta es 'OK' procede a actualizar todos los registros
+                        # Relacionado con la factura con la serie de factura electronica generada
                         if uuid_fel['status'] == 'OK':
                             self.numero_auth_fel = uuid_fel['numero_autorizacion']
 
-                            # Utilizar solo para debug
+                            # Utilizar solo para debug: guarda el json recibido
                             with open('ok_fel.json', 'w') as f:
                                 f.write(estado_fel[1])
 
-                        # Funcion encargada de actualizar todos los registros enlazados a la factura original
-                        estado_actualizacion = self.actualizar_registros()
-                        if estado_actualizacion != True:
-                            return estado_actualizacion
+                            # Funcion encargada de actualizar todos los registros enlazados a la factura original
+                            estado_actualizacion = self.actualizar_registros()
+                            if estado_actualizacion['status'] == 1:
+                                return estado_actualizacion['msj']
+                            else:
+                                return estado_actualizacion['msj']
 
-                        return estado_fel
+                            # TODO: OPCION PARA ENVIAR POR CORREO ELECTRONICO LAS FACTURAS ELECTRONICAS GENERADAS
+                            # return True
+                        elif uuid_fel['status'] == 'ERROR VALIDACION':
+                            return uuid_fel['detalles_errores']
+                        else:
+                            return uuid_fel['descripcion_errores']
                     else:
                         return estado_fel
                 else:
@@ -146,48 +156,50 @@ class FacturaElectronicaFEL:
             if mensajes['resultado'] == True and mensajes['cantidad_errores'] == 0:
                 # Se encarga de guardar las respuestas de INFILE-SAT esto para llevar registro
                 status_saved = self.guardar_respuesta(mensajes)
+                # Al primer error encontrado retornara un detalle con el mismo
                 if status_saved != True:
                     return status_saved
 
-                return {'status': 'OK', 'numero_autorizacion': mensajes['uuid'], 'serie': mensajes[serie], 'numero': mensajes[numero]}
+                return {'status': 'OK', 'numero_autorizacion': mensajes['uuid'], 'serie': mensajes['serie'], 'numero': mensajes['numero']}
             else:
                 return {'status': 'ERROR', 'numero_errores': str(mensajes['cantidad_errores']), 'detalles_errores': str(mensajes['descripcion_errores'])}
         except:
-            return {'status': 'ERROR', 'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
+            return {'status': 'ERROR VALIDACION', 'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
 
     def guardar_respuesta(self, mensajes):
         '''Funcion encargada guardar registro con respuestas de INFILE-SAT'''
         try:
-            resp_fel = frappe.new_doc("Envio FEL")
-            resp_fel.resultado = mensajes['resultado']
-            resp_fel.fecha = mensajes['fecha']
-            resp_fel.origen = mensajes['origen']
-            resp_fel.descripcion = mensajes['descripcion']
-            resp_fel.serie_factura_original = self.serie_factura
+            if not frappe.db.exists('Envio FEL', {'name': mensajes['uuid']}):
+                resp_fel = frappe.new_doc("Envio FEL")
+                resp_fel.resultado = mensajes['resultado']
+                resp_fel.fecha = mensajes['fecha']
+                resp_fel.origen = mensajes['origen']
+                resp_fel.descripcion = mensajes['descripcion']
+                resp_fel.serie_factura_original = self.serie_factura
 
-            if "control_emision" in mensajes:
-                resp_fel.saldo = mensajes['control_emision']['Saldo']
-                resp_fel.creditos = mensajes['control_emision']['Creditos']
+                if "control_emision" in mensajes:
+                    resp_fel.saldo = mensajes['control_emision']['Saldo']
+                    resp_fel.creditos = mensajes['control_emision']['Creditos']
 
-            resp_fel.alertas = mensajes['alertas_infile']
-            resp_fel.descripcion_alertas_infile = str(mensajes['descripcion_alertas_infile'])
-            resp_fel.alertas_sat = mensajes['alertas_sat']
-            resp_fel.descripcion_alertas_sat = str(mensajes['descripcion_alertas_sat'])
-            resp_fel.cantidad_errores = mensajes['cantidad_errores']
-            resp_fel.descripcion_errores = str(mensajes['descripcion_errores'])
+                resp_fel.alertas = mensajes['alertas_infile']
+                resp_fel.descripcion_alertas_infile = str(mensajes['descripcion_alertas_infile'])
+                resp_fel.alertas_sat = mensajes['alertas_sat']
+                resp_fel.descripcion_alertas_sat = str(mensajes['descripcion_alertas_sat'])
+                resp_fel.cantidad_errores = mensajes['cantidad_errores']
+                resp_fel.descripcion_errores = str(mensajes['descripcion_errores'])
 
-            if "informacion_adicional" in mensajes:
-                resp_fel.informacion_adicional = mensajes['informacion_adicional']
+                if "informacion_adicional" in mensajes:
+                    resp_fel.informacion_adicional = mensajes['informacion_adicional']
 
-            resp_fel.uuid = mensajes['uuid']
-            resp_fel.serie = mensajes['serie']
-            resp_fel.numero = mensajes['numero']
+                resp_fel.uuid = mensajes['uuid']
+                resp_fel.serie = mensajes['serie']
+                resp_fel.numero = mensajes['numero']
 
-            decodedBytes = base64.b64decode(mensajes['xml_certificado'])
-            decodedStr = str(decodedBytes, "utf-8")
-            resp_fel.xml_certificado = decodedStr
+                decodedBytes = base64.b64decode(mensajes['xml_certificado'])
+                decodedStr = str(decodedBytes, "utf-8")
+                resp_fel.xml_certificado = decodedStr
 
-            resp_fel.save()
+                resp_fel.save()
         except:
             return 'Error al tratar de guardar la rspuesta: '+str(frappe.get_traceback())
         else:
@@ -488,16 +500,17 @@ class FacturaElectronicaFEL:
            la serie generada para factura electronica
         """
         # Verifica que exista un documento en la tabla Envio FEL con el nombre de la serie original
-        if frappe.db.exists('Envios FEL', {'serie_factura_original': self.serie_factura}):
-            factura_guardada = frappe.db.get_values('Envios FEL',
+        if frappe.db.exists('Envio FEL', {'serie_factura_original': self.serie_factura}):
+            factura_guardada = frappe.db.get_values('Envio FEL',
                                                     filters={'serie_factura_original': self.serie_factura},
                                                     fieldname=['numero', 'serie', 'uuid'], as_dict=1)
             # Esta seccion se encarga de actualizar la serie, con una nueva que es serie y numero
             # buscara en las tablas donde exista una coincidencia actualizando con la nueva serie
+            serieFEL = str('FACELEC-' + factura_guardada[0]['numero'])
             try:
                 # serieFEL: guarda el numero DTE retornado por INFILE, se utilizara para reemplazar el nombre de la serie de la
                 # factura que lo generó.
-                serieFEL = str(factura_guardada[0]['serie'] + '-' + factura_guardada[0]['numero'])
+                # serieFEL = str(factura_guardada[0]['serie'] + '-' + factura_guardada[0]['numero'])
                 # serie_fac_original: Guarda la serie original de la factura.
                 serie_fac_original = self.serie_factura
 
@@ -612,9 +625,9 @@ class FacturaElectronicaFEL:
 
             except:
                 # En caso exista un error al renombrar la factura retornara el mensaje con el error
-                return 'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'
+                return {'status': 0, 'msj': 'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'}
             else:
                 # Si los datos se Guardan correctamente, se retornara el Numero Dte generado, que sera capturado por api.py
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
-                return True
+                return {'status':1, 'msj': serieFEL}
 
