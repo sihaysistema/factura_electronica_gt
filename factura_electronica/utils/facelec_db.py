@@ -257,22 +257,8 @@ def actualizarTablas(serieOriginalFac):
             if frappe.db.exists('Delivery Note', {'parent': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabDelivery Note` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
-            # else:
-            #     frappe.msgprint(_('No hay registro en tabSales Order))
 
             frappe.db.commit()
-
-            # Posible modifacadas
-            # # Artículo empaquetado
-            # if frappe.db.exists('Packed Item', {'': }): # ?
-            # # Avance de Factura de Ventas
-            # if frappe.db.exists('Sales Invoice Advance', {'': }): # ?
-            # # Pago de factura de ventas
-            # if frappe.db.exists('Sales Invoice Payment', {'': }): # ?
-            # # Entrada de Diario
-            # if frappe.db.exists('Journal Entry', {'': }): # ?
-            # # hoja de tiempo
-            # if frappe.db.exists('Timesheet', {'': }): # No hay registro
         except:
             # En caso exista un error al renombrar la factura retornara el mensaje con el error
             frappe.msgprint(_('Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'))
