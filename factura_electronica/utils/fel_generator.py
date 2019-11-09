@@ -9,8 +9,16 @@ import base64
 import requests
 import datetime
 
+
 class FacturaElectronicaFEL:
     def __init__(self, serie, cliente, conf_name, series_conf):
+        '''Constructor de la clase.
+
+         serie: serie original factura
+         cliente: Nombre cliente o codigo
+         conf_name: Nombre configuracion valida facelec
+         series_conf: Serie a utilizar para factura electronica'''
+
         self.d_general = {}
         self.d_emisor = {}
         self.d_receptor = {}
@@ -18,104 +26,91 @@ class FacturaElectronicaFEL:
         self.d_items = {}
         self.d_totales = {}
         self.d_firma = {}
+        self.base_peticion = {}
         self.serie_factura = str(serie)  # Serie original de la factura
         self.nombre_config = str(conf_name)  # Nombre doc configuracion para factura electronica
         self.nombre_cliente = str(cliente)  # Nombre cliente en factura
         self.serie_facelec_fel = str(series_conf)  # Series para factura electronica
         self.numero_auth_fel = ''
 
-    def construir_peticion(self):
-        '''Funcion principal encargada de construir XML peticion a partir de JSON y manejar la solicitud de facelec'''
-        # Verifica que todas las partes que conforman la peticion sean correctas
-        e_validador = self.validador_data()
+    def generar_facelec(self):
+        '''Funcion principal de la clase'''
+        base_msj = {}
+        # 1 - Validacion data
+        status_validacion = self.validador_data()
+        if status_validacion != True:
+            return status_validacion
 
-        if e_validador == True:
-            # Base de la paticion para luego ser convertida a xml y enviada a INFILE-SAT
-            base_peticion = {
-                "dte:GTDocumento": {
-                    "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
-                    "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
-                    "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
-                    "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                    "@Version": "0.4",
-                    "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
-                    "dte:SAT": {
-                        "@ClaseDocumento": "dte",
-                        "dte:DTE": {
-                            "@ID": "DatosCertificados",
-                            "dte:DatosEmision": {
-                                "@ID": "DatosEmision",
-                                "dte:DatosGenerales": self.d_general,
-                                "dte:Emisor": self.d_emisor,
-                                "dte:Receptor": self.d_receptor,
-                                "dte:Frases": self.d_frases,
-                                "dte:Items": self.d_items,
-                                "dte:Totales": self.d_totales 
-                            }
+        # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
+        base_peticion = {
+            "dte:GTDocumento": {
+                "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
+                "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
+                "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                "@Version": "0.4",
+                "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                "dte:SAT": {
+                    "@ClaseDocumento": "dte",
+                    "dte:DTE": {
+                        "@ID": "DatosCertificados",
+                        "dte:DatosEmision": {
+                            "@ID": "DatosEmision",
+                            "dte:DatosGenerales": self.d_general,
+                            "dte:Emisor": self.d_emisor,
+                            "dte:Receptor": self.d_receptor,
+                            "dte:Frases": self.d_frases,
+                            "dte:Items": self.d_items,
+                            "dte:Totales": self.d_totales 
                         }
                     }
                 }
             }
+        }
 
-            try:
-                # To XML
-                xmlString = xmltodict.unparse(base_peticion, pretty=True)
-                with open('mario.xml', 'w') as f:
-                    f.write(xmlString)
+    
+        # To XML
+        xmlString = xmltodict.unparse(base_peticion, pretty=True)
+        with open('mario.xml', 'w') as f:
+            f.write(xmlString)
 
-                # To base64
-                encodedBytes = base64.b64encode(xmlString.encode("utf-8"))
-                encodedStr = str(encodedBytes, "utf-8")
-                # with open('codificado.txt', 'w') as f:
-                #         f.write(encodedStr)
+        # To base64
+        encodedBytes = base64.b64encode(xmlString.encode("utf-8"))
+        encodedStr = str(encodedBytes, "utf-8")
+        # with open('codificado.txt', 'w') as f:
+        #         f.write(encodedStr)
 
-                # Hace peticion para firmar xml encoded base64
-                estado_firma = self.firmar_data(encodedStr)
+        # 3 - Certificacion XML
+        # Hace peticion para firmar xml encoded base64
+        estado_firma = self.firmar_data(encodedStr)
 
-                # Si la firma se hace exitosamente
-                if estado_firma[0] == True:
-                    with open('firmado.json', 'w') as f:
-                        f.write(estado_firma[1])
+        # Si la firma se hace exitosamente
+        if estado_firma[0] == True:
+            with open('firmado.json', 'w') as f:
+                f.write(estado_firma[1])
 
-                    # Guarda el estado de la funcion encargada de firmar el XML
-                    estado_fel = self.solicitar_factura_electronica(json.loads(estado_firma[1]))
-                    if estado_fel[0] == True:
+            # 4 - Solicitud Factura Electronica FEL
+            estado_fel = self.solicitar_factura_electronica(json.loads(estado_firma[1]))
+            if estado_fel[0] == True:
 
-                        # Si la respuesta es OK
-                        uuid_fel = self.validador_respuestas(estado_fel[1])
+                # 5 - Validacion de respuestas
+                uuid_fel = self.validador_respuestas(estado_fel[1])
 
-                        # Si la respuesta es 'OK' procede a actualizar todos los registros
-                        # Relacionado con la factura con la serie de factura electronica generada
-                        if uuid_fel['status'] == 'OK':
-                            self.numero_auth_fel = uuid_fel['numero_autorizacion']
+                # Si la respuesta es 'OK' procede a actualizar todos los registros
+                # Relacionado con la factura con la serie de factura electronica generada
+                if uuid_fel['status'] == 'OK':
+                    self.numero_auth_fel = uuid_fel['numero_autorizacion']
 
-                            # Utilizar solo para debug: guarda el json recibido
-                            with open('ok_fel.json', 'w') as f:
-                                f.write(estado_fel[1])
+                    # Utilizar solo para debug: guarda el json recibido
+                    with open('ok_fel.json', 'w') as f:
+                        f.write(estado_fel[1])
 
-                            # Funcion encargada de actualizar todos los registros enlazados a la factura original
-                            estado_actualizacion = self.actualizar_registros()
-                            if estado_actualizacion['status'] == 1:
-                                return estado_actualizacion['msj']
-                            else:
-                                return estado_actualizacion['msj']
-
-                            # TODO: OPCION PARA ENVIAR POR CORREO ELECTRONICO LAS FACTURAS ELECTRONICAS GENERADAS
-                            # return True
-                        elif uuid_fel['status'] == 'ERROR VALIDACION':
-                            return uuid_fel['detalles_errores']
-                        else:
-                            return uuid_fel['descripcion_errores']
+                    # Funcion encargada de actualizar todos los registros enlazados a la factura original
+                    estado_actualizacion = self.actualizar_registros()
+                    if estado_actualizacion['status'] == 1:
+                        return estado_actualizacion['msj']
                     else:
-                        return estado_fel
-                else:
-                    return 'No se logro firmar el documento: '+str(estado_firma)
-
-            except:
-                return 'Error: '+str(frappe.get_traceback())
-
-        else:
-            return e_validador
+                        return estado_actualizacion['msj']
 
     def validador_data(self):
         '''Funcion encargada de validar la data que construye la peticion a INFILE,
@@ -126,84 +121,32 @@ class FacturaElectronicaFEL:
         if estado_dg != True:
             return estado_dg
 
+        # Validacion y generacion seccion emisor
         estado_e = self.emisor()
         if estado_e != True:
             return estado_e
 
+        # Validacion y generacion seccion receptor
         estado_r = self.receptor()
         if estado_r != True:
             return estado_r
 
+        # Validacion y generacion seccion frases
         estado_f = self.frases()
         if estado_f != True:
             return estado_f
 
+        # Validacion y generacion seccion items
         estado_i = self.items()
         if estado_i != True:
             return estado_i
 
+        # Validacion y generacion seccion totales
         estado_t = self.totales()
         if estado_t != True:
             return estado_t
 
         return True
-
-    def validador_respuestas(self, msj_fel):
-        '''Funcion encargada de verificar las respuestas de INFILE-SAT'''
-        try:
-            mensajes = json.loads(msj_fel)
-            # Verifica que no existan errores
-            if mensajes['resultado'] == True and mensajes['cantidad_errores'] == 0:
-                # Se encarga de guardar las respuestas de INFILE-SAT esto para llevar registro
-                status_saved = self.guardar_respuesta(mensajes)
-                # Al primer error encontrado retornara un detalle con el mismo
-                if status_saved != True:
-                    return status_saved
-
-                return {'status': 'OK', 'numero_autorizacion': mensajes['uuid'], 'serie': mensajes['serie'], 'numero': mensajes['numero']}
-            else:
-                return {'status': 'ERROR', 'numero_errores': str(mensajes['cantidad_errores']), 'detalles_errores': str(mensajes['descripcion_errores'])}
-        except:
-            return {'status': 'ERROR VALIDACION', 'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
-
-    def guardar_respuesta(self, mensajes):
-        '''Funcion encargada guardar registro con respuestas de INFILE-SAT'''
-        try:
-            if not frappe.db.exists('Envio FEL', {'name': mensajes['uuid']}):
-                resp_fel = frappe.new_doc("Envio FEL")
-                resp_fel.resultado = mensajes['resultado']
-                resp_fel.fecha = mensajes['fecha']
-                resp_fel.origen = mensajes['origen']
-                resp_fel.descripcion = mensajes['descripcion']
-                resp_fel.serie_factura_original = self.serie_factura
-
-                if "control_emision" in mensajes:
-                    resp_fel.saldo = mensajes['control_emision']['Saldo']
-                    resp_fel.creditos = mensajes['control_emision']['Creditos']
-
-                resp_fel.alertas = mensajes['alertas_infile']
-                resp_fel.descripcion_alertas_infile = str(mensajes['descripcion_alertas_infile'])
-                resp_fel.alertas_sat = mensajes['alertas_sat']
-                resp_fel.descripcion_alertas_sat = str(mensajes['descripcion_alertas_sat'])
-                resp_fel.cantidad_errores = mensajes['cantidad_errores']
-                resp_fel.descripcion_errores = str(mensajes['descripcion_errores'])
-
-                if "informacion_adicional" in mensajes:
-                    resp_fel.informacion_adicional = mensajes['informacion_adicional']
-
-                resp_fel.uuid = mensajes['uuid']
-                resp_fel.serie = mensajes['serie']
-                resp_fel.numero = mensajes['numero']
-
-                decodedBytes = base64.b64decode(mensajes['xml_certificado'])
-                decodedStr = str(decodedBytes, "utf-8")
-                resp_fel.xml_certificado = decodedStr
-
-                resp_fel.save()
-        except:
-            return 'Error al tratar de guardar la rspuesta: '+str(frappe.get_traceback())
-        else:
-            return True
 
     def datos_generales(self):
         try:
@@ -439,6 +382,7 @@ class FacturaElectronicaFEL:
             return True
 
     def firmar_data(self, encodata):
+        '''Funcion encargada de solicitar firma para archivo XML '''
         try:
             url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
                                       'url_firma')
@@ -461,13 +405,12 @@ class FacturaElectronicaFEL:
             headers = {"content-type": "application/json"}
             response = requests.post(url, data=json.dumps(reqfel), headers=headers)
         except:
-            return 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
+            return False, 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
         else:
             return True, (response.content).decode('utf-8')
 
     def solicitar_factura_electronica(self, firmado):
-        '''Funcion encargada de solicitar factura electronica al WS'''
-        # Realizara la comunicacion al webservice
+        '''Funcion encargada de solicitar factura electronica al WS de INFILE'''
         try:
             data_fac = frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'company')
             nit_company = frappe.db.get_value('Company', {'name': data_fac}, 'nit_face_company')
@@ -491,9 +434,28 @@ class FacturaElectronicaFEL:
             }
             response = requests.post(url, data=json.dumps(req_dte), headers=headers)
         except:
-            return 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
+            return False, 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
         else:
             return True, (response.content).decode('utf-8')
+
+    def validador_respuestas(self, msj_fel):
+        '''Funcion encargada de verificar las respuestas de INFILE-SAT'''
+        try:
+            mensajes = json.loads(msj_fel)
+
+            # Verifica que no existan errores
+            if mensajes['resultado'] == True and mensajes['cantidad_errores'] == 0:
+                # # Se encarga de guardar las respuestas de INFILE-SAT esto para llevar registro
+                # status_saved = self.guardar_respuesta(mensajes)
+                # # Al primer error encontrado retornara un detalle con el mismo
+                # if status_saved != True:
+                #     return status_saved
+
+                return {'status': 'OK', 'numero_autorizacion': mensajes['uuid'], 'serie': mensajes['serie'], 'numero': mensajes['numero']}
+            else:
+                return {'status': 'ERROR', 'numero_errores': str(mensajes['cantidad_errores']), 'detalles_errores': str(mensajes['descripcion_errores'])}
+        except:
+            return {'status': 'ERROR VALIDACION', 'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
 
     def actualizar_registros(self):
         """Funcion encargada de actualizar todos los doctypes enlazados a la factura original, con
