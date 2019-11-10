@@ -177,11 +177,16 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                                                         filters={'name': nombre_config_validada},
                                                         fieldname=['url_listener', 'descargar_pdf_factura_electronica',
                                                                 'url_descarga_pdf'], as_dict=1)
+                    est = ''
                     try:
                         factura_electronica = FacturaElectronicaFEL(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_configuradas_fel)
                         est = factura_electronica.generar_facelec()
-                        frappe.msgprint(_('Ok Generada'+str(est)))
-                        return est
+                        if est['status'] == 'OK':
+                            frappe.msgprint(_('Ok Generada'+str(est)))
+                            # return est
+                        else:
+                            # return est
+                            frappe.msgprint(_(str(est)))
                     except:
                         frappe.msgprint(_('No se puedo generar la factura electronica: '+(est)))
                     # else:

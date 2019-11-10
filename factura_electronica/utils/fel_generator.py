@@ -45,7 +45,12 @@ class FacturaElectronicaFEL:
         # 1 - Validacion data
         status_validacion = self.validador_data()
         if status_validacion != True:
-            return status_validacion
+            return {
+                "status": "ERROR",
+                "uuid": "",
+                "errores": 1,
+                "descripcion_errores": [status_validacion]
+            }
 
         # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
         base_peticion = {
@@ -121,13 +126,44 @@ class FacturaElectronicaFEL:
                     estado_actualizacion = self.actualizar_registros()
 
                     if estado_actualizacion['status'] == 'OK':
-                        return estado_actualizacion['msj']
+                        # return estado_actualizacion['msj']
+                        return {
+                            "status": "OK",
+                            "uuid": estado_actualizacion['msj'],
+                            "errores": 0,
+                            "descripcion_errores": []
+                        }
                     else:
-                        return estado_actualizacion['msj']
+                        # return estado_actualizacion['msj']
+                        return {
+                            "status": "ERROR",
+                            "uuid": "",
+                            "errores": 1,
+                            "descripcion_errores": [estado_actualizacion['msj']]
+                        }
                 else:
-                    return uuid_fel['numero_errores'], uuid_fel['detalles_errores']
+                    # return uuid_fel['numero_errores'], uuid_fel['detalles_errores']
+                    return {
+                        "status": "ERROR",
+                        "uuid": "",
+                        "errores": 1,
+                        "descripcion_errores": [uuid_fel]
+                    }
             else:
-                return estado_fel[1]
+                # return estado_fel[1]
+                return {
+                    "status": "ERROR",
+                    "uuid": "",
+                    "errores": 1,
+                    "descripcion_errores": [estado_fel]
+                }
+        else:
+            return {
+                "status": "ERROR",
+                "uuid": "",
+                "errores": 1,
+                "descripcion_errores": [estado_firma]
+            }
 
     def validador_data(self):
         '''Funcion encargada de validar la data que construye la peticion a INFILE,
@@ -166,11 +202,12 @@ class FacturaElectronicaFEL:
         return True
 
     def datos_generales(self):
+        '''Funcion encargada de obtener la data necesaria para la seccion general'''
         try:
             self.d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'currency'),
                 "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@Tipo": 'FACT'  #self.serie_facelec_fel
+                "@Tipo": 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
             }
         except:
             return 'Error en obtener data para datos generales: '+str(frappe.get_traceback())
@@ -190,7 +227,7 @@ class FacturaElectronicaFEL:
             try:
                 dat_direccion = frappe.db.get_values('Address',
                                                     filters={'name': dat_fac[0]['company_address']},
-                                                    fieldname=['address_line1', 'address_line2', 'email_id', 'pincode',
+                                                    fieldname=['address_line1', 'email_id', 'pincode',
                                                             'state', 'city', 'country'], as_dict=1)
             except:
                 return 'No se pudo obtener data de direccion de la compania, verificar que exista una direccion con data en los campos <b>address_line1, email_id, pincode, state, city, country</b>'
@@ -199,7 +236,7 @@ class FacturaElectronicaFEL:
                                                 filters={'name': dat_fac[0]['company']},
                                                 fieldname=['company_name', 'nit_face_company'],
                                                 as_dict=1)
-            if len(dat_direccion) > 0:
+            if len(dat_direccion) > 0:  # Si existe por lo menos una direccion
                 # Validacion data
                 for dire in dat_direccion[0]:
                     if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
@@ -209,7 +246,7 @@ class FacturaElectronicaFEL:
 
             # Asignacion data
             self.d_emisor = {
-                "@AfiliacionIVA": "GEN",
+                "@AfiliacionIVA": "GEN", # TODO: Que otra afilicaciones existen?
                 "@CodigoEstablecimiento": frappe.db.get_value('Configuracion Factura Electronica',
                                                             {'name': self.nombre_config}, 'codigo_establecimiento'),  #"1",
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
@@ -217,7 +254,7 @@ class FacturaElectronicaFEL:
                 "@NombreComercial": dat_compania[0]['company_name'],
                 "@NombreEmisor": dat_compania[0]['company_name'],
                 "dte:DireccionEmisor": {
-                    "dte:Direccion": dat_direccion[0]['address_line1'] + ' - ' + dat_direccion[0]['address_line2'],
+                    "dte:Direccion": dat_direccion[0]['address_line1'],
                     "dte:CodigoPostal": dat_direccion[0]['pincode'],
                     "dte:Municipio": dat_direccion[0]['state'],
                     "dte:Departamento": dat_direccion[0]['city'],
@@ -232,7 +269,7 @@ class FacturaElectronicaFEL:
     def receptor(self):
         '''Funcion encargada de obtener y asignar data del Receptor/Cliente'''
         try:
-            # Obtencion data de RECEPTOR
+            # Obtencion data de RECEPTOR/CLIENTE
             dat_fac = frappe.db.get_values('Sales Invoice',
                                            filters={'name': self.serie_factura},
                                            fieldname=['nit_face_customer', 'customer_address'],
@@ -242,31 +279,45 @@ class FacturaElectronicaFEL:
             try:
                 dat_direccion = frappe.db.get_values('Address',
                                                     filters={'name': dat_fac[0]['customer_address']},
-                                                    fieldname=['address_line1', 'address_line2', 'email_id', 'pincode',
+                                                    fieldname=['address_line1', 'email_id', 'pincode',
                                                                'state', 'city', 'country'], as_dict=1)
             except:
-                return 'No se pudo obtener data de direccion de la compania, verificar que exista una direccion con data en los campos <b>address_line1, email_id, pincode, state, city, country</b>'
+                return 'No se pudo obtener data de direccion del cliente, verificar que exista una direccion con data en los campos <b>address_line1, email_id, pincode, state, city, country</b>, ya que es necesaria para generar factura electronica'
 
-            if len(dat_direccion) > 0:
+            if len(dat_direccion) > 0:  # Si existe por lo menos una direccion
                 # Validacion data
                 for dire in dat_direccion[0]:
                     if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
                         return 'No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no tiene data, por favor asignarle un valor e intentar de nuevo'.format(str(dire), self.nombre_cliente)
             else:
-                return 'No se encontro ninguna direccion para el cliente, verificar que exista una e intentar de nuevo'
+                return 'No se encontro ninguna direccion para el cliente, verificar que exista una e intentar de nuevo ya que es necesaria para generar factura electronica'
 
-            self.d_receptor = {
-                "@CorreoReceptor": dat_direccion[0]['email_id'],
-                "@IDReceptor": (dat_fac[0]['nit_face_customer']).replace('-', ''),  # NIT
-                "@NombreReceptor": str(self.nombre_cliente),
-                "dte:DireccionReceptor": {
-                    "dte:Direccion": dat_direccion[0]['address_line1']+', '+dat_direccion[0]['address_line2'],
-                    "dte:CodigoPostal": dat_direccion[0]['pincode'],
-                    "dte:Municipio": dat_direccion[0]['state'],
-                    "dte:Departamento": dat_direccion[0]['city'],
-                    "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper()
+            if (dat_fac[0]['nit_face_customer']).upper() == 'C/F':
+                self.d_receptor = {
+                    "@CorreoReceptor": dat_direccion[0]['email_id'],
+                    "@IDReceptor": (dat_fac[0]['nit_face_customer']).replace('/', ''),  # NIT => CF
+                    "@NombreReceptor": str(self.nombre_cliente),
+                    "dte:DireccionReceptor": {
+                        "dte:Direccion": dat_direccion[0]['address_line1'],
+                        "dte:CodigoPostal": dat_direccion[0]['pincode'],
+                        "dte:Municipio": dat_direccion[0]['state'],
+                        "dte:Departamento": dat_direccion[0]['city'],
+                        "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper()
+                    }
                 }
-            }
+            else:
+                self.d_receptor = {
+                    "@CorreoReceptor": dat_direccion[0]['email_id'],
+                    "@IDReceptor": (dat_fac[0]['nit_face_customer']).replace('-', ''),  # NIT
+                    "@NombreReceptor": str(self.nombre_cliente),
+                    "dte:DireccionReceptor": {
+                        "dte:Direccion": dat_direccion[0]['address_line1'],
+                        "dte:CodigoPostal": dat_direccion[0]['pincode'],
+                        "dte:Municipio": dat_direccion[0]['state'],
+                        "dte:Departamento": dat_direccion[0]['city'],
+                        "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper()
+                    }
+                }
         except:
             return 'Error no se puede completar la operacion por: '+str(frappe.get_traceback())
         else:
@@ -310,7 +361,7 @@ class FacturaElectronicaFEL:
             # Verificacion cantidad de items
             longitems = len(dat_items)
             if longitems > 1:
-                contador = 0
+                contador = 0  # Utilizado para enumerar las lineas en factura electronica
                 for i in range(0, longitems):
                     obj_item = {}
 
@@ -324,11 +375,11 @@ class FacturaElectronicaFEL:
 
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
-                    obj_item["dte:Cantidad"] = dat_items[i]['qty']
+                    obj_item["dte:Cantidad"] = float(dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = dat_items[i]['description']
-                    obj_item["dte:PrecioUnitario"] = dat_items[i]['rate']
-                    obj_item["dte:Precio"] = dat_items[i]['amount']
+                    obj_item["dte:PrecioUnitario"] = float(dat_items[i]['rate'])
+                    obj_item["dte:Precio"] = float(dat_items[i]['amount'])
                     obj_item["dte:Descuento"] = dat_items[i]['discount_amount']
                     obj_item["dte:Impuestos"] = {}
                     obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
@@ -353,11 +404,11 @@ class FacturaElectronicaFEL:
                     obj_item["@BienOServicio"] = 'B'
 
                 obj_item["@NumeroLinea"] = "1"
-                obj_item["dte:Cantidad"] = dat_items[0]['qty']
+                obj_item["dte:Cantidad"] = float(dat_items[0]['qty'])
                 obj_item["dte:UnidadMedida"] = dat_items[0]['facelec_three_digit_uom_code']
                 obj_item["dte:Descripcion"] = dat_items[0]['description']
-                obj_item["dte:PrecioUnitario"] = dat_items[0]['rate']
-                obj_item["dte:Precio"] = dat_items[0]['amount']
+                obj_item["dte:PrecioUnitario"] = float(dat_items[0]['rate'])
+                obj_item["dte:Precio"] = float(dat_items[0]['amount'])
                 obj_item["dte:Descuento"] = dat_items[0]['discount_amount']
                 obj_item["dte:Impuestos"] = {}
                 obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
@@ -380,6 +431,7 @@ class FacturaElectronicaFEL:
             return True
 
     def totales(self):
+        '''Funcion encargada de realizar totales de los impuestos sobre la factura'''
         try:
             dat_fac = frappe.db.get_values('Sales Invoice',
                                            filters={'name': self.serie_factura},
@@ -436,11 +488,12 @@ class FacturaElectronicaFEL:
             url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'url_dte')
             user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'alias')
             llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'llave_ws')
+            correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'correo_copia')
             ident = self.serie_factura
 
             req_dte = {
                 "nit_emisor": nit_company,
-                "correo_copia": "m.monroyc22@gmail.com",
+                "correo_copia": correo_copia,  # "m.monroyc22@gmail.com",
                 "xml_dte": firmado["archivo"]
             }
 
@@ -464,10 +517,10 @@ class FacturaElectronicaFEL:
             # Verifica que no existan errores
             if mensajes['resultado'] == True and mensajes['cantidad_errores'] == 0:
                 # # Se encarga de guardar las respuestas de INFILE-SAT esto para llevar registro
-                # status_saved = self.guardar_respuesta(mensajes)
-                # # Al primer error encontrado retornara un detalle con el mismo
-                # if status_saved != True:
-                #     return status_saved
+                status_saved = self.guardar_respuesta(mensajes)
+                # Al primer error encontrado retornara un detalle con el mismo
+                if status_saved != True:
+                    return {'status': 'ERROR', 'detalles_errores': status_saved, 'numero_errores':1}
 
                 return {'status': 'OK', 'numero_autorizacion': mensajes['uuid'], 'serie': mensajes['serie'], 'numero': mensajes['numero']}
             else:
@@ -611,3 +664,41 @@ class FacturaElectronicaFEL:
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
                 return {'status': 'OK', 'msj': serieFEL}
 
+    def guardar_respuesta(self, mensajes):
+        '''Funcion encargada guardar registro con respuestas de INFILE-SAT'''
+        try:
+            if not frappe.db.exists('Envio FEL', {'name': mensajes['uuid']}):
+                resp_fel = frappe.new_doc("Envio FEL")
+                resp_fel.resultado = mensajes['resultado']
+                resp_fel.fecha = mensajes['fecha']
+                resp_fel.origen = mensajes['origen']
+                resp_fel.descripcion = mensajes['descripcion']
+                resp_fel.serie_factura_original = self.serie_factura
+
+                if "control_emision" in mensajes:
+                    resp_fel.saldo = mensajes['control_emision']['Saldo']
+                    resp_fel.creditos = mensajes['control_emision']['Creditos']
+
+                resp_fel.alertas = mensajes['alertas_infile']
+                resp_fel.descripcion_alertas_infile = str(mensajes['descripcion_alertas_infile'])
+                resp_fel.alertas_sat = mensajes['alertas_sat']
+                resp_fel.descripcion_alertas_sat = str(mensajes['descripcion_alertas_sat'])
+                resp_fel.cantidad_errores = mensajes['cantidad_errores']
+                resp_fel.descripcion_errores = str(mensajes['descripcion_errores'])
+
+                if "informacion_adicional" in mensajes:
+                    resp_fel.informacion_adicional = mensajes['informacion_adicional']
+
+                resp_fel.uuid = mensajes['uuid']
+                resp_fel.serie = mensajes['serie']
+                resp_fel.numero = mensajes['numero']
+
+                decodedBytes = base64.b64decode(mensajes['xml_certificado'])
+                decodedStr = str(decodedBytes, "utf-8")
+                resp_fel.xml_certificado = decodedStr
+
+                resp_fel.save()
+        except:
+            return {'detalles_errores':'Error al tratar de guardar la rspuesta: '+str(frappe.get_traceback())}
+        else:
+            return True
