@@ -15,7 +15,7 @@ class FacturaElectronicaFEL:
         '''Constructor de la clase.
 
          serie: serie original factura
-         cliente: Nombre cliente o codigo
+         cliente: Nombre cliente o serie
          conf_name: Nombre configuracion valida facelec
          series_conf: Serie a utilizar para factura electronica'''
 
@@ -35,7 +35,13 @@ class FacturaElectronicaFEL:
 
     def generar_facelec(self):
         '''Funcion principal de la clase'''
-        base_msj = {}
+        base_msj = {
+            "status": "OK",
+            "uuid": "",
+            "errores": 0,
+            "descripcion_errores": [{}, {}]
+        }
+
         # 1 - Validacion data
         status_validacion = self.validador_data()
         if status_validacion != True:
@@ -69,16 +75,20 @@ class FacturaElectronicaFEL:
         }
 
     
-        # To XML
+        # To XML: Convierte json a xml indentado
         xmlString = xmltodict.unparse(base_peticion, pretty=True)
+        # Usar solo para debug ---
         with open('mario.xml', 'w') as f:
             f.write(xmlString)
+        # ------------------------
 
         # To base64
         encodedBytes = base64.b64encode(xmlString.encode("utf-8"))
         encodedStr = str(encodedBytes, "utf-8")
+        # Usar solo para debug ---
         # with open('codificado.txt', 'w') as f:
         #         f.write(encodedStr)
+        # ------------------------
 
         # 3 - Certificacion XML
         # Hace peticion para firmar xml encoded base64
@@ -86,18 +96,20 @@ class FacturaElectronicaFEL:
 
         # Si la firma se hace exitosamente
         if estado_firma[0] == True:
+            # Usar solo para debug ---
             with open('firmado.json', 'w') as f:
                 f.write(estado_firma[1])
+            # ------------------------
 
             # 4 - Solicitud Factura Electronica FEL
             estado_fel = self.solicitar_factura_electronica(json.loads(estado_firma[1]))
             if estado_fel[0] == True:
 
-                # 5 - Validacion de respuestas
+                # 5 - Validador de respuestas
                 uuid_fel = self.validador_respuestas(estado_fel[1])
 
                 # Si la respuesta es 'OK' procede a actualizar todos los registros
-                # Relacionado con la factura con la serie de factura electronica generada
+                # Relacionados con la factura original con la serie de factura electronica generada
                 if uuid_fel['status'] == 'OK':
                     self.numero_auth_fel = uuid_fel['numero_autorizacion']
 
@@ -107,10 +119,15 @@ class FacturaElectronicaFEL:
 
                     # Funcion encargada de actualizar todos los registros enlazados a la factura original
                     estado_actualizacion = self.actualizar_registros()
-                    if estado_actualizacion['status'] == 1:
+
+                    if estado_actualizacion['status'] == 'OK':
                         return estado_actualizacion['msj']
                     else:
                         return estado_actualizacion['msj']
+                else:
+                    return uuid_fel['numero_errores'], uuid_fel['detalles_errores']
+            else:
+                return estado_fel[1]
 
     def validador_data(self):
         '''Funcion encargada de validar la data que construye la peticion a INFILE,
@@ -189,6 +206,7 @@ class FacturaElectronicaFEL:
                         return 'No se puede completar la operacion ya que el campo {} de la direccion de compania no tiene data, por favor asignarle un valor e intentar de nuevo'.format(str(dire))
             else:
                 return 'No se encontro ninguna direccion para la compania, verificar que exista una e intentar de nuevo'
+
             # Asignacion data
             self.d_emisor = {
                 "@AfiliacionIVA": "GEN",
@@ -455,7 +473,7 @@ class FacturaElectronicaFEL:
             else:
                 return {'status': 'ERROR', 'numero_errores': str(mensajes['cantidad_errores']), 'detalles_errores': str(mensajes['descripcion_errores'])}
         except:
-            return {'status': 'ERROR VALIDACION', 'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
+            return {'status': 'ERROR VALIDACION', 'numero_errores':1, 'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
 
     def actualizar_registros(self):
         """Funcion encargada de actualizar todos los doctypes enlazados a la factura original, con
@@ -587,9 +605,9 @@ class FacturaElectronicaFEL:
 
             except:
                 # En caso exista un error al renombrar la factura retornara el mensaje con el error
-                return {'status': 0, 'msj': 'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'}
+                return {'status': 'ERROR', 'msj': 'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'}
             else:
-                # Si los datos se Guardan correctamente, se retornara el Numero Dte generado, que sera capturado por api.py
+                # Si los datos se Guardan correctamente, se retornara la serie, que sera capturado por api.py
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
-                return {'status':1, 'msj': serieFEL}
+                return {'status': 'OK', 'msj': serieFEL}
 

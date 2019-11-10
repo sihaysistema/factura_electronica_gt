@@ -81,7 +81,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
 
         else:  # Si no existe se creara
             nombre_config_validada = str(validar_config[1])
-
+            # Verificacion regimen GFACE
             if validar_config[2] == 'GFACE':
                 # VERIFICACION EXISTENCIA SERIES CONFIGURADAS, EN CONFIGURACION FACTURA ELECTRONICA
                 if frappe.db.exists('Configuracion Series', {'parent': nombre_config_validada, 'serie': prefijo_serie}):
@@ -168,7 +168,6 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
 
             # Verificacion regimen FEL
             if validar_config[2] == 'FEL':
-                # frappe.msgprint(_('FEL'))
                 if frappe.db.exists('Configuracion Series FEL', {'parent': nombre_config_validada, 'serie': prefijo_serie}):
                     series_configuradas_fel = frappe.db.get_values('Configuracion Series FEL',
                                                                     filters={'parent': nombre_config_validada, 'serie': prefijo_serie},
@@ -179,9 +178,8 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                                                         fieldname=['url_listener', 'descargar_pdf_factura_electronica',
                                                                 'url_descarga_pdf'], as_dict=1)
                     try:
-                        # generar_fac_fel(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_configuradas_fel)
                         factura_electronica = FacturaElectronicaFEL(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_configuradas_fel)
-                        est = factura_electronica.construir_peticion()
+                        est = factura_electronica.generar_facelec()
                         frappe.msgprint(_('Ok Generada'+str(est)))
                         return est
                     except:
