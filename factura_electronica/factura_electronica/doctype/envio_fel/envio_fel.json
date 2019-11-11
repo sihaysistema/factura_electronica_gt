@@ -27,6 +27,7 @@
   "uuid",
   "serie",
   "numero",
+  "serie_para_factura",
   "xml_certificado",
   "registro_tiempo",
   "registro_tiempo_section",
@@ -179,9 +180,14 @@
    "fieldname": "serie_factura_original",
    "fieldtype": "Data",
    "label": "Serie Factura Original"
+  },
+  {
+   "fieldname": "serie_para_factura",
+   "fieldtype": "Data",
+   "label": "Serie para Factura"
   }
  ],
- "modified": "2019-11-05 18:45:19.047067",
+ "modified": "2019-11-10 18:53:30.115295",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Envio FEL",

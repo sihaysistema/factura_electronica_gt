@@ -79,7 +79,6 @@ class FacturaElectronicaFEL:
             }
         }
 
-    
         # To XML: Convierte json a xml indentado
         xmlString = xmltodict.unparse(base_peticion, pretty=True)
         # Usar solo para debug ---
@@ -378,18 +377,18 @@ class FacturaElectronicaFEL:
                     obj_item["dte:Cantidad"] = float(dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = dat_items[i]['description']
-                    obj_item["dte:PrecioUnitario"] = float(dat_items[i]['rate'])
-                    obj_item["dte:Precio"] = float(dat_items[i]['amount'])
+                    obj_item["dte:PrecioUnitario"] = float(dat_items[i]['rate']) + float(dat_items[i]['discount_amount'])
+                    obj_item["dte:Precio"] = float(dat_items[i]['amount']) + float(dat_items[i]['discount_amount'])
                     obj_item["dte:Descuento"] = dat_items[i]['discount_amount']
                     obj_item["dte:Impuestos"] = {}
                     obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = 'IVA'
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = '1'
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = (float(dat_items[i]['facelec_gt_tax_net_fuel_amt']) + float(dat_items[i]['facelec_gt_tax_net_goods_amt']) + float(dat_items[i]['facelec_gt_tax_net_services_amt'])) - float(dat_items[i]['discount_amount']) #float(dat_items[i]['facelec_amount_minus_excise_tax'])
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = float(dat_items[i]['facelec_sales_tax_for_this_row'])
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format((float(dat_items[i]['facelec_gt_tax_net_fuel_amt']) + float(dat_items[i]['facelec_gt_tax_net_goods_amt']) + float(dat_items[i]['facelec_gt_tax_net_services_amt']))) #- float(dat_items[i]['discount_amount'])) #float(dat_items[i]['facelec_amount_minus_excise_tax'])
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(dat_items[i]['facelec_sales_tax_for_this_row']))
 
-                    obj_item["dte:Total"] = (float(dat_items[i]['facelec_amount_minus_excise_tax']) - float(dat_items[i]['discount_amount'])) # Se suman otr impuestos+ float(dat_items[i]['facelec_sales_tax_for_this_row'])
+                    obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[i]['facelec_amount_minus_excise_tax']))) #- float(dat_items[i]['discount_amount'])) # Se suman otr impuestos+ float(dat_items[i]['facelec_sales_tax_for_this_row'])
                 
                     items_ok.append(obj_item)
             else:
@@ -407,18 +406,18 @@ class FacturaElectronicaFEL:
                 obj_item["dte:Cantidad"] = float(dat_items[0]['qty'])
                 obj_item["dte:UnidadMedida"] = dat_items[0]['facelec_three_digit_uom_code']
                 obj_item["dte:Descripcion"] = dat_items[0]['description']
-                obj_item["dte:PrecioUnitario"] = float(dat_items[0]['rate'])
-                obj_item["dte:Precio"] = float(dat_items[0]['amount'])
+                obj_item["dte:PrecioUnitario"] = float(dat_items[0]['rate']) + float(dat_items[0]['discount_amount'])
+                obj_item["dte:Precio"] = float(dat_items[0]['amount']) + float(dat_items[0]['discount_amount'])
                 obj_item["dte:Descuento"] = dat_items[0]['discount_amount']
                 obj_item["dte:Impuestos"] = {}
                 obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
 
                 obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = 'IVA'
                 obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = '1'
-                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = (float(dat_items[0]['facelec_gt_tax_net_fuel_amt']) + float(dat_items[0]['facelec_gt_tax_net_goods_amt']) + float(dat_items[0]['facelec_gt_tax_net_services_amt'])) - float(dat_items[0]['discount_amount']) # precio - descuento/1.12
-                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = float(dat_items[0]['facelec_sales_tax_for_this_row'])
+                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format((float(dat_items[0]['facelec_gt_tax_net_fuel_amt']) + float(dat_items[0]['facelec_gt_tax_net_goods_amt']) + float(dat_items[0]['facelec_gt_tax_net_services_amt']))) #- float(dat_items[0]['discount_amount'])) # precio - descuento/1.12
+                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(dat_items[0]['facelec_sales_tax_for_this_row']))
 
-                obj_item["dte:Total"] = (float(dat_items[0]['facelec_amount_minus_excise_tax']) - float(dat_items[0]['discount_amount'])) # Se suma otros impuestos + float(dat_items[0]['facelec_sales_tax_for_this_row'])
+                obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[0]['facelec_amount_minus_excise_tax']))) # - float(dat_items[0]['discount_amount'])) # Se suma otros impuestos + float(dat_items[0]['facelec_sales_tax_for_this_row'])
             
                 items_ok.append(obj_item)
 
@@ -441,10 +440,10 @@ class FacturaElectronicaFEL:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": "IVA",
-                        "@TotalMontoImpuesto": dat_fac[0]['shs_total_iva_fac']
+                        "@TotalMontoImpuesto": '{0:.2f}'.format(float(dat_fac[0]['shs_total_iva_fac']))
                     }
                 },
-                "dte:GranTotal": dat_fac[0]['grand_total']
+                "dte:GranTotal": '{0:.2f}'.format(float(dat_fac[0]['grand_total']))
             }
         except:
             return 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
@@ -662,7 +661,9 @@ class FacturaElectronicaFEL:
             else:
                 # Si los datos se Guardan correctamente, se retornara la serie, que sera capturado por api.py
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
-                return {'status': 'OK', 'msj': serieFEL}
+                return {'status': 'OK', 'msj': factura_guardada[0]['uuid']}
+        # else:
+
 
     def guardar_respuesta(self, mensajes):
         '''Funcion encargada guardar registro con respuestas de INFILE-SAT'''
@@ -674,6 +675,7 @@ class FacturaElectronicaFEL:
                 resp_fel.origen = mensajes['origen']
                 resp_fel.descripcion = mensajes['descripcion']
                 resp_fel.serie_factura_original = self.serie_factura
+                resp_fel.serie_para_factura = 'FACELEC-'+str(mensajes['numero'])
 
                 if "control_emision" in mensajes:
                     resp_fel.saldo = mensajes['control_emision']['Saldo']

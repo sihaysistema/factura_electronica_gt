@@ -79,6 +79,19 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
 
             return dte_factura
 
+        elif frappe.db.exists('Envio FEL', {'serie_para_factura': serie_original_factura}):
+            factura_electronica = frappe.db.get_values('Envio FEL',
+                                                    filters={'serie_para_factura': serie_original_factura},
+                                                    fieldname=['serie_para_factura'],
+                                                    as_dict=1)
+            frappe.msgprint(_('''
+            <b>AVISO:</b> La Factura ya fue generada Anteriormente <b>{}</b>
+            '''.format(str(factura_electronica[0]['serie_para_factura']))))
+
+            dte_factura = str(factura_electronica[0]['serie_para_factura'])
+
+            return dte_factura
+
         else:  # Si no existe se creara
             nombre_config_validada = str(validar_config[1])
             # Verificacion regimen GFACE
@@ -183,7 +196,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                         est = factura_electronica.generar_facelec()
                         if est['status'] == 'OK':
                             frappe.msgprint(_('Ok Generada'+str(est)))
-                            # return est
+                            return est['uuid']
                         else:
                             # return est
                             frappe.msgprint(_(str(est)))
@@ -583,6 +596,165 @@ def obtener_serie_doc(opt):
                 return series_configuradas[0]['serie']
 
 
-class FelConectorApi:
-    def __init__(self, datos_factura):
-        pass
+def facelec_api(serie_factura, nombre_cliente, pre_se):
+    '''Verifica que todos los datos esten correctos para realizar una
+       peticion a INFILE y generar la factura electronica
+
+       Parametros
+       ----------
+       * serie_factura (str) : Serie de la factura
+       * nombre_cliente (str) : Nombre del cliente
+       * pre_se (str) : Prefijo de la serie
+    '''
+
+    serie_original_factura = str(serie_factura)
+    nombre_del_cliente = str(nombre_cliente)
+    prefijo_serie = str(pre_se)
+
+    # Verifica que exista una configuracion validada para Factura Electronicaa
+    validar_config = validar_configuracion()
+
+    # Si es igual a 1, hay una configuracion valida
+    if validar_config[0] == 1:
+        # Verifica si existe una factura con la misma serie, evita duplicadas
+        if frappe.db.exists('Envios Facturas Electronicas', {'numero_dte': serie_original_factura}):
+            factura_electronica = frappe.db.get_values('Envios Facturas Electronicas',
+                                                    filters={'numero_dte': serie_original_factura},
+                                                    fieldname=['serie_factura_original', 'cae', 'numero_dte'],
+                                                    as_dict=1)
+            return ('''
+            <b>AVISO:</b> La Factura ya fue generada Anteriormente <b>{}</b>
+            '''.format(str(factura_electronica[0]['numero_dte'])))
+
+        elif frappe.db.exists('Envio FEL', {'serie_para_factura': serie_original_factura}):
+            factura_electronica = frappe.db.get_values('Envio FEL',
+                                                    filters={'serie_para_factura': serie_original_factura},
+                                                    fieldname=['serie_para_factura'],
+                                                    as_dict=1)
+            return ('''
+            <b>AVISO:</b> La Factura ya fue generada Anteriormente <b>{}</b>
+            '''.format(str(factura_electronica[0]['serie_para_factura'])))
+
+        else:  # Si no existe se creara
+            nombre_config_validada = str(validar_config[1])
+            # Verificacion regimen GFACE
+            if validar_config[2] == 'GFACE':
+                # VERIFICACION EXISTENCIA SERIES CONFIGURADAS, EN CONFIGURACION FACTURA ELECTRONICA
+                if frappe.db.exists('Configuracion Series', {'parent': nombre_config_validada, 'serie': prefijo_serie}):
+                    series_configuradas = frappe.db.get_values('Configuracion Series',
+                                                                filters={'parent': nombre_config_validada, 'serie': prefijo_serie},
+                                                                fieldname=['fecha_resolucion', 'estado_documento',
+                                                                            'tipo_documento', 'serie', 'secuencia_infile',
+                                                                            'numero_resolucion', 'codigo_sat'], as_dict=1)
+
+
+                    url_configurada = frappe.db.get_values('Configuracion Factura Electronica',
+                                                        filters={'name': nombre_config_validada},
+                                                        fieldname=['url_listener', 'descargar_pdf_factura_electronica',
+                                                                'url_descarga_pdf'], as_dict=1)
+
+                    # Verificacion regimen GFACE
+                    # CONTRUCCION XML Y PETICION A WEBSERVICE
+                    try:
+                        xml_factura = construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, series_configuradas, nombre_config_validada)
+                    except:
+                        return 'Error crear xml para factura electronica: {}'.format(frappe.get_traceback())
+                    else:
+                        url = str(url_configurada[0]['url_listener'])
+                        tiempo_enviado = datetime.now()
+                        respuesta_infile = peticion_factura_electronica(xml_factura, url)
+                        # Usar para debug
+                        # with open('reci.xml', 'w') as f:
+                        #     f.write(str(respuesta_infile))
+
+                    # VALIDACION RESPUESTA
+                    try:
+                        # xmltodic parsea la respuesta por parte de INFILE
+                        documento_descripcion = xmltodict.parse(respuesta_infile)
+                        # En la descripcion se encuentra el mensaje, si el documento electronico se realizo con exito
+                        descripciones = (documento_descripcion['S:Envelope']['S:Body']['ns2:registrarDteResponse']['return']['descripcion'])
+                    except:
+                        return '''Error: INFILE no pudo recibir los datos: {0} \n {1}'''.format(str(respuesta_infile), frappe.get_traceback())
+                    else:
+                        # La funcion errores se encarga de verificar si existen errores o si la
+                        # generacion de factura electronica fue exitosa
+                        errores_diccionario = errores(descripciones)
+
+                        if (len(errores_diccionario) > 0):
+                            try:
+                                # Si el mensaje indica que la factura electronica se genero con exito se procede
+                                # a guardar la respuesta de INFILE en la DB
+                                if ((str(errores_diccionario['Mensaje']).lower()) == 'dte generado con exito'):
+
+                                    cae_fac_electronica = guardar(respuesta_infile, serie_original_factura, tiempo_enviado)
+                                    # frappe.msgprint(_('FACTURA GENERADA CON EXITO'))
+                                    # el archivo rexpuest.xml se encuentra en la ruta, /home/frappe/frappe-bench/sites
+
+                                    # USAR PARA DEBUG
+                                    # with open('respuesta_infile.xml', 'w') as recibidoxml:
+                                    #     recibidoxml.write(str(respuesta_infile))
+                                    #     recibidoxml.close()
+
+                                    # es-GT:  Esta funcion es la nueva funcion para actualizar todas las tablas en las cuales puedan aparecer.
+                                    numero_dte_correcto = actualizartb(serie_original_factura)
+                                    # Funcion para descargar y guardar pdf factura electronica
+                                    descarga_pdf = guardar_pdf_servidor(numero_dte_correcto, cae_fac_electronica)
+
+                                    # Este dato sera capturado por Js actualizando la url
+                                    return numero_dte_correcto
+                            except:
+                                for llave in errores_diccionario:
+                                    return '''
+                                    <span class="label label-warning" style="font-size: 14px">{}</span>
+                                    '''.format(str(llave)) + ' = ' + str(errores_diccionario[llave])
+
+                                # frappe.msgprint(_('NO GENERADA: {}'.format(frappe.get_traceback())))
+
+
+                else:
+                    return '''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
+                                        Por favor configura la serie <b>{0}</b> en 
+                                        <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>
+                                        e intenta de nuevo.
+                                    '''.format(prefijo_serie)
+
+            # Verificacion regimen FEL
+            if validar_config[2] == 'FEL':
+                if frappe.db.exists('Configuracion Series FEL', {'parent': nombre_config_validada, 'serie': prefijo_serie}):
+                    series_configuradas_fel = frappe.db.get_values('Configuracion Series FEL',
+                                                                    filters={'parent': nombre_config_validada, 'serie': prefijo_serie},
+                                                                    fieldname=['tipo_documento'], as_dict=1)
+
+                    url_configurada = frappe.db.get_values('Configuracion Factura Electronica',
+                                                        filters={'name': nombre_config_validada},
+                                                        fieldname=['url_listener', 'descargar_pdf_factura_electronica',
+                                                                'url_descarga_pdf'], as_dict=1)
+                    est = ''
+                    try:
+                        factura_electronica = FacturaElectronicaFEL(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_configuradas_fel)
+                        est = factura_electronica.generar_facelec()
+
+                        return est
+                        # if est['status'] == 'OK':
+                        #     # frappe.msgprint(_('Ok Generada'+str(est)))
+                        #     return est
+                        # else:
+                        #     return est
+                        #     # frappe.msgprint(_(str(est)))
+                    except:
+                        return 'No se pudo generar la factura electronica: '+(est)
+                else:
+                    return '''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
+                                        Por favor configura la serie <b>{0}</b> en 
+                                        <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>
+                                        e intenta de nuevo.
+                                    '''.format(prefijo_serie)
+
+    elif validar_config[0] == 2:
+        return '''Existe más de una configuración para factura electrónica.
+                             Verifique que solo exista una validada en
+                             <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>'''
+
+    elif validar_config[0] == 3:
+        return '''No se encontró una configuración válida. Verifique que exista una configuración validada en 
+                             <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>'''
