@@ -653,6 +653,11 @@ class FacturaElectronicaFEL:
                     frappe.db.sql('''UPDATE `tabDelivery Note` SET parent=%(name)s
                                     WHERE parent=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
+                # JOURNAL ENTRY UPDATES
+                if frappe.db.exists('Journal Entry Account', {'reference_name': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabJournal Entry Account` SET reference_name=%(name)s
+                                    WHERE reference_name=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
+
                 frappe.db.commit()
 
             except:
