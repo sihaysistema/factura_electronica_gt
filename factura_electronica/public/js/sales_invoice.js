@@ -735,6 +735,20 @@ frappe.ui.form.on("Sales Invoice", {
             });
         });
 
+        frm.add_custom_button(__('Enviar por correo'), () => {
+            // Your code
+            frappe.call({
+                method: 'factura_electronica.api.enviar_correo',
+                args: {
+                    nombre: frm.doc.name
+                },
+                callback: function (r) {
+                    // frm.reload_doc();
+                    console.log(r.message);
+                }
+            });
+        });
+
         // Cuando el documento se actualiza, la funcion verificac de que exista un cae.
         // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
         // En caso no exista un cae mostrara el boton para generar la factura electronica

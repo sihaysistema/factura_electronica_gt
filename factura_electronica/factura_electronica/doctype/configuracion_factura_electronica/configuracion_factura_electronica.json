@@ -45,7 +45,11 @@
   "url_firma",
   "url_dte",
   "configuracion_series_fel_section",
-  "series_fel"
+  "series_fel",
+  "configuracion_correo_electronico_section",
+  "asunto",
+  "mensaje",
+  "enviado_por"
  ],
  "fields": [
   {
@@ -279,11 +283,33 @@
    "fieldname": "correo_copia",
    "fieldtype": "Data",
    "label": "Correo Copia"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "configuracion_correo_electronico_section",
+   "fieldtype": "Section Break",
+   "label": "Configuracion Correo Electronico"
+  },
+  {
+   "fieldname": "asunto",
+   "fieldtype": "Data",
+   "label": "Asunto"
+  },
+  {
+   "fieldname": "mensaje",
+   "fieldtype": "Text Editor",
+   "label": "Mensaje"
+  },
+  {
+   "fieldname": "enviado_por",
+   "fieldtype": "Link",
+   "label": "Enviado por",
+   "options": "User"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2019-11-09 22:41:49.762043",
+ "modified": "2019-11-12 14:03:24.233707",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

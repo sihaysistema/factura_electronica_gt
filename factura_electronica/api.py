@@ -760,3 +760,18 @@ def facelec_api(serie_factura, nombre_cliente, pre_se):
     elif validar_config[0] == 3:
         return '''No se encontró una configuración válida. Verifique que exista una configuración validada en 
                              <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>'''
+
+
+@frappe.whitelist()
+def enviar_correo(nombre):
+    from frappe.core.doctype.communication.email import make
+    msg="Hola Mundo {}".format(nombre)
+
+    try:
+        make(doctype="Sales Invoice", name=nombre, subject="Factura Electronica", content=msg, recipients=['m.monroyc22@gmail.com'],
+            send_email=True, sender="erp.sihaysistema@gmail.com")
+        
+        msg = """Email send successfully to Employee"""
+        frappe.msgprint(msg)
+    except:
+        frappe.msgprint("could not send")
