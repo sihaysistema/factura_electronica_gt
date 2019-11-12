@@ -666,7 +666,7 @@ class FacturaElectronicaFEL:
             else:
                 # Si los datos se Guardan correctamente, se retornara la serie, que sera capturado por api.py
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
-                return {'status': 'OK', 'msj': factura_guardada[0]['uuid']}
+                return {'status': 'OK', 'msj': factura_guardada[0]['uuid'], 'serie_nueva': serieFEL}
         # else:
 
 

@@ -195,8 +195,10 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                         factura_electronica = FacturaElectronicaFEL(serie_original_factura, nombre_del_cliente, nombre_config_validada, series_configuradas_fel)
                         est = factura_electronica.generar_facelec()
                         if est['status'] == 'OK':
-                            frappe.msgprint(_('Ok Generada'+str(est)))
-                            return est['uuid']
+                            # frappe.msgprint(_('Ok Generada'+str(est)))
+                            serie_ok = frappe.db.get_value('Envio FEL', {'name': est['uuid']}, 'serie_para_factura')
+                            # return est['uuid']
+                            return serie_ok
                         else:
                             # return est
                             frappe.msgprint(_(str(est)))

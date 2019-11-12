@@ -401,6 +401,13 @@ function pdf_button(cae_documento, frm) {
         }).addClass("btn-primary");
 }
 
+function pdf_button_fel(cae_documento, frm) {
+    // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
+    frm.add_custom_button(__("VER PDF FACTURA ELECTRONICA"),
+        function () {
+            window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" + cae_documento);
+        }).addClass("btn-primary");
+}
 /*
 Crea un boton que permite guardar el PDF de factura electronica generado en el servidor
 de forma privada, tras finalizar la ejecucion del script del lado del servidor en el
@@ -508,6 +515,9 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
             guardar_pdf(frm);
+        } else if (frm.doc.numero_autorizacion_fel) {
+            cur_frm.clear_custom_buttons();
+            pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
         } else {
             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
             if (modalidad === 'manual') {
