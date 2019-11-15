@@ -345,7 +345,7 @@ class FacturaElectronicaFEL:
                                                         'item_code', 'description',
                                                         'net_amount', 'base_net_amount',
                                                         'discount_percentage',
-                                                        'discount_amount',
+                                                        'discount_amount', 'price_list_rate',
                                                         'net_rate', 'stock_uom',
                                                         'serial_no', 'item_group',
                                                         'rate', 'amount',
@@ -377,18 +377,19 @@ class FacturaElectronicaFEL:
                     obj_item["dte:Cantidad"] = float(dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = dat_items[i]['description']
-                    obj_item["dte:PrecioUnitario"] = float(dat_items[i]['rate']) + float(dat_items[i]['discount_amount'])
-                    obj_item["dte:Precio"] = float(dat_items[i]['amount']) + float(dat_items[i]['discount_amount'])
-                    obj_item["dte:Descuento"] = dat_items[i]['discount_amount']
+                    obj_item["dte:PrecioUnitario"] = float(dat_items[i]['rate']) + float(dat_items[i]['price_list_rate'] - dat_items[i]['rate'])
+                    obj_item["dte:Precio"] = float(dat_items[i]['qty']) * float(dat_items[i]['price_list_rate']) #float(dat_items[i]['amount']) + float(dat_items[i]['price_list_rate'] - dat_items[i]['rate'])
+                    obj_item["dte:Descuento"] = float(dat_items[i]['price_list_rate'] - dat_items[i]['rate'])
                     obj_item["dte:Impuestos"] = {}
                     obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = 'IVA'
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = '1'
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format((float(dat_items[i]['facelec_gt_tax_net_fuel_amt']) + float(dat_items[i]['facelec_gt_tax_net_goods_amt']) + float(dat_items[i]['facelec_gt_tax_net_services_amt']))) #- float(dat_items[i]['discount_amount'])) #float(dat_items[i]['facelec_amount_minus_excise_tax'])
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(dat_items[i]['facelec_sales_tax_for_this_row']))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(dat_items[i]['net_amount']))#(float(dat_items[i]['facelec_gt_tax_net_fuel_amt']) + float(dat_items[i]['facelec_gt_tax_net_goods_amt']) + float(dat_items[i]['facelec_gt_tax_net_services_amt']))) #- float(dat_items[i]['discount_amount'])) #float(dat_items[i]['facelec_amount_minus_excise_tax'])
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(dat_items[i]['net_amount']) * 0.12) #'{0:.2f}'.format(float(dat_items[i]['facelec_sales_tax_for_this_row']))
 
-                    obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[i]['facelec_amount_minus_excise_tax']))) #- float(dat_items[i]['discount_amount'])) # Se suman otr impuestos+ float(dat_items[i]['facelec_sales_tax_for_this_row'])
+                    obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[i]['amount']))) #- float(dat_items[i]['discount_amount'])) # Se suman otr impuestos+ float(dat_items[i]['facelec_sales_tax_for_this_row'])
+                    # obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[i]['price_list_rate']) - float((dat_items[i]['price_list_rate'] - dat_items[i]['rate']) * dat_items[i]['qty'])))
                 
                     items_ok.append(obj_item)
             else:
@@ -406,18 +407,19 @@ class FacturaElectronicaFEL:
                 obj_item["dte:Cantidad"] = float(dat_items[0]['qty'])
                 obj_item["dte:UnidadMedida"] = dat_items[0]['facelec_three_digit_uom_code']
                 obj_item["dte:Descripcion"] = dat_items[0]['description']
-                obj_item["dte:PrecioUnitario"] = float(dat_items[0]['rate']) + float(dat_items[0]['discount_amount'])
-                obj_item["dte:Precio"] = float(dat_items[0]['amount']) + float(dat_items[0]['discount_amount'])
-                obj_item["dte:Descuento"] = dat_items[0]['discount_amount']
+                obj_item["dte:PrecioUnitario"] = float(dat_items[0]['rate']) + float(dat_items[0]['price_list_rate'] - dat_items[0]['rate'])
+                obj_item["dte:Precio"] = float(dat_items[0]['qty']) * float(dat_items[0]['price_list_rate']) #float(dat_items[0]['amount']) + float(dat_items[0]['price_list_rate'] - dat_items[0]['rate'])
+                obj_item["dte:Descuento"] = float(dat_items[0]['price_list_rate'] - dat_items[0]['rate'])
                 obj_item["dte:Impuestos"] = {}
                 obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
 
                 obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = 'IVA'
                 obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = '1'
-                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format((float(dat_items[0]['facelec_gt_tax_net_fuel_amt']) + float(dat_items[0]['facelec_gt_tax_net_goods_amt']) + float(dat_items[0]['facelec_gt_tax_net_services_amt']))) #- float(dat_items[0]['discount_amount'])) # precio - descuento/1.12
-                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(dat_items[0]['facelec_sales_tax_for_this_row']))
+                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(dat_items[0]['net_amount'])) #'{0:.2f}'.format((float(dat_items[0]['facelec_gt_tax_net_fuel_amt']) + float(dat_items[0]['facelec_gt_tax_net_goods_amt']) + float(dat_items[0]['facelec_gt_tax_net_services_amt']))) #- float(dat_items[0]['discount_amount'])) # precio - descuento/1.12
+                obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(dat_items[0]['net_amount']) * 0.12) #'{0:.2f}'.format(float(dat_items[0]['facelec_sales_tax_for_this_row']))
 
-                obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[0]['facelec_amount_minus_excise_tax']))) # - float(dat_items[0]['discount_amount'])) # Se suma otros impuestos + float(dat_items[0]['facelec_sales_tax_for_this_row'])
+                obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[0]['amount']))) # - float(dat_items[0]['discount_amount'])) # Se suma otros impuestos + float(dat_items[0]['facelec_sales_tax_for_this_row'])
+                # obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[0]['price_list_rate']) - float((dat_items[0]['price_list_rate'] - dat_items[0]['rate']) * dat_items[0]['qty'])))
             
                 items_ok.append(obj_item)
 
@@ -434,13 +436,21 @@ class FacturaElectronicaFEL:
         try:
             dat_fac = frappe.db.get_values('Sales Invoice',
                                            filters={'name': self.serie_factura},
-                                           fieldname=['grand_total', 'shs_total_iva_fac'],
+                                           fieldname=['grand_total', 'shs_total_iva_fac', 'total_taxes_and_charges'],
                                            as_dict=1)
+            gran_tot = 0
+            items_f = frappe.db.get_values('Sales Invoice Item',
+                                        filters={'parent': self.serie_factura},
+                                        fieldname=['facelec_amount_minus_excise_tax'],
+                                        as_dict=1)
+            for i in items_f:
+                gran_tot += i['facelec_amount_minus_excise_tax']
+
             self.d_totales = {
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": "IVA",
-                        "@TotalMontoImpuesto": '{0:.2f}'.format(float(dat_fac[0]['shs_total_iva_fac']))
+                        "@TotalMontoImpuesto": '{0:.2f}'.format(float(dat_fac[0]['total_taxes_and_charges']))
                     }
                 },
                 "dte:GranTotal": '{0:.2f}'.format(float(dat_fac[0]['grand_total']))
