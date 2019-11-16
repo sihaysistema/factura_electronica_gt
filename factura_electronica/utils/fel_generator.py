@@ -32,24 +32,24 @@ class FacturaElectronicaFEL:
         self.nombre_cliente = str(cliente)  # Nombre cliente en factura
         self.serie_facelec_fel = str(series_conf)  # Series para factura electronica
         self.numero_auth_fel = ''
+        self.__errores_facelec = []
 
     def generar_facelec(self):
         '''Funcion principal de la clase'''
         base_msj = {
-            "status": "OK",
-            "uuid": "",
-            "errores": 0,
-            "descripcion_errores": [{}, {}]
+            "status": "ERROR",
+            "detalle_errores_facelec": [],
+            "uuid": ""
         }
 
         # 1 - Validacion data
         status_validacion = self.validador_data()
         if status_validacion != True:
+            self.__errores_facelec.append(status_validacion)
             return {
                 "status": "ERROR",
-                "uuid": "",
-                "errores": 1,
-                "descripcion_errores": [status_validacion]
+                "detalle_errores_facelec": self.__errores_facelec,
+                "uuid": ""
             }
 
         # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
@@ -125,43 +125,36 @@ class FacturaElectronicaFEL:
                     estado_actualizacion = self.actualizar_registros()
 
                     if estado_actualizacion['status'] == 'OK':
-                        # return estado_actualizacion['msj']
                         return {
                             "status": "OK",
-                            "uuid": estado_actualizacion['msj'],
-                            "errores": 0,
-                            "descripcion_errores": []
+                            "cantidad_errores": 0,
+                            "detalle_errores_facelec": [],
+                            "uuid": estado_actualizacion['msj']
                         }
                     else:
-                        # return estado_actualizacion['msj']
                         return {
                             "status": "ERROR",
-                            "uuid": "",
-                            "errores": 1,
-                            "descripcion_errores": [estado_actualizacion['msj']]
+                            "detalle_errores_facelec": [estado_actualizacion],
+                            "uuid": ""
                         }
                 else:
-                    # return uuid_fel['numero_errores'], uuid_fel['detalles_errores']
                     return {
                         "status": "ERROR",
-                        "uuid": "",
-                        "errores": 1,
-                        "descripcion_errores": [uuid_fel]
+                        "detalle_errores_facelec": [uuid_fel],
+                        "uuid": ""
                     }
             else:
                 # return estado_fel[1]
                 return {
                     "status": "ERROR",
-                    "uuid": "",
-                    "errores": 1,
-                    "descripcion_errores": [estado_fel]
+                    "detalle_errores_facelec": [estado_fel[1]],
+                    "uuid": ""
                 }
         else:
             return {
                 "status": "ERROR",
-                "uuid": "",
-                "errores": 1,
-                "descripcion_errores": [estado_firma]
+                "detalle_errores_facelec": [estado_firma[1]],
+                "uuid": ""
             }
 
     def validador_data(self):
