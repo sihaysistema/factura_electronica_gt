@@ -379,7 +379,7 @@ class FacturaElectronicaFEL:
                     obj_item["dte:Descripcion"] = dat_items[i]['description']
                     obj_item["dte:PrecioUnitario"] = float(dat_items[i]['rate']) + float(dat_items[i]['price_list_rate'] - dat_items[i]['rate'])
                     obj_item["dte:Precio"] = float(dat_items[i]['qty']) * float(dat_items[i]['price_list_rate']) #float(dat_items[i]['amount']) + float(dat_items[i]['price_list_rate'] - dat_items[i]['rate'])
-                    obj_item["dte:Descuento"] = float(dat_items[i]['price_list_rate'] - dat_items[i]['rate'])
+                    obj_item["dte:Descuento"] = float(dat_items[i]['price_list_rate'] * dat_items[i]['qty']) - float(dat_items[i]['amount'])
                     obj_item["dte:Impuestos"] = {}
                     obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
 
@@ -409,7 +409,7 @@ class FacturaElectronicaFEL:
                 obj_item["dte:Descripcion"] = dat_items[0]['description']
                 obj_item["dte:PrecioUnitario"] = float(dat_items[0]['rate']) + float(dat_items[0]['price_list_rate'] - dat_items[0]['rate'])
                 obj_item["dte:Precio"] = float(dat_items[0]['qty']) * float(dat_items[0]['price_list_rate']) #float(dat_items[0]['amount']) + float(dat_items[0]['price_list_rate'] - dat_items[0]['rate'])
-                obj_item["dte:Descuento"] = float(dat_items[0]['price_list_rate'] - dat_items[0]['rate'])
+                obj_item["dte:Descuento"] = float(dat_items[0]['price_list_rate'] * dat_items[0]['qty']) - float(dat_items[0]['amount'])
                 obj_item["dte:Impuestos"] = {}
                 obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
 
