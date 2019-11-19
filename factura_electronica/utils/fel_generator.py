@@ -29,7 +29,7 @@ class FacturaElectronicaFEL:
         self.base_peticion = {}
         self.serie_factura = str(serie)  # Serie original de la factura
         self.nombre_config = str(conf_name)  # Nombre doc configuracion para factura electronica
-        self.nombre_cliente = str(cliente)  # Nombre cliente en factura
+        self.nombre_cliente = frappe.db.get_value('Customer', {'name':str(cliente)}, 'customer_name')  # Nombre cliente en factura
         self.serie_facelec_fel = str(series_conf)  # Series para factura electronica
         self.numero_auth_fel = ''
         self.__errores_facelec = []

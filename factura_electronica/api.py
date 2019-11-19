@@ -201,11 +201,10 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                             return serie_ok
                         else:
                             # return est
-                            frappe.msgprint(_(str(est)))
+                            frappe.msgprint(_(str(est['detalle_errores_facelec'])))
                     except:
-                        frappe.msgprint(_('No se puedo generar la factura electronica: '+(est)))
-                    # else:
-                    #     frappe.msgprint(_(est))
+                        frappe.msgprint(_('No se puedo generar la factura electronica: '+(est['detalle_errores_facelec'])))
+
                 else:
                     frappe.msgprint(_('''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
                                         Por favor configura la serie <b>{0}</b> en 
@@ -598,6 +597,7 @@ def obtener_serie_doc(opt):
                 return series_configuradas[0]['serie']
 
 
+# FUNCION ESPECIAL PARA API - FEL
 def facelec_api(serie_factura, nombre_cliente, pre_se):
     '''Verifica que todos los datos esten correctos para realizar una
        peticion a INFILE y generar la factura electronica
