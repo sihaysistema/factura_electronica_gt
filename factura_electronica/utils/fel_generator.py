@@ -429,7 +429,7 @@ class FacturaElectronicaFEL:
         try:
             dat_fac = frappe.db.get_values('Sales Invoice',
                                            filters={'name': self.serie_factura},
-                                           fieldname=['grand_total', 'shs_total_iva_fac', 'total_taxes_and_charges'],
+                                           fieldname=['grand_total', 'shs_total_iva_fac', 'total_taxes_and_charges', 'total'],
                                            as_dict=1)
             gran_tot = 0
             items_f = frappe.db.get_values('Sales Invoice Item',
