@@ -11,6 +11,7 @@
   "url_descarga_pdf",
   "configuracion_pdf",
   "descargar_pdf_factura_electronica",
+  "company",
   "datos_proveedor_factura_electronica",
   "clave",
   "usuario",
@@ -311,12 +312,18 @@
    "fieldname": "llave_ws",
    "fieldtype": "Data",
    "label": "Llave WS"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2019-11-13 13:49:45.985257",
- "modified_by": "m.monroyc22@gmail.com",
+ "modified": "2019-11-27 15:01:07.829033",
+ "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
  "owner": "Administrator",
