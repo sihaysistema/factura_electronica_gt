@@ -580,6 +580,7 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         // console.log('No Guardada');
         cur_frm.set_value("cae_factura_electronica", '');
         cur_frm.set_value("serie_original_del_documento", '');
+        cur_frm.set_value("numero_autorizacion_fel", '');
         // frm.doc.cae_factura_electronica = '';
         // frm.doc.serie_original_del_documento = '';
     }
