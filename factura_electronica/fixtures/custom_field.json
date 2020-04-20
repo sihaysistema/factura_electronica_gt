@@ -1,5 +1,6 @@
 [
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -45,6 +46,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -90,6 +92,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -135,6 +138,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -180,6 +184,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -225,6 +230,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -270,6 +276,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -315,6 +322,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -360,6 +368,7 @@
   "width": "100"
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -405,6 +414,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -450,6 +460,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 1,
   "bold": 0,
   "collapsible": 0,
@@ -495,6 +506,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -540,6 +552,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -585,6 +598,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -630,6 +644,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -675,6 +690,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -720,6 +736,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 1,
   "bold": 0,
   "collapsible": 0,
@@ -765,6 +782,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -810,6 +828,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -855,6 +874,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -900,6 +920,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -945,6 +966,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -990,6 +1012,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1035,6 +1058,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1080,6 +1104,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1125,6 +1150,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 1,
   "bold": 0,
   "collapsible": 0,
@@ -1170,6 +1196,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 1,
   "bold": 0,
   "collapsible": 0,
@@ -1215,6 +1242,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1260,6 +1288,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1305,6 +1334,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1350,6 +1380,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1395,6 +1426,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1440,6 +1472,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1485,6 +1518,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1530,6 +1564,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1575,6 +1610,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 1,
   "bold": 0,
   "collapsible": 0,
@@ -1620,6 +1656,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1665,6 +1702,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 1,
   "bold": 0,
   "collapsible": 0,
@@ -1710,6 +1748,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1755,6 +1794,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1800,6 +1840,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 1,
   "bold": 0,
   "collapsible": 0,
@@ -1845,6 +1886,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1890,6 +1932,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1935,6 +1978,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -1980,6 +2024,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2025,6 +2070,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2070,6 +2116,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2115,6 +2162,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2160,6 +2208,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2205,6 +2254,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2250,6 +2300,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2295,6 +2346,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2340,6 +2392,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 1,
   "collapsible": 0,
@@ -2385,6 +2438,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2430,6 +2484,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2475,6 +2530,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2520,6 +2576,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2565,6 +2622,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2610,6 +2668,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2655,6 +2714,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2700,6 +2760,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2745,6 +2806,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2790,6 +2852,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2835,6 +2898,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2880,6 +2944,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2925,6 +2990,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -2970,6 +3036,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3015,6 +3082,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3060,6 +3128,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3105,6 +3174,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3150,6 +3220,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3195,6 +3266,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3240,6 +3312,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3285,6 +3358,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3330,6 +3404,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3375,6 +3450,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3420,6 +3496,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3465,6 +3542,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3510,6 +3588,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3555,6 +3634,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3600,6 +3680,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3645,6 +3726,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3690,6 +3772,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3735,6 +3818,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3780,6 +3864,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3825,6 +3910,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 1,
@@ -3870,6 +3956,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3915,6 +4002,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -3960,6 +4048,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4005,51 +4094,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": null,
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Receipt",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "guatemala_tax_pr",
-  "fieldtype": "Section Break",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "total_net_weight",
-  "label": "Guatemala Tax",
-  "length": 0,
-  "modified": "2018-02-06 23:09:32.032681",
-  "name": "Purchase Receipt-guatemala_tax_pr",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 0,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4095,6 +4140,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4140,6 +4186,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4185,6 +4232,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4230,6 +4278,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Receipt",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "guatemala_tax_pr",
+  "fieldtype": "Section Break",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "total_net_weight",
+  "label": "Guatemala Tax",
+  "length": 0,
+  "modified": "2018-02-06 23:09:32.032681",
+  "name": "Purchase Receipt-guatemala_tax_pr",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 0,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4275,51 +4370,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": "Total amount spent on items considered fuel as configured in Item DocType. Amount is net of fuel excise tax and sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Receipt",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "facelec_pr_gt_tax_fuel",
-  "fieldtype": "Currency",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "guatemala_tax_pr",
-  "label": "Fuel",
-  "length": 0,
-  "modified": "2018-02-06 23:10:39.352300",
-  "name": "Purchase Receipt-facelec_pr_gt_tax_fuel",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 1,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4365,6 +4416,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4410,6 +4462,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4455,6 +4508,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4500,6 +4554,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": "Total amount spent on items considered fuel as configured in Item DocType. Amount is net of fuel excise tax and sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Receipt",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "facelec_pr_gt_tax_fuel",
+  "fieldtype": "Currency",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "guatemala_tax_pr",
+  "label": "Fuel",
+  "length": 0,
+  "modified": "2018-02-06 23:10:39.352300",
+  "name": "Purchase Receipt-facelec_pr_gt_tax_fuel",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 1,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4545,6 +4646,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4590,51 +4692,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": null,
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Receipt",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "guatemala_tax_or_good_pr",
-  "fieldtype": "Column Break",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "facelec_pr_gt_tax_fuel",
-  "label": "",
-  "length": 0,
-  "modified": "2018-02-06 23:12:21.110238",
-  "name": "Purchase Receipt-guatemala_tax_or_good_pr",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 0,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4680,6 +4738,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4725,6 +4784,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4770,6 +4830,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4815,6 +4876,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Receipt",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "guatemala_tax_or_good_pr",
+  "fieldtype": "Column Break",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "facelec_pr_gt_tax_fuel",
+  "label": "",
+  "length": 0,
+  "modified": "2018-02-06 23:12:21.110238",
+  "name": "Purchase Receipt-guatemala_tax_or_good_pr",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 0,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4860,6 +4968,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4905,51 +5014,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": "Total amount spent on items considered goods as configured in Item DocType. Amount is net of sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Receipt",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "facelec_pr_gt_tax_goods",
-  "fieldtype": "Currency",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "guatemala_tax_or_good_pr",
-  "label": "Goods",
-  "length": 0,
-  "modified": "2018-02-06 23:12:22.670000",
-  "name": "Purchase Receipt-facelec_pr_gt_tax_goods",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 1,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -4995,6 +5060,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5040,6 +5106,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5085,6 +5152,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 1,
   "collapsible": 0,
@@ -5130,6 +5198,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": "Total amount spent on items considered goods as configured in Item DocType. Amount is net of sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Receipt",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "facelec_pr_gt_tax_goods",
+  "fieldtype": "Currency",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "guatemala_tax_or_good_pr",
+  "label": "Goods",
+  "length": 0,
+  "modified": "2018-02-06 23:12:22.670000",
+  "name": "Purchase Receipt-facelec_pr_gt_tax_goods",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 1,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5175,6 +5290,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5220,51 +5336,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": null,
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Receipt",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "guatemala_good_or_service_pr",
-  "fieldtype": "Column Break",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "facelec_pr_gt_tax_goods",
-  "label": "",
-  "length": 0,
-  "modified": "2018-02-06 23:12:24.519751",
-  "name": "Purchase Receipt-guatemala_good_or_service_pr",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 0,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5310,6 +5382,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5355,6 +5428,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5400,6 +5474,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Receipt",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "guatemala_good_or_service_pr",
+  "fieldtype": "Column Break",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "facelec_pr_gt_tax_goods",
+  "label": "",
+  "length": 0,
+  "modified": "2018-02-06 23:12:24.519751",
+  "name": "Purchase Receipt-guatemala_good_or_service_pr",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 0,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5445,6 +5566,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5490,51 +5612,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": "Total amount spent on items considered services as configured in Item DocType. Amount is net of sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Receipt",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "facelec_pr_gt_tax_services",
-  "fieldtype": "Currency",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "guatemala_good_or_service_pr",
-  "label": "Services",
-  "length": 0,
-  "modified": "2018-02-06 23:14:11.522423",
-  "name": "Purchase Receipt-facelec_pr_gt_tax_services",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 1,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5580,6 +5658,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5625,6 +5704,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5670,6 +5750,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": "Total amount spent on items considered services as configured in Item DocType. Amount is net of sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Receipt",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "facelec_pr_gt_tax_services",
+  "fieldtype": "Currency",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "guatemala_good_or_service_pr",
+  "label": "Services",
+  "length": 0,
+  "modified": "2018-02-06 23:14:11.522423",
+  "name": "Purchase Receipt-facelec_pr_gt_tax_services",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 1,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5715,6 +5842,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5760,96 +5888,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": null,
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Order",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "guatemala_tax",
-  "fieldtype": "Section Break",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "total_net_weight",
-  "label": "Guatemala Tax",
-  "length": 0,
-  "modified": "2018-02-06 14:03:50.799211",
-  "name": "Purchase Order-guatemala_tax",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 0,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": null,
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Receipt",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "facelec_pr_total_iva",
-  "fieldtype": "Currency",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "facelec_pr_gt_tax_services",
-  "label": "Total IVA",
-  "length": 0,
-  "modified": "2018-02-06 23:14:13.585678",
-  "name": "Purchase Receipt-facelec_pr_total_iva",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 1,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5895,6 +5934,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5940,6 +5980,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -5985,6 +6026,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6030,6 +6072,99 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Order",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "guatemala_tax",
+  "fieldtype": "Section Break",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "total_net_weight",
+  "label": "Guatemala Tax",
+  "length": 0,
+  "modified": "2018-02-06 14:03:50.799211",
+  "name": "Purchase Order-guatemala_tax",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 0,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Receipt",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "facelec_pr_total_iva",
+  "fieldtype": "Currency",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "facelec_pr_gt_tax_services",
+  "label": "Total IVA",
+  "length": 0,
+  "modified": "2018-02-06 23:14:13.585678",
+  "name": "Purchase Receipt-facelec_pr_total_iva",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 1,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6075,6 +6210,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6120,6 +6256,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6165,51 +6302,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": "Total amount spent on items considered fuel as configured in Item DocType. Amount is net of fuel excise tax and sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Order",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "facelec_po_gt_tax_fuel",
-  "fieldtype": "Currency",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "guatemala_tax",
-  "label": "Fuel",
-  "length": 0,
-  "modified": "2018-02-06 14:04:32.021670",
-  "name": "Purchase Order-facelec_po_gt_tax_fuel",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 1,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6255,6 +6348,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6300,6 +6394,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6345,6 +6440,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 1,
   "collapsible": 0,
@@ -6390,6 +6486,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": "Total amount spent on items considered fuel as configured in Item DocType. Amount is net of fuel excise tax and sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Order",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "facelec_po_gt_tax_fuel",
+  "fieldtype": "Currency",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "guatemala_tax",
+  "label": "Fuel",
+  "length": 0,
+  "modified": "2018-02-06 14:04:32.021670",
+  "name": "Purchase Order-facelec_po_gt_tax_fuel",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 1,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6435,6 +6578,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6480,51 +6624,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": null,
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Order",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "guatemala_po_tax_or_good",
-  "fieldtype": "Column Break",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "facelec_po_gt_tax_fuel",
-  "label": "",
-  "length": 0,
-  "modified": "2018-02-06 14:05:11.157157",
-  "name": "Purchase Order-guatemala_po_tax_or_good",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 0,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6570,6 +6670,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6615,6 +6716,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6660,6 +6762,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6705,6 +6808,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6750,6 +6854,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Order",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "guatemala_po_tax_or_good",
+  "fieldtype": "Column Break",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "facelec_po_gt_tax_fuel",
+  "label": "",
+  "length": 0,
+  "modified": "2018-02-06 14:05:11.157157",
+  "name": "Purchase Order-guatemala_po_tax_or_good",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 0,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6795,6 +6946,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6840,51 +6992,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": "Total amount spent on items considered goods as configured in Item DocType. Amount is net of sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Order",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "facelec_po_gt_tax_goods",
-  "fieldtype": "Currency",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "guatemala_po_tax_or_good",
-  "label": "Goods",
-  "length": 0,
-  "modified": "2018-02-06 14:05:58.561644",
-  "name": "Purchase Order-facelec_po_gt_tax_goods",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 1,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6930,6 +7038,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -6975,6 +7084,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7020,6 +7130,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7065,6 +7176,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": "Total amount spent on items considered goods as configured in Item DocType. Amount is net of sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Order",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "facelec_po_gt_tax_goods",
+  "fieldtype": "Currency",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "guatemala_po_tax_or_good",
+  "label": "Goods",
+  "length": 0,
+  "modified": "2018-02-06 14:05:58.561644",
+  "name": "Purchase Order-facelec_po_gt_tax_goods",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 1,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7110,6 +7268,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7155,51 +7314,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": "",
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Order",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "guatemala_po_good_or_service",
-  "fieldtype": "Column Break",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "facelec_po_gt_tax_goods",
-  "label": "",
-  "length": 0,
-  "modified": "2018-02-06 14:07:50.664669",
-  "name": "Purchase Order-guatemala_po_good_or_service",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 0,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7245,6 +7360,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7290,6 +7406,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7335,6 +7452,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": "",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Order",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "guatemala_po_good_or_service",
+  "fieldtype": "Column Break",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "facelec_po_gt_tax_goods",
+  "label": "",
+  "length": 0,
+  "modified": "2018-02-06 14:07:50.664669",
+  "name": "Purchase Order-guatemala_po_good_or_service",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 0,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7380,6 +7544,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7425,51 +7590,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": "Total amount spent on items considered services as configured in Item DocType. Amount is net of sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Order",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "facelec_po_gt_tax_services",
-  "fieldtype": "Currency",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "guatemala_po_good_or_service",
-  "label": "Services",
-  "length": 0,
-  "modified": "2018-02-06 14:06:44.189149",
-  "name": "Purchase Order-facelec_po_gt_tax_services",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 1,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7515,6 +7636,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7560,6 +7682,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": "Total amount spent on items considered services as configured in Item DocType. Amount is net of sales tax.\nFor Guatemalan Tax Authority Sales Tax reporting purposes.",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Order",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "facelec_po_gt_tax_services",
+  "fieldtype": "Currency",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "guatemala_po_good_or_service",
+  "label": "Services",
+  "length": 0,
+  "modified": "2018-02-06 14:06:44.189149",
+  "name": "Purchase Order-facelec_po_gt_tax_services",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 1,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7605,6 +7774,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7650,51 +7820,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": null,
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Order",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "facelec_po_total_iva",
-  "fieldtype": "Currency",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "facelec_po_gt_tax_services",
-  "label": "Total IVA",
-  "length": 0,
-  "modified": "2018-02-06 14:09:10.268199",
-  "name": "Purchase Order-facelec_po_total_iva",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 1,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7740,6 +7866,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7785,6 +7912,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7830,6 +7958,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Order",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "facelec_po_total_iva",
+  "fieldtype": "Currency",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "facelec_po_gt_tax_services",
+  "label": "Total IVA",
+  "length": 0,
+  "modified": "2018-02-06 14:09:10.268199",
+  "name": "Purchase Order-facelec_po_total_iva",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 1,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7875,6 +8050,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7920,6 +8096,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -7965,6 +8142,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8010,6 +8188,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8055,6 +8234,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8100,6 +8280,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8145,6 +8326,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8190,6 +8372,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8235,6 +8418,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8280,6 +8464,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8325,6 +8510,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8370,6 +8556,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8415,6 +8602,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8460,6 +8648,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8505,6 +8694,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8550,6 +8740,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8595,6 +8786,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 1,
   "bold": 0,
   "collapsible": 0,
@@ -8640,6 +8832,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8685,6 +8878,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8730,6 +8924,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8775,6 +8970,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8820,6 +9016,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8865,6 +9062,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8910,6 +9108,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -8955,6 +9154,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9000,6 +9200,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9045,6 +9246,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9090,6 +9292,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9135,6 +9338,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9180,51 +9384,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": null,
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Order Item",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "excise_tax_calculation_section",
-  "fieldtype": "Section Break",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "dimension_col_break",
-  "label": "Excise Tax calculation",
-  "length": 0,
-  "modified": "2018-02-06 14:19:36.289693",
-  "name": "Purchase Order Item-excise_tax_calculation_section",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 0,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9270,6 +9430,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Order Item",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "excise_tax_calculation_section",
+  "fieldtype": "Section Break",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "dimension_col_break",
+  "label": "Excise Tax calculation",
+  "length": 0,
+  "modified": "2018-02-06 14:19:36.289693",
+  "name": "Purchase Order Item-excise_tax_calculation_section",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 0,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9315,6 +9522,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9360,6 +9568,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9405,6 +9614,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9450,6 +9660,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 1,
@@ -9495,6 +9706,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9540,6 +9752,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9585,6 +9798,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9630,51 +9844,7 @@
   "width": null
  },
  {
-  "allow_on_submit": 0,
-  "bold": 0,
-  "collapsible": 0,
-  "collapsible_depends_on": null,
-  "columns": 0,
-  "default": null,
-  "depends_on": null,
-  "description": " ",
-  "docstatus": 0,
-  "doctype": "Custom Field",
-  "dt": "Purchase Order Item",
-  "fetch_from": null,
-  "fetch_if_empty": 0,
-  "fieldname": "facelec_po_amount_minus_excise_tax",
-  "fieldtype": "Data",
-  "hidden": 0,
-  "ignore_user_permissions": 0,
-  "ignore_xss_filter": 0,
-  "in_global_search": 0,
-  "in_list_view": 0,
-  "in_standard_filter": 0,
-  "insert_after": "col_brk_po",
-  "label": "Amount minus excise tax",
-  "length": 0,
-  "modified": "2018-02-06 20:55:31.998908",
-  "name": "Purchase Order Item-facelec_po_amount_minus_excise_tax",
-  "no_copy": 0,
-  "options": null,
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "permlevel": 0,
-  "precision": "",
-  "print_hide": 0,
-  "print_hide_if_no_value": 0,
-  "print_width": null,
-  "read_only": 1,
-  "report_hide": 0,
-  "reqd": 0,
-  "search_index": 0,
-  "translatable": 0,
-  "unique": 0,
-  "width": null
- },
- {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9720,6 +9890,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9727,25 +9898,25 @@
   "columns": 0,
   "default": null,
   "depends_on": null,
-  "description": null,
+  "description": " ",
   "docstatus": 0,
   "doctype": "Custom Field",
   "dt": "Purchase Order Item",
   "fetch_from": null,
   "fetch_if_empty": 0,
-  "fieldname": "facelec_po_sales_tax_for_this_row",
-  "fieldtype": "Currency",
+  "fieldname": "facelec_po_amount_minus_excise_tax",
+  "fieldtype": "Data",
   "hidden": 0,
   "ignore_user_permissions": 0,
   "ignore_xss_filter": 0,
   "in_global_search": 0,
   "in_list_view": 0,
   "in_standard_filter": 0,
-  "insert_after": "facelec_po_amount_minus_excise_tax",
-  "label": "Sales Tax for this Row",
+  "insert_after": "col_brk_po",
+  "label": "Amount minus excise tax",
   "length": 0,
-  "modified": "2018-02-06 21:06:25.104024",
-  "name": "Purchase Order Item-facelec_po_sales_tax_for_this_row",
+  "modified": "2018-02-06 20:55:31.998908",
+  "name": "Purchase Order Item-facelec_po_amount_minus_excise_tax",
   "no_copy": 0,
   "options": null,
   "parent": null,
@@ -9765,6 +9936,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 1,
   "bold": 0,
   "collapsible": 0,
@@ -9810,6 +9982,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9823,19 +9996,19 @@
   "dt": "Purchase Order Item",
   "fetch_from": null,
   "fetch_if_empty": 0,
-  "fieldname": "potype_of_expense_for_tax_purposes",
-  "fieldtype": "Section Break",
+  "fieldname": "facelec_po_sales_tax_for_this_row",
+  "fieldtype": "Currency",
   "hidden": 0,
   "ignore_user_permissions": 0,
   "ignore_xss_filter": 0,
   "in_global_search": 0,
   "in_list_view": 0,
   "in_standard_filter": 0,
-  "insert_after": "facelec_po_sales_tax_for_this_row",
-  "label": "Type of Expense for Tax purposes",
+  "insert_after": "facelec_po_amount_minus_excise_tax",
+  "label": "Sales Tax for this Row",
   "length": 0,
-  "modified": "2018-02-06 20:59:01.841773",
-  "name": "Purchase Order Item-potype_of_expense_for_tax_purposes",
+  "modified": "2018-02-06 21:06:25.104024",
+  "name": "Purchase Order Item-facelec_po_sales_tax_for_this_row",
   "no_copy": 0,
   "options": null,
   "parent": null,
@@ -9846,7 +10019,7 @@
   "print_hide": 0,
   "print_hide_if_no_value": 0,
   "print_width": null,
-  "read_only": 0,
+  "read_only": 1,
   "report_hide": 0,
   "reqd": 0,
   "search_index": 0,
@@ -9855,6 +10028,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 1,
   "bold": 0,
   "collapsible": 0,
@@ -9900,6 +10074,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -9913,19 +10088,19 @@
   "dt": "Purchase Order Item",
   "fetch_from": null,
   "fetch_if_empty": 0,
-  "fieldname": "facelec_po_gt_tax_net_fuel_amt",
-  "fieldtype": "Currency",
+  "fieldname": "potype_of_expense_for_tax_purposes",
+  "fieldtype": "Section Break",
   "hidden": 0,
   "ignore_user_permissions": 0,
   "ignore_xss_filter": 0,
   "in_global_search": 0,
   "in_list_view": 0,
   "in_standard_filter": 0,
-  "insert_after": "potype_of_expense_for_tax_purposes",
-  "label": "Net Fuel Amount",
+  "insert_after": "facelec_po_sales_tax_for_this_row",
+  "label": "Type of Expense for Tax purposes",
   "length": 0,
-  "modified": "2018-02-06 21:02:02.225773",
-  "name": "Purchase Order Item-facelec_po_gt_tax_net_fuel_amt",
+  "modified": "2018-02-06 20:59:01.841773",
+  "name": "Purchase Order Item-potype_of_expense_for_tax_purposes",
   "no_copy": 0,
   "options": null,
   "parent": null,
@@ -9936,7 +10111,7 @@
   "print_hide": 0,
   "print_hide_if_no_value": 0,
   "print_width": null,
-  "read_only": 1,
+  "read_only": 0,
   "report_hide": 0,
   "reqd": 0,
   "search_index": 0,
@@ -9945,6 +10120,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 1,
@@ -9990,6 +10166,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10003,7 +10180,7 @@
   "dt": "Purchase Order Item",
   "fetch_from": null,
   "fetch_if_empty": 0,
-  "fieldname": "facelec_po_gt_tax_net_goods_amt",
+  "fieldname": "facelec_po_gt_tax_net_fuel_amt",
   "fieldtype": "Currency",
   "hidden": 0,
   "ignore_user_permissions": 0,
@@ -10011,11 +10188,11 @@
   "in_global_search": 0,
   "in_list_view": 0,
   "in_standard_filter": 0,
-  "insert_after": "facelec_po_gt_tax_net_fuel_amt",
-  "label": "Net Goods Amount",
+  "insert_after": "potype_of_expense_for_tax_purposes",
+  "label": "Net Fuel Amount",
   "length": 0,
-  "modified": "2018-02-06 21:02:47.012414",
-  "name": "Purchase Order Item-facelec_po_gt_tax_net_goods_amt",
+  "modified": "2018-02-06 21:02:02.225773",
+  "name": "Purchase Order Item-facelec_po_gt_tax_net_fuel_amt",
   "no_copy": 0,
   "options": null,
   "parent": null,
@@ -10035,6 +10212,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10080,6 +10258,53 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
+  "allow_on_submit": 0,
+  "bold": 0,
+  "collapsible": 0,
+  "collapsible_depends_on": null,
+  "columns": 0,
+  "default": null,
+  "depends_on": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Purchase Order Item",
+  "fetch_from": null,
+  "fetch_if_empty": 0,
+  "fieldname": "facelec_po_gt_tax_net_goods_amt",
+  "fieldtype": "Currency",
+  "hidden": 0,
+  "ignore_user_permissions": 0,
+  "ignore_xss_filter": 0,
+  "in_global_search": 0,
+  "in_list_view": 0,
+  "in_standard_filter": 0,
+  "insert_after": "facelec_po_gt_tax_net_fuel_amt",
+  "label": "Net Goods Amount",
+  "length": 0,
+  "modified": "2018-02-06 21:02:47.012414",
+  "name": "Purchase Order Item-facelec_po_gt_tax_net_goods_amt",
+  "no_copy": 0,
+  "options": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "permlevel": 0,
+  "precision": "",
+  "print_hide": 0,
+  "print_hide_if_no_value": 0,
+  "print_width": null,
+  "read_only": 1,
+  "report_hide": 0,
+  "reqd": 0,
+  "search_index": 0,
+  "translatable": 0,
+  "unique": 0,
+  "width": null
+ },
+ {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10125,6 +10350,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10170,6 +10396,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10215,6 +10442,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10260,6 +10488,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10305,6 +10534,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 1,
@@ -10350,6 +10580,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 1,
   "bold": 0,
   "collapsible": 0,
@@ -10395,6 +10626,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10440,6 +10672,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10485,6 +10718,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10530,6 +10764,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10575,6 +10810,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10620,6 +10856,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,
@@ -10665,6 +10902,7 @@
   "width": null
  },
  {
+  "allow_in_quick_entry": 0,
   "allow_on_submit": 0,
   "bold": 0,
   "collapsible": 0,

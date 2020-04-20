@@ -19,12 +19,12 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Tipo Documento",
-   "options": "\nFACT\nFCAM\nFPEQ\nFCAP\nFESP\nNABN\nRDON\nRECI\nNDEB\nNCRE",
+   "options": "\nFACT\nFCAM\nFPEQ\nFCAP\nFESP\nNABN\nRDON\nRECI\nNDEB\nNCRE\nFACA\nFCCA\nFAPE\nFCPE\nFAAE\nFCAE",
    "reqd": 1
   }
  ],
  "istable": 1,
- "modified": "2019-09-25 18:43:07.643617",
+ "modified": "2020-04-20 13:05:51.619440",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Series FEL",

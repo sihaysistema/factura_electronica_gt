@@ -46,6 +46,7 @@
   "url_firma",
   "url_dte",
   "llave_ws",
+  "afiliacion_iva",
   "configuracion_series_fel_section",
   "series_fel",
   "configuracion_correo_electronico_section",
@@ -81,10 +82,10 @@
    "reqd": 1
   },
   {
-   "depends_on": "eval:doc.regimen === 'GFACE';",
+   "depends_on": "eval:(doc.regimen === 'GFACE')",
    "fieldname": "datos_proveedor_factura_electronica",
    "fieldtype": "Section Break",
-   "label": "DATOS PROVEEDOR FACTURA ELECTRONICA GFACE"
+   "label": "DATOS PROVEEDOR FACTURA ELECTRONICA"
   },
   {
    "fieldname": "clave",
@@ -223,6 +224,7 @@
    "reqd": 1
   },
   {
+   "collapsible_depends_on": "eval: doc.regimen === 'FEL';",
    "depends_on": "eval:doc.regimen === 'FEL';",
    "fieldname": "datos_fel_section",
    "fieldtype": "Section Break",
@@ -318,11 +320,18 @@
    "fieldtype": "Link",
    "label": "Company",
    "options": "Company"
+  },
+  {
+   "description": "De acuerdo al R\u00e9gimen que\ntenga registrado el contribuyente, se refiere a que puede ser General/Exento o Peque\u00f1o Contribuyente.",
+   "fieldname": "afiliacion_iva",
+   "fieldtype": "Select",
+   "label": "Afiliacion IVA",
+   "options": "\nGEN\nEXE\nPEQ"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2019-11-27 15:01:07.829033",
+ "modified": "2020-04-20 15:24:37.115463",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

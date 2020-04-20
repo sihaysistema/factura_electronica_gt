@@ -12,12 +12,15 @@ import datetime
 
 class FacturaElectronicaFEL:
     def __init__(self, serie, cliente, conf_name, series_conf):
-        '''Constructor de la clase.
-
-         serie: serie original factura
-         cliente: Nombre cliente o serie
-         conf_name: Nombre configuracion valida facelec
-         series_conf: Serie a utilizar para factura electronica'''
+        """
+        Constructor de la clase
+        
+        Args:
+            serie (str): serie original de la factura
+            cliente (str): nombre de cliente o serie
+            conf_name (str): nombre configuracion valida facelec
+            series_conf (str): serie a utilizar para generar factura electronica
+        """
 
         self.d_general = {}
         self.d_emisor = {}
@@ -35,7 +38,15 @@ class FacturaElectronicaFEL:
         self.__errores_facelec = []
 
     def generar_facelec(self):
-        '''Funcion principal de la clase'''
+        """
+        Funcion principal para generar facturas electronicas, valida la data
+        disponible, si todo esta bien procede a generar xml para ser firmado
+        y finalmente generar la factura electronica registrandola en la base de datos
+        
+        Returns:
+            dict: mensaje de status de lo procesado
+        """
+
         base_msj = {
             "status": "ERROR",
             "detalle_errores_facelec": [],
@@ -86,7 +97,7 @@ class FacturaElectronicaFEL:
             f.write(xmlString)
         # ------------------------
 
-        # To base64
+        # To base64: Convierte a base64
         encodedBytes = base64.b64encode(xmlString.encode("utf-8"))
         encodedStr = str(encodedBytes, "utf-8")
         # Usar solo para debug ---
@@ -158,8 +169,13 @@ class FacturaElectronicaFEL:
             }
 
     def validador_data(self):
-        '''Funcion encargada de validar la data que construye la peticion a INFILE,
-           Si existe por lo menos un error retornara la descripcion'''
+        """
+        Funcion encargada de validar la data que construye la peticion a INFILE,
+        Si existe por lo menos un error retornara la descripcion con dicho error
+
+        Returns:
+            [type]: [description]
+        """
 
         # Validacion y generacion seccion datos generales
         estado_dg = self.datos_generales()
@@ -194,12 +210,18 @@ class FacturaElectronicaFEL:
         return True
 
     def datos_generales(self):
-        '''Funcion encargada de obtener la data necesaria para la seccion general'''
+        """
+        Funcion encargada de obtener la data necesaria para la seccion general
+
+        Returns:
+            str/bool: mensaje con descripcion encaso error, True si todo va bien
+        """
+
         try:
             self.d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'currency'),
                 "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@Tipo": 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
+                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.nombre_config}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
             }
         except:
             return 'Error en obtener data para datos generales: '+str(frappe.get_traceback())
@@ -207,7 +229,13 @@ class FacturaElectronicaFEL:
             return True
 
     def emisor(self):
-        '''Funcion encargada de obtener y asignar data del Emisor/Company'''
+        """
+        Funcion encargada de obtener y asignar data del Emisor/Company
+        
+        Returns:
+            str: Descripcion con el status de la trasaccion
+        """ 
+
         try:
             # Obtencion data de EMISOR
             dat_fac = frappe.db.get_values('Sales Invoice',
@@ -238,9 +266,10 @@ class FacturaElectronicaFEL:
 
             # Asignacion data
             self.d_emisor = {
-                "@AfiliacionIVA": "GEN", # TODO: Que otra afilicaciones existen?
+                "@AfiliacionIVA": frappe.db.get_value('Configuracion Factura Electronica',
+                                                      {'name': self.nombre_config}, 'afiliacion_iva'),
                 "@CodigoEstablecimiento": frappe.db.get_value('Configuracion Factura Electronica',
-                                                            {'name': self.nombre_config}, 'codigo_establecimiento'),  #"1",
+                                                             {'name': self.nombre_config}, 'codigo_establecimiento'),  #"1",
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
                 "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', ''),
                 "@NombreComercial": dat_compania[0]['company_name'],
@@ -259,7 +288,13 @@ class FacturaElectronicaFEL:
             return True
 
     def receptor(self):
-        '''Funcion encargada de obtener y asignar data del Receptor/Cliente'''
+        """
+        Funcion encargada de obtener y asignar data del Receptor/Cliente
+        
+        Returns:
+            str: mensaje status de la transaccion
+        """
+
         try:
             # Obtencion data de RECEPTOR/CLIENTE
             dat_fac = frappe.db.get_values('Sales Invoice',
