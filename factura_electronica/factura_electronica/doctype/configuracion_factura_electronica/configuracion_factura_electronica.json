@@ -41,6 +41,7 @@
   "codigo",
   "es_anulacion",
   "tipo_frase",
+  "codigo_escenario",
   "column_break_32",
   "alias",
   "url_firma",
@@ -327,11 +328,17 @@
    "fieldtype": "Select",
    "label": "Afiliacion IVA",
    "options": "\nGEN\nEXE\nPEQ"
+  },
+  {
+   "fieldname": "codigo_escenario",
+   "fieldtype": "Int",
+   "label": "Codigo Escenario",
+   "reqd": 1
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-04-20 15:24:37.115463",
+ "modified": "2020-04-20 23:20:57.923410",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

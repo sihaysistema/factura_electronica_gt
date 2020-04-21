@@ -351,15 +351,28 @@ class FacturaElectronicaFEL:
             return True
 
     def frases(self):
-        # TODO: Consultar todas las posibles combinaciones disponibles
-        self.d_frases = {
-            "dte:Frase": {
-                "@CodigoEscenario": "1",
-                "@TipoFrase": "1"
-            }
-        }
+        """
+        debe indicarse los regímenes y textos especiales que son requeridos en los DTE,
+        de acuerdo a la afiliación del contribuyente y tipo de operación.
+        
+        Returns:
+            boolean: True/False
+        """
 
-        return True
+        try:
+            # TODO: Consultar todas las posibles combinaciones disponibles
+            self.d_frases = {
+                "dte:Frase": {
+                    "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
+                                                           {'name': self.nombre_config}, 'codigo_escenario'), #"1",
+                    "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
+                                                     {'name': self.nombre_config}, 'tipo_frase')[:1]  # "1"
+                }
+            }
+        except:
+            return 'Error, no se puedo obtener valor de Codigo Escenario y Tipo Frase'
+        else:
+            return True
 
     def items(self):
         '''Funcion encargada de asignar correctamente los items'''
