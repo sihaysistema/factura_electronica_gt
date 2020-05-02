@@ -41,7 +41,7 @@
   "reqd": 0,
   "search_index": 0,
   "translatable": 0,
-  "unique": 1,
+  "unique": 0,
   "width": null
  },
  {
@@ -86,7 +86,7 @@
   "reqd": 0,
   "search_index": 0,
   "translatable": 0,
-  "unique": 1,
+  "unique": 0,
   "width": null
  },
  {
@@ -131,7 +131,7 @@
   "reqd": 0,
   "search_index": 0,
   "translatable": 0,
-  "unique": 1,
+  "unique": 0,
   "width": null
  },
  {
@@ -176,7 +176,7 @@
   "reqd": 0,
   "search_index": 0,
   "translatable": 0,
-  "unique": 1,
+  "unique": 0,
   "width": null
  },
  {
@@ -221,7 +221,7 @@
   "reqd": 0,
   "search_index": 0,
   "translatable": 0,
-  "unique": 1,
+  "unique": 0,
   "width": null
  },
  {
