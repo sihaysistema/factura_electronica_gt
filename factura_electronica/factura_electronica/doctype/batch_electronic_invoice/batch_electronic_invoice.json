@@ -6,7 +6,10 @@
  "engine": "InnoDB",
  "field_order": [
   "company",
-  "amended_from"
+  "posting_date",
+  "amended_from",
+  "invoices_section",
+  "invoices"
  ],
  "fields": [
   {
@@ -23,10 +26,26 @@
    "options": "Batch Electronic Invoice",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "invoices_section",
+   "fieldtype": "Section Break",
+   "label": "Invoices"
+  },
+  {
+   "fieldname": "invoices",
+   "fieldtype": "Table",
+   "label": "Invoices",
+   "options": "Batch Invoices"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-05-21 11:11:32.416463",
+ "modified": "2020-05-21 11:43:41.830495",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Batch Electronic Invoice",
