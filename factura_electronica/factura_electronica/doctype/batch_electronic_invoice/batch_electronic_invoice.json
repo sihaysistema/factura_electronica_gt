@@ -5,18 +5,17 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "company",
   "posting_date",
-  "amended_from",
+  "validate_invoices",
   "invoices_section",
-  "invoices"
+  "batch_invoices",
+  "amended_from"
  ],
  "fields": [
   {
-   "fieldname": "company",
-   "fieldtype": "Link",
-   "label": "Company",
-   "options": "Company"
+   "fieldname": "validate_invoices",
+   "fieldtype": "Button",
+   "label": "Validate Invoices"
   },
   {
    "fieldname": "amended_from",
@@ -33,19 +32,20 @@
    "label": "Posting Date"
   },
   {
+   "collapsible": 1,
    "fieldname": "invoices_section",
    "fieldtype": "Section Break",
    "label": "Invoices"
   },
   {
-   "fieldname": "invoices",
+   "fieldname": "batch_invoices",
    "fieldtype": "Table",
-   "label": "Invoices",
+   "label": "Batch Invoices",
    "options": "Batch Invoices"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-05-21 11:43:41.830495",
+ "modified": "2020-05-21 12:35:19.652429",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Batch Electronic Invoice",
@@ -59,7 +59,7 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "System Manager",
+   "role": "Administrator",
    "share": 1,
    "write": 1
   },
@@ -71,7 +71,7 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Administrator",
+   "role": "System Manager",
    "share": 1,
    "write": 1
   }
