@@ -19,7 +19,7 @@ from factura_electronica.utils.fel_generator import FacturaElectronicaFEL
 
 
 def peticion_factura_electronica(datos_xml, url_servicio):
-    '''Realiza la peticion al webservice SOAP de INFILE
+    '''Realiza la peticion al webservice SOAP de INFILE GFACE
 
        Parametros:
        -----------
@@ -174,7 +174,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
 
                 else:
                     frappe.msgprint(_('''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
-                                        Por favor configura la serie <b>{0}</b> en 
+                                        Por favor configura la serie <b>{0}</b> en
                                         <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>
                                         e intenta de nuevo.
                                     '''.format(prefijo_serie)))
@@ -207,7 +207,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
 
                 else:
                     frappe.msgprint(_('''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
-                                        Por favor configura la serie <b>{0}</b> en 
+                                        Por favor configura la serie <b>{0}</b> en
                                         <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>
                                         e intenta de nuevo.
                                     '''.format(prefijo_serie)))
@@ -218,7 +218,7 @@ def generar_factura_electronica(serie_factura, nombre_cliente, pre_se):
                              <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>'''))
 
     elif validar_config[0] == 3:
-        frappe.msgprint(_('''No se encontró una configuración válida. Verifique que exista una configuración validada en 
+        frappe.msgprint(_('''No se encontró una configuración válida. Verifique que exista una configuración validada en
                              <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>'''))
 
 
@@ -253,7 +253,7 @@ def obtenerConfiguracionManualAutomatica():
 @frappe.whitelist()
 def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
     '''Descarga factura en servidor y registra en base de datos
-    
+
     Parametros:
     ----------
     * nombre_archivo (str) : Nombre que describe el archivo
@@ -321,7 +321,7 @@ def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
 @frappe.whitelist()
 def get_data_tax_account(name_account_tax_gt):
     '''Funcion para obtener los datos de impuestos dependiendo el tipo de cuenta recibido
-    
+
        Parametros:
        ----------
        * name_account_tax_gt (str) : Nombre de la cuenta
@@ -339,7 +339,7 @@ def get_data_tax_account(name_account_tax_gt):
 @frappe.whitelist()
 def obtener_numero_resolucion(nombre_serie):
     '''Retorna el numero de resolucion en base la serie de Configuracion Electronica
-    
+
     Parametros:
     ----------
     * nombre_serie (str) : Nombre de la serie para filtrar
@@ -354,7 +354,7 @@ def obtener_numero_resolucion(nombre_serie):
 @frappe.whitelist()
 def generar_tabla_html(tabla):
     """Funcion para generar tabla html + jinja, para mostrar impuestos por cada item
-    
+
     Parametros:
     ----------
     * tabla (json) : Json con la data que desibe los impuestos
@@ -733,7 +733,7 @@ def facelec_api(serie_factura, nombre_cliente, pre_se):
 
                 # else:
                 #     return '''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
-                #                         Por favor configura la serie <b>{0}</b> en 
+                #                         Por favor configura la serie <b>{0}</b> en
                 #                         <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>
                 #                         e intenta de nuevo.
                 #                     '''.format(prefijo_serie)
@@ -777,7 +777,7 @@ def facelec_api(serie_factura, nombre_cliente, pre_se):
                         }
                 else:
                     # return False, '''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
-                    #         Por favor configura la serie <b>{0}</b> en 
+                    #         Por favor configura la serie <b>{0}</b> en
                     #         <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>
                     #         e intenta de nuevo.
                     #     '''.format(prefijo_serie)
@@ -785,7 +785,7 @@ def facelec_api(serie_factura, nombre_cliente, pre_se):
                         "status": "ERROR",
                         "cantidad_errores": 1,
                         "detalle_errores_facelec": ['''La serie utilizada en esta factura no esta configurada para Facturas Electronicas.
-                            Por favor configura la serie <b>{0}</b> en 
+                            Por favor configura la serie <b>{0}</b> en
                             <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>
                             e intenta de nuevo.
                         '''.format(prefijo_serie)],
@@ -806,7 +806,7 @@ def facelec_api(serie_factura, nombre_cliente, pre_se):
         return {
             "status": "ERROR",
             "cantidad_errores": 1,
-            "detalle_errores_facelec": ['''No se encontró una configuración válida. Verifique que exista una configuración validada en 
+            "detalle_errores_facelec": ['''No se encontró una configuración válida. Verifique que exista una configuración validada en
                              <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>'''],
             "uuid": ""
         }
@@ -819,7 +819,7 @@ def enviar_correo(nombre):
     try:
         make(doctype="Sales Invoice", name=nombre, subject="Factura Electronica", content=msg, recipients=['m.monroyc22@gmail.com'],
             send_email=True, sender="erp.sihaysistema@gmail.com")
-        
+
         msg = """Email send successfully to Employee"""
         frappe.msgprint(msg)
     except:
