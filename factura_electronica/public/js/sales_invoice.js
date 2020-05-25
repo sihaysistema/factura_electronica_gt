@@ -50,10 +50,13 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
             // We calculate the total amount of excise or special tax based on the stock quantity and tax rate per uom variables above.
             this_row_tax_amount = (item_row.stock_qty * item_row.facelec_tax_rate_per_uom);
             // We then estimate the remainder taxable amount for which Other ERPNext configured taxes will apply.
-            this_row_taxable_amount = (item_row.amount - (item_row.stock_qty * item_row.facelec_tax_rate_per_uom));
+            this_row_taxable_amount = (item_row.amount - (item_row.stock_qty * item_row
+                .facelec_tax_rate_per_uom));
             // We change the fields for other tax amount as per the complete row taxable amount.
-            frm.doc.items[index].facelec_other_tax_amount = ((item_row.facelec_tax_rate_per_uom * (item_row.qty * item_row.conversion_factor)));
-            frm.doc.items[index].facelec_amount_minus_excise_tax = ((item_row.qty * item_row.rate) - (item_row.stock_qty * item_row.facelec_tax_rate_per_uom));
+            frm.doc.items[index].facelec_other_tax_amount = ((item_row.facelec_tax_rate_per_uom * (
+                item_row.qty * item_row.conversion_factor)));
+            frm.doc.items[index].facelec_amount_minus_excise_tax = ((item_row.qty * item_row.rate) - (
+                item_row.stock_qty * item_row.facelec_tax_rate_per_uom));
             // We refresh the items to recalculate everything to ensure proper math
             frm.refresh_field("items");
             //console.log(item_row.qty + " " + item_row.uom + "es/son igual/es a " + item_row.stock_qty + " " + item_row.stock_uom);
@@ -66,8 +69,10 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
 
             // Verificacion Individual para verificar si es Fuel, Good o Service
             if (item_row.factelecis_fuel) {
-                frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
+                frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row
+                    .facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row
+                    .facelec_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 /*
 				var total_fuel = 0;
@@ -84,8 +89,10 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                 */
             };
             if (item_row.facelec_is_good) {
-                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
+                frm.doc.items[index].facelec_gt_tax_net_goods_amt = (item_row
+                    .facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row
+                    .facelec_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check bienes
                 /*
                 var total_goods = 0;
@@ -106,8 +113,10 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                 // Estimamos el valor del IVA para esta linea
                 //frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_amount_minus_excise_tax * (this_company_sales_tax_var / 100)).toFixed(2);
                 //frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax - item_row.facelec_sales_tax_for_this_row).toFixed(2);
-                frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row.facelec_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
+                frm.doc.items[index].facelec_gt_tax_net_services_amt = (item_row
+                    .facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                frm.doc.items[index].facelec_sales_tax_for_this_row = (item_row
+                    .facelec_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
                 /*
                 var total_servi = 0;
                 $.each(frm.doc.items || [], function (i, d) {
@@ -160,13 +169,15 @@ function each_item(frm, cdt, cdn) {
         var tax_before_calc = frm.doc.facelec_total_iva;
         //console.log("El descuento total es:" + frm.doc.discount_amount);
         //console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
-        var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+        var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate /
+            100)));
         if (typeof (cur_frm.doc.taxes[0].rate) == "NaN") {
             //console.log("No hay descuento definido, calculando sin descuento.");
         } else {
             //console.log("El descuento parece ser un numero definido, calculando con descuento.");
             //console.log("El neto sin iva del descuento es" + discount_amount_net_value);
-            var discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+            var discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate /
+                100));
             //console.log("El IVA del descuento es:" + discount_amount_tax_value);
             frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
             //console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
@@ -220,7 +231,8 @@ function sumar_otros_impuestos_shs(frm, cdt, cdn) {
             if (item_row_1.facelec_tax_rate_per_uom_account) {
                 if (frm.doc.shs_otros_impuestos !== undefined) {
                     frm.doc.shs_otros_impuestos.forEach((tax_row_2, index_2) => {
-                        if (tax_row_2.account_head === item_row_1.facelec_tax_rate_per_uom_account) {
+                        if (tax_row_2.account_head === item_row_1
+                            .facelec_tax_rate_per_uom_account) {
                             var totalizador = 0;
                             totalizador = facelec_add_taxes(frm, tax_row_2.account_head)
                             cur_frm.doc.shs_otros_impuestos[index_2].total = totalizador;
@@ -297,7 +309,8 @@ function facelec_otros_impuestos_fila(frm, cdt, cdn) {
                     // var fila_nueva = cur_frm.add_child("shs_otros_impuestos");
                     // var fila_nueva = frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica", "shs_otros_impuestos");
                     // Crea una nueva fila vacia en la tabla hija shs_otros_impuestos
-                    frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica", "shs_otros_impuestos");
+                    frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica",
+                        "shs_otros_impuestos");
 
                     // Refresh datos de la tabla hija items
                     cur_frm.refresh_field('items');
@@ -360,7 +373,8 @@ function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
                         if (!tax_row.total) {
                             // console.log('SE ELIMINARA LA FILA ---------------->');
                             // Elimina la fila con valor 0
-                            cur_frm.doc.shs_otros_impuestos.splice(cur_frm.doc.shs_otros_impuestos[i2], 1);
+                            cur_frm.doc.shs_otros_impuestos.splice(cur_frm.doc
+                                .shs_otros_impuestos[i2], 1);
                             cur_frm.refresh_field("shs_otros_impuestos");
                         }
                     }
@@ -405,7 +419,8 @@ function pdf_button_fel(cae_documento, frm) {
     // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
     frm.add_custom_button(__("VER PDF FACTURA ELECTRONICA"),
         function () {
-            window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" + cae_documento);
+            window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
+                cae_documento);
         }).addClass("btn-primary");
 }
 /*
@@ -508,7 +523,8 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
     // FACTURAS FACE, CFACE
     // Este codigo entra en funcionamiento cuando la generacion automatica de la factura no es exitosa.
     // esto permite volver intentarlo hasta obtener el cae de la factura en que se estre trabajando.
-    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc
+        .status === "Overdue") {
         // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
         // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
         if (frm.doc.cae_factura_electronica) {
@@ -554,7 +570,8 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
 
     // Codigo para notas de debito
     // Codigo para Notas de Credito NDE
-    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue") {
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc
+        .status === "Overdue") {
         //var nombre = 'Nota Debito';
         if (frm.doc.es_nota_de_debito) {
             cur_frm.clear_custom_buttons('Factura Electronica');
@@ -623,13 +640,15 @@ frappe.ui.form.on("Sales Invoice", {
         // FIXME FIXME FIXME
         // Objetivo, cuando se salga del campo mediante TAB, que quede registrado el producto.
         // estrategia 1:  Focus al campo de quantity?  NO SIRVE.  Como que hay OTRO campo antes, quizas la flechita de link?
-        frm.fields_dict.items.grid.wrapper.on('focusout blur', 'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]', function (e) {
-            //console.log("Clicked on the field Item Code");
+        frm.fields_dict.items.grid.wrapper.on('focusout blur',
+            'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Clicked on the field Item Code");
 
-            each_item(frm, cdt, cdn);
-            facelec_tax_calc_new(frm, cdt, cdn);
-            // facelec_otros_impuestos_fila(frm, cdt, cdn);
-        });
+                each_item(frm, cdt, cdn);
+                facelec_tax_calc_new(frm, cdt, cdn);
+                // facelec_otros_impuestos_fila(frm, cdt, cdn);
+            });
 
         // FIXME NO FUNCIONA CON TAB, SOLO HACIENDO CLICK Y ENTER.  Si se presiona TAB, SE BORRA!
         /*frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]', function(e) {
@@ -637,63 +656,81 @@ frappe.ui.form.on("Sales Invoice", {
         	each_item(frm, cdt, cdn);
         	//facelec_tax_calc_new(frm, cdt, cdn);
         });*/
-        frm.fields_dict.items.grid.wrapper.on('click', 'input[data-fieldname="uom"][data-doctype="Sales Invoice Item"]', function (e) {
-            //console.log("Click on the UOM field");
-            each_item(frm, cdt, cdn);
-        });
-        frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="uom"][data-doctype="Sales Invoice Item"]', function (e) {
-            //console.log("Blur or focusout from the UOM field");
-            each_item(frm, cdt, cdn);
-        });
+        frm.fields_dict.items.grid.wrapper.on('click',
+            'input[data-fieldname="uom"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Click on the UOM field");
+                each_item(frm, cdt, cdn);
+            });
+        frm.fields_dict.items.grid.wrapper.on('blur focusout',
+            'input[data-fieldname="uom"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Blur or focusout from the UOM field");
+                each_item(frm, cdt, cdn);
+            });
         // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="uom"][data-doctype="Sales Invoice Item"]', function (e) {
-            //console.log("Mouse left the UOM field");
-            facelec_tax_calc_new(frm, cdt, cdn);
-        });
+        frm.fields_dict.items.grid.wrapper.on('blur',
+            'input[data-fieldname="uom"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Mouse left the UOM field");
+                facelec_tax_calc_new(frm, cdt, cdn);
+            });
         // This part might seem counterintuitive, but it is the "next" field in tab order after item code, which helps for a "creative" strategy to update everything after pressing TAB out of the item code field.  FIXME
-        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="item_name"][data-doctype="Sales Invoice Item"]', function (e) {
-            //console.log("Focusing with keyboard cursor through TAB on the Item Name Field");
-            each_item(frm, cdt, cdn);
-            facelec_otros_impuestos_fila(frm, cdt, cdn);
-        });
-        frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="qty"][data-doctype="Sales Invoice Item"]', function (e) {
-            //console.log("Blurring or focusing out from the Quantity Field");
-            each_item(frm, cdt, cdn);
-        });
+        frm.fields_dict.items.grid.wrapper.on('blur',
+            'input[data-fieldname="item_name"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Focusing with keyboard cursor through TAB on the Item Name Field");
+                each_item(frm, cdt, cdn);
+                facelec_otros_impuestos_fila(frm, cdt, cdn);
+            });
+        frm.fields_dict.items.grid.wrapper.on('blur focusout',
+            'input[data-fieldname="qty"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Blurring or focusing out from the Quantity Field");
+                each_item(frm, cdt, cdn);
+            });
         // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="qty"][data-doctype="Sales Invoice Item"]', function (e) {
-            //console.log("Mouse leaving from the Quantity Field");
-            each_item(frm, cdt, cdn);
-            facelec_tax_calc_new(frm, cdt, cdn);
-        });
+        frm.fields_dict.items.grid.wrapper.on('blur',
+            'input[data-fieldname="qty"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Mouse leaving from the Quantity Field");
+                each_item(frm, cdt, cdn);
+                facelec_tax_calc_new(frm, cdt, cdn);
+            });
         // DO NOT USE Keyup, ??  FIXME FIXME FIXME FIXME FIXME  este hace calculos bien
-        frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Invoice Item"]', function (e) {
-            //console.log("Blurring or focusing out from the Conversion Factor Field");
-            //  IMPORTANT! IMPORTANT!  This is the one that gets the calculations correct!
-            // Trying to calc first, then refresh, or no refresh at all...
-            each_item(frm, cdt, cdn);
-            cur_frm.refresh_field("conversion_factor");
-            //facelec_tax_calc_new(frm, cdt, cdn);
-            //setTimeout(function() { facelec_tax_calc_new(frm, cdt, cdn); }, 100);
-            // Running it twice, does not help to clear the variables our when calculating based on new conversion factor. It lags. FIXME
-            //fields_dict.items.wrapper.innerText or FIXME
-            //fields_dict.items.$wrapper.innerText FIXME
-            // find a way to realod this wrapper once more, so that proper data is set with innerHTML. FIXME
-            //setTimeout(function() { facelec_tax_calc_new(frm, cdt, cdn) }, 100);
-        });
+        frm.fields_dict.items.grid.wrapper.on('blur focusout',
+            'input[data-fieldname="conversion_factor"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Blurring or focusing out from the Conversion Factor Field");
+                //  IMPORTANT! IMPORTANT!  This is the one that gets the calculations correct!
+                // Trying to calc first, then refresh, or no refresh at all...
+                each_item(frm, cdt, cdn);
+                cur_frm.refresh_field("conversion_factor");
+                //facelec_tax_calc_new(frm, cdt, cdn);
+                //setTimeout(function() { facelec_tax_calc_new(frm, cdt, cdn); }, 100);
+                // Running it twice, does not help to clear the variables our when calculating based on new conversion factor. It lags. FIXME
+                //fields_dict.items.wrapper.innerText or FIXME
+                //fields_dict.items.$wrapper.innerText FIXME
+                // find a way to realod this wrapper once more, so that proper data is set with innerHTML. FIXME
+                //setTimeout(function() { facelec_tax_calc_new(frm, cdt, cdn) }, 100);
+            });
         // This specific one is only for keyup events, to recalculate all. Only on blur will it refresh everything!
         // Do not refresh with each_item in Mouse leave OR keyup! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('blur focusout', 'input[data-fieldname="conversion_factor"][data-doctype="Sales Invoice Item"]', function (e) {
-            //console.log("Key up, mouse leave or focus out from the Conversion Factor Field");
-            // Trying to calc first, then refresh, or no refresh at all...
-            facelec_tax_calc_new(frm, cdt, cdn);
-            each_item(frm, cdt, cdn);
-            cur_frm.refresh_field("conversion_factor");
-        });
-        frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="rate"][data-doctype="Sales Invoice Item"]', function (e) {
-            //console.log("Blurring from the Rate Field");
-            // each_item(frm, cdt, cdn);
-        });
+        frm.fields_dict.items.grid.wrapper.on('blur focusout',
+            'input[data-fieldname="conversion_factor"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Key up, mouse leave or focus out from the Conversion Factor Field");
+                // Trying to calc first, then refresh, or no refresh at all...
+                facelec_tax_calc_new(frm, cdt, cdn);
+                each_item(frm, cdt, cdn);
+                cur_frm.refresh_field("conversion_factor");
+            });
+        frm.fields_dict.items.grid.wrapper.on('blur',
+            'input[data-fieldname="rate"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Blurring from the Rate Field");
+                // each_item(frm, cdt, cdn);
+            });
         // en-US: Enabling event listeners in the main doctype
         // es-GT: Habilitando escuchadores de eventos en el tipo de documento principal
         // When ANY key is released after being pressed
@@ -760,6 +797,8 @@ frappe.ui.form.on("Sales Invoice", {
         } else {
             cur_frm.set_df_property("naming_series", "read_only", 0);
         }
+
+        prueba(frm)
     },
     validate: function (frm) {
         generar_tabla_html(frm);
@@ -777,13 +816,15 @@ frappe.ui.form.on("Sales Invoice", {
         //console.log("El descuento total es:" + frm.doc.discount_amount);
         // es-GT: Este muestra el IVA que se calculo por medio de nuestra aplicación.
         //console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
-        var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+        var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0]
+            .rate / 100)));
 
         if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) {
             //console.log("No hay descuento definido, calculando sin descuento.");
         } else {
             //console.log("El descuento parece ser un numero definido, calculando con descuento.");
-            var discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+            var discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0]
+                .rate / 100));
             //console.log("El IVA del descuento es:" + discount_amount_tax_value);
             frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
             //console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
@@ -849,7 +890,8 @@ frappe.ui.form.on("Sales Invoice", {
                             if (data.message === 'Automatico') {
                                 //console.log('Configuracion encontrada: AUTOMATICO');
                                 // generarFacturaSINBTN(frm, cdt, cdn);
-                                verificacionCAE('automatico', frm, cdt, cdn);
+                                verificacionCAE('automatico', frm, cdt,
+                                    cdn);
                             }
                         }
                     });
@@ -892,7 +934,8 @@ frappe.ui.form.on("Sales Invoice", {
                 if (numero_resolucion.message === undefined) {
                     // cur_frm.set_value('shs_numero_resolucion', '');
                 } else {
-                    cur_frm.set_value('shs_numero_resolucion', numero_resolucion.message);
+                    cur_frm.set_value('shs_numero_resolucion', numero_resolucion
+                        .message);
                 }
             }
         });
@@ -954,7 +997,8 @@ frappe.ui.form.on("Sales Invoice Item", {
         frm.doc.items.forEach((item_row_1, index_1) => {
             if (item_row_1.name == cdn) {
                 // console.log('La Fila a Eliminar es --------------> ' + item_row_1.item_code);
-                totalizar_valores(frm, cdn, item_row_1.facelec_tax_rate_per_uom_account, item_row_1.facelec_other_tax_amount)
+                totalizar_valores(frm, cdn, item_row_1.facelec_tax_rate_per_uom_account,
+                    item_row_1.facelec_other_tax_amount)
                 // facelec_tax_calc_new(frm, cdt, cdn);
             }
         });
@@ -1041,4 +1085,21 @@ function calculo_redondeo_pi(a, b) {
 
 function redondear(value, decimals) {
     return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+}
+
+
+function prueba(frm) {
+    frm.add_custom_button(__('test'), function () {
+
+        frappe.call({
+            method: "factura_electronica.fel_api.generate_electronic_invoice",
+            args: {
+                invoice_code: frm.doc.name
+            },
+            // El callback recibe como parametro el dato retornado por el script python del lado del servidor
+            callback: function (data) {
+                console.log(data.message);
+            }
+        });
+    }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
 }

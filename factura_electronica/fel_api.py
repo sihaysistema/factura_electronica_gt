@@ -41,14 +41,17 @@ def generate_electronic_invoice(invoice_code):
         # PASO 3: Creacion Factura Electronica
         # Creamos instancia
         new_invoice = ElectronicInvoice(invoice_code, status_config[1])
+        status = new_invoice.build_invoice()
+
+        frappe.msgprint(_(str(status)))
         # Validamos exista la data necesaria para generar facelec
-        new_invoice.validate()
-        # Construimos la peticion base
-        new_invoice.build()
-        # Firmamos y validamos la factura con INFILE
-        new_invoice.sign_invoice()
-        # Solicitamos Factura electronica, guardarmos y actualizamos registros
-        new_invoice.request_electronic_invoice()
+        # new_invoice.validate()
+        # # Construimos la peticion base
+        # new_invoice.build()
+        # # Firmamos y validamos la factura con INFILE
+        # new_invoice.sign_invoice()
+        # # Solicitamos Factura electronica, guardarmos y actualizamos registros
+        # new_invoice.request_electronic_invoice()
 
     except:
         pass
