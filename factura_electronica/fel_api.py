@@ -42,7 +42,7 @@ def generate_electronic_invoice(invoice_code):
         # Creamos instancia
         new_invoice = ElectronicInvoice(invoice_code, status_config[1])
         # Validamos exista la data necesaria para generar facelec
-        new_invoice.validator()
+        new_invoice.validate()
         # Construimos la peticion base
         new_invoice.build()
         # Firmamos y validamos la factura con INFILE
