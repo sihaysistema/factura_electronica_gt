@@ -6,7 +6,7 @@ import frappe
 from frappe import _
 # import datetime
 # import json
-
+import timeit
 from factura_electronica.fel.fel import ElectronicInvoice
 
 
@@ -24,7 +24,7 @@ def api_connector():
 
 @frappe.whitelist()
 def generate_electronic_invoice(invoice_code):
-
+    # start = timeit.timeit()
     try:
         # PASO 1: validamos que exista una configuracion valida para generar facturas electronicas
         status_config = validate_configuration()
@@ -39,24 +39,29 @@ def generate_electronic_invoice(invoice_code):
             return False, f'La factura se encuentra como ya generada, puedes validar los detalles en Envio FEL, con codigo UUID {status_invoice[1]}'
 
         # PASO 3: Creacion Factura Electronica
-        # Creamos instancia
+        # Creamos instancia: Valida todas las dependencias para crear el XML para factura electronica
         new_invoice = ElectronicInvoice(invoice_code, status_config[1])
         status = new_invoice.build_invoice()
 
-        frappe.msgprint(_(str(status)))
-        # Validamos exista la data necesaria para generar facelec
-        # new_invoice.validate()
-        # # Construimos la peticion base
-        # new_invoice.build()
-        # # Firmamos y validamos la factura con INFILE
-        # new_invoice.sign_invoice()
-        # # Solicitamos Factura electronica, guardarmos y actualizamos registros
-        # new_invoice.request_electronic_invoice()
+        # PASO 4: Conversion de JSON a XML, firmamos el documento y procesamos las respuestas
+        if status[0] == True:
+            status_firma = new_invoice.sign_invoice()
+            # Guardamos la respuesta en un archivo
+            if status_firma[0] == True:
+                with open('reciibo.txt', 'w') as f:
+                    f.write(str(status_firma[1]))
 
+                frappe.msgprint(_('Completado'))
+            else:
+                frappe.msgprint(_(f'NO: {status_firma[1]}'))
+        else:
+            frappe.msgprint(_(f'No: {status[1]}'))
+        # end = timeit.timeit()
+        # tiempo_ejecucion = start - end
+
+        # frappe.msgprint(_(f'Ejecutado en: {tiempo_ejecucion}'))
     except:
-        pass
-    else:
-        pass
+        return False, str(frappe.get_traceback())
 
 
 def validate_configuration():

@@ -398,34 +398,62 @@ class ElectronicInvoice:
         except:
             return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
+    def sign_invoice(self):
+        '''Funcion encargada de solicitar firma para archivo XML '''
 
-    # def sign_invoice(self):
-    #     '''Funcion encargada de solicitar firma para archivo XML '''
-    #     try:
-    #         url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
-    #                                   'url_firma')
-    #         codigo = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
-    #                                      'codigo')
-    #         alias = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
-    #                                     'alias')
-    #         anulacion = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
-    #                                         'es_anulacion')
-    #         llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
-    #                                     'llave_pfx')
-    #         reqfel = {
-    #             "llave": llave, # LLAVE
-    #             "archivo": str(encodata),  # En base64
-    #             # "codigo": codigo, # Número interno de cada transacción
-    #             "alias":  alias, # USUARIO
-    #             "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
-    #         }
+        try:
+            # To XML: Convierte de JSON a XML indentado
+            self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
+            # Usar solo para debug
+            with open('mi_factura.xml', 'w') as f:
+                f.write(self.__xml_string)
 
-    #         headers = {"content-type": "application/json"}
-    #         response = requests.post(url, data=json.dumps(reqfel), headers=headers)
-    #     except:
-    #         return False, 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
-    #     else:
-    #         return True, (response.content).decode('utf-8')
+        except:
+            return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
+
+        try:
+            # To base64: Convierte a base64, para enviarlo en la peticion
+            self.__encoded_bytes = base64.b64encode(self.__xml_string.encode("utf-8"))
+            self.__encoded_str = str(self.__encoded_bytes, "utf-8")
+            # Usar solo para debug
+            with open('codificado.txt', 'w') as f:
+                    f.write(self.__encoded_str)
+        except:
+            return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
+
+
+        # Generamos la peticion para firmar
+        try:
+            url = frappe.db.get_value('Configuracion Factura Electronica',
+                                     {'name': self.__config_name}, 'url_firma')
+
+            codigo = frappe.db.get_value('Configuracion Factura Electronica',
+                                        {'name': self.__config_name}, 'codigo')
+
+            alias = frappe.db.get_value('Configuracion Factura Electronica',
+                                       {'name': self.__config_name}, 'alias')
+
+            anulacion = frappe.db.get_value('Configuracion Factura Electronica',
+                                           {'name': self.__config_name}, 'es_anulacion')
+
+            self.__llave = frappe.db.get_value('Configuracion Factura Electronica',
+                                              {'name': self.__config_name}, 'llave_pfx')
+
+            self.__data_a_firmar = {
+                "llave": self.__llave, # LLAVE
+                "archivo": str(self.__encoded_str),  # En base64
+                # "codigo": codigo, # Número interno de cada transacción
+                "alias":  alias, # USUARIO
+                "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
+            }
+
+            headers = {"content-type": "application/json"}
+            response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
+
+            return True, (response.content).decode('utf-8')
+
+        except:
+            return False, 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
 
     # def request_electronic_invoice(self):
     #     '''Funcion encargada de solicitar factura electronica al WS de INFILE'''
