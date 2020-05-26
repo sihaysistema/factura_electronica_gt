@@ -12,8 +12,15 @@ from factura_electronica.fel.fel import ElectronicInvoice
 
 # API para uso interno de sistema ERPNext
 @frappe.whitelist()
-def api_interface():
-    pass
+def api_interface(invoice_code):
+    try:
+        state_of = generate_electronic_invoice(invoice_code)
+        frappe.msgprint(state_of[1])
+        return True
+
+    except:
+        frappe.msgprint(_(f'Ocurrio un problema al procesar la solicitud, mas info en: {frappe.get_traceback()}'))
+        return False
 
 
 # Conector API para usar con otros lenguajes de programacion
@@ -22,7 +29,7 @@ def api_connector():
     pass
 
 
-@frappe.whitelist()
+# @frappe.whitelist()
 def generate_electronic_invoice(invoice_code):
     # start = timeit.timeit()
     try:
@@ -43,23 +50,17 @@ def generate_electronic_invoice(invoice_code):
         new_invoice = ElectronicInvoice(invoice_code, status_config[1])
         status = new_invoice.build_invoice()
 
-        # PASO 4: Conversion de JSON a XML, firmamos el documento y procesamos las respuestas
-        if status[0] == True:
-            status_firma = new_invoice.sign_invoice()
-            # Guardamos la respuesta en un archivo
-            if status_firma[0] == True:
-                with open('reciibo.txt', 'w') as f:
-                    f.write(str(status_firma[1]))
+        # PASO 4: Firmar. Conversion de JSON a XML, firmamos el documento y procesamos las respuestas
+        if status[0] == False:  # Si la construccion de la peticion es False
+            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status[1]}'
 
-                frappe.msgprint(_('Completado'))
-            else:
-                frappe.msgprint(_(f'NO: {status_firma[1]}'))
-        else:
-            frappe.msgprint(_(f'No: {status[1]}'))
-        # end = timeit.timeit()
-        # tiempo_ejecucion = start - end
+        # Si todo va bien, se procede a firma y encriptar el archivo
+        status_firma = new_invoice.sign_invoice()
 
-        # frappe.msgprint(_(f'Ejecutado en: {tiempo_ejecucion}'))
+        if status_firma[0] == False:  # Si no se firma correctamente
+            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
+
+        # PASO 5: Solicitamos la Factura Electronica, guardamos y actualizamos los registros con la nueva data
     except:
         return False, str(frappe.get_traceback())
 
@@ -89,6 +90,16 @@ def validate_configuration():
 
 
 def check_invoice_records(invoice_code):
+    """
+    Verifica las existencias de envios de facturas electronicas en Envio FEL, si no encuentra registro
+    da paso a generar una nueva
+
+    Args:
+        invoice_code (str): Serie de factura
+
+    Returns:
+        tuple: Primera posicion True/False, Segunda poscion: mensaje descriptivo
+    """
     # Verifica si existe una factura con la misma serie, evita duplicadas
     if frappe.db.exists('Envio FEL', {'name': invoice_code}):
         facelec = frappe.db.get_values('Envio FEL',

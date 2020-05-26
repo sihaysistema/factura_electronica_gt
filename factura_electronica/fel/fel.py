@@ -450,7 +450,22 @@ class ElectronicInvoice:
             headers = {"content-type": "application/json"}
             response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
 
-            return True, (response.content).decode('utf-8')
+            # Guardamos en una variable privada la respuesta
+            self.__doc_firmado = (response.content).decode('utf-8')
+            # Guardamos la respuesta en un archivo DEBUG
+            with open('reciibo.txt', 'w') as f:
+                f.write(str(self.__doc_firmado))
+
+            # Si la respuesta es true
+            if self.__doc_firmado.get('resultado').lower() == 'true':
+                # Guardamos en privado el documento firmado y encriptado
+                self.__encrypted = self.__doc_firmado.get('archivo')
+
+                # Retornamos el status del proceso
+                return True, 'OK'
+
+            else:
+                return False, self.__doc_firmado.get('descripcion')
 
         except:
             return False, 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
