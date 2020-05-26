@@ -136,7 +136,7 @@ class ElectronicInvoice:
             return True, 'OK'
 
         except:
-            return False, f'Error en obtener data para datos generales: {str(frappe.get_traceback())}'
+            return False, f'Error en obtener data para datos generales mas detalles en :\n {str(frappe.get_traceback())}'
 
     def sender(self):
         """
@@ -149,9 +149,10 @@ class ElectronicInvoice:
             # De la factura obtenemos la compañia y direccion compañia emisora
             self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__invoice_code},
                                                 fieldname=['company', 'company_address', 'nit_face_customer',
-                                                           'customer_address', 'customer_name'], as_dict=1)
+                                                           'customer_address', 'customer_name', 'total_taxes_and_charges',
+                                                           'grand_total'], as_dict=1)
             if len(self.dat_fac) == 0:
-                return False, f'''No se encontro ninguna factura con serie: {self.__invoice_code}.
+                return False, f'''No se encontro ninguna factura con serie: {self.__invoice_code}.\
                                   Por favor valida los datos de la factura que deseas procesar'''
 
 
@@ -169,21 +170,24 @@ class ElectronicInvoice:
                                                  fieldname=['address_line1', 'email_id', 'pincode',
                                                             'state', 'city', 'country'], as_dict=1)
             if len(dat_direccion) == 0:
-                return False, f'No se encontro ninguna direccion de la compania {dat_compania[0]["company_name"]}, verifica que exista una con data en los campos address_line1, email_id, pincode, state, city, country, y vuelve a generar la factura'
+                return False, f'No se encontro ninguna direccion de la compania {dat_compania[0]["company_name"]},\
+                                verifica que exista una con data en los campos address_line1, email_id, pincode, state,\
+                                city, country, y vuelve a generar la factura'
 
 
             # Validacion de existencia en los campos de direccion, ya que son obligatorio por parte de la API FEL
             # Usaremos la primera que se encuentre
             for dire in dat_direccion[0]:
                 if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
-                    return False, '''No se puede completar la operacion ya que el campo {} de la direccion de compania no tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire))
+                    return False, '''No se puede completar la operacion ya que el campo {} de la direccion de compania no\
+                                     tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire))
 
             # Asignacion data
             self.__d_emisor = {
                 "@AfiliacionIVA": frappe.db.get_value('Configuracion Factura Electronica',
-                                                     {'name': self.nombre_config}, 'afiliacion_iva'),
+                                                     {'name': self.__config_name}, 'afiliacion_iva'),
                 "@CodigoEstablecimiento": frappe.db.get_value('Configuracion Factura Electronica',
-                                                             {'name': self.nombre_config}, 'codigo_establecimiento'),  #"1",
+                                                             {'name': self.__config_name}, 'codigo_establecimiento'),  #"1",
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
                 "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', ''),
                 "@NombreComercial": dat_compania[0]['company_name'],
@@ -200,7 +204,8 @@ class ElectronicInvoice:
             return True, 'OK'
 
         except:
-            return False, 'Problema al tratar de generar data para emisor'+str(frappe.get_traceback())
+            return False, 'Proceso no completado, no se pudieron obtener todos los datos necesarios, verifica tener todos\
+                           los campos necesario en Configuracion Factura Electronica. Mas detalles en: \n'+str(frappe.get_traceback())
 
     def receiver(self):
         """
@@ -216,23 +221,23 @@ class ElectronicInvoice:
                                                  fieldname=['address_line1', 'email_id', 'pincode',
                                                             'state', 'city', 'country'], as_dict=1)
             if len(dat_direccion) == 0:
-                return False, f'''No se encontro ninguna direccion para el cliente {self.dat_fac[0]["customer_name"]}.
+                return False, f'''No se encontro ninguna direccion para el cliente {self.dat_fac[0]["customer_name"]}.\
                                   Por favor asigna un direccion y vuelve a intentarlo'''
 
             # Validacion data direccion cliente
             for dire in dat_direccion[0]:
                 if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
-                    return False, '''No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no
-                                     tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire), self.nombre_cliente)
+                    return False, '''No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no\
+                                     tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire), self.dat_fac[0]["customer_name"])
 
 
             # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
             # electronico, los demas campos se pueden dejar como defualt para ciudad
-            if str(dat_fac[0]['nit_face_customer']).upper() == 'C/F':
+            if str(self.dat_fac[0]['nit_face_customer']).upper() == 'C/F':
                 self.__d_receptor = {
                     "@CorreoReceptor": dat_direccion[0]['email_id'],
-                    "@IDReceptor": (dat_fac[0]['nit_face_customer']).replace('/', ''),  # NIT => CF
-                    "@NombreReceptor": str(self.nombre_cliente),
+                    "@IDReceptor": (self.dat_fac[0]['nit_face_customer']).replace('/', ''),  # NIT => CF
+                    "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
                     "dte:DireccionReceptor": {
                         "dte:Direccion": dat_direccion[0]['address_line1'],
                         "dte:CodigoPostal": dat_direccion[0]['pincode'],
@@ -244,8 +249,8 @@ class ElectronicInvoice:
             else:
                 self.__d_receptor = {
                     "@CorreoReceptor": dat_direccion[0]['email_id'],
-                    "@IDReceptor": (dat_fac[0]['nit_face_customer']).replace('-', ''),  # NIT
-                    "@NombreReceptor": str(self.nombre_cliente),
+                    "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),  # NIT
+                    "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
                     "dte:DireccionReceptor": {
                         "dte:Direccion": dat_direccion[0]['address_line1'],
                         "dte:CodigoPostal": dat_direccion[0]['pincode'],
