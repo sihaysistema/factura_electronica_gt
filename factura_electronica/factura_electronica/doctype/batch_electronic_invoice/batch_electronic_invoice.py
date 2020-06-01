@@ -26,7 +26,7 @@ def batch_generator(invoice_list):
 
         batch_created = BATCH.insert(ignore_permissions=True)
 
-        return batch_created.name
+        return True, batch_created.name
 
     except:
         return False, str(frappe.get_traceback())

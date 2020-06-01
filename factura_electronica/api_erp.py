@@ -11,9 +11,13 @@ from frappe import _
 # USAR ESTE SCRIPT COMO API PARA COMUNICAR APPS DEL ECOSISTEMA FRAPPE/ERPNEXT :)
 
 @frappe.whitelist()
-def generate_batch(invoices):
+def batch_generator_api(invoices):
     try:
         status_invoices = batch_generator(invoices)
+        frappe.msgprint(_(str(status_invoices)))
 
-    except :
+    except:
         pass
+
+
+
