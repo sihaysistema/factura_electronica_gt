@@ -133,6 +133,7 @@
    "label": "DATOS ESTABLECIMIENTO GFACE"
   },
   {
+   "description": "FEL/GFACE",
    "fieldname": "codigo_establecimiento",
    "fieldtype": "Data",
    "label": "Codigo Establecimiento",
@@ -155,6 +156,7 @@
    "label": "Importe Otros Impuestos"
   },
   {
+   "description": "FEL/GFACE",
    "fieldname": "id_dispositivo",
    "fieldtype": "Data",
    "label": "ID Dispositivo",
@@ -232,11 +234,13 @@
    "label": "DATOS FEL"
   },
   {
+   "description": "FEL",
    "fieldname": "llave_pfx",
    "fieldtype": "Data",
    "label": "Llave PFX"
   },
   {
+   "description": "FEL",
    "fieldname": "codigo",
    "fieldtype": "Data",
    "label": "Codigo"
@@ -246,6 +250,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "FEL",
    "fieldname": "alias",
    "fieldtype": "Data",
    "label": "Alias"
@@ -263,28 +268,32 @@
    "options": "Configuracion Series FEL"
   },
   {
+   "description": "FEL",
    "fieldname": "url_dte",
    "fieldtype": "Data",
    "label": "URL DTE"
   },
   {
+   "description": "FEL",
    "fieldname": "url_firma",
    "fieldtype": "Data",
    "label": "URL Firma"
   },
   {
+   "description": "FEL",
    "fieldname": "es_anulacion",
    "fieldtype": "Data",
    "label": "Es Anulacion"
   },
   {
+   "description": "FEL",
    "fieldname": "tipo_frase",
    "fieldtype": "Select",
    "label": "Tipo Frase",
    "options": "\n1: Frase de retencio\u0301n del ISR\n2: Frase de retencio\u0301n del IVA\n3: Frase de no genera derecho a cre\u0301dito fiscal del IVA\n4: Frase de exento o no afecto al IVA"
   },
   {
-   "description": "Envia copia de factura electronica generada",
+   "description": "FEL: Envia copia de factura electronica generada",
    "fieldname": "correo_copia",
    "fieldtype": "Data",
    "label": "Correo Copia"
@@ -312,6 +321,7 @@
    "options": "User"
   },
   {
+   "description": "FEL",
    "fieldname": "llave_ws",
    "fieldtype": "Data",
    "label": "Llave WS"
@@ -323,13 +333,14 @@
    "options": "Company"
   },
   {
-   "description": "De acuerdo al R\u00e9gimen que\ntenga registrado el contribuyente, se refiere a que puede ser General/Exento o Peque\u00f1o Contribuyente.",
+   "description": "FEL: De acuerdo al R\u00e9gimen que\ntenga registrado el contribuyente, se refiere a que puede ser General/Exento o Peque\u00f1o Contribuyente.",
    "fieldname": "afiliacion_iva",
    "fieldtype": "Select",
    "label": "Afiliacion IVA",
    "options": "\nGEN\nEXE\nPEQ"
   },
   {
+   "description": "FEL",
    "fieldname": "codigo_escenario",
    "fieldtype": "Int",
    "label": "Codigo Escenario",
@@ -338,7 +349,7 @@
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-04-20 23:20:57.923410",
+ "modified": "2020-06-01 16:47:30.954642",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

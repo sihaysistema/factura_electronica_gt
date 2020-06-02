@@ -43,7 +43,8 @@ def generate_electronic_invoice(invoice_code):
         # en parametro
         status_invoice = check_invoice_records(str(invoice_code))
         if status_invoice[0] == True:
-            return False, f'La factura se encuentra como ya generada, puedes validar los detalles en Envio FEL, con codigo UUID {status_invoice[1]}'
+            return False, f'La factura se encuentra como ya generada, puedes validar los detalles en \
+                            Envio FEL, con codigo UUID {status_invoice[1]}'
 
         # PASO 3: Creacion Factura Electronica
         # Creamos instancia: Valida todas las dependencias para crear el XML para factura electronica
@@ -60,6 +61,7 @@ def generate_electronic_invoice(invoice_code):
         if status_firma[0] == False:  # Si no se firma correctamente
             return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
+        frappe.msgprint(_(str(status_firma)))
         # PASO 5: Solicitamos la Factura Electronica, guardamos y actualizamos los registros con la nueva data
     except:
         return False, str(frappe.get_traceback())
@@ -83,10 +85,12 @@ def validate_configuration():
             return (True, str(configuracion_valida[0]['name']))
 
         elif (len(configuracion_valida) > 1):
-            return (False, 'Se encontro mas de una configuración, por favor verifica que solo exista una en Configuracion Factura Electronia')
+            return (False, 'Se encontro mas de una configuración, por favor verifica que solo exista \
+                    una en Configuracion Factura Electronia')
 
     else:
-        return (False, 'No se encontro ninguna configuración, por favor crea y valida una en Configuracion Factura Electronica')
+        return (False, 'No se encontro ninguna configuración, por favor crea y valida una en \
+                Configuracion Factura Electronica')
 
 
 def check_invoice_records(invoice_code):

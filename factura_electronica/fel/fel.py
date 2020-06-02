@@ -140,7 +140,8 @@ class ElectronicInvoice:
 
     def sender(self):
         """
-        Valida y obtiene la data necesaria para la seccion de Emisor
+        Valida y obtiene la data necesaria para la seccion de Emisor,
+        entidad que emite la factura
 
         Returns:
             str: Descripcion con el status de la trasaccion
@@ -171,7 +172,7 @@ class ElectronicInvoice:
                                                             'state', 'city', 'country'], as_dict=1)
             if len(dat_direccion) == 0:
                 return False, f'No se encontro ninguna direccion de la compania {dat_compania[0]["company_name"]},\
-                                verifica que exista una con data en los campos address_line1, email_id, pincode, state,\
+                                verifica que exista una, con data en los campos address_line1, email_id, pincode, state,\
                                 city, country, y vuelve a generar la factura'
 
 
@@ -228,7 +229,8 @@ class ElectronicInvoice:
             for dire in dat_direccion[0]:
                 if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
                     return False, '''No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no\
-                                     tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire), self.dat_fac[0]["customer_name"])
+                                     tiene data, por favor asignarle un valor e intentar de nuevo \
+                                  '''.format(str(dire), self.dat_fac[0]["customer_name"])
 
 
             # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
@@ -451,20 +453,20 @@ class ElectronicInvoice:
             response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
 
             # Guardamos en una variable privada la respuesta
-            self.__doc_firmado = (response.content).decode('utf-8')
+            self.__doc_firmado = json.loads((response.content).decode('utf-8'))
             # Guardamos la respuesta en un archivo DEBUG
-            with open('reciibo.txt', 'w') as f:
-                f.write(str(self.__doc_firmado))
+            with open('reciibo.json', 'w') as f:
+                f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
-            if self.__doc_firmado.get('resultado').lower() == 'true':
+            if self.__doc_firmado.get('resultado') == True:
                 # Guardamos en privado el documento firmado y encriptado
                 self.__encrypted = self.__doc_firmado.get('archivo')
 
                 # Retornamos el status del proceso
                 return True, 'OK'
 
-            else:
+            else:  # Si ocurre un error retornamos la descripcion del error por INFILE
                 return False, self.__doc_firmado.get('descripcion')
 
         except:

@@ -1092,7 +1092,7 @@ function prueba(frm) {
     frm.add_custom_button(__('test'), function () {
 
         frappe.call({
-            method: "factura_electronica.fel_api.generate_electronic_invoice",
+            method: "factura_electronica.fel_api.api_interface",
             args: {
                 invoice_code: frm.doc.name
             },
