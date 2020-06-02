@@ -28,11 +28,26 @@ import datetime
 
 class ElectronicInvoice:
     def __init__(self, invoice_code, conf_name):
+        """__init__
+        Constructor de la clase, las propiedades iniciadas como privadas
+
+        Args:
+            invoice_code (str): Serie origianl de la factura
+            conf_name (str): Nombre configuracion para factura electronica
+        """
         self.__invoice_code = invoice_code
         self.__config_name = conf_name
         self.__log_error = []
 
     def build_invoice(self):
+        """
+        Valida las dependencias necesarias, para construir XML desde un JSON
+        para ser firmado certificado por la SAT y finalmente generar factura electronica
+
+        Returns:
+            tuple: True/False, msj, msj
+        """
+
         try:
             # 1 Validamos la data antes de construir
             status_validate = self.validate()
@@ -66,8 +81,8 @@ class ElectronicInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                with open('mi_factura.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion))
+                # with open('mi_factura.json', 'w') as f:
+                #     f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:
@@ -81,7 +96,7 @@ class ElectronicInvoice:
         Si existe por lo menos un error retornara la descripcion con dicho error
 
         Returns:
-            [type]: [description]
+            tuple: True/False, msj, msj
         """
 
         # Validacion y generacion seccion datos generales
@@ -146,8 +161,9 @@ class ElectronicInvoice:
         entidad que emite la factura
 
         Returns:
-            str: Descripcion con el status de la trasaccion
+            tuple: True/False, msj, msj
         """
+
         try:
             # De la factura obtenemos la compañia y direccion compañia emisora
             self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__invoice_code},
@@ -215,7 +231,7 @@ class ElectronicInvoice:
         Validacion y generacion datos de Receptor (cliente)
 
         Returns:
-            [type]: [description]
+            tuple: True/False, msj, msj
         """
 
         # Intentara obtener data de direccion cliente
@@ -295,6 +311,13 @@ class ElectronicInvoice:
             return False, 'Error, no se puedo obtener valor de Codigo Escenario y Tipo Frase'
 
     def items(self):
+        """
+        Procesa todos los items de la factura aplicando calculos necesarios para la SAT
+
+        Returns:
+            tuple: True/False, msj, msj
+        """
+
         try:
             i_fel = {}  # Guardara la seccion de items ok
             items_ok = []  # Guardara todos los items OK
@@ -381,7 +404,13 @@ class ElectronicInvoice:
             return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
     def totals(self):
-        '''Funcion encargada de realizar totales de los impuestos sobre la factura'''
+        """
+        Funcion encargada de realizar totales de los impuestos sobre la factura
+
+        Returns:
+            tuple: True/False, msj, msj
+        """
+
         try:
             gran_tot = 0
             for i in self.__dat_items:
@@ -403,7 +432,12 @@ class ElectronicInvoice:
             return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
     def sign_invoice(self):
-        '''Funcion encargada de solicitar firma para archivo XML '''
+        """
+        Funcion encargada de solicitar firma para archivo XML
+
+        Returns:
+            tuple: True/False, msj, msj
+        """
 
         try:
             # To XML: Convierte de JSON a XML indentado
@@ -456,9 +490,10 @@ class ElectronicInvoice:
 
             # Guardamos en una variable privada la respuesta
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
+
             # Guardamos la respuesta en un archivo DEBUG
-            with open('reciibo.json', 'w') as f:
-                f.write(json.dumps(self.__doc_firmado, indent=2))
+            # with open('reciibo.json', 'w') as f:
+            #     f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -479,7 +514,7 @@ class ElectronicInvoice:
         Funcion encargada de solicitar factura electronica al Web Service de INFILE
 
         Returns:
-            [type]: [description]
+            tuple: True/False, msj, msj
         """
 
         try:
@@ -518,7 +553,7 @@ class ElectronicInvoice:
         Funcion encargada de verificar las respuestas de INFILE-SAT
 
         Returns:
-            [type]: [description]
+            tuple: True/False, msj, msj
         """
 
         try:
@@ -547,7 +582,7 @@ class ElectronicInvoice:
         Funcion encargada guardar registro con respuestas de INFILE-SAT
 
         Returns:
-            [type]: [description]
+            tuple: True/False, msj, msj
         """
 
         try:
@@ -596,7 +631,7 @@ class ElectronicInvoice:
         la serie generada para factura electronica
 
         Returns:
-            [type]: [description]
+            tuple: True/False, msj, msj
         """
 
         # Verifica que exista un documento en la tabla Envio FEL con el nombre de la serie original

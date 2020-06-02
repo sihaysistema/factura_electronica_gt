@@ -6,7 +6,7 @@ import frappe
 from frappe import _
 # import datetime
 # import json
-import timeit
+# from timeit import default_timer as timer usar para medir tiempo ejecucion
 from factura_electronica.fel.fel import ElectronicInvoice
 
 
@@ -25,17 +25,33 @@ def api_interface(invoice_code, naming_series):
         el msgprint es para mostrar un mensaje a usuario
     """
 
+    # start = timer() usar para medir tyiempo de ejecucion
     try:
         state_of = generate_electronic_invoice(invoice_code, naming_series)
         if state_of[0] == False:
+            # end = timer()  \n\n\n {end - start}
             frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
                             title=_('Process not completed'), indicator='red')
-            return False, 'Proceso no completado'
+
+            if type(state_of[1]) is dict:  # Aplica para los mensjaes base de datos actualizados
+                return False, state_of[1]['msj']
+            else:
+                return False, state_of[1]
 
 
-        frappe.msgprint(msg=_(f'Electronic invoice generated with universal unique identifier <b>{state_of[1]["msj"]}</b>'),
-                        title=_('Process successfully completed'), indicator='green')
-        return True, str(state_of[1]["serie_nueva"])
+        if type(state_of[1]) is dict:
+            # end = timer()  \n\n\n {end - start}
+            frappe.msgprint(msg=_(f'Electronic invoice generated with universal unique identifier <b>{state_of[1]["msj"]}</b>'),
+                            title=_('Process successfully completed'), indicator='green')
+
+            return True, str(state_of[1]["serie_nueva"])
+
+        else:
+            # end = timer()
+            frappe.msgprint(msg=_(f'Electronic invoice generated with universal unique identifier <b>{state_of[1]}</b>'),
+                            title=_('Process successfully completed'), indicator='green')
+
+            return True, str(state_of[1])
 
     except:
         frappe.msgprint(_(f'Ocurrio un problema al procesar la solicitud, mas info en: {frappe.get_traceback()}'))
@@ -57,10 +73,9 @@ def generate_electronic_invoice(invoice_code, naming_series):
         invoice_code (str): Serie original de la factura
 
     Returns:
-        [type]: [description]
+        tuple: True/False, msj, msj
     """
 
-    # start = timeit.timeit()
     try:
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
         status_config = validate_configuration()
@@ -76,8 +91,8 @@ def generate_electronic_invoice(invoice_code, naming_series):
         # PASO 2: VALIDACION EXTRA PARA NO GENERAR FACTURAS ELECTRONICA DUPLICADAS, SI OCURRIERA EN ALGUN ESCENARIO
         status_invoice = check_invoice_records(str(invoice_code))
         if status_invoice[0] == True:
-            return False, f'La factura se encuentra como ya generada, puedes validar los detalles en \
-                            EnvioS FEL, con codigo UUID {status_invoice[1]}'
+            return False, f'La factura se encuentra registrada como ya generada, puedes validar los detalles en \
+                            Envios FEL, con codigo UUID {status_invoice[1]}'
 
         # PASO 3: FACTURA ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
@@ -101,17 +116,17 @@ def generate_electronic_invoice(invoice_code, naming_series):
 
         # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
         status_res = new_invoice.response_validator()
-        if status_res['status'] == 'ERROR':
+        if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
             return status_res  # return tuple
 
         # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
         status_upgrade = new_invoice.upgrade_records()
-        if status_upgrade['status'] == 'ERROR':
+        if status_upgrade[1]['status'] == 'ERROR':
             return status_upgrade
 
         # SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
         # el UUID y la nueva serie para la factura
-        return True, status_upgrade
+        return status_upgrade
         # frappe.msgprint(_(str(status_upgrade)))
 
     except:
@@ -167,9 +182,3 @@ def check_invoice_records(invoice_code):
 
     else:
         return False, 'A generar una nueva'
-
-
-def validate_serie(serie, conf_name):
-
-    serie = frappe.db.get_value('Configuracion Series FEL', {'parent': str(conf_name), 'serie': str(serie)},
-                                'tipo_documento')
