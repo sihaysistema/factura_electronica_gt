@@ -60,12 +60,17 @@ def generate_electronic_invoice(invoice_code):
         if status_firma[0] == False:  # Si no se firma correctamente
             return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
-        # PASO 5: Solicitamos la Factura Electronica, guardamos y actualizamos los registros con la nueva data
+        # PASO 5: SOLICITAMOS FACTURA ELECTRONICA
         status_facelec = new_invoice.request_electronic_invoice()
         if status_facelec[0] == False:
             return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
 
         # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
+        status_res = new_invoice.response_validator()
+        if status_res['status'] == 'ERROR':
+            return status_res
+
+        # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
         frappe.msgprint(_(str(status_facelec[1])))
 
 
