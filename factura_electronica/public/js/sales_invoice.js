@@ -500,13 +500,14 @@ function generar_boton_factura(tipo_factura, frm) {
             method: "factura_electronica.fel_api.api_interface",
             args: {
                 invoice_code: frm.doc.name,
-                pre_se: frm.doc.naming_series
+                naming_series: frm.doc.naming_series
             },
             // El callback recibe como parametro el dato retornado por el script python del lado del servidor
             callback: function (data) {
-                if (data.message !== undefined) {
+                console.log(data.message);
+                if (data.message[0] === true) {
                     // Crea una nueva url con el nombre del documento actualizado
-                    let url_nueva = mi_url.replace(serie_de_factura, data.message);
+                    let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
                     // Asigna la nueva url a la ventana actual
                     window.location.assign(url_nueva);
                     // Recarga la pagina
@@ -827,7 +828,6 @@ frappe.ui.form.on("Sales Invoice", {
             cur_frm.set_df_property("naming_series", "read_only", 0);
         }
 
-        prueba(frm)
     },
     validate: function (frm) {
         generar_tabla_html(frm);
@@ -1114,19 +1114,4 @@ function calculo_redondeo_pi(a, b) {
 
 function redondear(value, decimals) {
     return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
-}
-
-function prueba(frm) {
-    frm.add_custom_button(__('test'), function () {
-        frappe.call({
-            method: "factura_electronica.fel_api.api_interface",
-            args: {
-                invoice_code: frm.doc.name
-            },
-            // El callback recibe como parametro el dato retornado por el script python del lado del servidor
-            callback: function (data) {
-                console.log(data.message);
-            }
-        });
-    }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
 }

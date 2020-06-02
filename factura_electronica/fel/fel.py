@@ -65,8 +65,10 @@ class ElectronicInvoice:
                     }
                 }
 
+                # USAR SOLO PARA DEBUG:
                 with open('mi_factura.json', 'w') as f:
                     f.write(json.dumps(self.__base_peticion))
+
                 return True,'OK'
             else:
                 return False, status_validate[1]
@@ -527,18 +529,18 @@ class ElectronicInvoice:
 
                 # Al primer error encontrado retornara un detalle con el mismo
                 if status_saved == False:
-                    # return False, status_saved, 1
-                    return {'status': 'ERROR', 'detalles_errores': status_saved, 'numero_errores':1}
+                    return False, status_saved
+                    # return {'status': 'ERROR', 'detalles_errores': status_saved, 'numero_errores':1}
 
-                return {'status': 'OK', 'numero_autorizacion': self.__response_ok['uuid'],
-                        'serie': self.__response_ok['serie'], 'numero': self.__response_ok['numero']}
+                return True, {'status': 'OK', 'numero_autorizacion': self.__response_ok['uuid'],
+                              'serie': self.__response_ok['serie'], 'numero': self.__response_ok['numero']}
 
             else:
-                return {'status': 'ERROR', 'numero_errores': str(self.__response_ok['cantidad_errores']),
-                        'detalles_errores': str(self.__response_ok['descripcion_errores'])}
+                return False, {'status': 'ERROR', 'numero_errores': str(self.__response_ok['cantidad_errores']),
+                               'detalles_errores': str(self.__response_ok['descripcion_errores'])}
         except:
-            return {'status': 'ERROR VALIDACION', 'numero_errores':1,
-                    'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
+            return False, {'status': 'ERROR VALIDACION', 'numero_errores':1,
+                           'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
 
     def save_answers(self):
         """
@@ -615,11 +617,11 @@ class ElectronicInvoice:
                 # Actualizacion de tablas que son modificadas directamente.
                 # 01 - tabSales Invoice: actualizacion con datos correctos
                 frappe.db.sql('''UPDATE `tabSales Invoice`
-                                SET name=%(name)s,
+                                 SET name=%(name)s,
                                     numero_autorizacion_fel=%(no_correcto)s,
                                     serie_original_del_documento=%(serie_orig_correcta)s
-                                WHERE name=%(serieFa)s
-                                ''', {'name':serieFEL, 'no_correcto': factura_guardada[0]['uuid'],
+                                 WHERE name=%(serieFa)s
+                              ''', {'name':serieFEL, 'no_correcto': factura_guardada[0]['uuid'],
                                     'serie_orig_correcta': serie_fac_original, 'serieFa':serie_fac_original})
 
                 # 02 - tabSales Invoice Item: actualizacion items de la factura
@@ -728,9 +730,10 @@ class ElectronicInvoice:
 
             except:
                 # En caso exista un error al renombrar la factura retornara el mensaje con el error
-                return {'status': 'ERROR', 'msj': 'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'}
+                return False, {'status': 'ERROR',
+                               'msj': 'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'}
 
             else:
                 # Si los datos se Guardan correctamente, se retornara la serie, que sera capturado por api.py
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
-                return {'status': 'OK', 'msj': factura_guardada[0]['uuid'], 'serie_nueva': serieFEL}
+                return True, {'status': 'OK', 'msj': factura_guardada[0]['uuid'], 'serie_nueva': serieFEL}

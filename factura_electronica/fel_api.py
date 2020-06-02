@@ -21,17 +21,25 @@ def api_interface(invoice_code, naming_series):
         invoice_code (str): Serie original de la factura
 
     Returns:
-        [type]: [description]
+        tuple, msgprint: (True/False, mensaje ok/descripcion error) usado para javascript,
+        el msgprint es para mostrar un mensaje a usuario
     """
 
     try:
         state_of = generate_electronic_invoice(invoice_code, naming_series)
-        frappe.msgprint(state_of)
-        return True
+        if state_of[0] == False:
+            frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
+                            title=_('Process not completed'), indicator='red')
+            return False, 'Proceso no completado'
+
+
+        frappe.msgprint(msg=_(f'Electronic invoice generated with universal unique identifier <b>{state_of[1]["msj"]}</b>'),
+                        title=_('Process successfully completed'), indicator='green')
+        return True, str(state_of[1]["serie_nueva"])
 
     except:
         frappe.msgprint(_(f'Ocurrio un problema al procesar la solicitud, mas info en: {frappe.get_traceback()}'))
-        return False
+        return False, 'Ocurrio un error en el proceso de generar factura electronia'
 
 
 # Conector API para usar con otros Frameworks
@@ -58,30 +66,30 @@ def generate_electronic_invoice(invoice_code, naming_series):
         status_config = validate_configuration()
 
         if status_config[0] == False:
-            return False, str(status_config[1])
+            return status_config
 
         # PASO 1.1: VALIDAMOS LA SERIE A UTILIZAR PARA DEFINIR EL TIPO DE FACTURA ELECTRONIC A GENERAR
         if not frappe.db.exists('Configuracion Series FEL', {'parent': str(status_config[1]), 'serie': str(naming_series)}):
             return False, f'La serie utilizada en la factura no se encuentra configurada para Factura electronica \
                             Por favor agreguela en Series Fel de Configuracion Factura Electronica, y vuelva a intentar'
 
-        # PASO 2: validamos que no se haya generado factura electronica anteriormente, para la serie recibida
-        # en parametro
+        # PASO 2: VALIDACION EXTRA PARA NO GENERAR FACTURAS ELECTRONICA DUPLICADAS, SI OCURRIERA EN ALGUN ESCENARIO
         status_invoice = check_invoice_records(str(invoice_code))
         if status_invoice[0] == True:
             return False, f'La factura se encuentra como ya generada, puedes validar los detalles en \
-                            Envio FEL, con codigo UUID {status_invoice[1]}'
+                            EnvioS FEL, con codigo UUID {status_invoice[1]}'
 
-        # PASO 3: Creacion Factura Electronica
-        # Creamos instancia: Valida todas las dependencias para crear el XML para factura electronica
+        # PASO 3: FACTURA ELECTRONICA
+        # paso 3.1 - NUEVA INSTANCIA
         new_invoice = ElectronicInvoice(invoice_code, status_config[1])
-        status = new_invoice.build_invoice()
 
-        # PASO 4: Firmar. Conversion de JSON a XML, firmamos el documento y procesamos las respuestas
+        # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
+        status = new_invoice.build_invoice()
         if status[0] == False:  # Si la construccion de la peticion es False
             return False, f'Ocurrio un problema en el proceso, mas detalle en: {status[1]}'
 
-        # Si todo va bien, se procede a firma y encriptar el archivo
+        # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
+        # En este paso se convierte de JSON a XML y se codifica en base64
         status_firma = new_invoice.sign_invoice()
         if status_firma[0] == False:  # Si no se firma correctamente
             return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
@@ -94,13 +102,15 @@ def generate_electronic_invoice(invoice_code, naming_series):
         # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
         status_res = new_invoice.response_validator()
         if status_res['status'] == 'ERROR':
-            return status_res
+            return status_res  # return tuple
 
         # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
         status_upgrade = new_invoice.upgrade_records()
         if status_upgrade['status'] == 'ERROR':
             return status_upgrade
 
+        # SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
+        # el UUID y la nueva serie para la factura
         return True, status_upgrade
         # frappe.msgprint(_(str(status_upgrade)))
 
