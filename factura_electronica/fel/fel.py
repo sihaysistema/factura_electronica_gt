@@ -472,35 +472,45 @@ class ElectronicInvoice:
         except:
             return False, 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
 
-    # def request_electronic_invoice(self):
-    #     '''Funcion encargada de solicitar factura electronica al WS de INFILE'''
-    #     try:
-    #         data_fac = frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'company')
-    #         nit_company = frappe.db.get_value('Company', {'name': data_fac}, 'nit_face_company')
+    def request_electronic_invoice(self):
+        """
+        Funcion encargada de solicitar factura electronica al Web Service de INFILE
 
-    #         url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'url_dte')
-    #         user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'alias')
-    #         llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'llave_ws')
-    #         correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'correo_copia')
-    #         ident = self.serie_factura
+        Returns:
+            [type]: [description]
+        """
 
-    #         req_dte = {
-    #             "nit_emisor": nit_company,
-    #             "correo_copia": correo_copia,  # "m.monroyc22@gmail.com",
-    #             "xml_dte": firmado["archivo"]
-    #         }
+        try:
+            data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
+            nit_company = frappe.db.get_value('Company', {'name': self.dat_fac[0]['nit_face_customer']}, 'nit_face_company')
 
-    #         headers = {
-    #             "content-type": "application/json",
-    #             "usuario": user,
-    #             "llave": llave,
-    #             "identificador": ident
-    #         }
-    #         response = requests.post(url, data=json.dumps(req_dte), headers=headers)
-    #     except:
-    #         return False, 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
-    #     else:
-    #         return True, (response.content).decode('utf-8')
+            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
+            user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
+            llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'llave_ws')
+            correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'correo_copia')
+            ident = self.__invoice_code  # identificador
+
+            req_dte = {
+                "nit_emisor": nit_company,
+                "correo_copia": correo_copia,  # "m.monroyc22@gmail.com",
+                "xml_dte": self.__encrypted
+            }
+
+            headers = {
+                "content-type": "application/json",
+                "usuario": user,
+                "llave": llave,
+                "identificador": ident
+            }
+
+            self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
+            self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
+
+            return True, 'OK'
+
+        except:
+            return False, 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
+
 
     # def response_validator(self):
     #     pass

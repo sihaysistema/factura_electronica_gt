@@ -57,12 +57,17 @@ def generate_electronic_invoice(invoice_code):
 
         # Si todo va bien, se procede a firma y encriptar el archivo
         status_firma = new_invoice.sign_invoice()
-
         if status_firma[0] == False:  # Si no se firma correctamente
             return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
-        frappe.msgprint(_(str(status_firma)))
         # PASO 5: Solicitamos la Factura Electronica, guardamos y actualizamos los registros con la nueva data
+        status_facelec = new_invoice.request_electronic_invoice()
+        if status_facelec[0] == False:
+            return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
+
+        frappe.msgprint(_(str(status_facelec[1])))
+
+
     except:
         return False, str(frappe.get_traceback())
 
