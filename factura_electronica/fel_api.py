@@ -65,6 +65,7 @@ def generate_electronic_invoice(invoice_code):
         if status_facelec[0] == False:
             return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
 
+        # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
         frappe.msgprint(_(str(status_facelec[1])))
 
 

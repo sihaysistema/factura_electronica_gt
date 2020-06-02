@@ -511,12 +511,77 @@ class ElectronicInvoice:
         except:
             return False, 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
 
+    def response_validator(self):
+        """
+        Funcion encargada de verificar las respuestas de INFILE-SAT
 
-    # def response_validator(self):
-    #     pass
+        Returns:
+            [type]: [description]
+        """
 
-    # def save_answers(self):
-    #     pass
+        try:
+            # Verifica que no existan errores
+            if self.__response_ok['resultado'] == True and self.__response_ok['cantidad_errores'] == 0:
+                # # Se encarga de guardar las respuestas de INFILE-SAT esto para llevar registro
+                status_saved = self.save_answers(self.__response_ok)
+
+                # Al primer error encontrado retornara un detalle con el mismo
+                if status_saved != True:
+                    return {'status': 'ERROR', 'detalles_errores': status_saved, 'numero_errores':1}
+
+                return {'status': 'OK', 'numero_autorizacion': self.__response_ok['uuid'],
+                        'serie': self.__response_ok['serie'], 'numero': self.__response_ok['numero']}
+
+            else:
+                return {'status': 'ERROR', 'numero_errores': str(self.__response_ok['cantidad_errores']),
+                        'detalles_errores': str(self.__response_ok['descripcion_errores'])}
+        except:
+            return {'status': 'ERROR VALIDACION', 'numero_errores':1,
+                    'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
+
+    def save_answers(self):
+        '''Funcion encargada guardar registro con respuestas de INFILE-SAT'''
+        try:
+            if not frappe.db.exists('Envio FEL', {'name': self.__response_ok['uuid']}):
+                resp_fel = frappe.new_doc("Envio FEL")
+                resp_fel.resultado = self.__response_ok['resultado']
+                resp_fel.fecha = self.__response_ok['fecha']
+                resp_fel.origen = self.__response_ok['origen']
+                resp_fel.descripcion = self.__response_ok['descripcion']
+                resp_fel.serie_factura_original = self.__invoice_code
+                resp_fel.serie_para_factura = 'FACELEC-'+str(self.__response_ok['numero'])
+
+                if "control_emision" in self.__response_ok:
+                    resp_fel.saldo = self.__response_ok['control_emision']['Saldo']
+                    resp_fel.creditos = self.__response_ok['control_emision']['Creditos']
+
+                resp_fel.alertas = self.__response_ok['alertas_infile']
+                resp_fel.descripcion_alertas_infile = str(self.__response_ok['descripcion_alertas_infile'])
+                resp_fel.alertas_sat = self.__response_ok['alertas_sat']
+                resp_fel.descripcion_alertas_sat = str(self.__response_ok['descripcion_alertas_sat'])
+                resp_fel.cantidad_errores = self.__response_ok['cantidad_errores']
+                resp_fel.descripcion_errores = str(self.__response_ok['descripcion_errores'])
+
+                if "informacion_adicional" in self.__response_ok:
+                    resp_fel.informacion_adicional = self.__response_ok['informacion_adicional']
+
+                resp_fel.uuid = self.__response_ok['uuid']
+                resp_fel.serie = self.__response_ok['serie']
+                resp_fel.numero = self.__response_ok['numero']
+
+                decodedBytes = base64.b64decode(self.__response_ok['xml_certificado'])
+                decodedStr = str(decodedBytes, "utf-8")
+                resp_fel.xml_certificado = decodedStr
+
+                resp_fel.save(ignore_permissions=True)
+
+            return True, 'OK'
+
+        except:
+            return False, f'Error al tratar de guardar la rspuesta, para la factura {self.__invoice_code}, \
+                            Mas detalles en {str(frappe.get_traceback())}'
+
+
 
     # def upgrade_records(self):
     #     pass
