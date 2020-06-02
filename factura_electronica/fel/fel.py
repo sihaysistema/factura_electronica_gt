@@ -523,7 +523,7 @@ class ElectronicInvoice:
             # Verifica que no existan errores
             if self.__response_ok['resultado'] == True and self.__response_ok['cantidad_errores'] == 0:
                 # # Se encarga de guardar las respuestas de INFILE-SAT esto para llevar registro
-                status_saved = self.save_answers(self.__response_ok)
+                status_saved = self.save_answers()
 
                 # Al primer error encontrado retornara un detalle con el mismo
                 if status_saved == False:
@@ -589,13 +589,18 @@ class ElectronicInvoice:
                             Mas detalles en {str(frappe.get_traceback())}'
 
     def upgrade_records(self):
-        """Funcion encargada de actualizar todos los doctypes enlazados a la factura original, con
-           la serie generada para factura electronica
         """
+        Funcion encargada de actualizar todos los doctypes enlazados a la factura original, con
+        la serie generada para factura electronica
+
+        Returns:
+            [type]: [description]
+        """
+
         # Verifica que exista un documento en la tabla Envio FEL con el nombre de la serie original
-        if frappe.db.exists('Envio FEL', {'serie_factura_original': self.serie_factura}):
+        if frappe.db.exists('Envio FEL', {'serie_factura_original': self.__invoice_code}):
             factura_guardada = frappe.db.get_values('Envio FEL',
-                                                    filters={'serie_factura_original': self.serie_factura},
+                                                    filters={'serie_factura_original': self.__invoice_code},
                                                     fieldname=['numero', 'serie', 'uuid'], as_dict=1)
             # Esta seccion se encarga de actualizar la serie, con una nueva que es serie y numero
             # buscara en las tablas donde exista una coincidencia actualizando con la nueva serie
@@ -605,7 +610,7 @@ class ElectronicInvoice:
                 # factura que lo generó.
                 # serieFEL = str(factura_guardada[0]['serie'] + '-' + factura_guardada[0]['numero'])
                 # serie_fac_original: Guarda la serie original de la factura.
-                serie_fac_original = self.serie_factura
+                serie_fac_original = self.__invoice_code
 
                 # Actualizacion de tablas que son modificadas directamente.
                 # 01 - tabSales Invoice: actualizacion con datos correctos
@@ -724,6 +729,7 @@ class ElectronicInvoice:
             except:
                 # En caso exista un error al renombrar la factura retornara el mensaje con el error
                 return {'status': 'ERROR', 'msj': 'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'}
+
             else:
                 # Si los datos se Guardan correctamente, se retornara la serie, que sera capturado por api.py
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos

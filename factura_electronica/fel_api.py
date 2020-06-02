@@ -10,12 +10,23 @@ import timeit
 from factura_electronica.fel.fel import ElectronicInvoice
 
 
-# API para uso interno de sistema ERPNext
+# API para uso interno con apps hechas con Frappe Framework
 @frappe.whitelist()
-def api_interface(invoice_code):
+def api_interface(invoice_code, naming_series):
+    """
+    Para uso interno con otras apps hechas con frappe framework,
+    llamara a las funciones necesarias para generar factura electronica
+
+    Args:
+        invoice_code (str): Serie original de la factura
+
+    Returns:
+        [type]: [description]
+    """
+
     try:
-        state_of = generate_electronic_invoice(invoice_code)
-        frappe.msgprint(state_of[1])
+        state_of = generate_electronic_invoice(invoice_code, naming_series)
+        frappe.msgprint(state_of)
         return True
 
     except:
@@ -23,21 +34,36 @@ def api_interface(invoice_code):
         return False
 
 
-# Conector API para usar con otros lenguajes de programacion
+# Conector API para usar con otros Frameworks
 @frappe.whitelist()
 def api_connector():
     pass
 
 
-# @frappe.whitelist()
-def generate_electronic_invoice(invoice_code):
+def generate_electronic_invoice(invoice_code, naming_series):
+    """
+    Llama a la clase y sus metodos encargados de generar factura electronica,
+    validando primer los requisitos para que se posible la generacion
+
+    Args:
+        invoice_code (str): Serie original de la factura
+
+    Returns:
+        [type]: [description]
+    """
+
     # start = timeit.timeit()
     try:
-        # PASO 1: validamos que exista una configuracion valida para generar facturas electronicas
+        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
         status_config = validate_configuration()
 
         if status_config[0] == False:
             return False, str(status_config[1])
+
+        # PASO 1.1: VALIDAMOS LA SERIE A UTILIZAR PARA DEFINIR EL TIPO DE FACTURA ELECTRONIC A GENERAR
+        if not frappe.db.exists('Configuracion Series FEL', {'parent': str(status_config[1]), 'serie': str(naming_series)}):
+            return False, f'La serie utilizada en la factura no se encuentra configurada para Factura electronica \
+                            Por favor agreguela en Series Fel de Configuracion Factura Electronica, y vuelva a intentar'
 
         # PASO 2: validamos que no se haya generado factura electronica anteriormente, para la serie recibida
         # en parametro
@@ -71,8 +97,12 @@ def generate_electronic_invoice(invoice_code):
             return status_res
 
         # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
-        frappe.msgprint(_(str(status_facelec[1])))
+        status_upgrade = new_invoice.upgrade_records()
+        if status_upgrade['status'] == 'ERROR':
+            return status_upgrade
 
+        return True, status_upgrade
+        # frappe.msgprint(_(str(status_upgrade)))
 
     except:
         return False, str(frappe.get_traceback())
@@ -115,6 +145,7 @@ def check_invoice_records(invoice_code):
     Returns:
         tuple: Primera posicion True/False, Segunda poscion: mensaje descriptivo
     """
+
     # Verifica si existe una factura con la misma serie, evita duplicadas
     if frappe.db.exists('Envio FEL', {'name': invoice_code}):
         facelec = frappe.db.get_values('Envio FEL',
@@ -126,3 +157,9 @@ def check_invoice_records(invoice_code):
 
     else:
         return False, 'A generar una nueva'
+
+
+def validate_serie(serie, conf_name):
+
+    serie = frappe.db.get_value('Configuracion Series FEL', {'parent': str(conf_name), 'serie': str(serie)},
+                                'tipo_documento')

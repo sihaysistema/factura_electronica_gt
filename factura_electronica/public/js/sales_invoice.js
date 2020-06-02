@@ -459,6 +459,36 @@ function eliminar_pdf() {
     }).addClass("btn-primary");
 }
 
+// Funcion antigua para generar factura electronica GFACE
+// function generar_boton_factura(tipo_factura, frm) {
+//     frm.add_custom_button(__(tipo_factura), function () {
+//         // frm.reload(); permite hacer un refresh de todo el documento
+//         frm.reload_doc();
+//         let serie_de_factura = frm.doc.name;
+//         // Guarda la url actual
+//         let mi_url = window.location.href;
+//         frappe.call({
+//             method: "factura_electronica.api.generar_factura_electronica",
+//             args: {
+//                 serie_factura: frm.doc.name,
+//                 nombre_cliente: frm.doc.customer,
+//                 pre_se: frm.doc.naming_series
+//             },
+//             // El callback recibe como parametro el dato retornado por el script python del lado del servidor
+//             callback: function (data) {
+//                 if (data.message !== undefined) {
+//                     // Crea una nueva url con el nombre del documento actualizado
+//                     let url_nueva = mi_url.replace(serie_de_factura, data.message);
+//                     // Asigna la nueva url a la ventana actual
+//                     window.location.assign(url_nueva);
+//                     // Recarga la pagina
+//                     frm.reload_doc();
+//                 }
+//             }
+//         });
+//     }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
+// }
+
 function generar_boton_factura(tipo_factura, frm) {
     frm.add_custom_button(__(tipo_factura), function () {
         // frm.reload(); permite hacer un refresh de todo el documento
@@ -467,10 +497,9 @@ function generar_boton_factura(tipo_factura, frm) {
         // Guarda la url actual
         let mi_url = window.location.href;
         frappe.call({
-            method: "factura_electronica.api.generar_factura_electronica",
+            method: "factura_electronica.fel_api.api_interface",
             args: {
-                serie_factura: frm.doc.name,
-                nombre_cliente: frm.doc.customer,
+                invoice_code: frm.doc.name,
                 pre_se: frm.doc.naming_series
             },
             // El callback recibe como parametro el dato retornado por el script python del lado del servidor
@@ -1087,10 +1116,8 @@ function redondear(value, decimals) {
     return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
 }
 
-
 function prueba(frm) {
     frm.add_custom_button(__('test'), function () {
-
         frappe.call({
             method: "factura_electronica.fel_api.api_interface",
             args: {
