@@ -443,8 +443,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            with open('mi_factura.xml', 'w') as f:
-                f.write(self.__xml_string)
+            # with open('mi_factura.xml', 'w') as f:
+            #     f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -454,8 +454,8 @@ class ElectronicInvoice:
             self.__encoded_bytes = base64.b64encode(self.__xml_string.encode("utf-8"))
             self.__encoded_str = str(self.__encoded_bytes, "utf-8")
             # Usar solo para debug
-            with open('codificado.txt', 'w') as f:
-                    f.write(self.__encoded_str)
+            # with open('codificado.txt', 'w') as f:
+            #         f.write(self.__encoded_str)
         except:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
 
@@ -492,7 +492,7 @@ class ElectronicInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('reciibo.json', 'w') as f:
+            # with open('reciibo_firmado.json', 'w') as f:
             #     f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
@@ -542,6 +542,9 @@ class ElectronicInvoice:
 
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
+
+            # with open('pl_factura.json', 'w') as f:
+            #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
