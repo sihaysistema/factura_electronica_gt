@@ -30,12 +30,14 @@ def api_interface(invoice_code, naming_series):
         state_of = generate_electronic_invoice(invoice_code, naming_series)
         if state_of[0] == False:
             # end = timer()  \n\n\n {end - start}
-            frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
-                            title=_('Process not completed'), indicator='red')
 
             if type(state_of[1]) is dict:  # Aplica para los mensjaes base de datos actualizados
-                return False, state_of[1]['msj']
+                frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
+                               title=_('Process not completed'), indicator='red')
+                return False, state_of[1]
             else:
+                frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
+                               title=_('Process not completed'), indicator='red')
                 return False, state_of[1]
 
 
