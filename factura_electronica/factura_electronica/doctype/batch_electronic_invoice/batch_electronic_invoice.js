@@ -35,10 +35,11 @@ function fel_generator(frm) {
     frm.add_custom_button(__("Generate Electronic Invoice"), function () {
 
         frappe.call({
-            method: 'factura_electronica.fel_api.electronic_invoices_batch',
+            method: 'factura_electronica.factura_electronica.doctype.batch_electronic_invoice.batch_electronic_invoice.electronic_invoices_batch',
             args: {
                 invoice_list: frm.doc.batch_invoices || [],
-                docname: frm.doc.name
+                doc_name: frm.doc.name,
+                doct: frm.doc.doctype
             },
             callback: function (r) {
                 console.log(r.message);
