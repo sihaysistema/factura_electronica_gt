@@ -20,10 +20,11 @@ frappe.ui.form.on('Batch Electronic Invoice', {
         frappe.call({
             method: 'factura_electronica.factura_electronica.doctype.batch_electronic_invoice.batch_electronic_invoice.submit_invoice',
             args: {
-                invoices: frm.doc.batch_invoices
+                invoices: frm.doc.batch_invoices || []
             },
             callback: function (r) {
                 console.log(r.message);
+                frm.reload_doc();
             },
         });
     }
@@ -33,16 +34,17 @@ frappe.ui.form.on('Batch Electronic Invoice', {
 function fel_generator(frm) {
     frm.add_custom_button(__("Generate Electronic Invoice"), function () {
 
-        // frappe.call({
-        //     method: 'factura_electronica.batch_api.test_function',
-        //     args: {
-        //         references: frm.doc.expenses,
-        //         docname: frm.doc.name,
-        //     },
-        //     callback: function (r) {
-        //         frm.reload_doc();
-        //     },
-        // });
+        frappe.call({
+            method: 'factura_electronica.fel_api.electronic_invoices_batch',
+            args: {
+                invoice_list: frm.doc.batch_invoices || [],
+                docname: frm.doc.name
+            },
+            callback: function (r) {
+                console.log(r.message);
+                frm.reload_doc();
+            },
+        });
 
     }).addClass("btn-primary");
 }

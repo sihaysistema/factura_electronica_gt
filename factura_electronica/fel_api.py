@@ -4,8 +4,9 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
+import time
 # import datetime
-# import json
+import json
 # from timeit import default_timer as timer usar para medir tiempo ejecucion
 from factura_electronica.fel.fel import ElectronicInvoice
 
@@ -58,6 +59,46 @@ def api_interface(invoice_code, naming_series):
     except:
         frappe.msgprint(_(f'Ocurrio un problema al procesar la solicitud, mas info en: {frappe.get_traceback()}'))
         return False, 'Ocurrio un error en el proceso de generar factura electronia'
+
+
+
+@frappe.whitelist()
+def electronic_invoices_batch(invoice_list, docname):
+    """
+    Conector a Doctype Batch Electronic Invoice, para generar serialmente Facturas electronicas
+
+    Args:
+        invoice_list (list): Lista de facturas a generar
+        docname (str): Nombre del doctype
+
+    Returns:
+        bool: True, para que javascript refresque la pagina y refleje los ultimso cambios
+    """
+
+    try:
+        invoice_list = json.loads(invoice_list)
+        log_invoices = []
+
+        if len(invoice_list) > 0:
+            fin_c = len(invoice_list)
+
+            for index, invoice in enumerate(invoice_list):
+                # Formula para calcular el porcentarje sobre la cantidad de registros
+                progress = ((index * 100) / fin_c)
+
+                invoice_code = invoice.get('invoice')
+                naming_serie = frappe.db.get_value('Sales Invoice', {'name': invoice_code}, 'naming_series')
+                status_elec_invoice = generate_electronic_invoice(invoice_code, naming_serie)
+
+                descr = f'Invoice {index} of {fin_c}'
+                frappe.publish_progress(percent=progress, title="Generating electronic invoices", description=descr,
+                                        doctype="Batch Electronic Invoice", docname=docname)
+                time.sleep(0.5)
+
+        return True
+
+    except:
+        frappe.msgprint(_(str(frappe.get_traceback())))
 
 
 # Conector API para usar con otros Frameworks

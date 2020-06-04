@@ -764,6 +764,11 @@ class ElectronicInvoice:
                     frappe.db.sql('''UPDATE `tabJournal Entry Account` SET reference_name=%(name)s
                                     WHERE reference_name=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
+                # UPDATE BATCH RECORDS OF INVOICES
+                if frappe.db.exists('Batch Invoices', {'invoice': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabBatch Invoices` SET invoice=%(name)s, electronic_invoice_status="Generated"
+                                    WHERE invoice=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
+
                 frappe.db.commit()
 
             except:
