@@ -39,15 +39,10 @@ def submit_invoice(invoices):
 
     for invoice in invoices:
         # get an existing document
-        if not frappe.db.exists('Sales Invoice', {'name': str(invoice.get('invoice')), 'docstatus': 1}) and \
+        if not frappe.db.exists('Sales Invoice', {'name': str(invoice.get('invoice')), 'docstatus': 1, 'status': 'Draft'}) and \
         frappe.db.exists('Sales Invoice', {'name': str(invoice.get('invoice'))}):
 
             invoice = frappe.get_doc('Sales Invoice', {'name': str(invoice.get('invoice'))})
             invoice.docstatus = 1
             invoice.submit()
-
-            return 'Validada'
-
-        else:
-            return 'Ya estaba validada'
 
