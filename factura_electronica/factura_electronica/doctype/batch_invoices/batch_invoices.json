@@ -4,7 +4,9 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "invoice"
+  "invoice",
+  "status_invoice",
+  "uuid"
  ],
  "fields": [
   {
@@ -14,10 +16,22 @@
    "label": "Invoice",
    "options": "Sales Invoice",
    "search_index": 1
+  },
+  {
+   "fetch_from": "invoice.status",
+   "fieldname": "status_invoice",
+   "fieldtype": "Data",
+   "label": "Status Invoice",
+   "read_only": 1
+  },
+  {
+   "fieldname": "uuid",
+   "fieldtype": "Data",
+   "label": "UUID"
   }
  ],
  "istable": 1,
- "modified": "2020-05-21 12:16:22.655613",
+ "modified": "2020-06-03 14:53:51.360702",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Batch Invoices",

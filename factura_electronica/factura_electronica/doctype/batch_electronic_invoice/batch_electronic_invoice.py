@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 from datetime import date
+import json
 
 class BatchElectronicInvoice(Document):
 	pass
@@ -30,3 +31,23 @@ def batch_generator(invoice_list):
 
     except:
         return False, str(frappe.get_traceback())
+
+
+@frappe.whitelist()
+def submit_invoice(invoices):
+    invoices = json.loads(invoices)
+
+    for invoice in invoices:
+        # get an existing document
+        if not frappe.db.exists('Sales Invoice', {'name': str(invoice.get('invoice')), 'docstatus': 1}) and \
+        frappe.db.exists('Sales Invoice', {'name': str(invoice.get('invoice'))}):
+
+            invoice = frappe.get_doc('Sales Invoice', {'name': str(invoice.get('invoice'))})
+            invoice.docstatus = 1
+            invoice.submit()
+
+            return 'Validada'
+
+        else:
+            return 'Ya estaba validada'
+
