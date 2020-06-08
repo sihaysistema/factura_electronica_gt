@@ -16,6 +16,15 @@ class BatchElectronicInvoice(Document):
 
 
 def batch_generator(invoice_list):
+    """
+    Creador de lotes, todos seran guardados solo hasta el nivel save
+
+    Args:
+        invoice_list (list): Lista de facturas a agregar
+
+    Returns:
+        tuple: (True/False, mensaje de descripcion)
+    """
 
     try:
         if len(invoice_list) == 0:
