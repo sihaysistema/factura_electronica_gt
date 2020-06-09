@@ -543,7 +543,7 @@ class ElectronicInvoice:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            # with open('pl_factura.json', 'w') as f:
+            # with open('RESPONSE_factura.json', 'w') as f:
             #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'

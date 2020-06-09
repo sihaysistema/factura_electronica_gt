@@ -45,17 +45,19 @@ def api_interface(invoice_code, naming_series):
 
         if type(state_of[1]) is dict:
             # end = timer()  \n\n\n {end - start}
+            new_serie = frappe.db.get_value('Envio FEL', {'name': state_of[1]["msj"]}, 'serie_para_factura')
             frappe.msgprint(msg=_(f'Electronic invoice generated with universal unique identifier <b>{state_of[1]["msj"]}</b>'),
                             title=_('Process successfully completed'), indicator='green')
 
-            return True, str(state_of[1]["serie_nueva"])
+            return True, str(new_serie)
 
         else:
             # end = timer()
+            new_serie = frappe.db.get_value('Envio FEL', {'name': state_of[1]}, 'serie_para_factura')
             frappe.msgprint(msg=_(f'Electronic invoice generated with universal unique identifier <b>{state_of[1]}</b>'),
                             title=_('Process successfully completed'), indicator='green')
 
-            return True, str(state_of[1])
+            return True, str(new_serie)
 
     except:
         frappe.msgprint(_(f'Ocurrio un problema al procesar la solicitud, mas info en: {frappe.get_traceback()}'))
@@ -156,6 +158,8 @@ def generate_electronic_invoice(invoice_code, naming_series):
             return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
 
         # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
+        # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
+        # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
         status_res = new_invoice.response_validator()
         if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
             return status_res  # return tuple
