@@ -773,10 +773,12 @@ class ElectronicInvoice:
 
             except:
                 # En caso exista un error al renombrar la factura retornara el mensaje con el error
-                return False, {'status': 'ERROR',
-                               'msj': 'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica'}
+                return False, f'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica \
+                                mas informacion en el siguiente log: {frappe.get_traceback()}'
 
             else:
                 # Si los datos se Guardan correctamente, se retornara la serie, que sera capturado por api.py
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
-                return True, {'status': 'OK', 'msj': factura_guardada[0]['uuid'], 'serie_nueva': serieFEL}
+
+                # Se utilizara el UUID como clave para orquestar el resto de las apps que lo necesiten
+                return True, factura_guardada[0]['uuid']

@@ -32,6 +32,7 @@ def api_interface(invoice_code, naming_series):
         if state_of[0] == False:
             # end = timer()  \n\n\n {end - start}
 
+            # Si ocurre algun error en la fase final de facelec
             if type(state_of[1]) is dict:  # Aplica para los mensjaes base de datos actualizados
                 frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
                                title=_('Process not completed'), indicator='red')
@@ -61,10 +62,47 @@ def api_interface(invoice_code, naming_series):
         return False, 'Ocurrio un error en el proceso de generar factura electronia'
 
 
+
 # Conector API para usar con otros Frameworks
 @frappe.whitelist()
-def api_connector():
-    pass
+def api_facelec(invoice_name, naming_serie):
+    """
+    Conector API
+
+    Args:
+        invoice_name (str): Nombre de la factura
+        naming_serie (str): Serie utilizada en la factura
+
+    Returns:
+        tuple: (True/False, msj)
+    """
+
+    try:
+        # llamamos a la funcion que se encarga de validaciones y finalmente generar facelec
+        state_of_facelec = generate_electronic_invoice(invoice_name, naming_serie)
+        if state_of_facelec[0] == False:
+            dict_response = {
+                'status': 'NO PROCESADO',
+                'id_factura': invoice_name,
+                'msj': state_of_facelec[1]
+            }
+
+            return dict_response
+
+        dict_ok = {
+            'status': 'OK',
+            'id_factura': invoice_name,
+            'uuid': state_of_facelec[1]
+        }
+
+        return dict_ok
+
+    except:
+        return {
+            'status': 'ERROR',
+            'id_factura': invoice_name,
+            'msj': f'Ocurrio un problema al tratar de generar factura electronica, mas info en: {frappe.get_traceback()}'
+        }
 
 
 def generate_electronic_invoice(invoice_code, naming_series):
@@ -124,12 +162,12 @@ def generate_electronic_invoice(invoice_code, naming_series):
 
         # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
         status_upgrade = new_invoice.upgrade_records()
-        if status_upgrade[1]['status'] == 'ERROR':
+        if status_upgrade[0] == False:
             return status_upgrade
 
         # SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
         # el UUID y la nueva serie para la factura
-        return status_upgrade
+        return True, status_upgrade[1]
         # frappe.msgprint(_(str(status_upgrade)))
 
     except:
