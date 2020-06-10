@@ -28,7 +28,8 @@ def batch_generator(invoice_list):
 
     try:
         if len(invoice_list) == 0:
-            return False, 'No se recibio ninguna factura'
+            return False, 'Las Facturas procesadas ya se encuentran generadas en lote, para verificar \
+                           puedes ver en <a href="#List/Batch Electronic Invoice"><b>Batch Electronic Invoice</b></a>'
 
         BATCH = frappe.get_doc({
             "doctype": "Batch Electronic Invoice",
