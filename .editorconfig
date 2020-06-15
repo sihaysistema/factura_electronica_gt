@@ -1,0 +1,62 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# SI HAY SISTEMA STYLE GUIDE
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+indent_size = 4
+trim_trailing_whitespace = true
+end_of_line = lf
+charset = utf-8
+
+# Matches multiple files with brace expansion notation
+# Set default charset
+[*.{js,py}]
+charset = utf-8
+
+# Python
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 110
+insert_final_newline = true
+
+# Javascript
+[*.js]
+indent_style = space
+indent_size = 4
+max_line_length = 110
+
+# HTML
+[*.html]
+indent_style = space
+indent_size = 4
+
+# CSS
+[*.css]
+indent_style = space
+indent_size = 4
+
+# JSON
+[*.json]
+indent_style = space
+indent_size = 4
+insert_final_newline = false
+
+# Tab indentation (no size specified)
+[Makefile]
+indent_style = tab
+
+# Matches the exact files either package.json or .travis.yml
+[{package.json,.travis.yml}]
+indent_style = space
+indent_size = 2
+insert_final_newline = ignore
+
+# Minified JavaScript files shouldn't be changed
+[**.min.js]
+indent_style = ignore
+insert_final_newline = ignore

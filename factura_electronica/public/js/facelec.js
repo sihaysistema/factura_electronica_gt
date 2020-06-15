@@ -102,10 +102,14 @@ frappe.ui.form.on("Company", {
 // descripciones campos address
 frappe.ui.form.on("Address", {
     refresh: function (frm) {
-        frm.set_df_property("city", "description", __("<b>Departamento</b>"));
-        frm.set_df_property("state", "description", __("<b>Municipio</b>"));
-        frm.set_df_property("address_line1", "description", __("<b>Direccion Comercial 1</b>"));
-        frm.set_df_property("address_line2", "description", __("<b>Direccion Comercial 2</b>"));
-        frm.set_df_property("country", "description", __("<b>Pais</b>"));
+        frm.set_df_property("city", "description", __("<b>FEL: Departamento</b>"));
+        frm.set_df_property("state", "description", __("<b>FEL: Municipio</b>"));
+        frm.set_df_property("address_line1", "description", __(
+            "<b>FEL: Direccion Comercial 1</b>"));
+        frm.set_df_property("country", "description", __("<b>FEL: Pais</b>"));
+        frm.set_df_property("email_id", "description", __("<b>FEL: Correo Electronico</b>"));
+        frm.set_df_property("pincode", "description", __("<b>FEL: Código Postal</b>"));
+        frm.set_df_property("is_primary_address", "description", __(
+            "<b>FEL: Dirección para facturar</b>"));
     }
 });

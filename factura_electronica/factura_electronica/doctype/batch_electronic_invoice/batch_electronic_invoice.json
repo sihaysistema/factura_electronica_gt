@@ -1,0 +1,81 @@
+{
+ "autoname": "BATCH.##########",
+ "creation": "2020-05-21 11:11:32.416463",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "posting_date",
+  "validate_invoices",
+  "invoices_section",
+  "batch_invoices",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "validate_invoices",
+   "fieldtype": "Button",
+   "label": "Validate Invoices"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Batch Electronic Invoice",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "invoices_section",
+   "fieldtype": "Section Break",
+   "label": "Invoices"
+  },
+  {
+   "fieldname": "batch_invoices",
+   "fieldtype": "Table",
+   "label": "Batch Invoices",
+   "options": "Batch Invoices"
+  }
+ ],
+ "modified": "2020-06-04 14:39:50.415399",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Batch Electronic Invoice",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
