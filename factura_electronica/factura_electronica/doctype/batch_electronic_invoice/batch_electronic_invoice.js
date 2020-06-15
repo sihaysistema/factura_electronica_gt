@@ -12,8 +12,15 @@ frappe.ui.form.on('Batch Electronic Invoice', {
         // Agrega clase bootstrap al boton
         frm.get_field("validate_invoices").$input.addClass("btn btn-primary");
 
+        frappe.call(
+            'factura_electronica.factura_electronica.doctype.batch_electronic_invoice.batch_electronic_invoice.verify_validated_invoices', {
+            invoices: frm.doc.batch_invoices || []
+        }).then(r => {
+            if (r.message === true) {
+                fel_generator(frm);
+            }
+        })
 
-        fel_generator(frm);
     },
     validate_invoices: function (frm) {
         // Validacion a todas las facturas que se encuentren en la tabla hija

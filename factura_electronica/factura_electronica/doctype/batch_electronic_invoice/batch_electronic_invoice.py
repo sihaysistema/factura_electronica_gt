@@ -103,3 +103,28 @@ def electronic_invoices_batch(invoice_list, doc_name, doct):
         frappe.msgprint(_(str(frappe.get_traceback())))
 
 
+@frappe.whitelist()
+def verify_validated_invoices(invoices):
+    """
+    Verifica si todas las facturas se encuentran validadas, esto para hacer mostrar
+    el boton para factura electronica, solo y solo si todas las facturas estan validadas,
+    tambien permite crear facelec por facelec
+
+    Args:
+        invoices (list): Lista dicconarios con los nombre de factura
+
+    Returns:
+        bool: True/False
+    """
+
+    invoice_list = json.loads(invoices)
+
+    if len(invoice_list) > 0:
+        for invoice in invoice_list:
+            if not frappe.db.exists('Sales Invoice', {'name': invoice.get('invoice'), 'docstatus':1}):
+                return False
+
+        return True
+
+    else:
+        return False
