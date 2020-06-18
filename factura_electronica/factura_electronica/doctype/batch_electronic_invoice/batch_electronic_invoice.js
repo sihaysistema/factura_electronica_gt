@@ -4,9 +4,10 @@
 frappe.ui.form.on('Batch Electronic Invoice', {
     refresh: function (frm) {
 
-        // frm.set_intro(__(
-        //     'NOTA PARA GENERADOR DE LOTES'
-        // ));
+        frm.set_intro(__(
+            'Si el estatus de las facturas persiste como no generadas, se recomienda ir factura por factura generando factura electronica'
+        ));
+
         // Validador de funcion, que muestra el boton de import payments SOLAMENTE despues de Guardado.
 
         // Agrega clase bootstrap al boton
