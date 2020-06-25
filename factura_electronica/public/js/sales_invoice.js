@@ -828,6 +828,23 @@ frappe.ui.form.on("Sales Invoice", {
             cur_frm.set_df_property("naming_series", "read_only", 0);
         }
 
+        cur_frm.page.add_action_item(__("ISR"), function () {
+            frappe.call({
+                method: 'factura_electronica.api_erp.journal_entry_isr',
+                args: {
+                    references: frm.doc.expenses,
+                    docname: frm.doc.name,
+                },
+                callback: function (r) {
+                    frm.reload_doc();
+                },
+            });
+        });
+
+        cur_frm.page.add_action_item(__("ISR-IVA"), function () {
+            frappe.msgprint("Approved");
+        });
+
     },
     validate: function (frm) {
         generar_tabla_html(frm);
@@ -1020,8 +1037,8 @@ frappe.ui.form.on("Sales Invoice", {
 });
 
 frappe.ui.form.on("Sales Invoice Item", {
-    items_add: function (frm, cdt, cdn) {},
-    items_move: function (frm, cdt, cdn) {},
+    items_add: function (frm, cdt, cdn) { },
+    items_move: function (frm, cdt, cdn) { },
     before_items_remove: function (frm, cdt, cdn) {
         frm.doc.items.forEach((item_row_1, index_1) => {
             if (item_row_1.name == cdn) {
