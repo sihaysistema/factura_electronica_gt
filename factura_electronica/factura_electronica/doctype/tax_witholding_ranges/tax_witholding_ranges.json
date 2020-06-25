@@ -1,0 +1,97 @@
+{
+ "autoname": "TAX-CONFIG.#######",
+ "creation": "2020-06-24 22:04:18.220431",
+ "description": "Doctype para guardar pre configuraciones sobre impuestos y Facturas Electronicas",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "rententions_section",
+  "isr_account_payable",
+  "iva_account_payable",
+  "column_break_5",
+  "isr_percentage_rate"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "rententions_section",
+   "fieldtype": "Section Break",
+   "label": "Rententions"
+  },
+  {
+   "fieldname": "isr_account_payable",
+   "fieldtype": "Link",
+   "label": "ISR Account payable",
+   "options": "Account"
+  },
+  {
+   "fieldname": "iva_account_payable",
+   "fieldtype": "Link",
+   "label": "IVA Account Payable",
+   "options": "Account"
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "isr_percentage_rate",
+   "fieldtype": "Percent",
+   "label": "ISR percentage rate"
+  }
+ ],
+ "modified": "2020-06-24 22:04:18.220431",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Tax Witholding Ranges",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

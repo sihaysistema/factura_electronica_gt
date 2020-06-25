@@ -50,5 +50,16 @@ def get_data():
                     "onboard": 1
                 }
             ]
+        },
+        {
+            "label": _("Taxes"),
+            "items": [
+                {
+                    "type": "doctype",
+                    "name": "Tax Witholding Ranges",
+                    "description": _("Tax Witholding Ranges"),
+                    "onboard": 1
+                }
+            ]
         }
     ]
