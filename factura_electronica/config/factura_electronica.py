@@ -56,12 +56,6 @@ def get_data():
             "items": [
                 {
                     "type": "doctype",
-                    "name": "Tax Witholding Ranges",
-                    "description": _("Tax Witholding Ranges"),
-                    "onboard": 1
-                },
-                {
-                    "type": "doctype",
                     "name": "Purchase and Sales Ledger Tax Declaration",
                     "description": _("Purchase and Sales Ledger Tax Declaration"),
                     "onboard": 1
