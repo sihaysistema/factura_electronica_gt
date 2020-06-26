@@ -833,15 +833,16 @@ frappe.ui.form.on("Sales Invoice", {
                 frappe.call({
                     method: 'factura_electronica.api_erp.journal_entry_isr',
                     args: {
-                        company: frm.doc.company,
-                        posting_date: frm.doc.posting_date,
-                        total_debit: frm.doc.grand_total,
-                        total_credit: frm.doc.grand_total,
-                        debit_to: frm.doc.debit_to,
-                        currency: frm.doc.currency,
-                        curr_exch: frm.doc.conversion_rate,
-                        customer: frm.doc.customer,
-                        name_inv: frm.doc.name
+                        data_invoice: {
+                            company: frm.doc.company,
+                            posting_date: frm.doc.posting_date,
+                            grand_total: frm.doc.grand_total,
+                            debit_to: frm.doc.debit_to,
+                            currency: frm.doc.currency,
+                            curr_exch: frm.doc.conversion_rate,
+                            customer: frm.doc.customer,
+                            name_inv: frm.doc.name
+                        }
                     },
                     callback: function (r) {
                         console.log(r.message);

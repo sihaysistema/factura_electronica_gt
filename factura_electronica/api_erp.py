@@ -24,13 +24,10 @@ def batch_generator_api(invoices):
 
 
 @frappe.whitelist()
-def journal_entry_isr(company, posting_date, total_debit, total_credit, debit_to,
-                      currency, curr_exch, customer, name_inv, posting_time="", cheque_no="", cheque_date="",
-                      user_remark="", docstatus=0, cost_center=""):
+def journal_entry_isr(data_invoice):
     try:
-        new_je = JournalEntryISR(company, posting_date, total_debit, total_credit, debit_to,
-                                currency, curr_exch, customer, name_inv, posting_time="", cheque_no="", cheque_date="",
-                                user_remark="", docstatus=0, cost_center="")
+        frappe.msgprint(str(data_invoice))
+        new_je = JournalEntryISR(json.loads(data_invoice))
         new_je.validate_dependencies()
         new_je.generate_je_accounts()
         new_je.create_journal_entry()
@@ -38,26 +35,27 @@ def journal_entry_isr(company, posting_date, total_debit, total_credit, debit_to
         frappe.msgprint(str(frappe.get_traceback()))
 
 
+# company, posting_date, grand_total, debit_to,
+# currency, curr_exch, customer, name_inv, posting_time,
+# cheque_no="", cheque_date="", user_remark="", docstatus=0,
+# cost_center=""
 class JournalEntryISR:
-    def __init__(self, company, posting_date, total_debit, total_credit,  debit_to,
-                 currency, curr_exch, customer, name_inv, posting_time, cheque_no="", cheque_date="",
-                 user_remark="", docstatus=0, cost_center=""):
+    def __init__(self, data_invoice):
 
-        self.company = str(company).strip()
-        self.posting_date = str(posting_date)
-        self.posting_time = str(posting_time)
-        self.total_debit = float(total_debit)
-        self.total_credit = float(total_credit)
-        self.debit_to = str(debit_to).strip()
-        self.currency = str(currency).strip()
-        self.curr_exch = float(curr_exch)
-        self.customer = str(customer).strip()
-        self.name_inv = str(name_inv).strip()
-        self.cheque_no = str(cheque_no).strip()
-        self.cheque_date = str(cheque_date)
-        self.remarks = str(user_remark)
-        self.docstatus = int(docstatus)
-        self.cost_center = str(cost_center).strip()
+        self.company = str(data_invoice.get("company")).strip()
+        self.posting_date = str(data_invoice.get("posting_date"))
+        self.posting_time = str(data_invoice.get("posting_time", ""))
+        self.grand_total = float(data_invoice.get("grand_total"))
+        self.debit_to = str(data_invoice.get("debit_to")).strip()
+        self.currency = str(data_invoice.get("currency")).strip()
+        self.curr_exch = float(data_invoice.get("curr_exch"))
+        self.customer = str(data_invoice.get("customer")).strip()
+        self.name_inv = str(data_invoice.get("name_inv")).strip()
+        self.cheque_no = str(data_invoice.get("cheque_no", "")).strip()
+        self.cheque_date = str(data_invoice.get("cheque_date", ""))
+        self.remarks = str(data_invoice.get("user_remark", ""))
+        self.docstatus = int(data_invoice.get("docstatus", 0))
+        self.cost_center = str(data_invoice.get("cost_center", "")).strip()
 
     def validate_dependencies(self):
         # TODO: API
@@ -77,9 +75,12 @@ class JournalEntryISR:
         # si la cuenta es de dolares, se usara, si no existe TODO: se buscara la defaulta configurada
         # Si se cobra en quetzales se buscara la default de la compania sino se data una alerta
 
-        self.default_bank_acc = frappe.db.get_value("Customer", {"name": self.customer}, "default_bank_account")
-        if not self.default_bank_acc:
+        self.default_bank_acc_customer = frappe.db.get_value("Customer", {"name": self.customer}, "default_bank_account")
+        if not self.default_bank_acc_customer:
             frappe.msgprint("NO")
+        else:
+            self.default_bank_acc = frappe.db.get_value("Bank Account", {"name": self.default_bank_acc_customer},
+                                                        "account")
 
         # ISR
         # Si existe algun registo para la compania en:
@@ -88,13 +89,13 @@ class JournalEntryISR:
                                                             "isr_account_payable")
 
     def generate_je_accounts(self):
-        isr_amt = apply_formula_isr(self.total_credit)
+        isr_amt = apply_formula_isr(self.grand_total, self.curr_exch)
 
         self.accounts_je = [
             {
                 "account": self.debit_to,  #Cuenta a que se va a utilizar
                 "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
-                "credit_in_account_currency": amount_converter(self.total_credit, 1),  #Valor del monto a acreditar
+                "credit_in_account_currency": amount_converter(self.grand_total, self.curr_exch),  #Valor del monto a acreditar
                 "debit_in_account_currency": 0,  #Valor del monto a debitar
                 # "exchange_rate": 1,  #Tipo decambio
                 # "account_currency": frappe.db.get_value("Account", {"name": self.debit_to}, "account_currency"),
@@ -107,27 +108,18 @@ class JournalEntryISR:
                 "account": self.default_bank_acc,  #Cuenta a que se va a utilizar
                 "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
                 "credit_in_account_currency": 0,  #Valor del monto a acreditar
-                "debit_in_account_currency": apply_calcl(self.total_credit, self.curr_exch, isr_amt),  #Valor del monto a debitar
-                # "exchange_rate": self.curr_exch,  #Tipo decambio
-                # "account_currency": frappe.db.get_value("Account", {"name": self.default_bank_acc}, "account_currency"),
-                # "party_type": "Customer",  #Tipo de tercero: Proveedor, Cliente, Estudiante, Accionista, Etc. SE USARA CUSTOMER UA QUE VIENE DE SALES INVOICE
-                # "party": self.customer,  #Nombre del cliente
-                # "reference_name": self.name_inv,  #Referencia dada por sistema
-                # "reference_type": "Sales Invoice"
+                "debit_in_account_currency": apply_calcl(self.grand_total, self.curr_exch, isr_amt),  #Valor del monto a debitar
             },
             {
-                "account": self.isr_account_payable,  #Cuenta a que se va a utilizar
+                "account": self.isr_account_payable[0][0],  #Cuenta a que se va a utilizar
                 "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
                 "credit_in_account_currency": 0,  #Valor del monto a acreditar
                 "debit_in_account_currency": isr_amt,  #Valor del monto a debitar
-                # "exchange_rate": self.curr_exch,  #Tipo decambio
-                # "account_currency": frappe.db.get_value("Account", {"name": self.default_bank_acc}, "account_currency"),
-                # "party_type": "Customer",  #Tipo de tercero: Proveedor, Cliente, Estudiante, Accionista, Etc. SE USARA CUSTOMER UA QUE VIENE DE SALES INVOICE
-                # "party": self.customer,  #Nombre del cliente
-                # "reference_name": self.name_inv,  #Referencia dada por sistema
-                # "reference_type": "Sales Invoice"
             }
         ]
+
+        # with open('filas.json', 'w') as f:
+        #     f.write(json.dumps(self.accounts_je, indent=2))
 
     def create_journal_entry(self):
         try:
@@ -135,7 +127,7 @@ class JournalEntryISR:
                 "doctype": "Journal Entry",
                 "voucher_type": "Journal Entry",
                 "cheque_no": self.cheque_no,
-                "cheque_date": self.cheque_date,
+                "cheque_date": self.posting_date,
                 "company": self.company,
                 "posting_date": self.posting_date,
                 # "user_remark": self.user_remark,
@@ -156,11 +148,13 @@ def amount_converter(monto, currency_exchange, from_currency="GTQ", to_currency=
     return monto * currency_exchange
 
 
-def apply_formula_isr(monto):
-    salida = (monto - (monto / 1.12) * (5/100))
+def apply_formula_isr(monto, curr_exch):
+    am_gtq = monto * curr_exch
+    salida = (am_gtq - (am_gtq / 1.12) * (5/100))
     return salida
 
 
 def apply_calcl(monto, curr_exch, isr):
-    x = (monto - isr) * 1/curr_exch
+    am_gtq = monto * (curr_exch)
+    x = ((am_gtq - isr) * 1/curr_exch)
     return x
