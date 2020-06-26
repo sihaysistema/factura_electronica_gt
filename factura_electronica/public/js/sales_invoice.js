@@ -828,22 +828,31 @@ frappe.ui.form.on("Sales Invoice", {
             cur_frm.set_df_property("naming_series", "read_only", 0);
         }
 
-        cur_frm.page.add_action_item(__("ISR"), function () {
-            frappe.call({
-                method: 'factura_electronica.api_erp.journal_entry_isr',
-                args: {
-                    references: frm.doc.expenses,
-                    docname: frm.doc.name,
-                },
-                callback: function (r) {
-                    frm.reload_doc();
-                },
+        if (frm.doc.docstatus === 1 && frm.doc.status !== 'Paid') {
+            cur_frm.page.add_action_item(__("ISR"), function () {
+                frappe.call({
+                    method: 'factura_electronica.api_erp.journal_entry_isr',
+                    args: {
+                        company: frm.doc.company,
+                        posting_date: frm.doc.posting_date,
+                        total_debit: frm.doc.grand_total,
+                        total_credit: frm.doc.grand_total,
+                        debit_to: frm.doc.debit_to,
+                        currency: frm.doc.currency,
+                        curr_exch: frm.doc.conversion_rate,
+                        customer: frm.doc.customer,
+                        name_inv: frm.doc.name
+                    },
+                    callback: function (r) {
+                        console.log(r.message);
+                    },
+                });
             });
-        });
 
-        cur_frm.page.add_action_item(__("ISR-IVA"), function () {
-            frappe.msgprint("Approved");
-        });
+            cur_frm.page.add_action_item(__("ISR-IVA"), function () {
+                frappe.msgprint("Approved");
+            });
+        }
 
     },
     validate: function (frm) {

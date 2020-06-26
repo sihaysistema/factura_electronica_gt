@@ -8,6 +8,9 @@ from factura_electronica.factura_electronica.doctype.batch_electronic_invoice.ba
     batch_generator
 from frappe import _
 
+import json
+
+
 # USAR ESTE SCRIPT COMO API PARA COMUNICAR APPS DEL ECOSISTEMA FRAPPE/ERPNEXT :)
 
 @frappe.whitelist()
@@ -21,11 +24,13 @@ def batch_generator_api(invoices):
 
 
 @frappe.whitelist()
-def journal_entry_isr(cheque_on, cheque_date, company, posting_date, user_remark, total_debit,
-                      total_credit, accounts, docstatus, posting_time, debit_to, names,
-                      currency, curr_exch, customer, name_inv):
+def journal_entry_isr(company, posting_date, total_debit, total_credit, debit_to,
+                      currency, curr_exch, customer, name_inv, posting_time="", cheque_no="", cheque_date="",
+                      user_remark="", docstatus=0, cost_center=""):
     try:
-        new_je = JournalEntryISR()
+        new_je = JournalEntryISR(company, posting_date, total_debit, total_credit, debit_to,
+                                currency, curr_exch, customer, name_inv, posting_time="", cheque_no="", cheque_date="",
+                                user_remark="", docstatus=0, cost_center="")
         new_je.validate_dependencies()
         new_je.generate_je_accounts()
         new_je.create_journal_entry()
@@ -34,8 +39,8 @@ def journal_entry_isr(cheque_on, cheque_date, company, posting_date, user_remark
 
 
 class JournalEntryISR:
-    def __init__(self, company, posting_date, total_debit, total_credit, posting_time, debit_to,
-                 currency, curr_exch, customer, name_inv, cheque_no="", cheque_date="",
+    def __init__(self, company, posting_date, total_debit, total_credit,  debit_to,
+                 currency, curr_exch, customer, name_inv, posting_time, cheque_no="", cheque_date="",
                  user_remark="", docstatus=0, cost_center=""):
 
         self.company = str(company).strip()
@@ -64,7 +69,7 @@ class JournalEntryISR:
         # Validamos el centro de costo, si no existe se usara el default configurado en la company
         # tambien existe la posiblidad de que el usario haga la modificaciones manualmente en el Journal Entry
         if not frappe.db.exists("Cost Center", {"name": self.cost_center, "company": self.company}):
-            self.cost_center = frappe.db.get_value("Company", {"name": self.company}, "default_cost_center")
+            self.cost_center = frappe.db.get_value("Company", {"name": self.company}, "cost_center")
 
         # Para segunda fila
         # Validamos Bank Account Default por cliente, si es USD, GTQ, etc ...
@@ -72,7 +77,7 @@ class JournalEntryISR:
         # si la cuenta es de dolares, se usara, si no existe TODO: se buscara la defaulta configurada
         # Si se cobra en quetzales se buscara la default de la compania sino se data una alerta
 
-        self.default_bank_acc = frappe.db.get_value("Customer", {"customer_name": self.customer}, "default_bank_account")
+        self.default_bank_acc = frappe.db.get_value("Customer", {"name": self.customer}, "default_bank_account")
         if not self.default_bank_acc:
             frappe.msgprint("NO")
 
@@ -92,7 +97,7 @@ class JournalEntryISR:
                 "credit_in_account_currency": amount_converter(self.total_credit, 1),  #Valor del monto a acreditar
                 "debit_in_account_currency": 0,  #Valor del monto a debitar
                 # "exchange_rate": 1,  #Tipo decambio
-                "account_currency": frappe.db.get_value("Account", {"name": self.debit_to}, "currency_account"),
+                # "account_currency": frappe.db.get_value("Account", {"name": self.debit_to}, "account_currency"),
                 "party_type": "Customer",  #Tipo de tercero: Proveedor, Cliente, Estudiante, Accionista, Etc. SE USARA CUSTOMER UA QUE VIENE DE SALES INVOICE
                 "party": self.customer,  #Nombre del cliente
                 "reference_name": self.name_inv,  #Referencia dada por sistema
@@ -103,8 +108,8 @@ class JournalEntryISR:
                 "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
                 "credit_in_account_currency": 0,  #Valor del monto a acreditar
                 "debit_in_account_currency": apply_calcl(self.total_credit, self.curr_exch, isr_amt),  #Valor del monto a debitar
-                "exchange_rate": self.curr_exch,  #Tipo decambio
-                "account_currency": frappe.db.get_value("Account", {"name": self.default_bank_acc}, "currency_account"),
+                # "exchange_rate": self.curr_exch,  #Tipo decambio
+                # "account_currency": frappe.db.get_value("Account", {"name": self.default_bank_acc}, "account_currency"),
                 # "party_type": "Customer",  #Tipo de tercero: Proveedor, Cliente, Estudiante, Accionista, Etc. SE USARA CUSTOMER UA QUE VIENE DE SALES INVOICE
                 # "party": self.customer,  #Nombre del cliente
                 # "reference_name": self.name_inv,  #Referencia dada por sistema
@@ -116,7 +121,7 @@ class JournalEntryISR:
                 "credit_in_account_currency": 0,  #Valor del monto a acreditar
                 "debit_in_account_currency": isr_amt,  #Valor del monto a debitar
                 # "exchange_rate": self.curr_exch,  #Tipo decambio
-                "account_currency": frappe.db.get_value("Account", {"name": self.default_bank_acc}, "currency_account"),
+                # "account_currency": frappe.db.get_value("Account", {"name": self.default_bank_acc}, "account_currency"),
                 # "party_type": "Customer",  #Tipo de tercero: Proveedor, Cliente, Estudiante, Accionista, Etc. SE USARA CUSTOMER UA QUE VIENE DE SALES INVOICE
                 # "party": self.customer,  #Nombre del cliente
                 # "reference_name": self.name_inv,  #Referencia dada por sistema
@@ -126,27 +131,22 @@ class JournalEntryISR:
 
     def create_journal_entry(self):
         try:
-            JOURNALENTRY = frappe.get_doc(
-                {
-                    "doctype": "Journal Entry",
-                    "voucher_type": "Journal Entry",
-                    "cheque_on": self.cheque_on,
-                    "cheque_date": self.cheque_date,
-                    "company": self.company,
-                    "posting_date": self.posting_date,
-                    "user_remark": self.user_remark,
-                    "total_debit": self.total_debit,
-                    "total_credit": self.total_credit,
-                    "accounts": self.accounts_je,
-                    "docstatus": 0,
-                    # "posting_time": "17:57:12",
-                    "title": "Poliza ISR"
-                }
-            )
+            JOURNALENTRY = frappe.get_doc({
+                "doctype": "Journal Entry",
+                "voucher_type": "Journal Entry",
+                "cheque_no": self.cheque_no,
+                "cheque_date": self.cheque_date,
+                "company": self.company,
+                "posting_date": self.posting_date,
+                # "user_remark": self.user_remark,
+                "accounts": list(self.accounts_je),
+                "docstatus": 0,
+                "multi_currency": 1
+            })
 
             status_journal = JOURNALENTRY.insert(ignore_permissions=True)
 
-            frappe.msgprint('exito')
+            frappe.msgprint(str(status_journal))
 
         except:
             frappe.msgprint(str(frappe.get_traceback()))
