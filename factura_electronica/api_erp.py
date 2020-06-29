@@ -198,7 +198,7 @@ class JournalEntryISR:
 
             status_journal = JOURNALENTRY.insert(ignore_permissions=True)
 
-            frappe.msgprint(str(status_journal))
+            frappe.msgprint(_('Journal Entry generado con exito'))
 
         except:
             frappe.msgprint(str(frappe.get_traceback()))
