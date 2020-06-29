@@ -66,6 +66,7 @@ class JournalEntryISR:
         self.remarks = str(data_invoice.get("user_remark", ""))
         self.docstatus = int(data_invoice.get("docstatus", 0))
         self.cost_center = str(data_invoice.get("cost_center", "")).strip()
+        self.accounts_je = []
 
     def validate_dependencies(self):
         """
@@ -108,54 +109,72 @@ class JournalEntryISR:
         Genera las filas para Journal Entry, detecta si es necesario aplicar conversion dolares, quetzales,
         aplicar IVA, ISR
         """
-        isr_amt = apply_formula_isr(self.grand_total, self.curr_exch)
 
         # Logica posible fila 1
+        # Moneda de la cuenta
         curr_row_a = frappe.db.get_value("Account", {"name": self.debit_to}, "account_currency")
-        # Aplicamos equivalente operador ternario, if en uan sola linea
+        # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
         # resultado = valor_si if condicion else valor_no
-        exch_rate_je = 1 if (curr_row_a == "GTQ") else self.curr_exch
+        exch_rate_row = 1 if (curr_row_a == "GTQ") else self.curr_exch
 
         row_one = {
             "account": self.debit_to,  # Cuenta a que se va a utilizar
             "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
-            "credit_in_account_currency": amount_converter(self.grand_total, self.curr_exch, self.currency, curr_row_a),  #Valor del monto a acreditar
+            "credit_in_account_currency": amount_converter(self.grand_total, self.curr_exch,
+                                                           from_currency=self.currency, to_currency=curr_row_a),  #Valor del monto a acreditar
             "debit_in_account_currency": 0,  #Valor del monto a debitar
-            "exchange_rate": exch_rate_je,  # Tipo de cambio
+            "exchange_rate": exch_rate_row,  # Tipo de cambio
             "account_currency": curr_row_a,
             "party_type": "Customer",  #Tipo de tercero: Proveedor, Cliente, Estudiante, Accionista, Etc. SE USARA CUSTOMER UA QUE VIENE DE SALES INVOICE
             "party": self.customer,  #Nombre del cliente
             "reference_name": self.name_inv,  #Referencia dada por sistema
             "reference_type": "Sales Invoice"
         }
+        self.accounts_je.append(row_one)
 
         # Logica posible fila 2
+        # moneda de la cuenta
         curr_row_b = frappe.db.get_value("Account", {"name": self.default_bank_acc}, "account_currency")
-        # Aplicamos equivalente operador ternario, if en uan sola linea
+        # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
         # resultado = valor_si if condicion else valor_no
-        exch_rate_je = 1 if (curr_row_a == "GTQ") else self.curr_exch
+        exch_rate_row = 1 if (curr_row_b == "GTQ") else self.curr_exch
+
+        # Calculo fila dos
+        ISR_PAYABLE = apply_formula_isr(self.grand_total)
+        amt_without_isr = (self.grand_total - ISR_PAYABLE)
+        calc_row_two = amount_converter(amt_without_isr, self.curr_exch,
+                                        from_currency=self.currency, to_currency=curr_row_b)
 
         row_two = {
             "account": self.default_bank_acc,  #Cuenta a que se va a utilizar
             "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
             "credit_in_account_currency": 0,  #Valor del monto a acreditar
-            "exchange_rate": exch_rate_je,  # Tipo de cambio
+            "exchange_rate": exch_rate_row,  # Tipo de cambio
             "account_currency": curr_row_b,  # Moneda de la cuenta
-            "debit_in_account_currency": apply_calcl(self.grand_total, self.curr_exch, isr_amt),  #Valor del monto a debitar
+            "debit_in_account_currency": calc_row_two,  #Valor del monto a debitar
         }
+        self.accounts_je.append(row_two)
 
+        # Logica posible fila 3
+        # moneda de la cuenta
+        curr_row_c = frappe.db.get_value("Account", {"name": self.isr_account_payable[0][0]}, "account_currency")
+        # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
+        # resultado = valor_si if condicion else valor_no
+        exch_rate_row = 1 if (curr_row_c == "GTQ") else self.curr_exch
+        isr_curr_acc = amount_converter(ISR_PAYABLE, self.curr_exch, from_currency=self.currency, to_currency=curr_row_c)
 
-        self.accounts_je = [
-            {
-                "account": self.isr_account_payable[0][0],  #Cuenta a que se va a utilizar
-                "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
-                "credit_in_account_currency": 0,  #Valor del monto a acreditar
-                "debit_in_account_currency": isr_amt,  #Valor del monto a debitar
-            }
-        ]
+        row_three = {
+            "account": self.isr_account_payable[0][0],  #Cuenta a que se va a utilizar
+            "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
+            "credit_in_account_currency": 0,  #Valor del monto a acreditar
+            "exchange_rate": exch_rate_row,  # Tipo de cambio
+            "account_currency": curr_row_c,  # Moneda de la cuenta
+            "debit_in_account_currency": isr_curr_acc,  #Valor del monto a debitar
+        }
+        self.accounts_je.append(row_three)
 
-        # with open('filas.json', 'w') as f:
-        #     f.write(json.dumps(self.accounts_je, indent=2))
+        with open('filas.json', 'w') as f:
+            f.write(json.dumps(self.accounts_je, indent=2))
 
     def create_journal_entry(self):
         """
@@ -199,25 +218,24 @@ def amount_converter(monto, currency_exchange, from_currency="GTQ", to_currency=
     """
 
     # Si se maneja la misma moneda se retorna el mismo monto
-    if from_currency == "GTQ" and to_currency == "GTQ":
+    if (from_currency == "GTQ" and to_currency == "GTQ") \
+        or (from_currency == "USD" and to_currency == "USD"):
         return monto
 
     # Si hay que convertir de GTQ a USD
     if from_currency == "GTQ" and to_currency == "USD":
-        return monto * 1/currency_exchange
+        return (monto * (1/currency_exchange))
 
     # Si hay que convertir de USD a GTQ
     if from_currency == "USD" and to_currency == "GTQ":
-        return monto * currency_exchange
+        return (monto * currency_exchange)
 
+    return monto
 
-def apply_formula_isr(monto, curr_exch):
-    am_gtq = monto * curr_exch
-    # NOTE: JALAR LAS TASAS CONFIGURADAS
-    # IVA: SALES/PURCHASE INVOICE TAXES AND CHARGES
-    # ISR: TABLA HIJA EN COMPANY, TASA ISR
-    salida = (am_gtq - (am_gtq / 1.12) * (5/100))
-    return salida
+# Aplicara el calculo no importando la moneda
+# Nota aplicarle conversion si es necesario
+def apply_formula_isr(monto):
+    return (monto/1.12) * (5/100)
 
 
 def apply_calcl(monto, curr_exch, isr):

@@ -839,7 +839,7 @@ frappe.ui.form.on("Sales Invoice", {
                             grand_total: frm.doc.grand_total,
                             debit_to: frm.doc.debit_to,
                             currency: frm.doc.currency,
-                            curr_exch: frm.doc.conversion_rate,
+                            curr_exch: frm.doc.plc_conversion_rate,
                             customer: frm.doc.customer,
                             name_inv: frm.doc.name
                         }
