@@ -841,7 +841,8 @@ frappe.ui.form.on("Sales Invoice", {
                             currency: frm.doc.currency,
                             curr_exch: frm.doc.plc_conversion_rate,
                             customer: frm.doc.customer,
-                            name_inv: frm.doc.name
+                            name_inv: frm.doc.name,
+                            taxes_and_charges: frm.doc.taxes_and_charges
                         }
                     },
                     callback: function (r) {

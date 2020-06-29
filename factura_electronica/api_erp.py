@@ -66,6 +66,7 @@ class JournalEntryISR:
         self.remarks = str(data_invoice.get("user_remark", ""))
         self.docstatus = int(data_invoice.get("docstatus", 0))
         self.cost_center = str(data_invoice.get("cost_center", "")).strip()
+        self.taxes_template = str(data_invoice.get("taxes_and_charges", "")).strip()
         self.accounts_je = []
 
     def validate_dependencies(self):
@@ -140,7 +141,7 @@ class JournalEntryISR:
         exch_rate_row = 1 if (curr_row_b == "GTQ") else self.curr_exch
 
         # Calculo fila dos
-        ISR_PAYABLE = apply_formula_isr(self.grand_total)
+        ISR_PAYABLE = apply_formula_isr(self.grand_total, self.name_inv, self.company)
         amt_without_isr = (self.grand_total - ISR_PAYABLE)
         calc_row_two = amount_converter(amt_without_isr, self.curr_exch,
                                         from_currency=self.currency, to_currency=curr_row_b)
@@ -173,8 +174,8 @@ class JournalEntryISR:
         }
         self.accounts_je.append(row_three)
 
-        with open('filas.json', 'w') as f:
-            f.write(json.dumps(self.accounts_je, indent=2))
+        # with open('filas.json', 'w') as f:
+        #     f.write(json.dumps(self.accounts_je, indent=2))
 
     def create_journal_entry(self):
         """
@@ -234,11 +235,21 @@ def amount_converter(monto, currency_exchange, from_currency="GTQ", to_currency=
 
 # Aplicara el calculo no importando la moneda
 # Nota aplicarle conversion si es necesario
-def apply_formula_isr(monto):
-    return (monto/1.12) * (5/100)
+def apply_formula_isr(monto, invoice_name, company):
+    """
+    Formula para obtener ISR
 
+    Args:
+        monto (float): Monto con IVA
 
-def apply_calcl(monto, curr_exch, isr):
-    am_gtq = monto * (curr_exch)
-    x = ((am_gtq - isr) * 1/curr_exch)
-    return x
+    Returns:
+        float: ISR
+    """
+    if not invoice_name:
+        frappe.msgprint(_('No se encontro tasa de iva'))
+        return
+
+    tasa_iva = float(frappe.db.get_value('Sales Taxes and Charges', {'parent': invoice_name}, 'rate') / 100) + 1  # 1.12
+    tasa_isr = float(frappe.db.get_value('Tax Witholding Ranges', {'parent': company}, 'isr_percentage_rate')) / 100
+
+    return (monto/tasa_iva) * tasa_isr
