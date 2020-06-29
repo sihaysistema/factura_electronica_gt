@@ -261,7 +261,7 @@ def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
     * nombre_archivo (str) : Nombre que describe el archivo
     * cae_de_factura_electronica (str) : CAE
     '''
-
+    import os
     modalidad_configurada = validar_configuracion()
     nombre_de_sitio = get_site_name(frappe.local.site)
     ruta_archivo = '{0}/private/files/factura-electronica/'.format(nombre_de_sitio)

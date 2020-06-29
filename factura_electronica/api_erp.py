@@ -25,23 +25,33 @@ def batch_generator_api(invoices):
 
 @frappe.whitelist()
 def journal_entry_isr(data_invoice):
+    """
+    Funciona llamada desde boton Sales Invoice, encargada de crear Journal
+    Entry, en funcion a los parametros pasados
+
+    Args:
+        data_invoice (dict): Diccionario con las propiedades de la factura
+    """
     try:
-        frappe.msgprint(str(data_invoice))
-        new_je = JournalEntryISR(json.loads(data_invoice))
-        new_je.validate_dependencies()
-        new_je.generate_je_accounts()
-        new_je.create_journal_entry()
+        new_je = JournalEntryISR(json.loads(data_invoice))  # Creamos una nueva instancia
+        new_je.validate_dependencies()  # Aplicamos validaciones
+        new_je.generate_je_accounts()  # Generamos las filas para el journal entry
+        new_je.create_journal_entry()  # Guardamos registro
     except:
         frappe.msgprint(str(frappe.get_traceback()))
 
 
-# company, posting_date, grand_total, debit_to,
-# currency, curr_exch, customer, name_inv, posting_time,
-# cheque_no="", cheque_date="", user_remark="", docstatus=0,
-# cost_center=""
 class JournalEntryISR:
+    """
+    Clase de uso general, API interna y API Externa
+    """
     def __init__(self, data_invoice):
+        """
+        Constructor de la clase
 
+        Args:
+            data_invoice (dict): Propiedades de la factura procesada
+        """
         self.company = str(data_invoice.get("company")).strip()
         self.posting_date = str(data_invoice.get("posting_date"))
         self.posting_time = str(data_invoice.get("posting_time", ""))
@@ -58,6 +68,10 @@ class JournalEntryISR:
         self.cost_center = str(data_invoice.get("cost_center", "")).strip()
 
     def validate_dependencies(self):
+        """
+        Se encarga de validar las dependencias, necesarias para generar un Journal Entry con ISR
+        Dolares, Quetzales
+        """
         # TODO: API
         # Validamos cuenta debit_to: debe ya estar configurado en company en caso ocurran errores
         # Si la company maneja quetzales la cuenta debe ser de quetzales, etc...
@@ -75,7 +89,8 @@ class JournalEntryISR:
         # si la cuenta es de dolares, se usara, si no existe TODO: se buscara la defaulta configurada
         # Si se cobra en quetzales se buscara la default de la compania sino se data una alerta
 
-        self.default_bank_acc_customer = frappe.db.get_value("Customer", {"name": self.customer}, "default_bank_account")
+        self.default_bank_acc_customer = frappe.db.get_value("Customer", {"name": self.customer},
+                                                             "default_bank_account")
         if not self.default_bank_acc_customer:
             frappe.msgprint("NO")
         else:
@@ -89,27 +104,48 @@ class JournalEntryISR:
                                                             "isr_account_payable")
 
     def generate_je_accounts(self):
+        """
+        Genera las filas para Journal Entry, detecta si es necesario aplicar conversion dolares, quetzales,
+        aplicar IVA, ISR
+        """
         isr_amt = apply_formula_isr(self.grand_total, self.curr_exch)
 
+        # Logica posible fila 1
+        curr_row_a = frappe.db.get_value("Account", {"name": self.debit_to}, "account_currency")
+        # Aplicamos equivalente operador ternario, if en uan sola linea
+        # resultado = valor_si if condicion else valor_no
+        exch_rate_je = 1 if (curr_row_a == "GTQ") else self.curr_exch
+
+        row_one = {
+            "account": self.debit_to,  # Cuenta a que se va a utilizar
+            "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
+            "credit_in_account_currency": amount_converter(self.grand_total, self.curr_exch, self.currency, curr_row_a),  #Valor del monto a acreditar
+            "debit_in_account_currency": 0,  #Valor del monto a debitar
+            "exchange_rate": exch_rate_je,  # Tipo de cambio
+            "account_currency": curr_row_a,
+            "party_type": "Customer",  #Tipo de tercero: Proveedor, Cliente, Estudiante, Accionista, Etc. SE USARA CUSTOMER UA QUE VIENE DE SALES INVOICE
+            "party": self.customer,  #Nombre del cliente
+            "reference_name": self.name_inv,  #Referencia dada por sistema
+            "reference_type": "Sales Invoice"
+        }
+
+        # Logica posible fila 2
+        curr_row_b = frappe.db.get_value("Account", {"name": self.default_bank_acc}, "account_currency")
+        # Aplicamos equivalente operador ternario, if en uan sola linea
+        # resultado = valor_si if condicion else valor_no
+        exch_rate_je = 1 if (curr_row_a == "GTQ") else self.curr_exch
+
+        row_two = {
+            "account": self.default_bank_acc,  #Cuenta a que se va a utilizar
+            "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
+            "credit_in_account_currency": 0,  #Valor del monto a acreditar
+            "exchange_rate": exch_rate_je,  # Tipo de cambio
+            "account_currency": curr_row_b,  # Moneda de la cuenta
+            "debit_in_account_currency": apply_calcl(self.grand_total, self.curr_exch, isr_amt),  #Valor del monto a debitar
+        }
+
+
         self.accounts_je = [
-            {
-                "account": self.debit_to,  #Cuenta a que se va a utilizar
-                "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
-                "credit_in_account_currency": amount_converter(self.grand_total, self.curr_exch),  #Valor del monto a acreditar
-                "debit_in_account_currency": 0,  #Valor del monto a debitar
-                # "exchange_rate": 1,  #Tipo decambio
-                # "account_currency": frappe.db.get_value("Account", {"name": self.debit_to}, "account_currency"),
-                "party_type": "Customer",  #Tipo de tercero: Proveedor, Cliente, Estudiante, Accionista, Etc. SE USARA CUSTOMER UA QUE VIENE DE SALES INVOICE
-                "party": self.customer,  #Nombre del cliente
-                "reference_name": self.name_inv,  #Referencia dada por sistema
-                "reference_type": "Sales Invoice"
-            },
-            {
-                "account": self.default_bank_acc,  #Cuenta a que se va a utilizar
-                "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
-                "credit_in_account_currency": 0,  #Valor del monto a acreditar
-                "debit_in_account_currency": apply_calcl(self.grand_total, self.curr_exch, isr_amt),  #Valor del monto a debitar
-            },
             {
                 "account": self.isr_account_payable[0][0],  #Cuenta a que se va a utilizar
                 "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
@@ -122,6 +158,10 @@ class JournalEntryISR:
         #     f.write(json.dumps(self.accounts_je, indent=2))
 
     def create_journal_entry(self):
+        """
+        Inserta los registros en la base de datos, creando un objeto de la clase Journal Entry
+        de frappe, aplicando los validadores internos de frappe
+        """
         try:
             JOURNALENTRY = frappe.get_doc({
                 "doctype": "Journal Entry",
@@ -145,11 +185,37 @@ class JournalEntryISR:
 
 
 def amount_converter(monto, currency_exchange, from_currency="GTQ", to_currency="GTQ"):
-    return monto * currency_exchange
+    """
+    Conversor de montos, en funcion a from_currency, to_currency
+
+    Args:
+        monto (float): Monto a convertir
+        currency_exchange (float): Tipo cambio usando en factura de venta
+        from_currency (str, optional): Moneda en codigo ISO. Defaults to "GTQ".
+        to_currency (str, optional): Moneda en codigo ISO. Defaults to "GTQ".
+
+    Returns:
+        float: Monto con conversion, en caso aplique
+    """
+
+    # Si se maneja la misma moneda se retorna el mismo monto
+    if from_currency == "GTQ" and to_currency == "GTQ":
+        return monto
+
+    # Si hay que convertir de GTQ a USD
+    if from_currency == "GTQ" and to_currency == "USD":
+        return monto * 1/currency_exchange
+
+    # Si hay que convertir de USD a GTQ
+    if from_currency == "USD" and to_currency == "GTQ":
+        return monto * currency_exchange
 
 
 def apply_formula_isr(monto, curr_exch):
     am_gtq = monto * curr_exch
+    # NOTE: JALAR LAS TASAS CONFIGURADAS
+    # IVA: SALES/PURCHASE INVOICE TAXES AND CHARGES
+    # ISR: TABLA HIJA EN COMPANY, TASA ISR
     salida = (am_gtq - (am_gtq / 1.12) * (5/100))
     return salida
 
