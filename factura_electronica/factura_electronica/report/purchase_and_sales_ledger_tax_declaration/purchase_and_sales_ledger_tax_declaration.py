@@ -14,10 +14,18 @@ from frappe import _, _dict, scrub
 from frappe.utils import cstr, flt, nowdate
 from frappe.utils import get_site_name
 
+
+MONTHS_MAP = {
+    "January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "Jun": 6,
+    "July": 7, "August": 8, "September": 9, "October": 10, "November": 11, "December": 12
+}
+
+
 def execute(filters=None):
     columns = get_columns()
-    data = [{}]
+    data = get_data(filters)
     return columns, data
+
 
 def get_columns():
     """
@@ -63,7 +71,7 @@ def get_columns():
         },
         {
             "label": _("Date of document"),
-            "fieldname": "date_of_documento",
+            "fieldname": "date_of_document",
             "fieldtype": "Date",
             "width": 100
         },
@@ -221,3 +229,42 @@ def get_columns():
 
     return columns
 
+
+def get_data(filters):
+    return get_purchases_invoice(filters)
+
+
+def get_purchases_invoice(filters):
+    filters_query = ""
+
+    month = MONTHS_MAP.get(filters.month)
+
+    purchase_invoices = frappe.db.sql(
+        f"""SELECT DISTINCT name AS document, naming_series AS document_series, posting_date AS date_of_document,
+            facelec_nit_fproveedor AS customer_supplier_nit, supplier AS name_customer_supplier
+            FROM `tabPurchase Invoice`
+            WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND docstatus=1
+            AND company='{filters.company}';
+        """, as_dict=True
+    )
+
+    with open('asl_purchase_invoice.json', 'w') as f:
+        f.write(json.dumps(purchase_invoices, default=str))
+    # items = frappe.db.sql(
+    #     f"""SELECT DISTINCT parent, docstatus, net_amount, amount, facelec_p_is_good AS is_good,
+    #         facelec_p_is_service AS is_service, facelec_p_is_fuel AS is_fuel,
+    #         facelec_p_sales_tax_for_this_row AS tax_for_item, facelec_p_gt_tax_net_fuel_amt AS net_fuel,
+    #         facelec_p_gt_tax_net_goods_amt AS net_good, facelec_p_gt_tax_net_services_amt AS net_service,
+    #         facelec_p_amount_minus_excise_tax AS minus_excise_tax, facelec_p_other_tax_amount As other_tax
+    #         FROM `tabPurchase Invoice Item` WHERE parent
+    #         IN (SELECT DISTINCT name FROM `tabPurchase Invoice` WHERE docstatus=1 AND
+    #         company = '{filters.company}' AND YEAR(posting_date)='{filters.year}' AND
+    #         MONTH(posting_date)='{month}'
+    #     """, as_dict=True
+    # )
+
+    return purchase_invoices
+
+
+def get_sales_invoice(filters):
+    pass
