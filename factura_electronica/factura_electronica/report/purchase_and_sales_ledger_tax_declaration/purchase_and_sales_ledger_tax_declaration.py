@@ -231,7 +231,11 @@ def get_columns():
 
 
 def get_data(filters):
-    return get_purchases_invoice(filters)
+    data = []
+    data.extend(get_purchases_invoice(filters))
+    data.extend(get_sales_invoice(filters))
+
+    return data
 
 
 def get_purchases_invoice(filters):
@@ -248,23 +252,59 @@ def get_purchases_invoice(filters):
         """, as_dict=True
     )
 
-    with open('asl_purchase_invoice.json', 'w') as f:
-        f.write(json.dumps(purchase_invoices, default=str))
-    # items = frappe.db.sql(
-    #     f"""SELECT DISTINCT parent, docstatus, net_amount, amount, facelec_p_is_good AS is_good,
-    #         facelec_p_is_service AS is_service, facelec_p_is_fuel AS is_fuel,
-    #         facelec_p_sales_tax_for_this_row AS tax_for_item, facelec_p_gt_tax_net_fuel_amt AS net_fuel,
-    #         facelec_p_gt_tax_net_goods_amt AS net_good, facelec_p_gt_tax_net_services_amt AS net_service,
-    #         facelec_p_amount_minus_excise_tax AS minus_excise_tax, facelec_p_other_tax_amount As other_tax
-    #         FROM `tabPurchase Invoice Item` WHERE parent
-    #         IN (SELECT DISTINCT name FROM `tabPurchase Invoice` WHERE docstatus=1 AND
-    #         company = '{filters.company}' AND YEAR(posting_date)='{filters.year}' AND
-    #         MONTH(posting_date)='{month}'
-    #     """, as_dict=True
-    # )
+    # with open('asl_purchase_invoice.json', 'w') as f:
+    #     f.write(json.dumps(purchase_invoices, default=str))
+
+    # Query para obtener datos de los items en las facturas de compras, para luego procesar con pandas
+    items = frappe.db.sql(
+        f"""SELECT DISTINCT parent, docstatus, net_amount, amount, facelec_p_is_good AS is_good,
+            facelec_p_is_service AS is_service, facelec_p_is_fuel AS is_fuel,
+            facelec_p_sales_tax_for_this_row AS tax_for_item, facelec_p_gt_tax_net_fuel_amt AS net_fuel,
+            facelec_p_gt_tax_net_goods_amt AS net_good, facelec_p_gt_tax_net_services_amt AS net_service,
+            facelec_p_amount_minus_excise_tax AS minus_excise_tax, facelec_p_other_tax_amount As other_tax
+            FROM `tabPurchase Invoice Item` WHERE parent
+            IN (SELECT DISTINCT name FROM `tabPurchase Invoice` WHERE docstatus=1 AND
+            company = '{filters.company}' AND YEAR(posting_date)='{filters.year}' AND
+            MONTH(posting_date)='{month}')
+        """, as_dict=True
+    )
+
+    # with open('items_purchase_invoice.json', 'w') as f:
+    #     f.write(json.dumps(items, indent=2))
 
     return purchase_invoices
 
 
 def get_sales_invoice(filters):
-    pass
+
+    month = MONTHS_MAP.get(filters.month)
+
+    sales_invoices = frappe.db.sql(
+        f"""SELECT DISTINCT name AS document, naming_series AS document_series, posting_date AS date_of_document,
+            nit_face_customer AS customer_supplier_nit, customer AS name_customer_supplier
+            FROM `tabSales Invoice`
+            WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND docstatus=1
+            AND company='{filters.company}';
+        """, as_dict=True
+    )
+
+    with open('asl_sales_invoice.json', 'w') as f:
+        f.write(json.dumps(sales_invoices, default=str))
+
+    items = frappe.db.sql(
+        f"""SELECT DISTINCT parent, docstatus, net_amount, amount, facelec_is_good AS is_good,
+            facelec_is_service AS is_service, factelecis_fuel AS is_fuel,
+            facelec_sales_tax_for_this_row AS tax_for_item, facelec_gt_tax_net_fuel_amt AS net_fuel,
+            facelec_gt_tax_net_goods_amt AS net_good, facelec_gt_tax_net_services_amt AS net_service,
+            facelec_amount_minus_excise_tax AS minus_excise_tax, facelec_other_tax_amount As other_tax
+            FROM `tabSales Invoice Item` WHERE parent
+            IN (SELECT DISTINCT name FROM `tabSales Invoice` WHERE YEAR(posting_date)='{filters.year}'
+            AND MONTH(posting_date)='{month}' AND docstatus=1
+            AND company='{filters.company}')
+        """, as_dict=True
+    )
+
+    with open('items_sales_invoices.json', 'w') as f:
+        f.write(json.dumps(items, indent=2))
+
+    return sales_invoices
