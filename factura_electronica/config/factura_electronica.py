@@ -59,6 +59,14 @@ def get_data():
                     "name": "Purchase and Sales Ledger Tax Declaration",
                     "description": _("Purchase and Sales Ledger Tax Declaration"),
                     "onboard": 1
+                },
+                {
+                    "type": "report",
+                    "label": _("Purchase and Sales Ledger Tax Declaration Report"),
+                    "name": "Purchase and Sales Ledger Tax Declaration",
+                    "is_query_report": True,
+                    "dependencies": ["Sales Invoice", "Purchase Invoice"],
+                    "onboard": 1
                 }
             ]
         }
