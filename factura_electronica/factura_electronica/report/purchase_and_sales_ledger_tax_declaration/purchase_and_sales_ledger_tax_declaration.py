@@ -10,9 +10,9 @@ import json
 import pandas as pd
 
 import frappe
+from factura_electronica.utils.utilities_facelec import generate_asl_file
 from frappe import _, _dict, scrub
-from frappe.utils import cstr, flt, nowdate
-from frappe.utils import get_site_name
+from frappe.utils import cstr, flt, get_site_name, nowdate
 
 
 MONTHS_MAP = {
@@ -24,6 +24,12 @@ MONTHS_MAP = {
 def execute(filters=None):
     columns = get_columns()
     data = get_data(filters)
+
+    generate_asl_file(data)
+
+    with open('asl_report.json', 'w') as f:
+        f.write(json.dumps(data, indent=2, default=str))
+
     return columns, data
 
 
@@ -40,188 +46,194 @@ def get_columns():
 
     columns = [
         {
-            "label": _("Establishment"),
-            "fieldname": "establishment",
+            "label": _("Establecimiento"),
+            "fieldname": "establecimiento",
             "fieldtype": "Data",
             "width": 100
         },
         {
-            "label": _("Purchases/Sales"),
-            "fieldname": "purchases_sales",
+            "label": _("Compras/Ventas"),
+            "fieldname": "compras_ventas",
+            "fieldtype": "Currency",
+            "width": 100
+        },
+        {
+            "label": _("Documento"),
+            "fieldname": "documento",
             "fieldtype": "Data",
             "width": 100
         },
         {
-            "label": _("Document"),
-            "fieldname": "document",
+            "label": _("Serie del documento"),
+            "fieldname": "serie_doc",
             "fieldtype": "Data",
             "width": 100
         },
         {
-            "label": _("Document series"),
-            "fieldname": "document_series",
+            "label": _("Número del documento"),
+            "fieldname": "no_doc",
             "fieldtype": "Data",
             "width": 100
         },
         {
-            "label": _("Document number"),
-            "fieldname": "document_number",
-            "fieldtype": "Data",
-            "width": 100
-        },
-        {
-            "label": _("Date of document"),
-            "fieldname": "date_of_document",
+            "label": _("Fecha del documento"),
+            "fieldname": "fecha_doc",
             "fieldtype": "Date",
             "width": 100
         },
         {
-            "label": _("Customer/Supplier NIT"),
-            "fieldname": "customer_supplier_nit",
+            "label": _("NIT del cliente/proveedor"),
+            "fieldname": "nit_cliente_proveedor",
             "fieldtype": "Data",
             "width": 100
         },
         {
-            "label": _("Name of customer/supplier"),
-            "fieldname": "name_customer_supplier",
+            "label": _("Nombre del cliente/proveedor"),
+            "fieldname": "nombre_cliente_proveedor",
             "fieldtype": "Data",
             "width": 100
         },
         {
-            "label": _("Type of transaction"),
-            "fieldname": "type_of_transaction",
+            "label": _("Tipo de transacción"),
+            "fieldname": "tipo_transaccion",
             "fieldtype": "Data",
             "width": 100
         },
         {
-            "label": _("Type of operation (Good or Service)"),
-            "fieldname": "type_operation_good_service",
+            "label": _("Tipo de Operación (Bien o Servicio)"),
+            "fieldname": "tipo_ope",
             "fieldtype": "Data",
             "width": 100
         },
         {
-            "label": _("Document status"),
-            "fieldname": "document_status",
+            "label": _("Estado del documento"),
+            "fieldname": "status_doc",
             "fieldtype": "Data",
             "width": 100
         },
         {
-            "label": _("DPI card or passport order number"),
-            "fieldname": "no_order_cedula_dpi_or_passport",
+            "label": _("No. de orden de la cédula, DPI o Pasaporte"),
+            "fieldname": "no_orden_cedula_dpi_pasaporte",
             "fieldtype": "Data",
             "width": 100
         },
         {
-            "label": _("Registration number of the ID card, DPI or passport"),
-            "fieldname": "no_cedula_dpi_passport",
+            "label": _("No. de registro de la cédula, DPI o Pasaporte"),
+            "fieldname": "no_regi_cedula_dpi_pasaporte",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Operation Document Type"),
-            "fieldname": "operation_doc_type",
+            "label": _("Tipo Documento de Operación"),
+            "fieldname": "tipo_doc_ope",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Operation document number"),
-            "fieldname": "operation_doc_number",
+            "label": _("Número del documento de Operación"),
+            "fieldname": "no_doc_operacion",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Total Taxed Value of Document, Local Operating Goods "),
-            "fieldname": "total_tax_doc_local_op_goods",
+            "label": _("Total Valor Gravado del documento, Bienes operación Local"),
+            "fieldname": "total_gravado_doc_bien_ope_local",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Total Taxed Value of Document, Foreign Operation Goods"),
-            "fieldname": "total_tax_doc_local_foreign_goods",
+            "label": _("Total Valor Gravado del documento, Bienes operación del Exterior"),
+            "fieldname": "total_gravado_doc_bien_ope_exterior",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Total Taxed Value of the document Services operation Local "),
-            "fieldname": "total_tax_doc_local_ope_service",
+            "label": _("Total Valor Gravado del documento Servicios operación Local"),
+            "fieldname": "total_gravado_doc_servi_ope_local",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Total Taxed Value of the document Services operation of the use Outside"),
-            "fieldname": "total_tax_doc_local_ope_service_outside",
+            "label": _("Total Valor Gravado del documento Servicios operación del uso Exterior"),
+            "fieldname": "total_gravado_doc_servi_ope_exterior",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Total Exempt Document Value, Locally Operated Assets"),
-            "fieldname": "total_exempt_doc_local_ope_assets",
+            "label": _("Total Valor Exento del documento, Bienes operación Local"),
+            "fieldname": "total_exento_doc_bien_ope_local",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Total Exempt Document Value, Foreign Operating Goods"),
-            "fieldname": "total_exempt_doc_foreign_ope_goods",
+            "label": _("Total Valor Exento del documento, Bienes operación del Exterior"),
+            "fieldname": "total_exento_doc_bien_ope_exterior",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Total Exempt Document Value, Local Operation Services"),
-            "fieldname": "total_exempt_doc_local_ope_services",
+            "label": _("Total Valor Exento del documento, Servicios operación Local"),
+            "fieldname": "total_exento_doc_servi_ope_local",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Total Exempt Document Value, Foreign Operation Services"),
-            "fieldname": "total_exempt_doc_foreign_ope_services",
+            "label": _("Total Valor Exento del documento, Servicios operación del Exterior"),
+            "fieldname": "total_exento_doc_servi_ope_exterior",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Type of certificate"),
-            "fieldname": "type_of_certificate",
+            "label": _("Tipo de Constancia"),
+            "fieldname": "tipo_constancia",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Number of the certificate of exemption/purchase of inputs/withholding of IVA"),
-            "fieldname": "no_certificate_exemp_purchase_inp_withholding_iva",
+            "label": _("Número de la constancia de exención/adquisición de insumos/reten-ción del IVA"),
+            "fieldname": "no_constancia_exension_adqui_insu_reten_iva",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Value of the certificate of exemption/purchase of inputs/withholding of VAT"),
-            "fieldname": "value_certificate_exemp_purchase_inp_withholding_iva",
+            "label": _("Valor de la constancia de exención/adquisición de insumos/reten-ción del IVA"),
+            "fieldname": "valor_constancia_exension_adqui_insu_reten_iva",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Small Taxpayer Total Billed Local Operation Goods"),
-            "fieldname": "small_taxpayer_total_billed_local_ope_goods",
+            "label": _("Pequeño Contribuyente Total Facturado Operación Local Bienes"),
+            "fieldname": "peque_contri_total_facturado_ope_local_bienes",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Small Taxpayer Total Billed Local Operation Services"),
-            "fieldname": "small_taxpayer_total_billed_local_ope_services",
+            "label": _("Pequeño Contribuyente Total Facturado Operación Local Servicios"),
+            "fieldname": "peque_contri_total_facturado_ope_local_servicios",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Small Taxpayer Total Invoiced Foreign Operation Goods"),
-            "fieldname": "small_taxpayer_total_invoiced_foreign_ope_goods",
+            "label": _("Pequeño Contribuyente Total Facturado Operación al Exterior Bienes"),
+            "fieldname": "peque_contri_total_facturado_ope_exterior_bienes",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Small Taxpayer Total Billed Foreign Operation Services IVA"),
-            "fieldname": "small_taxpayer_total_billed_foreign_ope_services_iva",
+            "label": _("Pequeño Contribuyente Total Facturado Operación al Exterior Servicios"),
+            "fieldname": "peque_contri_total_facturado_ope_exterior_servicios",
             "fieldtype": "Data",
             "width": 100,
         },
         {
-            "label": _("Total Document Value"),
-            "fieldname": "total_document_value",
+            "label": _("IVA"),
+            "fieldname": "iva",
+            "fieldtype": "Data",
+            "width": 100,
+        },
+        {
+            "label": _("Total Valor del Documento"),
+            "fieldname": "total_valor_doc",
             "fieldtype": "Data",
             "width": 100,
         },
@@ -232,8 +244,14 @@ def get_columns():
 
 def get_data(filters):
     data = []
-    data.extend(get_purchases_invoice(filters))
-    data.extend(get_sales_invoice(filters))
+    sales_inv = get_purchases_invoice(filters)
+    purchase_inv = get_sales_invoice(filters)
+
+    if len(sales_inv) > 0:
+        data.extend(sales_inv)
+
+    if len(purchase_inv) > 0:
+        data.extend(purchase_inv)
 
     return data
 
@@ -244,8 +262,8 @@ def get_purchases_invoice(filters):
     month = MONTHS_MAP.get(filters.month)
 
     purchase_invoices = frappe.db.sql(
-        f"""SELECT DISTINCT name AS document, naming_series AS document_series, posting_date AS date_of_document,
-            facelec_nit_fproveedor AS customer_supplier_nit, supplier AS name_customer_supplier
+        f"""SELECT DISTINCT name AS documento, naming_series AS serie_doc, posting_date AS fecha_doc,
+            facelec_nit_fproveedor AS nit_cliente_proveedor, supplier AS nombre_cliente_proveedor
             FROM `tabPurchase Invoice`
             WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND docstatus=1
             AND company='{filters.company}';
@@ -280,8 +298,8 @@ def get_sales_invoice(filters):
     month = MONTHS_MAP.get(filters.month)
 
     sales_invoices = frappe.db.sql(
-        f"""SELECT DISTINCT name AS document, naming_series AS document_series, posting_date AS date_of_document,
-            nit_face_customer AS customer_supplier_nit, customer AS name_customer_supplier
+        f"""SELECT DISTINCT name AS documento, naming_series AS serie_doc, posting_date AS fecha_doc,
+            nit_face_customer AS nit_cliente_proveedor, customer AS nombre_cliente_proveedor
             FROM `tabSales Invoice`
             WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND docstatus=1
             AND company='{filters.company}';
