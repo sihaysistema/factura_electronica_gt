@@ -12,7 +12,7 @@ app_email = "m.monroyc22@gmail.com"
 app_license = "GNU General Public License (v3)"
 # es-GT: Indica la existencia de campos a la medida para agregar a la instalación estandar de ERPNext
 # en-US: Indicates the existense of custom fields to add to existing ERPNext installation
-fixtures = ["Custom Field", "Tax Category"]
+fixtures = ["Custom Field", "Translation"]
 
 # Includes in <head>
 # ------------------
