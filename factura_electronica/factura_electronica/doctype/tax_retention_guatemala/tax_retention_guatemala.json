@@ -18,7 +18,9 @@
   "invoice_date",
   "grand_total",
   "currency",
-  "retention_amount"
+  "retention_amount",
+  "retention_confirmation",
+  "retention_status"
  ],
  "fields": [
   {
@@ -105,10 +107,20 @@
    "fieldname": "retention_amount",
    "fieldtype": "Currency",
    "label": "Retention Amount"
+  },
+  {
+   "fieldname": "retention_confirmation",
+   "fieldtype": "Data",
+   "label": "Retention Confirmation"
+  },
+  {
+   "fieldname": "retention_status",
+   "fieldtype": "Data",
+   "label": "Retention Status"
   }
  ],
  "issingle": 1,
- "modified": "2020-06-30 16:25:59.173854",
+ "modified": "2020-06-30 22:26:26.231722",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Tax Retention Guatemala",
