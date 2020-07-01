@@ -46,3 +46,15 @@ def journal_entry_isr(data_invoice):
     except:
         frappe.msgprint(msg=_(f'More details in the following log \n {frappe.get_traceback()}'),
                         title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
+
+
+@frappe.whitelist()
+def download_asl_files():
+    """
+    Permite descargar
+    """
+    frappe.local.response.filename = "ASISTE.ASL"
+    with open("ASISTE.ASL", "rb") as fileobj:
+        filedata = fileobj.read()
+    frappe.local.response.filecontent = filedata
+    frappe.local.response.type = "download"

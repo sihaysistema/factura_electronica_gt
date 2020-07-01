@@ -80,8 +80,8 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
         },
     ],
     onload: function (report) {
-        report.page.add_inner_button(__("Download Excel"), function () {
-            window.open("/api/method/factura_electronica.api_erp.download_asl");
+        report.page.add_inner_button(__("Download ASL Files"), function () {
+            window.open("/api/method/factura_electronica.api_erp.download_asl_files");
             // window.open("sihaysistema.com", "_blank");
         });
     },

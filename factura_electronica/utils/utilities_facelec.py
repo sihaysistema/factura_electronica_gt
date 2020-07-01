@@ -65,12 +65,13 @@ def validar_configuracion():
 
 def generate_asl_file(data_asl, file_name='ASISTE.ASL', delimiter="|"):
 
-    with open('ASL.txt', 'a') as archivo_asl:
-        archivo_asl.seek(0)
-        archivo_asl.truncate()
+    try:
+        with open(file_name, 'a') as archivo_asl:
+            archivo_asl.seek(0)
+            archivo_asl.truncate()
 
-        for d in data_asl:
-            asl_row = f"""{d.get('establecimiento', '')}{delimiter}{d.get('compras_ventas', '')}{delimiter}{d.get('documento', '')}{delimiter}{d.get('serie_doc', '')}{delimiter}\
+            for d in data_asl:
+                asl_row = f"""{d.get('establecimiento', '')}{delimiter}{d.get('compras_ventas', '')}{delimiter}{d.get('documento', '')}{delimiter}{d.get('serie_doc', '')}{delimiter}\
 {d.get('no_doc', '')}{delimiter}{d.get('fecha_doc', '')}{delimiter}{d.get('nit_cliente_proveedor', '')}{delimiter}{d.get('nombre_cliente_proveedor', '')}{delimiter}\
 {d.get('tipo_transaccion', '')}{delimiter}{d.get('tipo_ope', '')}{delimiter}{d.get('status_doc', '')}{delimiter}{d.get('no_orden_cedula_dpi_pasaporte', '')}{delimiter}\
 {d.get('no_regi_cedula_dpi_pasaporte', '')}{delimiter}{d.get('tipo_doc_ope', '')}{delimiter}{d.get('no_doc_operacion', '')}{delimiter}{d.get('total_gravado_doc_bien_ope_local', '')}{delimiter}\
@@ -79,6 +80,11 @@ def generate_asl_file(data_asl, file_name='ASISTE.ASL', delimiter="|"):
 {d.get('tipo_constancia', '')}{delimiter}{d.get('no_constancia_exension_adqui_insu_reten_iva', '')}{delimiter}{d.get('valor_constancia_exension_adqui_insu_reten_iva', '')}{delimiter}{d.get('peque_contri_total_facturado_ope_local_bienes', '')}{delimiter}\
 {d.get('peque_contri_total_facturado_ope_local_servicios', '')}{delimiter}{d.get('peque_contri_total_facturado_ope_exterior_bienes', '')}{delimiter}{d.get('peque_contri_total_facturado_ope_exterior_servicios', '')}{delimiter}\
 {d.get('iva', '')}{d.get('total_valor_doc', '')}\n"""
-            archivo_asl.writelines(asl_row)
+                archivo_asl.writelines(asl_row)
 
-    archivo_asl.close()
+        archivo_asl.close()
+
+        return True, 'OK'
+
+    except:
+        return False, str(frappe.get_traceback())

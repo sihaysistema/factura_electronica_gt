@@ -25,12 +25,20 @@ def execute(filters=None):
     columns = get_columns()
     data = get_data(filters)
 
-    generate_asl_file(data)
-
-    with open('asl_report.json', 'w') as f:
-        f.write(json.dumps(data, indent=2, default=str))
-
-    return columns, data
+    if len(data) > 0:
+        status_file = generate_asl_file(data)
+        if status_file[0] == True:
+            frappe.msgprint(msg=_('Press the download button to get the ASL files'),
+                            title=_('Successfully generated ASL report and file'), indicator='green')
+            return columns, data
+        else:
+            frappe.msgprint(msg=_(f'More details in the following log \n {status_file[1]}'),
+                            title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
+            return columns, [{}]
+    else:
+        return columns, [{}]
+    # with open('asl_report.json', 'w') as f:
+    #     f.write(json.dumps(data, indent=2, default=str))
 
 
 def get_columns():
@@ -306,8 +314,8 @@ def get_sales_invoice(filters):
         """, as_dict=True
     )
 
-    with open('asl_sales_invoice.json', 'w') as f:
-        f.write(json.dumps(sales_invoices, default=str))
+    # with open('asl_sales_invoice.json', 'w') as f:
+    #     f.write(json.dumps(sales_invoices, default=str))
 
     items = frappe.db.sql(
         f"""SELECT DISTINCT parent, docstatus, net_amount, amount, facelec_is_good AS is_good,
@@ -322,7 +330,7 @@ def get_sales_invoice(filters):
         """, as_dict=True
     )
 
-    with open('items_sales_invoices.json', 'w') as f:
-        f.write(json.dumps(items, indent=2))
+    # with open('items_sales_invoices.json', 'w') as f:
+    #     f.write(json.dumps(items, indent=2))
 
     return sales_invoices
