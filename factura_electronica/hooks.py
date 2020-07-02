@@ -255,11 +255,13 @@ fixtures = [
                 "Item-tax_per_category",
                 "Item-facelec_is_fuel",
                 "Item-facelec_is_good",
-                "Item-facelec_is_service"
+                "Item-facelec_is_service",
+                "Purchase Invoice-purchase_ledger_page_number",
+                "Sales Invoice-sales_ledger_page_number"
             ]
         ]
     ]
-    }, "Tax Category"
+    }, "Tax Category", "Translation"
 ]
 
 # Includes in <head>
@@ -371,4 +373,3 @@ app_include_js = "/assets/factura_electronica/js/facelec.min.js"
 # override_whitelisted_methods = {
 # 	"frappe.desk.doctype.event.event.get_events": "factura_electronica.event.get_events"
 # }
-
