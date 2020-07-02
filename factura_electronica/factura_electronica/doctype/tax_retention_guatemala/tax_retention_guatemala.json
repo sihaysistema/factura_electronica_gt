@@ -1,0 +1,164 @@
+{
+ "autoname": "TAX-RETENTION.########",
+ "creation": "2020-06-30 13:51:47.988808",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "date",
+  "retention_type",
+  "party_type",
+  "party",
+  "company",
+  "import_invoices",
+  "section_break",
+  "journal_entry",
+  "purchase_invoice",
+  "sales_invoice",
+  "invoice_date",
+  "grand_total",
+  "currency",
+  "retention_amount",
+  "retention_confirmation",
+  "retention_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "retention_type",
+   "fieldtype": "Select",
+   "label": "Retention Type",
+   "options": "\nISR\nIVA"
+  },
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "label": "Party Type",
+   "options": "DocType"
+  },
+  {
+   "depends_on": "doc.party_type",
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "label": "Party",
+   "options": "party_type"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "import_invoices",
+   "fieldtype": "Button",
+   "label": "Import Invoices"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break",
+   "fieldtype": "Section Break",
+   "label": "Invoices and Journal Entry"
+  },
+  {
+   "fieldname": "journal_entry",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Journal Entry",
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "purchase_invoice",
+   "fieldtype": "Link",
+   "label": "Purchase Invoice",
+   "options": "Purchase Invoice",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "fieldname": "invoice_date",
+   "fieldtype": "Date",
+   "label": "Invoice Date"
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "label": "Grand Total"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "retention_amount",
+   "fieldtype": "Currency",
+   "label": "Retention Amount"
+  },
+  {
+   "fieldname": "retention_confirmation",
+   "fieldtype": "Data",
+   "label": "Retention Confirmation"
+  },
+  {
+   "fieldname": "retention_status",
+   "fieldtype": "Data",
+   "label": "Retention Status"
+  }
+ ],
+ "issingle": 1,
+ "modified": "2020-07-01 15:50:21.800208",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Tax Retention Guatemala",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
