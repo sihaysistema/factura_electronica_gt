@@ -17,6 +17,8 @@ fixtures = [
     {"dt": "Custom Field", "filters": [
         [
             "name", "in", [
+                "Contact-valid_identifications",
+                "Contact-identifications",
                 "Quotation-facelec_qt_nit",
                 "Otros Impuestos Factura Electronica-cost_center",
                 "UOM-faceleccodigo_unidad_de_medida",
