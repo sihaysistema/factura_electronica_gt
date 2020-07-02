@@ -269,6 +269,16 @@ def get_data(filters):
             column_i = validate_trasaction(purchase_invoice)
             purchase_invoice.update(column_i)
 
+            # Column P
+            # TODO: de la factura hay que separar los montos que son de bienes
+            # para Total Valor Gravado del documento, Bienes operación Local
+            if column_i == 'L':
+                pass
+                # purchase_invoice.update(column_i)
+
+            # Column Q, TODO: servicios local, etc
+            # Realizar mismo procedimineto hasta la columna W
+
         data.extend(purchase_invoices)
 
     if len(sales_invoices) > 0:
@@ -307,6 +317,8 @@ def validate_trasaction(invoice):
     if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
         and venta_o_compra == 'C'):
         return {'tipo_transaccion': 'I'}
+
+    # TODO: VERIFICAR QUE ES 'A' y 'T'
 
     # Si no se aplica ningu escenario anterior se retorna como Local
     return {'tipo_transaccion': 'L'}
