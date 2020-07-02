@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 frappe.query_reports["VAT and Income Tax Retention Report"] = {
-	"filters": [
+    "filters": [
         {
             fieldname: "company",
             label: __("Company"),
@@ -18,10 +18,6 @@ frappe.query_reports["VAT and Income Tax Retention Report"] = {
                         // console.log(r.message.name)
                         frappe.query_report.set_filter_value("nit", r.message.tax_id);
                     });
-                frappe
-                    .call((r) => {
-                        frappe.query_report.set_filter_value("address", r.message);
-                    });
             },
         },
         {
@@ -35,10 +31,10 @@ frappe.query_reports["VAT and Income Tax Retention Report"] = {
             fieldname: "Tipo de Factura",
             label: __("tipo_de_factura"),
             fieldtype: "Select",
-            options: ["Supplier","Customer"],
+            options: ["", "Supplier", "Customer"],
             default: "",
-            reqd: 1,
-		},
+            reqd: 0,
+        },
         {
             fieldname: "from_date",
             label: __("From Date"),
@@ -66,5 +62,5 @@ frappe.query_reports["VAT and Income Tax Retention Report"] = {
             default: "",
             fieldtype: "Check",
         },
-	]
+    ]
 };

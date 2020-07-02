@@ -13,6 +13,7 @@ from frappe.utils import cstr, flt, get_site_name, nowdate
 
 
 def execute(filters=None):
+    frappe.msgprint(str(filters))
     columns = get_columns()
     data = get_data(filters)
     return columns, data
@@ -95,18 +96,35 @@ def get_columns():
 
 def get_data(filters):
     data = []
-    purchase_inv = get_purchases_invoice(filters)
-    #purchase_inv = get_sales_invoice(filters)
 
-    #if len(sales_inv) > 0:
-     #   data.extend(sales_inv)
+    # Escenarios
+    # 1 - En filtros solo se selecciono Supplier
+    # Obtenemos datos solo de proveedores, Facturas de compra
+    if filters.tipo_de_factura == "Supplier":
+        purchase_inv = get_purchases_invoice(filters)
+        if len(purchase_inv) > 0:  # Si por lo menos hay un registro
+            return purchase_inv
 
-    if len(purchase_inv) > 0:
-        data.extend(purchase_inv)
+    # 2 - En filtros solo se seleccino Customer
+    # Obtendremos datos solo de clientes, Facturas de Venta
+    if filters.tipo_de_factura == "Customer":
+        sales_inv = get_sales_invoice(filters)
+        if len(sales_inv) > 0:  # Si por lo menos hay un registro
+            return sales_inv
 
-    return data
+    # 3 - En filtros no se selecciono ni Supplier, ni Customer
+    # Obtendremos datos de proveedores y clientes, Facturas Venta y Compra
+    if not filters.tipo_de_factura:
+        purchase_inv = get_purchases_invoice(filters)
+        sales_inv = get_sales_invoice(filters)
 
+        if len(purchase_inv) > 0:  # Si por lo menos hay un registro
+            return data.extend(purchase_inv)
 
+        if len(sales_inv) > 0:  # Si por lo menos hay un registro
+            return data.extend(sales_inv)
+
+        return data
 
 
 def get_purchases_invoice(filters):
@@ -120,24 +138,24 @@ def get_purchases_invoice(filters):
         """, as_dict=True
     )
 
+    # Descomentar solo para debug
     # with open('asl_purchase_invoice.json', 'w') as f:
     #     f.write(json.dumps(purchase_invoices, default=str))
 
     # Query para obtener datos de los items en las facturas de compras, para luego procesar con pandas
     return purchase_invoices
 
-'''
+
 def get_sales_invoice(filters):
+    return []
+    # sales_invoices = frappe.db.sql(
+    #     f"""SELECT DISTINCT name AS invoce_number, posting_date AS postin_date,
+    #         nit_face_customer AS tax_id, customer AS FROM `tabSales Invoice`
+    #         WHERE posting_date BETWEEN '{filters.from_date}' AND '{filters.to_date}' AND docstatus=1
+    #         AND company='{filters.company}';
+    #     """, as_dict=True
+    # )
 
-    sales_invoices = frappe.db.sql(
-        f"""SELECT DISTINCT name AS invoce_number, posting_date AS postin_date,
-            nit_face_customer AS tax_id, customer AS FROM `tabSales Invoice`
-            WHERE posting_date BETWEEN '{filters.from_date}' AND '{filters.to_date}' AND docstatus=1
-            AND company='{filters.company}';
-        """, as_dict=True
-    )
-
-    # with open('asl_sales_invoice.json', 'w') as f:
-    #     f.write(json.dumps(sales_invoices, default=str))
-    return sales_invoices
-'''
+    # # with open('asl_sales_invoice.json', 'w') as f:
+    # #     f.write(json.dumps(sales_invoices, default=str))
+    # return sales_invoices
