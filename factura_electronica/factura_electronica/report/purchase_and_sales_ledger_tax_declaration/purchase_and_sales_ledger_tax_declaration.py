@@ -258,13 +258,55 @@ def get_data(filters):
     """
 
     data = []
-    sales_inv = get_purchases_invoice(filters)
-    purchase_inv = get_sales_invoice(filters)
+    sales_invoices = get_purchases_invoice(filters)
+    purchase_invoices = get_sales_invoice(filters)
 
-    if len(sales_inv) > 0:
-        data.extend(sales_inv)
 
-    if len(purchase_inv) > 0:
-        data.extend(purchase_inv)
+    if len(purchase_invoices) > 0:
+        # Procesamos facturas de compra
+        for purchase_invoice in purchase_invoices:
+            # Validamos tipo de trasaccion
+            column_i = validate_trasaction(purchase_invoice)
+            purchase_invoice.update(column_i)
+
+        data.extend(purchase_invoices)
+
+    if len(sales_invoices) > 0:
+        # Procesamos facturas de venta
+        for sales_invoice in sales_invoices:
+            pass
+        data.extend(sales_invoices)
 
     return data
+
+
+def validate_trasaction(invoice):
+    """
+    Validaciones para la columna I
+
+    Args:
+        invoice ([type]): [description]
+    """
+
+    company_country = frappe.db.get_value('Company', {'name': invoice.get('company')}, 'country')
+    invoice_country = frappe.db.get_value('Address', {'name': invoice.get('invoice_address')},
+                                          'country') or "Guatemala"
+    venta_o_compra = invoice.get('compras_ventas')
+
+    # Local
+    if ((company_country == 'Guatemala' and invoice_country == 'Guatemala')
+        and (venta_o_compra == 'C' or venta_o_compra == 'V')):
+        return {'tipo_transaccion': 'L'}
+
+    # Exportacion
+    if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
+        and (venta_o_compra == 'V')):
+        return {'tipo_transaccion': 'E'}
+
+    # Importacion
+    if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
+        and venta_o_compra == 'C'):
+        return {'tipo_transaccion': 'I'}
+
+    # Si no se aplica ningu escenario anterior se retorna como Local
+    return {'tipo_transaccion': 'L'}
