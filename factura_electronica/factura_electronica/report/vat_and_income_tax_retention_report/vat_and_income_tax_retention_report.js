@@ -28,8 +28,8 @@ frappe.query_reports["VAT and Income Tax Retention Report"] = {
             read_only: 1,
         },
         {
-            fieldname: "Tipo de Factura",
-            label: __("tipo_de_factura"),
+            fieldname: "tipo_de_factura",
+            label: __("Tipo de Factura"),
             fieldtype: "Select",
             options: ["", "Supplier", "Customer"],
             default: "",

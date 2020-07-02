@@ -13,10 +13,21 @@ from frappe.utils import cstr, flt, get_site_name, nowdate
 
 
 def execute(filters=None):
-    frappe.msgprint(str(filters))
+    """
+    Funcion principal del reporte
+
+    Args:
+        filters (dict, optional): Filtros front end. Defaults to None.
+
+    Returns:
+        tuple: columnas y datos
+    """
+
     columns = get_columns()
     data = get_data(filters)
+
     return columns, data
+
 
 def get_columns():
     """
@@ -57,7 +68,7 @@ def get_columns():
         {
             "label": _("Invoice Date"),
             "fieldname": "invoice_date",
-            "fieldtype": "Data",
+            "fieldtype": "Date",
             "width": 100
         },
         {
@@ -94,14 +105,27 @@ def get_columns():
 
     return columns
 
+
 def get_data(filters):
+    """
+    Llama a las funciones encargadas de correr los queries que obtienen datos
+    de la base de datos, de Facturas de compra, venta
+
+    Args:
+        filters (dict): Filtros front end
+
+    Returns:
+        list: Lista diccionarios
+    """
+
     data = []
 
     # Escenarios
     # 1 - En filtros solo se selecciono Supplier
     # Obtenemos datos solo de proveedores, Facturas de compra
-    if filters.tipo_de_factura == "Supplier":
+    if str(filters.tipo_de_factura) == "Supplier":
         purchase_inv = get_purchases_invoice(filters)
+        frappe.msgprint(str(purchase_inv))
         if len(purchase_inv) > 0:  # Si por lo menos hay un registro
             return purchase_inv
 
@@ -114,20 +138,30 @@ def get_data(filters):
 
     # 3 - En filtros no se selecciono ni Supplier, ni Customer
     # Obtendremos datos de proveedores y clientes, Facturas Venta y Compra
-    if not filters.tipo_de_factura:
+    if filters.tipo_de_factura is None:
         purchase_inv = get_purchases_invoice(filters)
         sales_inv = get_sales_invoice(filters)
 
         if len(purchase_inv) > 0:  # Si por lo menos hay un registro
-            return data.extend(purchase_inv)
+            data.extend(purchase_inv)
 
         if len(sales_inv) > 0:  # Si por lo menos hay un registro
-            return data.extend(sales_inv)
+            data.extend(sales_inv)
 
         return data
 
 
 def get_purchases_invoice(filters):
+    """get_purchases_invoice [summary]
+
+    [extended_summary]
+
+    Args:
+        filters ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
     filters_query = ""
 
     purchase_invoices = frappe.db.sql(
