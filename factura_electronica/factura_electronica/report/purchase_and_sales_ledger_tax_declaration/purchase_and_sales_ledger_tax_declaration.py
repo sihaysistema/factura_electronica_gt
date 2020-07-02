@@ -259,8 +259,8 @@ def get_data(filters):
     """
 
     data = []
-    sales_invoices = get_purchases_invoice(filters)
-    purchase_invoices = get_sales_invoice(filters)
+    sales_invoices = get_sales_invoice(filters)
+    purchase_invoices = get_purchases_invoice(filters)
 
     # Si existen datos
     if len(purchase_invoices) > 0:
@@ -299,11 +299,11 @@ def get_data(filters):
 
         # data.extend(purchase_invoices)
 
-    if len(sales_invoices) > 0:
-        # Procesamos facturas de venta
-        for sales_invoice in sales_invoices:
-            pass
-        data.extend(sales_invoices)
+    # if len(sales_invoices) > 0:
+    #     # Procesamos facturas de venta
+    #     for sales_invoice in sales_invoices:
+    #         pass
+    #     data.extend(sales_invoices)
 
     return data
 

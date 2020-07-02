@@ -37,7 +37,7 @@ def get_purchases_invoice(filters):
             supplier_address AS invoice_address, net_total, facelec_p_gt_tax_fuel AS total_fuel, facelec_p_gt_tax_goods AS total_goods,
             facelec_p_gt_tax_services AS total_services
             FROM `tabPurchase Invoice`
-            WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND docstatus=1 OR docstatus=2
+            WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND (docstatus=1 OR docstatus=2)
             AND company='{filters.company}';
         """, as_dict=True
     )
@@ -83,7 +83,7 @@ def get_sales_invoice(filters):
             nit_face_customer AS nit_cliente_proveedor, customer AS nombre_cliente_proveedor, company,
             customer_address AS invoice_address, net_total
             FROM `tabSales Invoice`
-            WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND docstatus=1 OR docstatus=2
+            WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND (docstatus=1 OR docstatus=2)
             AND company='{filters.company}';
         """, as_dict=True
     )
