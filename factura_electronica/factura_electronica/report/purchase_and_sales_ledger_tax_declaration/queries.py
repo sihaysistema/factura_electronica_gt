@@ -35,7 +35,7 @@ def get_purchases_invoice(filters):
         f"""SELECT DISTINCT name AS documento, 'C' AS compras_ventas, naming_series AS serie_doc, posting_date AS fecha_doc,
             facelec_nit_fproveedor AS nit_cliente_proveedor, supplier AS nombre_cliente_proveedor
             FROM `tabPurchase Invoice`
-            WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND docstatus=1
+            WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND docstatus=1 OR docstatus=2
             AND company='{filters.company}';
         """, as_dict=True
     )
@@ -80,7 +80,7 @@ def get_sales_invoice(filters):
         f"""SELECT DISTINCT name AS documento, 'V' AS compras_ventas, naming_series AS serie_doc, posting_date AS fecha_doc,
             nit_face_customer AS nit_cliente_proveedor, customer AS nombre_cliente_proveedor
             FROM `tabSales Invoice`
-            WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND docstatus=1
+            WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND docstatus=1 OR docstatus=2
             AND company='{filters.company}';
         """, as_dict=True
     )
