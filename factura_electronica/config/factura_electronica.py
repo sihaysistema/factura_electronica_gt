@@ -69,5 +69,17 @@ def get_data():
                     "onboard": 1
                 }
             ]
+        },
+        {
+            "label": _("Reports"),
+            "items": [
+                {
+                    "type": "report",
+                    "label": _("VAT and Income Tax Retention Report"),
+                    "name": "VAT and Income Tax Retention Report",
+                    "is_query_report": True,
+                    "onboard": 1
+                }
+            ]
         }
     ]
