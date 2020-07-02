@@ -23,6 +23,9 @@ def execute(filters=None):
     if len(data) > 0:
         status_file = generate_asl_file(data)
         if status_file[0] == True:
+            with open('asl_report.json', 'w') as f:
+                f.write(json.dumps(data, indent=2, default=str))
+
             frappe.msgprint(msg=_('Press the download button to get the ASL files'),
                             title=_('Successfully generated ASL report and file'), indicator='green')
             return columns, data
@@ -32,8 +35,6 @@ def execute(filters=None):
             return columns, [{}]
     else:
         return columns, [{}]
-    # with open('asl_report.json', 'w') as f:
-    #     f.write(json.dumps(data, indent=2, default=str))
 
 
 def get_columns():
@@ -261,25 +262,42 @@ def get_data(filters):
     sales_invoices = get_purchases_invoice(filters)
     purchase_invoices = get_sales_invoice(filters)
 
-
+    # Si existen datos
     if len(purchase_invoices) > 0:
-        # Procesamos facturas de compra
+        # Procesamos facturas de compra, por cada factura
         for purchase_invoice in purchase_invoices:
             # Validamos tipo de trasaccion
             column_i = validate_trasaction(purchase_invoice)
+            # Actualizamos el valor del diccionario iterado
             purchase_invoice.update(column_i)
+            # Agregamos el diccionario a la lista destino
+            # data.append(purchase_invoice)
 
-            # Column P
-            # TODO: de la factura hay que separar los montos que son de bienes
-            # para Total Valor Gravado del documento, Bienes operación Local
-            if column_i == 'L':
-                pass
-                # purchase_invoice.update(column_i)
+            # Column P, R Locales
+            # Si la factura es local, obtenemos el monto de bienes en al factura
+            # con iva incluido
+            if column_i.get('tipo_transaccion') == 'L':
+                # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                purchase_invoice.update({'total_gravado_doc_bien_ope_local': purchase_invoice.get('net_total')})
+                # data.append(purchase_invoice)
 
-            # Column Q, TODO: servicios local, etc
-            # Realizar mismo procedimineto hasta la columna W
+                # col r
+                purchase_invoice.update({'total_gravado_doc_servi_ope_local': purchase_invoice.get('net_total')})
+                # data.append(purchase_invoice)
 
-        data.extend(purchase_invoices)
+            # Columna Q, S: Si es exterior
+            if column_i.get('tipo_transaccion') == 'E':
+                # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': purchase_invoice.get('net_total')})
+                # data.append(purchase_invoice)
+
+                # col S
+                purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': purchase_invoice.get('net_total')})
+                # data.append(purchase_invoice)
+
+            data.append(purchase_invoice)
+
+        # data.extend(purchase_invoices)
 
     if len(sales_invoices) > 0:
         # Procesamos facturas de venta
@@ -298,27 +316,33 @@ def validate_trasaction(invoice):
         invoice ([type]): [description]
     """
 
-    company_country = frappe.db.get_value('Company', {'name': invoice.get('company')}, 'country')
-    invoice_country = frappe.db.get_value('Address', {'name': invoice.get('invoice_address')},
-                                          'country') or "Guatemala"
-    venta_o_compra = invoice.get('compras_ventas')
+    try:
+        venta_o_compra = invoice.get('compras_ventas')
+        company_country = frappe.db.get_value('Company', {'name': invoice.get('company')}, 'country')
 
-    # Local
-    if ((company_country == 'Guatemala' and invoice_country == 'Guatemala')
-        and (venta_o_compra == 'C' or venta_o_compra == 'V')):
+        invoice_country = frappe.db.get_value('Address', {'name': invoice.get('invoice_address')},
+                                            'country') or "Guatemala"
+
+        # Local
+        if ((company_country == 'Guatemala' and invoice_country == 'Guatemala')
+            and (venta_o_compra == 'C' or venta_o_compra == 'V')):
+            return {'tipo_transaccion': 'L'}
+
+        # Exportacion
+        if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
+            and (venta_o_compra == 'V')):
+            return {'tipo_transaccion': 'E'}
+
+        # Importacion
+        if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
+            and venta_o_compra == 'C'):
+            return {'tipo_transaccion': 'I'}
+
+        # TODO: VERIFICAR QUE ES 'A' y 'T'
+
+        # Si no se aplica ningu escenario anterior se retorna como Local
         return {'tipo_transaccion': 'L'}
 
-    # Exportacion
-    if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
-        and (venta_o_compra == 'V')):
-        return {'tipo_transaccion': 'E'}
-
-    # Importacion
-    if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
-        and venta_o_compra == 'C'):
-        return {'tipo_transaccion': 'I'}
-
-    # TODO: VERIFICAR QUE ES 'A' y 'T'
-
-    # Si no se aplica ningu escenario anterior se retorna como Local
-    return {'tipo_transaccion': 'L'}
+    except:
+        # Si no hay direccion usamos como default Local
+        return {'tipo_transaccion': 'L'}

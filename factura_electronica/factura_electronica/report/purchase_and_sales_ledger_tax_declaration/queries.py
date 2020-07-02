@@ -34,7 +34,8 @@ def get_purchases_invoice(filters):
     purchase_invoices = frappe.db.sql(
         f"""SELECT DISTINCT name AS documento, 'C' AS compras_ventas, naming_series AS serie_doc, posting_date AS fecha_doc,
             facelec_nit_fproveedor AS nit_cliente_proveedor, supplier AS nombre_cliente_proveedor, company,
-            supplier_address AS invoice_address, net_total
+            supplier_address AS invoice_address, net_total, facelec_p_gt_tax_fuel AS total_fuel, facelec_p_gt_tax_goods AS total_goods,
+            facelec_p_gt_tax_services AS total_services
             FROM `tabPurchase Invoice`
             WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND docstatus=1 OR docstatus=2
             AND company='{filters.company}';

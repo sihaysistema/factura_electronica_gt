@@ -168,7 +168,8 @@ def get_purchases_invoice(filters):
         f"""SELECT DISTINCT name AS invoce_number, posting_date AS invoice_date,
             facelec_nit_fproveedor AS tax_id, supplier AS entity
             FROM `tabPurchase Invoice`
-            WHERE posting_date BETWEEN '{filters.from_date}' AND '{filters.to_date}' AND docstatus=1 AND company='{filters.company}';
+            WHERE posting_date BETWEEN '{filters.from_date}' AND '{filters.to_date}'
+            AND docstatus=1 AND company='{filters.company}';
         """, as_dict=True
     )
 
