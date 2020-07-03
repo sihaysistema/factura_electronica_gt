@@ -266,6 +266,8 @@ def get_data(filters):
     if len(purchase_invoices) > 0:
         # Procesamos facturas de compra, por cada factura
         for purchase_invoice in purchase_invoices:
+
+            # Column I
             # Validamos tipo de trasaccion
             column_i = validate_trasaction(purchase_invoice)
             # Actualizamos el valor del diccionario iterado
@@ -276,21 +278,44 @@ def get_data(filters):
                                               'facelec_establishment')
             purchase_invoice.update({'establecimiento': establ_comp})
 
+            # Column B: Compras/Ventas (ya viene procesado de la base de datos) C o V
+
+            # TODO: Column C: Documento
+
+            # TODO: Column D, Serie del documento, Se esta usando naming series (ya viene procesado de la db)
+
             # Column E: Numero de factura, de name se pasara por una funcionq ue elimina string(letras)
             purchase_invoice.update({'no_doc': string_cleaner(purchase_invoice.get('documento'), opt=True)})
+
+            # Column F, Fecha del documento: se esta usando posting date de la factura
+
+            # Column G, NIT del cliente/proveedor: ya procesado por la db
+
+            # Column H, Nombre del cliente/proveedor: ya procesado por la db
+
+            # Column J, Tipo de Operación (Bien o Servicio):
+            # TODO PROPUESTA: Si todos los items de la factura son bienes se clasifica como bien
+            # Si todos los items de la factura son servicios se clasifica con servicio
+            # Si los items in invoice are mixed then, empty row
 
             # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura
             # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
             purchase_invoice.update({'status_doc': validate_status_document(purchase_invoice)})
 
-            # Column L:
+            # Las validaciones para L y M se basa en si hay data en contact ya se por Customer, Supplier
+            # Si no hay dato se dejara en blanco, especificar bien esto en manual user
+
+            # Column L: No. de orden de la cédula, DPI o Pasaporte
             contact_name = frappe.db.get_value('Contact', {'address': purchase_invoice.get('invoice_address')}, 'name')
-            ord_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'ip_prefix')
+            ord_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'ip_prefix') or ""
             purchase_invoice.update({'no_orden_cedula_dpi_pasaporte': ord_doc_entity})
 
-            # Coumn K:
-            no_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'id_number')
+            # Coumn M: No. de registro de la cédula, DPI o Pasaporte
+            no_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'id_number') or ""
             purchase_invoice.update({'no_regi_cedula_dpi_pasaporte': no_doc_entity})
+
+            # Column N: Tipo Documento de Operación POR AHORA NO APLICA, puede ser DUA o FAUCA, eaplica solo exportador
+            # Column O: Número del documento de Operación, POR AHORA NO APLICA, solo para exportadores
 
 
             # Column P, R Locales
@@ -311,6 +336,10 @@ def get_data(filters):
                 # col S
                 purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': purchase_invoice.get('net_total')})
 
+            # Columna X: Tipo de constancia
+            # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS
+            # CEXE = CONSTANCIA DE EXENCIÓN DE IVA
+            # CRIVA = CONSTANCIA DE RETENCIÓN DE IVA
 
             data.append(purchase_invoice)
 
