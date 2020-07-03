@@ -305,5 +305,4 @@ def fill_fixtures():
     fixtures_fillup.append(translation)
     return fixtures_fillup
 
-
 fixtures = fill_fixtures()
