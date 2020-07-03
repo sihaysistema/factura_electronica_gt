@@ -12,13 +12,14 @@ nuevos fixtures que estes creando se agreguen al listado fixtures.
 """
 
 def fill_fixtures():
-        # We declare fixtures as an empty list.
+    # We declare fixtures as an empty list.
     fixtures_fillup = []
 
     # Add the corresponding fields to the fixture objects
     # if the object does not exist, simply create it and copy accordingly.
 
-    custom_field = {"dt": "Custom Field", "filters": [
+    custom_field = {
+        "dt": "Custom Field", "filters": [
             [
                 "name", "in", [
                     "Purchase Invoice-supplier_invoice_prefix",
@@ -272,9 +273,10 @@ def fill_fixtures():
                 ]
             ]
         ]
-        }
+    }
 
-    translation = {"dt": "Translation", "filters": [
+    translation = {
+        "dt": "Translation", "filters": [
             [
                 "source_name", "in", [
                     "Public Writ",
@@ -297,12 +299,15 @@ def fill_fixtures():
                 ]
             ]
         ]
-        }
+    }
 
 
     # NEW FUNCTIONALITY FOR EXPORTING
     fixtures_fillup.append(custom_field)
     fixtures_fillup.append(translation)
+    fixtures_fillup.append('Tax Category')
+    fixtures_fillup.append('Identification Document Type')
+
     return fixtures_fillup
 
-fixtures = fill_fixtures()
+# fixtures = fill_fixtures()
