@@ -88,18 +88,27 @@ def get_sales_invoice(filters):
 
 def get_items_purchase_invoice(invoice_name):
     # Query para obtener datos de los items en las facturas de compras, para luego procesar con pandas
+    # items = frappe.db.sql(
+    #     f"""SELECT DISTINCT parent, net_amount, amount, facelec_p_is_good AS is_good,
+    #         facelec_p_is_service AS is_service, facelec_p_is_fuel AS is_fuel,
+    #         facelec_p_sales_tax_for_this_row AS tax_for_item, facelec_p_gt_tax_net_fuel_amt AS net_fuel,
+    #         facelec_p_gt_tax_net_goods_amt AS net_good, facelec_p_gt_tax_net_services_amt AS net_service,
+    #         facelec_p_amount_minus_excise_tax AS minus_excise_tax, facelec_p_other_tax_amount As other_tax
+    #         FROM `tabPurchase Invoice Item` WHERE parent = '{invoice_name}'
+    #     """, as_dict=True
+    # )
+
     items = frappe.db.sql(
         f"""SELECT DISTINCT parent, net_amount, amount, facelec_p_is_good AS is_good,
             facelec_p_is_service AS is_service, facelec_p_is_fuel AS is_fuel,
             facelec_p_sales_tax_for_this_row AS tax_for_item, facelec_p_gt_tax_net_fuel_amt AS net_fuel,
-            facelec_p_gt_tax_net_goods_amt AS net_good, facelec_p_gt_tax_net_services_amt AS net_service,
-            facelec_p_amount_minus_excise_tax AS minus_excise_tax, facelec_p_other_tax_amount As other_tax
+            facelec_p_gt_tax_net_goods_amt AS net_good, facelec_p_gt_tax_net_services_amt AS net_service
             FROM `tabPurchase Invoice Item` WHERE parent = '{invoice_name}'
         """, as_dict=True
     )
 
     with open('items_purchase.json', 'w') as f:
-        f.write(json.dumps(items, indent=2))
+        f.write(json.dumps(items, default=str, indent=2))
 
     return items
 

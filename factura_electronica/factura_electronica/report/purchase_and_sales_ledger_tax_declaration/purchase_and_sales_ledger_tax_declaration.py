@@ -430,14 +430,19 @@ def process_purchase_invoice_items(invoice_name):
     try:
         # Obtenemos items de las facturas de compra, segun su parent = name
         items = get_items_purchase_invoice(invoice_name)
-
+        # frappe.msgprint(str(items))
         # Cargamos a un dataframe
-        df = pd.DataFrame.from_dict(json.loads(items))
+        df_items = pd.read_json(json.dumps(items))
+        # df_items = pd.DataFrame.from_dict(items)
+        with open('prev_df.txt', 'w') as f:
+            f.write(str(df_items))
+
         # Localizamos aquellos items que sean bienes, y lo sumamos
-        sum_goods = (df.loc[df['is_good'] == 1].sum()).to_dict()
+        sum_goods = (df_items.loc[df_items['is_good'] == 1].sum()).to_dict()
+        frappe.msgprint(sum_goods)
 
         # Localizamos aquellos items que sean servicios, y lo sumamos
-        sum_services = (df.loc[df['is_service'] == 1].sum()).to_dict()
+        sum_services = (df_items.loc[df_items['is_service'] == 1].sum()).to_dict()
 
         with open('sum_service.json', 'w') as f:
             f.write(json.dumps(sum_services, indent=2))
@@ -451,7 +456,13 @@ def process_purchase_invoice_items(invoice_name):
         }
 
     except:  # Si por alguna razon ocurre error, posiblemente item no configurado retornamos cero
-        frappe.msgprint(frappe.get_traceback())
+        # frappe.msgprint(frappe.get_traceback())
+        with open('log_err.txt', 'w') as f:
+            f.write(str(frappe.get_traceback()))
+        return {
+            'goods': 0,
+            'services': 0
+        }
         # return {
         #     'goods': 0,
         #     'services': 0
