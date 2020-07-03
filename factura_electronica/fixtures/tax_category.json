@@ -68,5 +68,15 @@
   "parentfield": null,
   "parenttype": null,
   "title": "SAT: Peque\u00f1o Contribuyente"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-03 16:39:27.346918",
+  "name": "SAT: R\u00e9gimen Especial Contribuyente Agropecuario",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: R\u00e9gimen Especial Contribuyente Agropecuario"
  }
 ]
