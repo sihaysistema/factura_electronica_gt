@@ -417,3 +417,11 @@ def validate_status_document(invoice):
 
     return ''
     # Validar el caso de facturas con descuentos, si lleva descuento es D
+
+
+def process_sales_invoice_items(invoice_name):
+    pass
+
+
+def process_purchase_invoice_items(invoice_name):
+    pass
