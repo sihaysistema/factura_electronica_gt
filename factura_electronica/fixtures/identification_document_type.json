@@ -1,0 +1,42 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Identification Document Type",
+  "identification_document_type": "DPI",
+  "modified": "2020-07-02 20:15:10.308046",
+  "name": "DPI",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Identification Document Type",
+  "identification_document_type": "DUI",
+  "modified": "2020-07-02 20:17:03.200896",
+  "name": "DUI",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Identification Document Type",
+  "identification_document_type": "PASSPORT",
+  "modified": "2020-07-02 20:17:19.198286",
+  "name": "PASSPORT",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Identification Document Type",
+  "identification_document_type": "PAS",
+  "modified": "2020-07-02 20:17:38.839702",
+  "name": "PAS",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ }
+]

@@ -11,7 +11,7 @@ import pandas as pd
 
 import frappe
 from factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.queries import *
-from factura_electronica.utils.utilities_facelec import generate_asl_file
+from factura_electronica.utils.utilities_facelec import generate_asl_file, string_cleaner
 from frappe import _, _dict, scrub
 from frappe.utils import cstr, flt, get_site_name, nowdate
 
@@ -23,6 +23,9 @@ def execute(filters=None):
     if len(data) > 0:
         status_file = generate_asl_file(data)
         if status_file[0] == True:
+            with open('asl_report.json', 'w') as f:
+                f.write(json.dumps(data, indent=2, default=str))
+
             frappe.msgprint(msg=_('Press the download button to get the ASL files'),
                             title=_('Successfully generated ASL report and file'), indicator='green')
             return columns, data
@@ -32,8 +35,6 @@ def execute(filters=None):
             return columns, [{}]
     else:
         return columns, [{}]
-    # with open('asl_report.json', 'w') as f:
-    #     f.write(json.dumps(data, indent=2, default=str))
 
 
 def get_columns():
@@ -258,34 +259,66 @@ def get_data(filters):
     """
 
     data = []
-    sales_invoices = get_purchases_invoice(filters)
-    purchase_invoices = get_sales_invoice(filters)
+    sales_invoices = get_sales_invoice(filters)
+    purchase_invoices = get_purchases_invoice(filters)
 
-
+    # Si existen datos
     if len(purchase_invoices) > 0:
-        # Procesamos facturas de compra
+        # Procesamos facturas de compra, por cada factura
         for purchase_invoice in purchase_invoices:
             # Validamos tipo de trasaccion
             column_i = validate_trasaction(purchase_invoice)
+            # Actualizamos el valor del diccionario iterado
             purchase_invoice.update(column_i)
 
-            # Column P
-            # TODO: de la factura hay que separar los montos que son de bienes
-            # para Total Valor Gravado del documento, Bienes operación Local
-            if column_i == 'L':
-                pass
-                # purchase_invoice.update(column_i)
+            # Column A: Establecimiento
+            establ_comp = frappe.db.get_value('Address', {'name': purchase_invoice.get('company_address_invoice', '')},
+                                              'facelec_establishment')
+            purchase_invoice.update({'establecimiento': establ_comp})
 
-            # Column Q, TODO: servicios local, etc
-            # Realizar mismo procedimineto hasta la columna W
+            # Column E: Numero de factura, de name se pasara por una funcionq ue elimina string(letras)
+            purchase_invoice.update({'no_doc': string_cleaner(purchase_invoice.get('documento'), opt=True)})
 
-        data.extend(purchase_invoices)
+            # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura
+            # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
+            purchase_invoice.update({'status_doc': validate_status_document(purchase_invoice)})
 
-    if len(sales_invoices) > 0:
-        # Procesamos facturas de venta
-        for sales_invoice in sales_invoices:
-            pass
-        data.extend(sales_invoices)
+            # Column L:
+            contact_name = frappe.db.get_value('Contact', {'address': purchase_invoice.get('invoice_address')}, 'name')
+            ord_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'ip_prefix')
+            purchase_invoice.update({'no_orden_cedula_dpi_pasaporte': ord_doc_entity})
+
+            # Coumn K:
+            no_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'id_number')
+            purchase_invoice.update({'no_regi_cedula_dpi_pasaporte': no_doc_entity})
+
+
+            # Column P, R Locales
+            # Si la factura es local, obtenemos el monto de bienes en al factura
+            # con iva incluido
+            if column_i.get('tipo_transaccion') == 'L':
+                # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                purchase_invoice.update({'total_gravado_doc_bien_ope_local': purchase_invoice.get('net_total')})
+
+                # col r
+                purchase_invoice.update({'total_gravado_doc_servi_ope_local': purchase_invoice.get('net_total')})
+
+            # Columna Q, S: Si es exterior
+            if column_i.get('tipo_transaccion') == 'E':
+                # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': purchase_invoice.get('net_total')})
+
+                # col S
+                purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': purchase_invoice.get('net_total')})
+
+
+            data.append(purchase_invoice)
+
+    # if len(sales_invoices) > 0:
+    #     # Procesamos facturas de venta
+    #     for sales_invoice in sales_invoices:
+    #         pass
+    #     data.extend(sales_invoices)
 
     return data
 
@@ -298,27 +331,60 @@ def validate_trasaction(invoice):
         invoice ([type]): [description]
     """
 
-    company_country = frappe.db.get_value('Company', {'name': invoice.get('company')}, 'country')
-    invoice_country = frappe.db.get_value('Address', {'name': invoice.get('invoice_address')},
-                                          'country') or "Guatemala"
-    venta_o_compra = invoice.get('compras_ventas')
+    try:
+        venta_o_compra = invoice.get('compras_ventas')
+        company_country = frappe.db.get_value('Company', {'name': invoice.get('company')}, 'country')
 
-    # Local
-    if ((company_country == 'Guatemala' and invoice_country == 'Guatemala')
-        and (venta_o_compra == 'C' or venta_o_compra == 'V')):
+        invoice_country = frappe.db.get_value('Address', {'name': invoice.get('invoice_address')},
+                                            'country') or "Guatemala"
+
+        # Local
+        if ((company_country == 'Guatemala' and invoice_country == 'Guatemala')
+            and (venta_o_compra == 'C' or venta_o_compra == 'V')):
+            return {'tipo_transaccion': 'L'}
+
+        # Exportacion
+        if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
+            and (venta_o_compra == 'V')):
+            return {'tipo_transaccion': 'E'}
+
+        # Importacion
+        if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
+            and venta_o_compra == 'C'):
+            return {'tipo_transaccion': 'I'}
+
+        # TODO: VERIFICAR QUE ES 'A' y 'T'
+
+        # Si no se aplica ningu escenario anterior se retorna como Local
         return {'tipo_transaccion': 'L'}
 
-    # Exportacion
-    if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
-        and (venta_o_compra == 'V')):
-        return {'tipo_transaccion': 'E'}
+    except:
+        # Si no hay direccion usamos como default Local
+        return {'tipo_transaccion': 'L'}
 
-    # Importacion
-    if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
-        and venta_o_compra == 'C'):
-        return {'tipo_transaccion': 'I'}
 
-    # TODO: VERIFICAR QUE ES 'A' y 'T'
+def validate_status_document(invoice):
+    """
+    Valida el estado de la factura, puede ser Emitida, Anulada, o con Descuentos
 
-    # Si no se aplica ningu escenario anterior se retorna como Local
-    return {'tipo_transaccion': 'L'}
+    Args:
+        invoice (dict): Factura iterada
+
+    Returns:
+        str: Escenario aplicado
+    """
+
+    # Si es compra, se deja vacio
+    if invoice.get('compras_ventas') == 'C':
+        return ''
+
+    # Si es venta y esta validada, se retorna como E de Emitida
+    if invoice.get('compras_ventas') == 'V' and invoice.get('docstatus') == 1:
+        return 'E'
+
+    # Si es venta y esta cancelada, se retorna como A de Anulada
+    if invoice.get('compras_ventas') == 'V' and invoice.get('docstatus') == 2:
+        return 'A'
+
+    return ''
+    # Validar el caso de facturas con descuentos, si lleva descuento es D
