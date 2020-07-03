@@ -8,6 +8,7 @@ import datetime
 import frappe
 from frappe import _
 from frappe.utils import cstr, flt
+import json
 
 
 MONTHS_MAP = {
@@ -96,6 +97,9 @@ def get_items_purchase_invoice(invoice_name):
             FROM `tabPurchase Invoice Item` WHERE parent = '{invoice_name}'
         """, as_dict=True
     )
+
+    with open('items_purchase.json', 'w') as f:
+        f.write(json.dumps(items, indent=2))
 
     return items
 

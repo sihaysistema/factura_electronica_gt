@@ -266,14 +266,14 @@ def get_data(filters):
     if len(purchase_invoices) > 0:
         # Procesamos facturas de compra, por cada factura
         for purchase_invoice in purchase_invoices:
-
-            # Column I
+            get_items_purchase_invoice(purchase_invoice.get('documento'))
+            # Column I: OK
             # Validamos tipo de trasaccion
             column_i = validate_trasaction(purchase_invoice)
             # Actualizamos el valor del diccionario iterado
             purchase_invoice.update(column_i)
 
-            # Column A: Establecimiento
+            # Column A: Establecimiento - OK
             establ_comp = frappe.db.get_value('Address', {'name': purchase_invoice.get('company_address_invoice', '')},
                                               'facelec_establishment')
             purchase_invoice.update({'establecimiento': establ_comp})
@@ -321,20 +321,22 @@ def get_data(filters):
             # Column P, R Locales
             # Si la factura es local, obtenemos el monto de bienes en al factura
             # con iva incluido
+            amt_local = process_purchase_invoice_items(purchase_invoice.get('documento'))
+
             if column_i.get('tipo_transaccion') == 'L':
                 # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                purchase_invoice.update({'total_gravado_doc_bien_ope_local': purchase_invoice.get('net_total')})
+                purchase_invoice.update({'total_gravado_doc_bien_ope_local': amt_local.get('goods')})
 
                 # col r
-                purchase_invoice.update({'total_gravado_doc_servi_ope_local': purchase_invoice.get('net_total')})
+                purchase_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
 
             # Columna Q, S: Si es exterior
             if column_i.get('tipo_transaccion') == 'E':
                 # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': purchase_invoice.get('net_total')})
+                purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
 
                 # col S
-                purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': purchase_invoice.get('net_total')})
+                purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
 
             # Columna X: Tipo de constancia
             # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS
@@ -424,4 +426,33 @@ def process_sales_invoice_items(invoice_name):
 
 
 def process_purchase_invoice_items(invoice_name):
-    pass
+
+    try:
+        # Obtenemos items de las facturas de compra, segun su parent = name
+        items = get_items_purchase_invoice(invoice_name)
+
+        # Cargamos a un dataframe
+        df = pd.DataFrame.from_dict(json.loads(items))
+        # Localizamos aquellos items que sean bienes, y lo sumamos
+        sum_goods = (df.loc[df['is_good'] == 1].sum()).to_dict()
+
+        # Localizamos aquellos items que sean servicios, y lo sumamos
+        sum_services = (df.loc[df['is_service'] == 1].sum()).to_dict()
+
+        with open('sum_service.json', 'w') as f:
+            f.write(json.dumps(sum_services, indent=2))
+
+        with open('sum_good.json', 'w') as f:
+            f.write(json.dumps(sum_goods, indent=2))
+
+        return {
+            'goods': sum_goods.get('amount', 0),
+            'services': sum_services.get('amount', 0)
+        }
+
+    except:  # Si por alguna razon ocurre error, posiblemente item no configurado retornamos cero
+        frappe.msgprint(frappe.get_traceback())
+        # return {
+        #     'goods': 0,
+        #     'services': 0
+        # }
