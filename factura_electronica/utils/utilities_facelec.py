@@ -88,3 +88,37 @@ def generate_asl_file(data_asl, file_name='ASISTE.ASL', delimiter="|"):
 
     except:
         return False, str(frappe.get_traceback())
+
+
+def string_cleaner(str_to_clean, opt=False):
+    """
+    De un string permite eliminar todos los numeros o todas las letras,
+    si opt=False eliminara numeros dejando solo letras
+    si opt=True eliminara letras dejando solo numeros
+
+    Args:
+        str_to_clean (str): String a limpiar
+        opt (bool, optional): True para eliminar numeros,
+        False para eliminar letras. Defaults to False.
+
+    Returns:
+        str/bool: Si todo va bien retorna el string limpio, sino retornara
+        False como no procesado
+    """
+
+    try:
+        s = str(str_to_clean)
+
+        if opt == False:
+            # removiendo numeros
+            result = ''.join([i for i in s if not i.isdigit()])
+
+        elif opt == True:
+            # removiendo letras
+            result = ''.join([i for i in s if i.isdigit()])
+        else:
+            return False
+    except:
+        return False
+    else:
+        return result

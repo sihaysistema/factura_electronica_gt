@@ -11,7 +11,7 @@ import pandas as pd
 
 import frappe
 from factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.queries import *
-from factura_electronica.utils.utilities_facelec import generate_asl_file
+from factura_electronica.utils.utilities_facelec import generate_asl_file, string_cleaner
 from frappe import _, _dict, scrub
 from frappe.utils import cstr, flt, get_site_name, nowdate
 
@@ -270,6 +270,14 @@ def get_data(filters):
             column_i = validate_trasaction(purchase_invoice)
             # Actualizamos el valor del diccionario iterado
             purchase_invoice.update(column_i)
+
+            # Column A: Establecimiento
+            establ_comp = frappe.db.get_value('Address', {'name': purchase_invoice.get('company_address_invoice', '')},
+                                              'facelec_establishment')
+            purchase_invoice.update({'establecimiento': establ_comp})
+
+            # Column E: Numero de factura, de name se pasara por una funcionq ue elimina string(letras)
+            purchase_invoice.update({'no_doc': string_cleaner(purchase_invoice.get('documento'), opt=True)})
 
             # Column P, R Locales
             # Si la factura es local, obtenemos el monto de bienes en al factura
