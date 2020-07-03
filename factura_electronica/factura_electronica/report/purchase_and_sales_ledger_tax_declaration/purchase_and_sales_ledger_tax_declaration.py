@@ -266,51 +266,82 @@ def get_data(filters):
     if len(purchase_invoices) > 0:
         # Procesamos facturas de compra, por cada factura
         for purchase_invoice in purchase_invoices:
+            get_items_purchase_invoice(purchase_invoice.get('documento'))
+            # Column I: OK
             # Validamos tipo de trasaccion
             column_i = validate_trasaction(purchase_invoice)
             # Actualizamos el valor del diccionario iterado
             purchase_invoice.update(column_i)
 
-            # Column A: Establecimiento
+            # Column A: Establecimiento - OK
             establ_comp = frappe.db.get_value('Address', {'name': purchase_invoice.get('company_address_invoice', '')},
                                               'facelec_establishment')
             purchase_invoice.update({'establecimiento': establ_comp})
 
+            # Column B: Compras/Ventas (ya viene procesado de la base de datos) C o V
+
+            # TODO: Column C: Documento
+
+            # TODO: Column D, Serie del documento, Se esta usando naming series (ya viene procesado de la db)
+
             # Column E: Numero de factura, de name se pasara por una funcionq ue elimina string(letras)
             purchase_invoice.update({'no_doc': string_cleaner(purchase_invoice.get('documento'), opt=True)})
+
+            # Column F, Fecha del documento: se esta usando posting date de la factura
+
+            # Column G, NIT del cliente/proveedor: ya procesado por la db
+
+            # Column H, Nombre del cliente/proveedor: ya procesado por la db
+
+            # Column J, Tipo de Operación (Bien o Servicio):
+            # TODO PROPUESTA: Si todos los items de la factura son bienes se clasifica como bien
+            # Si todos los items de la factura son servicios se clasifica con servicio
+            # Si los items in invoice are mixed then, empty row
 
             # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura
             # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
             purchase_invoice.update({'status_doc': validate_status_document(purchase_invoice)})
 
-            # Column L:
+            # Las validaciones para L y M se basa en si hay data en contact ya se por Customer, Supplier
+            # Si no hay dato se dejara en blanco, especificar bien esto en manual user
+
+            # Column L: No. de orden de la cédula, DPI o Pasaporte
             contact_name = frappe.db.get_value('Contact', {'address': purchase_invoice.get('invoice_address')}, 'name')
-            ord_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'ip_prefix')
+            ord_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'ip_prefix') or ""
             purchase_invoice.update({'no_orden_cedula_dpi_pasaporte': ord_doc_entity})
 
-            # Coumn K:
-            no_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'id_number')
+            # Coumn M: No. de registro de la cédula, DPI o Pasaporte
+            no_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'id_number') or ""
             purchase_invoice.update({'no_regi_cedula_dpi_pasaporte': no_doc_entity})
+
+            # Column N: Tipo Documento de Operación POR AHORA NO APLICA, puede ser DUA o FAUCA, eaplica solo exportador
+            # Column O: Número del documento de Operación, POR AHORA NO APLICA, solo para exportadores
 
 
             # Column P, R Locales
             # Si la factura es local, obtenemos el monto de bienes en al factura
             # con iva incluido
+            amt_local = process_purchase_invoice_items(purchase_invoice.get('documento'))
+
             if column_i.get('tipo_transaccion') == 'L':
                 # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                purchase_invoice.update({'total_gravado_doc_bien_ope_local': purchase_invoice.get('net_total')})
+                purchase_invoice.update({'total_gravado_doc_bien_ope_local': amt_local.get('goods')})
 
                 # col r
-                purchase_invoice.update({'total_gravado_doc_servi_ope_local': purchase_invoice.get('net_total')})
+                purchase_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
 
             # Columna Q, S: Si es exterior
             if column_i.get('tipo_transaccion') == 'E':
                 # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': purchase_invoice.get('net_total')})
+                purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
 
                 # col S
-                purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': purchase_invoice.get('net_total')})
+                purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
 
+            # Columna X: Tipo de constancia
+            # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS
+            # CEXE = CONSTANCIA DE EXENCIÓN DE IVA
+            # CRIVA = CONSTANCIA DE RETENCIÓN DE IVA
 
             data.append(purchase_invoice)
 
@@ -388,3 +419,51 @@ def validate_status_document(invoice):
 
     return ''
     # Validar el caso de facturas con descuentos, si lleva descuento es D
+
+
+def process_sales_invoice_items(invoice_name):
+    pass
+
+
+def process_purchase_invoice_items(invoice_name):
+
+    try:
+        # Obtenemos items de las facturas de compra, segun su parent = name
+        items = get_items_purchase_invoice(invoice_name)
+        # frappe.msgprint(str(items))
+        # Cargamos a un dataframe
+        df_items = pd.read_json(json.dumps(items))
+        # df_items = pd.DataFrame.from_dict(items)
+        # with open('prev_df.txt', 'w') as f:
+        #     f.write(str(df_items))
+
+        # Localizamos aquellos items que sean bienes, y lo sumamos
+        sum_goods = (df_items.loc[df_items['is_good'] == 1].sum()).to_dict()
+        frappe.msgprint(sum_goods)
+
+        # Localizamos aquellos items que sean servicios, y lo sumamos
+        sum_services = (df_items.loc[df_items['is_service'] == 1].sum()).to_dict()
+
+        # with open('sum_service.json', 'w') as f:
+        #     f.write(json.dumps(sum_services, indent=2))
+
+        # with open('sum_good.json', 'w') as f:
+        #     f.write(json.dumps(sum_goods, indent=2))
+
+        return {
+            'goods': sum_goods.get('amount', 0),
+            'services': sum_services.get('amount', 0)
+        }
+
+    except:  # Si por alguna razon ocurre error, posiblemente item no configurado retornamos cero
+        # frappe.msgprint(frappe.get_traceback())
+        # with open('log_err.txt', 'w') as f:
+        #     f.write(str(frappe.get_traceback()))
+        return {
+            'goods': 0,
+            'services': 0
+        }
+        # return {
+        #     'goods': 0,
+        #     'services': 0
+        # }
