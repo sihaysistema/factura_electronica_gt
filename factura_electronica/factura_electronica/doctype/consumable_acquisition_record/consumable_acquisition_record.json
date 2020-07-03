@@ -1,29 +1,27 @@
 {
- "autoname": "TAX-RETENTION.########",
- "creation": "2020-06-30 13:51:47.988808",
+ "autoname": "CADI.########",
+ "creation": "2020-07-03 13:49:52.813014",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
   "date",
-  "retention_type",
-  "party_type",
-  "party",
+  "consumable_record_type",
+  "supplier",
   "company",
   "tax_id",
-  "import_invoices",
   "section_break",
   "journal_entry",
   "purchase_invoice",
-  "sales_invoice",
   "invoice_date",
   "grand_total",
   "currency",
   "retention_amount",
-  "retention_confirmation",
-  "retention_status",
-  "retention_image",
-  "attach_retention_image"
+  "consumable_acquisition_confirmation_prefix",
+  "consumable_acquisition_confirmation_no",
+  "consumable_acquisition_status",
+  "consumable_acquisition_image",
+  "attach_consumable_acquisition_image"
  ],
  "fields": [
   {
@@ -32,36 +30,12 @@
    "label": "Date"
   },
   {
-   "fieldname": "retention_type",
-   "fieldtype": "Select",
-   "label": "Retention Type",
-   "options": "\nISR\nIVA"
-  },
-  {
-   "fieldname": "party_type",
-   "fieldtype": "Link",
-   "label": "Party Type",
-   "options": "DocType"
-  },
-  {
-   "depends_on": "doc.party_type",
-   "fieldname": "party",
-   "fieldtype": "Dynamic Link",
-   "label": "Party",
-   "options": "party_type"
-  },
-  {
    "fieldname": "company",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Company",
    "options": "Company",
    "reqd": 1
-  },
-  {
-   "fieldname": "import_invoices",
-   "fieldtype": "Button",
-   "label": "Import Invoices"
   },
   {
    "collapsible": 1,
@@ -85,12 +59,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "sales_invoice",
-   "fieldtype": "Link",
-   "label": "Sales Invoice",
-   "options": "Sales Invoice"
-  },
-  {
    "fieldname": "invoice_date",
    "fieldtype": "Date",
    "label": "Invoice Date"
@@ -109,40 +77,59 @@
   {
    "fieldname": "retention_amount",
    "fieldtype": "Currency",
-   "label": "Retention Amount"
+   "label": "Consumable Acquisition Amount"
   },
   {
-   "fieldname": "retention_confirmation",
-   "fieldtype": "Data",
-   "label": "Retention Confirmation"
+   "default": "CADI",
+   "fieldname": "consumable_record_type",
+   "fieldtype": "Select",
+   "label": "Consumable Type",
+   "options": "\nCADI"
   },
   {
-   "fieldname": "retention_status",
-   "fieldtype": "Data",
-   "label": "Retention Status"
-  },
-  {
-   "fieldname": "retention_image",
-   "fieldtype": "Image",
-   "label": "Image",
-   "options": "attach_retention_image"
-  },
-  {
-   "fieldname": "attach_retention_image",
-   "fieldtype": "Attach Image",
-   "label": "Attach Retention Image"
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier"
   },
   {
    "fieldname": "tax_id",
    "fieldtype": "Data",
-   "label": "Tax ID"
+   "label": "Tax ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "consumable_acquisition_confirmation_prefix",
+   "fieldtype": "Data",
+   "label": "Consumable Acquisition Confirmation Prefix"
+  },
+  {
+   "fieldname": "consumable_acquisition_confirmation_no",
+   "fieldtype": "Data",
+   "label": "Consumable Acquisition Confirmation Number"
+  },
+  {
+   "fieldname": "consumable_acquisition_status",
+   "fieldtype": "Data",
+   "label": "Consumable Acquisition Status"
+  },
+  {
+   "fieldname": "consumable_acquisition_image",
+   "fieldtype": "Image",
+   "label": "Image",
+   "options": "attach_consumable_acquisition_image"
+  },
+  {
+   "fieldname": "attach_consumable_acquisition_image",
+   "fieldtype": "Attach Image",
+   "label": "Attach Retention Image"
   }
  ],
  "issingle": 1,
- "modified": "2020-07-03 14:00:35.353132",
+ "modified": "2020-07-03 14:00:08.423276",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
- "name": "Tax Retention Guatemala",
+ "name": "Consumable Acquisition Record",
  "owner": "Administrator",
  "permissions": [
   {
