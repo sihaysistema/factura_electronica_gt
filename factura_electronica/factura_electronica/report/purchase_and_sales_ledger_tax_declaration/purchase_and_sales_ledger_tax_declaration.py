@@ -434,8 +434,8 @@ def process_purchase_invoice_items(invoice_name):
         # Cargamos a un dataframe
         df_items = pd.read_json(json.dumps(items))
         # df_items = pd.DataFrame.from_dict(items)
-        with open('prev_df.txt', 'w') as f:
-            f.write(str(df_items))
+        # with open('prev_df.txt', 'w') as f:
+        #     f.write(str(df_items))
 
         # Localizamos aquellos items que sean bienes, y lo sumamos
         sum_goods = (df_items.loc[df_items['is_good'] == 1].sum()).to_dict()
@@ -444,11 +444,11 @@ def process_purchase_invoice_items(invoice_name):
         # Localizamos aquellos items que sean servicios, y lo sumamos
         sum_services = (df_items.loc[df_items['is_service'] == 1].sum()).to_dict()
 
-        with open('sum_service.json', 'w') as f:
-            f.write(json.dumps(sum_services, indent=2))
+        # with open('sum_service.json', 'w') as f:
+        #     f.write(json.dumps(sum_services, indent=2))
 
-        with open('sum_good.json', 'w') as f:
-            f.write(json.dumps(sum_goods, indent=2))
+        # with open('sum_good.json', 'w') as f:
+        #     f.write(json.dumps(sum_goods, indent=2))
 
         return {
             'goods': sum_goods.get('amount', 0),
@@ -457,8 +457,8 @@ def process_purchase_invoice_items(invoice_name):
 
     except:  # Si por alguna razon ocurre error, posiblemente item no configurado retornamos cero
         # frappe.msgprint(frappe.get_traceback())
-        with open('log_err.txt', 'w') as f:
-            f.write(str(frappe.get_traceback()))
+        # with open('log_err.txt', 'w') as f:
+        #     f.write(str(frappe.get_traceback()))
         return {
             'goods': 0,
             'services': 0

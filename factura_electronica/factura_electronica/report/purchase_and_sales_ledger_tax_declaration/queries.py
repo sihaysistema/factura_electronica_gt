@@ -107,8 +107,8 @@ def get_items_purchase_invoice(invoice_name):
         """, as_dict=True
     )
 
-    with open('items_purchase.json', 'w') as f:
-        f.write(json.dumps(items, default=str, indent=2))
+    # with open('items_purchase.json', 'w') as f:
+    #     f.write(json.dumps(items, default=str, indent=2))
 
     return items
 
