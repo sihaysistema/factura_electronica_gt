@@ -36,7 +36,7 @@ def get_purchases_invoice(filters):
             facelec_nit_fproveedor AS nit_cliente_proveedor, supplier AS nombre_cliente_proveedor, company,
             supplier_address AS invoice_address, net_total, facelec_p_gt_tax_fuel AS total_fuel, facelec_p_gt_tax_goods AS total_goods,
             facelec_p_gt_tax_services AS total_services, facelec_p_total_iva AS iva, grand_total AS total_valor_doc,
-            shipping_address AS company_address_invoice
+            shipping_address AS company_address_invoice, docstatus
             FROM `tabPurchase Invoice`
             WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND (docstatus=1 OR docstatus=2)
             AND company='{filters.company}';

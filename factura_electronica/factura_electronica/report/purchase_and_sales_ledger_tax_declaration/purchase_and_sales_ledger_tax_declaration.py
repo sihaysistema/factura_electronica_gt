@@ -279,6 +279,11 @@ def get_data(filters):
             # Column E: Numero de factura, de name se pasara por una funcionq ue elimina string(letras)
             purchase_invoice.update({'no_doc': string_cleaner(purchase_invoice.get('documento'), opt=True)})
 
+            # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura
+            # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
+            purchase_invoice.update({'status_doc': validate_status_document(purchase_invoice)})
+
+
             # Column P, R Locales
             # Si la factura es local, obtenemos el monto de bienes en al factura
             # con iva incluido
@@ -347,3 +352,30 @@ def validate_trasaction(invoice):
     except:
         # Si no hay direccion usamos como default Local
         return {'tipo_transaccion': 'L'}
+
+
+def validate_status_document(invoice):
+    """
+    Valida el estado de la factura, puede ser Emitida, Anulada, o con Descuentos
+
+    Args:
+        invoice (dict): Factura iterada
+
+    Returns:
+        str: Escenario aplicado
+    """
+
+    # Si es compra, se deja vacio
+    if invoice.get('compras_ventas') == 'C':
+        return ''
+
+    # Si es venta y esta validada, se retorna como E de Emitida
+    if invoice.get('compras_ventas') == 'V' and invoice.get('docstatus') == 1:
+        return 'E'
+
+    # Si es venta y esta cancelada, se retorna como A de Anulada
+    if invoice.get('compras_ventas') == 'V' and invoice.get('docstatus') == 2:
+        return 'A'
+
+    return ''
+    # Valida el caso de facturas con descuentos, si lleva descuento es D
