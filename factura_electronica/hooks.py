@@ -267,7 +267,7 @@ fixtures = [
             ]
         ]
     ]
-    }, "Tax Category", "Translation"
+    }, "Tax Category", "Translation", "Identification Document Type"
 ]
 
 # Includes in <head>

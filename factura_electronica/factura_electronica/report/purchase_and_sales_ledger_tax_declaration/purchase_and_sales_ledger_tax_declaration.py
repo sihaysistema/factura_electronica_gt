@@ -283,6 +283,15 @@ def get_data(filters):
             # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
             purchase_invoice.update({'status_doc': validate_status_document(purchase_invoice)})
 
+            # Column L:
+            contact_name = frappe.db.get_value('Contact', {'address': purchase_invoice.get('invoice_address')}, 'name')
+            ord_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'ip_prefix')
+            purchase_invoice.update({'no_orden_cedula_dpi_pasaporte': ord_doc_entity})
+
+            # Coumn K:
+            no_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'id_number')
+            purchase_invoice.update({'no_regi_cedula_dpi_pasaporte': no_doc_entity})
+
 
             # Column P, R Locales
             # Si la factura es local, obtenemos el monto de bienes en al factura
@@ -378,4 +387,4 @@ def validate_status_document(invoice):
         return 'A'
 
     return ''
-    # Valida el caso de facturas con descuentos, si lleva descuento es D
+    # Validar el caso de facturas con descuentos, si lleva descuento es D

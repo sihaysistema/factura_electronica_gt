@@ -11,17 +11,20 @@
   {
    "fieldname": "ip_prefix",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "ID Prefix",
-   "options": "Identification Document Type"
+   "options": "Identification Document Type",
+   "search_index": 1
   },
   {
    "fieldname": "id_number",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "ID Number"
   }
  ],
  "istable": 1,
- "modified": "2020-07-02 15:51:07.744445",
+ "modified": "2020-07-02 20:20:20.047062",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Contact Identification",
