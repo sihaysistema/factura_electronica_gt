@@ -270,8 +270,6 @@ def get_data(filters):
             column_i = validate_trasaction(purchase_invoice)
             # Actualizamos el valor del diccionario iterado
             purchase_invoice.update(column_i)
-            # Agregamos el diccionario a la lista destino
-            # data.append(purchase_invoice)
 
             # Column P, R Locales
             # Si la factura es local, obtenemos el monto de bienes en al factura
@@ -279,25 +277,20 @@ def get_data(filters):
             if column_i.get('tipo_transaccion') == 'L':
                 # Actualizamos el valor de ... con el de bienes obtenido de la factura
                 purchase_invoice.update({'total_gravado_doc_bien_ope_local': purchase_invoice.get('net_total')})
-                # data.append(purchase_invoice)
 
                 # col r
                 purchase_invoice.update({'total_gravado_doc_servi_ope_local': purchase_invoice.get('net_total')})
-                # data.append(purchase_invoice)
 
             # Columna Q, S: Si es exterior
             if column_i.get('tipo_transaccion') == 'E':
                 # Actualizamos el valor de ... con el de bienes obtenido de la factura
                 purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': purchase_invoice.get('net_total')})
-                # data.append(purchase_invoice)
 
                 # col S
                 purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': purchase_invoice.get('net_total')})
-                # data.append(purchase_invoice)
+
 
             data.append(purchase_invoice)
-
-        # data.extend(purchase_invoices)
 
     # if len(sales_invoices) > 0:
     #     # Procesamos facturas de venta

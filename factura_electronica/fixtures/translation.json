@@ -306,5 +306,19 @@
   "source_name": "Retention Confirmation Number",
   "status": null,
   "target_name": "Constancia de Retencion"
+ },
+ {
+  "contributed_translation_doctype_name": null,
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2020-07-02 18:22:15.873586",
+  "name": "e9916c803f",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "Tax Category Group",
+  "status": "Saved",
+  "target_name": "Grupos de Categor\u00eda de Impuestos"
  }
 ]

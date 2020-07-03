@@ -259,7 +259,11 @@ fixtures = [
                 "Item-facelec_is_good",
                 "Item-facelec_is_service",
                 "Purchase Invoice-purchase_ledger_page_number",
-                "Sales Invoice-sales_ledger_page_number"
+                "Sales Invoice-sales_ledger_page_number",
+                "Customer-facelec_tax_category",
+                "Customer-facelec_section_taxes",
+                "Supplier-facelec_tax_category",
+                "Supplier-facelec_section_taxes"
             ]
         ]
     ]
