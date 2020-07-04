@@ -1400,11 +1400,11 @@
   "target_name": "Constancia de Exenci\u00f3n de IVA"
  },
  {
-  "contributed_translation_doctype_name": null,
+  "contributed_translation_doctype_name": "6508735caf",
   "docstatus": 0,
   "doctype": "Translation",
   "language": "es",
-  "modified": "2020-07-03 16:25:34.346874",
+  "modified": "2020-07-04 15:47:52.024718",
   "name": "02387873de",
   "parent": null,
   "parentfield": null,
@@ -1412,5 +1412,33 @@
   "source_name": "Public Writ",
   "status": "Saved",
   "target_name": "Escritura P\u00fablica"
+ },
+ {
+  "contributed_translation_doctype_name": null,
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "en",
+  "modified": "2020-07-04 15:48:12.671788",
+  "name": "336d20cff6",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "Es Factura Especial",
+  "status": "Saved",
+  "target_name": "Is Special Invoice"
+ },
+ {
+  "contributed_translation_doctype_name": "0c6654bf95",
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2020-07-04 15:49:54.132022",
+  "name": "0638b90df3",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "Is Special Invoice",
+  "status": "Saved",
+  "target_name": "Es Factura Especial"
  }
 ]
