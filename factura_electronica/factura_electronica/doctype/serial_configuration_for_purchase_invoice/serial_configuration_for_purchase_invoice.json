@@ -1,6 +1,6 @@
 {
- "creation": "2019-09-25 18:43:07.643617",
- "description": "Tabla para configurar series, que permite asignar tipo de documentos segun SAT ASL, Factura Electronica FEL. Aplica para Facturas de venta",
+ "creation": "2020-07-04 19:54:32.010699",
+ "description": "Tabla para configurar series, que permite asignar tipo de documentos segun SAT ASL, Factura Electronica FEL. Aplica para Facturas de compra",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -39,10 +39,10 @@
   }
  ],
  "istable": 1,
- "modified": "2020-07-04 19:52:40.728303",
+ "modified": "2020-07-04 19:54:32.010699",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
- "name": "Configuracion Series FEL",
+ "name": "Serial Configuration For Purchase Invoice",
  "owner": "Administrator",
  "permissions": [],
  "quick_entry": 1,

@@ -11,7 +11,7 @@ import pandas as pd
 
 import frappe
 from factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.queries import *
-from factura_electronica.utils.utilities_facelec import generate_asl_file, string_cleaner
+from factura_electronica.utils.utilities_facelec import generate_asl_file, string_cleaner, validar_configuracion
 from frappe import _, _dict, scrub
 from frappe.utils import cstr, flt, get_site_name, nowdate
 
@@ -29,6 +29,7 @@ def execute(filters=None):
             frappe.msgprint(msg=_('Press the download button to get the ASL files'),
                             title=_('Successfully generated ASL report and file'), indicator='green')
             return columns, data
+
         else:
             frappe.msgprint(msg=_(f'More details in the following log \n {status_file[1]}'),
                             title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
@@ -266,7 +267,9 @@ def get_data(filters):
     if len(purchase_invoices) > 0:
         # Procesamos facturas de compra, por cada factura
         for purchase_invoice in purchase_invoices:
-            get_items_purchase_invoice(purchase_invoice.get('documento'))
+            inv_name = purchase_invoice.get('documento')
+
+            get_items_purchase_invoice(inv_name)
             # Column I: OK
             # Validamos tipo de trasaccion
             column_i = validate_trasaction(purchase_invoice)
@@ -281,11 +284,13 @@ def get_data(filters):
             # Column B: Compras/Ventas (ya viene procesado de la base de datos) C o V
 
             # TODO: Column C: Documento
+            document_inv = validate_serie(purchase_invoice.get('serie_doc'), inv_name)
+            purchase_invoice.update({'documento': document_inv})
 
             # TODO: Column D, Serie del documento, Se esta usando naming series (ya viene procesado de la db)
 
             # Column E: Numero de factura, de name se pasara por una funcionq ue elimina string(letras)
-            purchase_invoice.update({'no_doc': string_cleaner(purchase_invoice.get('documento'), opt=True)})
+            purchase_invoice.update({'no_doc': string_cleaner(inv_name, opt=True)})
 
             # Column F, Fecha del documento: se esta usando posting date de la factura
 
@@ -321,7 +326,7 @@ def get_data(filters):
             # Column P, R Locales
             # Si la factura es local, obtenemos el monto de bienes en al factura
             # con iva incluido
-            amt_local = process_purchase_invoice_items(purchase_invoice.get('documento'))
+            amt_local = process_purchase_invoice_items(inv_name)
 
             if column_i.get('tipo_transaccion') == 'L':
                 # Actualizamos el valor de ... con el de bienes obtenido de la factura
@@ -460,3 +465,23 @@ def process_purchase_invoice_items(invoice_name):
             'goods': 0,
             'services': 0
         }
+
+
+def validate_serie(naming_serie, invoice_name):
+
+    # Obtenemos datos y status de la configuracion para factura electroncia
+    status_config_facelec =  validar_configuracion()
+
+    # Si se encuentra una configuracion valida
+    if status_config_facelec[0] == 1:
+        name_conf = status_config_facelec[1]
+
+        # Obtnemos el tipo de documento para la serie utilizada en la factura
+        doc_ok_invoice = frappe.db.get_value('Configuracion Series FEL',
+                                            {'parent': name_conf, 'serie': naming_serie},
+                                             'serie_sat')
+
+        return doc_ok_invoice
+
+    else:
+        return ''
