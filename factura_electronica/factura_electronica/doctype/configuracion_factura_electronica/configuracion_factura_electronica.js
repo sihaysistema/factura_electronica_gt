@@ -32,12 +32,13 @@ frappe.ui.form.on('Configuracion Factura Electronica', {
         });
 
         // Aplica para Purchase Invoice
+        // NOTA: Se esta usando la misma funcion de facturas especiales
         frappe.call({
             method: "factura_electronica.factura_electronica.doctype.configuracion_factura_electronica.configuracion_factura_electronica.series_factura_especial",
 
             callback: function (r) {
                 // console.log(r.message);
-                frappe.meta.get_docfield('Series Factura Especial', 'serie', cur_frm.doc.name).options = r.message
+                frappe.meta.get_docfield('Serial Configuration For Purchase Invoice', 'serie', cur_frm.doc.name).options = r.message
                 cur_frm.refresh_field('serie');
             }
         });

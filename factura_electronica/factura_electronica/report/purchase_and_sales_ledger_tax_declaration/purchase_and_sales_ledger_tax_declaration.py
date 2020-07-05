@@ -467,7 +467,17 @@ def process_purchase_invoice_items(invoice_name):
         }
 
 
-def validate_serie(naming_serie, invoice_name):
+def validate_serie(naming_serie):
+    """
+    Busca el tipo de documento relacionado a la serie usado en la factura venta/compra
+    esto en configuraciones de series de factura electronica
+
+    Args:
+        naming_serie (str): Serie utilizada en factura compra/venta
+
+    Returns:
+        str: Documento SAT
+    """
 
     # Obtenemos datos y status de la configuracion para factura electroncia
     status_config_facelec =  validar_configuracion()
@@ -477,9 +487,16 @@ def validate_serie(naming_serie, invoice_name):
         name_conf = status_config_facelec[1]
 
         # Obtnemos el tipo de documento para la serie utilizada en la factura
+        # Primero buscamos para las facturas de venta
         doc_ok_invoice = frappe.db.get_value('Configuracion Series FEL',
                                             {'parent': name_conf, 'serie': naming_serie},
                                              'serie_sat')
+
+        # Buscamos para las facturas de compra
+        if not doc_ok_invoice:
+            doc_ok_invoice = frappe.db.get_value('Serial Configuration For Purchase Invoice',
+                                                {'parent': name_conf, 'serie': naming_serie},
+                                                 'serie_sat')
 
         return doc_ok_invoice
 
