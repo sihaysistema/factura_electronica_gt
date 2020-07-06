@@ -264,6 +264,76 @@ def get_data(filters):
     sales_invoices = get_sales_invoice(filters)
     purchase_invoices = get_purchases_invoice(filters)
 
+    processed_purchase_invoices = process_purchase_invoices(purchase_invoices)
+    data.extend(processed_purchase_invoices)
+
+    return data
+
+
+def process_sales_invoice_items(invoice_name):
+    pass
+
+
+def process_purchase_invoice_items(invoice_name):
+    """
+    Obtiene el monto total de bienes y servicios, iva incluido
+
+    Args:
+        invoice_name (list): Lista de diccionarios con los items de factura
+
+    Returns:
+        dict: total de bien y servicio
+    """
+
+    try:
+        # Obtenemos items de las facturas de compra, segun su parent = name
+        items = get_items_purchase_invoice(invoice_name)
+
+        # Cargamos a un dataframe
+        df_items = pd.read_json(json.dumps(items))
+
+        # Localizamos aquellos items que sean bienes, y lo sumamos
+        sum_goods = (df_items.loc[df_items['is_good'] == 1].sum()).to_dict()
+        frappe.msgprint(sum_goods)
+
+        # Localizamos aquellos items que sean servicios, y lo sumamos
+        sum_services = (df_items.loc[df_items['is_service'] == 1].sum()).to_dict()
+
+        # Solo para DEBUG: si quieres ver la estructura de datos descomenta
+        # with open('sum_service.json', 'w') as f:
+        #     f.write(json.dumps(sum_services, indent=2))
+
+        # with open('sum_good.json', 'w') as f:
+        #     f.write(json.dumps(sum_goods, indent=2))
+
+        return {
+            'goods': sum_goods.get('amount', 0),
+            'services': sum_services.get('amount', 0)
+        }
+
+    except:  # Si por alguna razon ocurre error, posiblemente item no configurado retornamos cero
+        # frappe.msgprint(frappe.get_traceback())
+
+        return {
+            'goods': 0,
+            'services': 0
+        }
+
+
+def process_purchase_invoices(purchase_invoices):
+    """
+    Procesa todas facturas de compra, asignando correctamente a un diccionario
+    los datos necesarios para mostrar en reporte
+
+    Args:
+        purchase_invoices (list): Lista diccionarios con data db
+
+    Returns:
+        list: lista diccionarios datos procesados
+    """
+
+    data = []
+
     # Si existen datos
     if len(purchase_invoices) > 0:
         # Procesamos facturas de compra, por cada factura
@@ -385,62 +455,11 @@ def get_data(filters):
                         # col S
                         purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
 
-            # Columna X: Tipo de constancia
+            # Columna X, Y, Z: Tipo de constancia, solo para ventas
             # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS
             # CEXE = CONSTANCIA DE EXENCIÓN DE IVA
             # CRIVA = CONSTANCIA DE RETENCIÓN DE IVA
 
             data.append(purchase_invoice)
 
-    # if len(sales_invoices) > 0:
-    #     # Procesamos facturas de venta
-    #     for sales_invoice in sales_invoices:
-    #         pass
-    #     data.extend(sales_invoices)
-
     return data
-
-
-def process_sales_invoice_items(invoice_name):
-    pass
-
-
-def process_purchase_invoice_items(invoice_name):
-
-    try:
-        # Obtenemos items de las facturas de compra, segun su parent = name
-        items = get_items_purchase_invoice(invoice_name)
-
-        # Cargamos a un dataframe
-        df_items = pd.read_json(json.dumps(items))
-
-        # Localizamos aquellos items que sean bienes, y lo sumamos
-        sum_goods = (df_items.loc[df_items['is_good'] == 1].sum()).to_dict()
-        frappe.msgprint(sum_goods)
-
-        # Localizamos aquellos items que sean servicios, y lo sumamos
-        sum_services = (df_items.loc[df_items['is_service'] == 1].sum()).to_dict()
-
-        # Solo para DEBUG: si quieres ver la estructura de datos descomenta
-        # with open('sum_service.json', 'w') as f:
-        #     f.write(json.dumps(sum_services, indent=2))
-
-        # with open('sum_good.json', 'w') as f:
-        #     f.write(json.dumps(sum_goods, indent=2))
-
-        return {
-            'goods': sum_goods.get('amount', 0),
-            'services': sum_services.get('amount', 0)
-        }
-
-    except:  # Si por alguna razon ocurre error, posiblemente item no configurado retornamos cero
-        # frappe.msgprint(frappe.get_traceback())
-
-        return {
-            'goods': 0,
-            'services': 0
-        }
-
-
-def process_purchase_invoices(purchase_invoices):
-    pass
