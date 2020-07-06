@@ -502,3 +502,7 @@ def validate_serie(naming_serie):
 
     else:
         return ''
+
+
+def validate_document_series(invoice_name):
+    pass
