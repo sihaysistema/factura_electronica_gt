@@ -63,10 +63,19 @@ def validar_configuracion():
         return (int(3), 'Error 3')
 
 
-def generate_asl_file(data_asl, file_name='ASISTE.ASL', delimiter="|"):
+def generate_asl_file(data_asl, file_name='ASISTE', delimiter='|', extension='.ASL'):
+    """
+    Utilidad para crear archivos para asiste libros SAT Guatemala
+
+    Args:
+        data_asl (list): Lista diccionarios
+        file_name (str, optional): Nombre para el archivo. Defaults to 'ASISTE'.
+        delimiter (str, optional): Delimitador a usar en el archivo. Defaults to '|'.
+        extension (str, optional): Extension a usar en el archivo. Defaults to '.ASL'
+    """
 
     try:
-        with open(file_name, 'a') as archivo_asl:
+        with open(f'{file_name}{extension}', 'a') as archivo_asl:
             archivo_asl.seek(0)
             archivo_asl.truncate()
 

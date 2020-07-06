@@ -21,14 +21,14 @@ charset = utf-8
 [*.py]
 indent_style = space
 indent_size = 4
-max_line_length = 110
+max_line_length = 130
 insert_final_newline = true
 
 # Javascript
 [*.js]
 indent_style = space
 indent_size = 4
-max_line_length = 110
+max_line_length = 130
 
 # HTML
 [*.html]

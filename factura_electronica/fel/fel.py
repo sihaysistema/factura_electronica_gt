@@ -596,7 +596,8 @@ class ElectronicInvoice:
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
                 resp_fel.serie_factura_original = self.__invoice_code
-                resp_fel.serie_para_factura = 'FACELEC-'+str(self.__response_ok['numero'])
+                # resp_fel.serie_para_factura = 'FACELEC-'+str(self.__response_ok['numero'])
+                resp_fel.serie_para_factura = str(self.__response_ok['serie']).replace('*', '')+str(self.__response_ok['numero'])
 
                 if "control_emision" in self.__response_ok:
                     resp_fel.saldo = self.__response_ok['control_emision']['Saldo']
@@ -644,7 +645,9 @@ class ElectronicInvoice:
                                                     fieldname=['numero', 'serie', 'uuid'], as_dict=1)
             # Esta seccion se encarga de actualizar la serie, con una nueva que es serie y numero
             # buscara en las tablas donde exista una coincidencia actualizando con la nueva serie
-            serieFEL = str('FACELEC-' + factura_guardada[0]['numero'])
+            serie_sat = str(factura_guardada[0]['serie']).replace('*', '')  # Se sustituye el * tomando en cuenta el server de pruebas FEL
+            # serieFEL = str('FACELEC-' + factura_guardada[0]['numero'])
+            serieFEL = str(serie_sat + str(factura_guardada[0]['numero']))
             try:
                 # serieFEL: guarda el numero DTE retornado por INFILE, se utilizara para reemplazar el nombre de la serie de la
                 # factura que lo generó.

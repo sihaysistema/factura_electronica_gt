@@ -11,7 +11,8 @@ import pandas as pd
 
 import frappe
 from factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.queries import *
-from factura_electronica.utils.utilities_facelec import generate_asl_file, string_cleaner
+from factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.validators import *
+from factura_electronica.utils.utilities_facelec import generate_asl_file, string_cleaner, validar_configuracion
 from frappe import _, _dict, scrub
 from frappe.utils import cstr, flt, get_site_name, nowdate
 
@@ -29,6 +30,7 @@ def execute(filters=None):
             frappe.msgprint(msg=_('Press the download button to get the ASL files'),
                             title=_('Successfully generated ASL report and file'), indicator='green')
             return columns, data
+
         else:
             frappe.msgprint(msg=_(f'More details in the following log \n {status_file[1]}'),
                             title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
@@ -266,7 +268,9 @@ def get_data(filters):
     if len(purchase_invoices) > 0:
         # Procesamos facturas de compra, por cada factura
         for purchase_invoice in purchase_invoices:
-            get_items_purchase_invoice(purchase_invoice.get('documento'))
+            inv_name = purchase_invoice.get('documento')
+
+            get_items_purchase_invoice(inv_name)
             # Column I: OK
             # Validamos tipo de trasaccion
             column_i = validate_trasaction(purchase_invoice)
@@ -278,39 +282,50 @@ def get_data(filters):
                                               'facelec_establishment')
             purchase_invoice.update({'establecimiento': establ_comp})
 
-            # Column B: Compras/Ventas (ya viene procesado de la base de datos) C o V
+            # Column B: Compras/Ventas (ya viene procesado de la base de datos) C o V, OK
 
-            # TODO: Column C: Documento
+            # Column C: Documento, OK
+            document_inv = validate_serie(purchase_invoice.get('serie_doc'))
+            purchase_invoice.update({'documento': document_inv})
 
-            # TODO: Column D, Serie del documento, Se esta usando naming series (ya viene procesado de la db)
+            # Column D, Serie del documento, OK
+            # Primero se validara en envios FEL, si no existe se usara la data que ya viene procesada de db
+            serie_docu = validate_document_serie(inv_name)
+            if serie_docu[0] == True:
+                purchase_invoice.update({'serie_doc': serie_docu[1]})
 
-            # Column E: Numero de factura, de name se pasara por una funcionq ue elimina string(letras)
-            purchase_invoice.update({'no_doc': string_cleaner(purchase_invoice.get('documento'), opt=True)})
+            # Column E: Numero de factura, se aplica el mism proceso anterior, OK
+            number_docu = validate_document_number(inv_name)
+            if number_docu[0] == True:
+                purchase_invoice.update({'no_doc': number_docu[1]})
 
-            # Column F, Fecha del documento: se esta usando posting date de la factura
+            # Si no aplica lo anterior, name de factura se pasa por un limpiador de strings, dejando solamente el numero de la factura
+            purchase_invoice.update({'no_doc': string_cleaner(inv_name, opt=True)})
 
-            # Column G, NIT del cliente/proveedor: ya procesado por la db
+            # Column F, Fecha del documento: se esta usando posting date de la factura, OK
 
-            # Column H, Nombre del cliente/proveedor: ya procesado por la db
+            # Column G, NIT del cliente/proveedor: ya procesado por la db, OK
 
-            # Column J, Tipo de Operación (Bien o Servicio):
-            # TODO PROPUESTA: Si todos los items de la factura son bienes se clasifica como bien
+            # Column H, Nombre del cliente/proveedor: ya procesado por la db, OK
+
+            # Column J, Tipo de Operación (Bien o Servicio): OK
+            # Si todos los items de la factura son bienes se clasifica como bien
             # Si todos los items de la factura son servicios se clasifica con servicio
             # Si los items in invoice are mixed then, empty row
+            purchase_invoice.update({'tipo_ope': validate_invoice_of_goods_or_services(inv_name)})
 
-            # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura
+            # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura OK
             # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
             purchase_invoice.update({'status_doc': validate_status_document(purchase_invoice)})
 
-            # Las validaciones para L y M se basa en si hay data en contact ya se por Customer, Supplier
+            # Las validaciones para L y M se basa en si hay data en contact va se por Customer, Supplier
             # Si no hay dato se dejara en blanco, especificar bien esto en manual user
-
-            # Column L: No. de orden de la cédula, DPI o Pasaporte
+            # Column L: No. de orden de la cédula, DPI o Pasaporte, OK
             contact_name = frappe.db.get_value('Contact', {'address': purchase_invoice.get('invoice_address')}, 'name')
             ord_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'ip_prefix') or ""
             purchase_invoice.update({'no_orden_cedula_dpi_pasaporte': ord_doc_entity})
 
-            # Coumn M: No. de registro de la cédula, DPI o Pasaporte
+            # Coumn M: No. de registro de la cédula, DPI o Pasaporte, OK
             no_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'id_number') or ""
             purchase_invoice.update({'no_regi_cedula_dpi_pasaporte': no_doc_entity})
 
@@ -318,10 +333,10 @@ def get_data(filters):
             # Column O: Número del documento de Operación, POR AHORA NO APLICA, solo para exportadores
 
 
-            # Column P, R Locales
+            # Column P, R Locales, OK
             # Si la factura es local, obtenemos el monto de bienes en al factura
             # con iva incluido
-            amt_local = process_purchase_invoice_items(purchase_invoice.get('documento'))
+            amt_local = process_purchase_invoice_items(inv_name)
 
             if column_i.get('tipo_transaccion') == 'L':
                 # Actualizamos el valor de ... con el de bienes obtenido de la factura
@@ -330,7 +345,7 @@ def get_data(filters):
                 # col r
                 purchase_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
 
-            # Columna Q, S: Si es exterior
+            # Columna Q, S: Si es exterior, OK
             if column_i.get('tipo_transaccion') == 'E':
                 # Actualizamos el valor de ... con el de bienes obtenido de la factura
                 purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
@@ -352,73 +367,6 @@ def get_data(filters):
     #     data.extend(sales_invoices)
 
     return data
-
-
-def validate_trasaction(invoice):
-    """
-    Validaciones para la columna I
-
-    Args:
-        invoice ([type]): [description]
-    """
-
-    try:
-        venta_o_compra = invoice.get('compras_ventas')
-        company_country = frappe.db.get_value('Company', {'name': invoice.get('company')}, 'country')
-
-        invoice_country = frappe.db.get_value('Address', {'name': invoice.get('invoice_address')},
-                                            'country') or "Guatemala"
-
-        # Local
-        if ((company_country == 'Guatemala' and invoice_country == 'Guatemala')
-            and (venta_o_compra == 'C' or venta_o_compra == 'V')):
-            return {'tipo_transaccion': 'L'}
-
-        # Exportacion
-        if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
-            and (venta_o_compra == 'V')):
-            return {'tipo_transaccion': 'E'}
-
-        # Importacion
-        if ((company_country == 'Guatemala' and invoice_country != 'Guatemala')
-            and venta_o_compra == 'C'):
-            return {'tipo_transaccion': 'I'}
-
-        # TODO: VERIFICAR QUE ES 'A' y 'T'
-
-        # Si no se aplica ningu escenario anterior se retorna como Local
-        return {'tipo_transaccion': 'L'}
-
-    except:
-        # Si no hay direccion usamos como default Local
-        return {'tipo_transaccion': 'L'}
-
-
-def validate_status_document(invoice):
-    """
-    Valida el estado de la factura, puede ser Emitida, Anulada, o con Descuentos
-
-    Args:
-        invoice (dict): Factura iterada
-
-    Returns:
-        str: Escenario aplicado
-    """
-
-    # Si es compra, se deja vacio
-    if invoice.get('compras_ventas') == 'C':
-        return ''
-
-    # Si es venta y esta validada, se retorna como E de Emitida
-    if invoice.get('compras_ventas') == 'V' and invoice.get('docstatus') == 1:
-        return 'E'
-
-    # Si es venta y esta cancelada, se retorna como A de Anulada
-    if invoice.get('compras_ventas') == 'V' and invoice.get('docstatus') == 2:
-        return 'A'
-
-    return ''
-    # Validar el caso de facturas con descuentos, si lleva descuento es D
 
 
 def process_sales_invoice_items(invoice_name):
@@ -460,3 +408,4 @@ def process_purchase_invoice_items(invoice_name):
             'goods': 0,
             'services': 0
         }
+

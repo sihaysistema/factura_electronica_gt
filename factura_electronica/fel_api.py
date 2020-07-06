@@ -60,8 +60,8 @@ def api_interface(invoice_code, naming_series):
             return True, str(new_serie)
 
     except:
-        frappe.msgprint(_(f'Ocurrio un problema al procesar la solicitud, mas info en: {frappe.get_traceback()}'))
-        return False, 'Ocurrio un error en el proceso de generar factura electronia'
+        frappe.msgprint(_(f'A problem occurred while processing the request, more info at: {frappe.get_traceback()}'))
+        return False, 'An error occurred in the process of generating an electronic invoice'
 
 
 
