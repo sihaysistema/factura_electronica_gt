@@ -272,6 +272,7 @@ def fill_fixtures():
                     "Supplier-facelec_section_taxes",
                     "Sales Taxes and Charges Template-facelec_is_exempt",
                     "Item-facelec_is_exempt"
+                    "Purchase Taxes and Charges Template-facelec_is_exempt"
                 ]
             ]
         ]

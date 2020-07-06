@@ -337,21 +337,36 @@ def get_data(filters):
             # Si la factura es local, obtenemos el monto de bienes en al factura
             # con iva incluido
             amt_local = process_purchase_invoice_items(inv_name)
+            template_tax_name = purchase_invoice.get('taxes_and_charges', '')
+            is_exempt = validate_if_exempt(template_tax_name, purchase_invoice.get('compras_ventas'))
 
             if column_i.get('tipo_transaccion') == 'L':
-                # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                purchase_invoice.update({'total_gravado_doc_bien_ope_local': amt_local.get('goods')})
+                if is_exempt == 1:
+                    # Column T
+                    purchase_invoice.update({'total_exento_doc_bien_ope_local': amt_local.get('goods')})
+                    # Column V
+                    purchase_invoice.update({'total_exento_doc_servi_ope_local': amt_local.get('services')})
 
-                # col r
-                purchase_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
+                else:
+                    # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                    purchase_invoice.update({'total_gravado_doc_bien_ope_local': amt_local.get('goods')})
+
+                    # col r
+                    purchase_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
 
             # Columna Q, S: Si es exterior, OK
             if column_i.get('tipo_transaccion') == 'E':
-                # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
+                if is_exempt == 1:
+                    # Column U
+                    purchase_invoice.update({'total_exento_doc_bien_ope_exterior': amt_local.get('goods')})
+                    # Column W
+                    purchase_invoice.update({'total_exento_doc_servi_ope_exterior': amt_local.get('services')})
+                else:
+                    # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                    purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
 
-                # col S
-                purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
+                    # col S
+                    purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
 
             # Columna X: Tipo de constancia
             # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS

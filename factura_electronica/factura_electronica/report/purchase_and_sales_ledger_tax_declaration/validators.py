@@ -195,3 +195,21 @@ def validate_invoice_of_goods_or_services(invoice_name):
 
     else:
         return ''
+
+
+def validate_if_exempt(template_tax_name='', purchase_or_sale='V'):
+    if not template_tax_name:
+        return 0
+
+    if purchase_or_sale == 'V':
+        is_exempt = frappe.db.get_value('Sales Taxes and Charges Template',
+                                        {'name': template_tax_name}, 'facelec_is_exempt')
+        return is_exempt
+
+    if purchase_or_sale == 'C':
+        is_exempt = frappe.db.get_value('Purchase Taxes and Charges Template',
+                                        {'name': template_tax_name}, 'facelec_is_exempt')
+        return is_exempt
+
+    # Si no se cumplete ninguna de la anterior retornamos que no es exenta
+    return 0
