@@ -424,22 +424,23 @@ frappe.ui.form.on("Purchase Invoice", {
         // console.log(cuentas_registradas);
         // console.log(Object.keys(cuentas_registradas).length);
 
+        // TODO: EN QUE QUEDO ESTO?
         // Si existe por lo menos una cuenta, se ejecuta frappe.call
-        if (Object.keys(cuentas_registradas).length > 0) {
-            frappe.call({
-                method: "factura_electronica.resources_facelec.special_tax.add_gl_entry_other_special_tax",
-                args: {
-                    invoice_name: frm.doc.name,
-                    accounts: cuentas_registradas,
-                    invoice_type: "Purchase Invoice"
-                },
-                // El callback se ejecuta tras finalizar la ejecucion del script python del lado
-                // del servidor
-                callback: function () {
-                    // frm.reload_doc();
-                }
-            });
-        }
+        // if (Object.keys(cuentas_registradas).length > 0) {
+        //     frappe.call({
+        //         method: "factura_electronica.utils.special_tax.add_gl_entry_other_special_tax",
+        //         args: {
+        //             invoice_name: frm.doc.name,
+        //             accounts: cuentas_registradas,
+        //             invoice_type: "Purchase Invoice"
+        //         },
+        //         // El callback se ejecuta tras finalizar la ejecucion del script python del lado
+        //         // del servidor
+        //         callback: function () {
+        //             // frm.reload_doc();
+        //         }
+        //     });
+        // }
     },
     naming_series: function (frm, cdt, cdn) {
         // frappe call
@@ -452,7 +453,7 @@ frappe.ui.form.on("Purchase Invoice", {
         console.log(frm.doc.naming_series);
 
         frappe.call({
-            method: "factura_electronica.resources_facelec.special_invoice.verificar_existencia_series",
+            method: "factura_electronica.utils.special_invoice.verificar_existencia_series",
             args: {
                 serie: frm.doc.naming_series
             },
