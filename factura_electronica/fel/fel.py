@@ -596,7 +596,8 @@ class ElectronicInvoice:
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
                 resp_fel.serie_factura_original = self.__invoice_code
-                resp_fel.serie_para_factura = 'FACELEC-'+str(self.__response_ok['numero'])
+                # resp_fel.serie_para_factura = 'FACELEC-'+str(self.__response_ok['numero'])
+                resp_fel.serie_para_factura = str(self.__response_ok['serie']).replace('*', '')+str(self.__response_ok['numero'])
 
                 if "control_emision" in self.__response_ok:
                     resp_fel.saldo = self.__response_ok['control_emision']['Saldo']

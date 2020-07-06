@@ -281,15 +281,24 @@ def get_data(filters):
                                               'facelec_establishment')
             purchase_invoice.update({'establecimiento': establ_comp})
 
-            # Column B: Compras/Ventas (ya viene procesado de la base de datos) C o V
+            # Column B: Compras/Ventas (ya viene procesado de la base de datos) C o V, OK
 
-            # TODO: Column C: Documento
-            document_inv = validate_serie(purchase_invoice.get('serie_doc'), inv_name)
+            # Column C: Documento, OK
+            document_inv = validate_serie(purchase_invoice.get('serie_doc'))
             purchase_invoice.update({'documento': document_inv})
 
-            # TODO: Column D, Serie del documento, Se esta usando naming series (ya viene procesado de la db)
+            # Column D, Serie del documento, OK
+            # Primero se validara en envios FEL, si no existe se usara la data que ya viene procesada de db
+            serie_docu = validate_document_serie(inv_name)
+            if serie_docu[0] == True:
+                purchase_invoice.update({'serie_doc': serie_docu[1]})
 
-            # Column E: Numero de factura, de name se pasara por una funcionq ue elimina string(letras)
+            # Column E: Numero de factura, se aplica el mism proceso anterior, OK
+            number_docu = validate_document_number(inv_name)
+            if number_docu[0] == True:
+                purchase_invoice.update({'no_doc': number_docu[1]})
+
+            # Si no aplica lo anterior, name de factura se pasa por un limpiador de strings, dejando solamente el numero de la factura
             purchase_invoice.update({'no_doc': string_cleaner(inv_name, opt=True)})
 
             # Column F, Fecha del documento: se esta usando posting date de la factura
@@ -504,5 +513,46 @@ def validate_serie(naming_serie):
         return ''
 
 
-def validate_document_series(invoice_name):
-    pass
+def validate_document_serie(invoice_name):
+    """
+    Valida la serie utilizada en la factura venta/compra, primero en Envios FEL
+    donde hay registros de factura electronica
+
+    Args:
+        invoice_name (str): name Factura venta/compra
+
+    Returns:
+        str: Serie de la Factura
+    """
+    # En el caso de documento electronicos, si se encuentra registrados en envio
+    # se utilizara la serie y numero
+    if frappe.db.exists('Envio FEL', {'serie_para_factura': invoice_name}):
+        serie = frappe.db.get_value('Envio FEL', {'serie_para_factura': invoice_name}, 'serie')
+
+        return True, serie
+
+    else:
+        return False, 'No encontrada'
+
+
+def validate_document_number(invoice_name):
+    """
+    Valida el numero utilizado en la factura venta/compra, primero en Envios FEL
+    donde hay registros de factura electronica
+
+    Args:
+        invoice_name (str): name Factura compra/venta
+
+    Returns:
+        str: Numero de factura
+    """
+
+    # En el caso de documento electronicos, si se encuentra registrados en envio
+    # se utilizara la serie y numero
+    if frappe.db.exists('Envio FEL', {'serie_para_factura': invoice_name}):
+        numero = frappe.db.get_value('Envio FEL', {'serie_para_factura': invoice_name}, 'numero')
+
+        return True, numero
+
+    else:
+        return False, 'No encontrado'
