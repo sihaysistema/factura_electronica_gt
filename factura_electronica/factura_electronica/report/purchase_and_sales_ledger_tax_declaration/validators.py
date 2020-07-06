@@ -44,7 +44,7 @@ def validate_trasaction(invoice):
             and venta_o_compra == 'C'):
             return {'tipo_transaccion': 'I'}
 
-        # TODO: VERIFICAR QUE ES 'A' y 'T'
+        # TODO: A=ADQUISICION, T=TRANSFERENCIA
 
         # Si no se aplica ningu escenario anterior se retorna como Local
         return {'tipo_transaccion': 'L'}
