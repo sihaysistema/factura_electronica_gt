@@ -48,6 +48,7 @@
   "url_dte",
   "llave_ws",
   "afiliacion_iva",
+  "local_currency",
   "configuracion_series_fel_section",
   "series_fel",
   "series_configuration_for_purchase_invoices_section",
@@ -363,11 +364,19 @@
    "fieldtype": "Table",
    "label": "Purchase Invoice Series",
    "options": "Serial Configuration For Purchase Invoice"
+  },
+  {
+   "default": "GTQ",
+   "fieldname": "local_currency",
+   "fieldtype": "Select",
+   "label": "Local Currency",
+   "options": "\nGTQ",
+   "read_only": 1
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-07-04 19:58:55.446577",
+ "modified": "2020-07-06 01:31:54.597682",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
