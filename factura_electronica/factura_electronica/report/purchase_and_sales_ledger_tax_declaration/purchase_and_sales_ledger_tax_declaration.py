@@ -301,30 +301,30 @@ def get_data(filters):
             # Si no aplica lo anterior, name de factura se pasa por un limpiador de strings, dejando solamente el numero de la factura
             purchase_invoice.update({'no_doc': string_cleaner(inv_name, opt=True)})
 
-            # Column F, Fecha del documento: se esta usando posting date de la factura
+            # Column F, Fecha del documento: se esta usando posting date de la factura, OK
 
-            # Column G, NIT del cliente/proveedor: ya procesado por la db
+            # Column G, NIT del cliente/proveedor: ya procesado por la db, OK
 
-            # Column H, Nombre del cliente/proveedor: ya procesado por la db
+            # Column H, Nombre del cliente/proveedor: ya procesado por la db, OK
 
-            # Column J, Tipo de Operación (Bien o Servicio):
-            # TODO PROPUESTA: Si todos los items de la factura son bienes se clasifica como bien
+            # Column J, Tipo de Operación (Bien o Servicio): OK
+            # Si todos los items de la factura son bienes se clasifica como bien
             # Si todos los items de la factura son servicios se clasifica con servicio
             # Si los items in invoice are mixed then, empty row
+            purchase_invoice.update({'tipo_ope': validate_invoice_of_goods_or_services(inv_name)})
 
-            # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura
+            # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura OK
             # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
             purchase_invoice.update({'status_doc': validate_status_document(purchase_invoice)})
 
-            # Las validaciones para L y M se basa en si hay data en contact ya se por Customer, Supplier
+            # Las validaciones para L y M se basa en si hay data en contact va se por Customer, Supplier
             # Si no hay dato se dejara en blanco, especificar bien esto en manual user
-
-            # Column L: No. de orden de la cédula, DPI o Pasaporte
+            # Column L: No. de orden de la cédula, DPI o Pasaporte, OK
             contact_name = frappe.db.get_value('Contact', {'address': purchase_invoice.get('invoice_address')}, 'name')
             ord_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'ip_prefix') or ""
             purchase_invoice.update({'no_orden_cedula_dpi_pasaporte': ord_doc_entity})
 
-            # Coumn M: No. de registro de la cédula, DPI o Pasaporte
+            # Coumn M: No. de registro de la cédula, DPI o Pasaporte, OK
             no_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'id_number') or ""
             purchase_invoice.update({'no_regi_cedula_dpi_pasaporte': no_doc_entity})
 
@@ -332,7 +332,7 @@ def get_data(filters):
             # Column O: Número del documento de Operación, POR AHORA NO APLICA, solo para exportadores
 
 
-            # Column P, R Locales
+            # Column P, R Locales, OK
             # Si la factura es local, obtenemos el monto de bienes en al factura
             # con iva incluido
             amt_local = process_purchase_invoice_items(inv_name)
@@ -344,7 +344,7 @@ def get_data(filters):
                 # col r
                 purchase_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
 
-            # Columna Q, S: Si es exterior
+            # Columna Q, S: Si es exterior, OK
             if column_i.get('tipo_transaccion') == 'E':
                 # Actualizamos el valor de ... con el de bienes obtenido de la factura
                 purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
@@ -556,3 +556,37 @@ def validate_document_number(invoice_name):
 
     else:
         return False, 'No encontrado'
+
+
+def validate_invoice_of_goods_or_services(invoice_name):
+    """
+    Valida si la factura es de bien o servicios, en funcion a la cantidad
+    de items de servicios o bienes
+
+    Args:
+        invoice_name (str): name Factura compra/venta
+
+    Returns:
+        str: BIEN, SERVICIO O string vacio
+    """
+
+    items = get_items_purchase_invoice(invoice_name)
+
+    # Cargamos a un dataframe
+    df = pd.read_json(json.dumps(items))
+
+    # Obtenemos todos los registros que sean bienes, luego hacemos un conteo
+    # y luego obtenemos solamente el conteo del campo que nos interesa
+    subset_goods = df[df["is_good"] == 1].count().is_good
+
+    subset_services = df[df["is_service"] == 1].count().is_service
+
+    # Verificamos el mayor
+    if int(subset_goods) > int(subset_services):
+        return 'BIEN'
+
+    elif int(subset_services) > int(subset_goods):
+        return 'SERVICIOS'
+
+    else:
+        return ''
