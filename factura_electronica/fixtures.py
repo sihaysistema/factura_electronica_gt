@@ -269,7 +269,9 @@ def fill_fixtures():
                     "Customer-facelec_tax_category",
                     "Customer-facelec_section_taxes",
                     "Supplier-facelec_tax_category",
-                    "Supplier-facelec_section_taxes"
+                    "Supplier-facelec_section_taxes",
+                    "Sales Taxes and Charges Template-facelec_is_exempt",
+                    "Item-facelec_is_exempt"
                 ]
             ]
         ]
