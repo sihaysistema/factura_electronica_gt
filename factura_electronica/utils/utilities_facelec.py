@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import frappe
-from frappe import _
+
+import datetime
 import unicodedata
 from xml.sax.saxutils import escape
+
+import pandas as pd
+import json
+
+import frappe
+from frappe import _
 
 
 def encuentra_errores(cadena):
@@ -63,7 +69,7 @@ def validar_configuracion():
         return (int(3), 'Error 3')
 
 
-def generate_asl_file(data_asl, file_name='ASISTE', delimiter='|', extension='.ASL'):
+def generate_asl_file(datos_asiste, file_name='ASISTE', delimiter='|', extension='.ASL'):
     """
     Utilidad para crear archivos para asiste libros SAT Guatemala
 
@@ -75,6 +81,14 @@ def generate_asl_file(data_asl, file_name='ASISTE', delimiter='|', extension='.A
     """
 
     try:
+        # Cargamos a un df la data, para limpiar los valores None
+        df = pd.DataFrame(json.loads(datos_asiste)).fillna('')
+        data_asl = df.to_dict(orient='records')
+
+        # Para debug
+        # with open('testasl.json', 'w') as f:
+        #     f.write(json.dumps(data_asl, default=str))
+
         with open(f'{file_name}{extension}', 'a') as archivo_asl:
             archivo_asl.seek(0)
             archivo_asl.truncate()

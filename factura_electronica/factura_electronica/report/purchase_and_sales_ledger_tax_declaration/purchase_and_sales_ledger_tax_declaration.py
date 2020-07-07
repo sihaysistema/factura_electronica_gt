@@ -32,10 +32,11 @@ def execute(filters=None):
     data = get_data(filters)
 
     if len(data) > 0:
-        status_file = generate_asl_file(data)
+        status_file = generate_asl_file(json.dumps(data, default=str))
         if status_file[0] == True:
-            # with open('asl_report.json', 'w') as f:
-            #     f.write(json.dumps(data, indent=2, default=str))
+            # Para debug
+            # with open('asl_report.txt', 'w') as f:
+            #     f.write(str(data))
 
             # frappe.msgprint(msg=_('Press the download button to get the ASL files'),
             #                 title=_('Successfully generated ASL report and file'), indicator='green')
@@ -45,6 +46,7 @@ def execute(filters=None):
             frappe.msgprint(msg=_(f'More details in the following log \n {status_file[1]}'),
                             title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
             return columns, [{}]
+
     else:
         return columns, [{}]
 
