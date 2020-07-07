@@ -127,6 +127,13 @@ def get_data():
                     "name": "VAT and Income Tax Retention Report",
                     "is_query_report": True,
                     "onboard": 1
+                },
+                {
+                    "type": "report",
+                    "label": _("VAT Payable and Receivable Conciliation"),
+                    "name": "VAT Payable and Receivable Conciliation",
+                    "is_query_report": True,
+                    "onboard": 1
                 }
             ]
         }
