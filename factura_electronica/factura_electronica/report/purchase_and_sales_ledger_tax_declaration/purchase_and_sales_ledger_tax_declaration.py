@@ -273,11 +273,7 @@ def get_data(filters):
     return data
 
 
-def process_sales_invoice_items(invoice_name):
-    pass
-
-
-def process_purchase_invoice_items(invoice_name):
+def process_invoice_items(invoice_name, type_inv='C'):
     """
     Obtiene el monto total de bienes y servicios, iva incluido
 
@@ -289,8 +285,13 @@ def process_purchase_invoice_items(invoice_name):
     """
 
     try:
-        # Obtenemos items de las facturas de compra, segun su parent = name
-        items = get_items_purchase_invoice(invoice_name)
+        if type_inv == 'C':
+            # Obtenemos items de las facturas de compra, segun su parent = name
+            items = get_items_purchase_invoice(invoice_name)
+
+        if type_inv == 'V':
+            # Obtenemos items de las facturas de compra, segun su parent = name
+            items = get_items_sales_invoice(invoice_name)
 
         # Cargamos a un dataframe
         df_items = pd.read_json(json.dumps(items))
@@ -408,7 +409,7 @@ def process_purchase_invoices(purchase_invoices):
             # Column P, R Locales, OK
             # Si la factura es local, obtenemos el monto de bienes en al factura
             # con iva incluido
-            amt_local = process_purchase_invoice_items(inv_name)
+            amt_local = process_invoice_items(inv_name, type_inv=purchase_invoice.get('compras_ventas'))
             template_tax_name = purchase_invoice.get('taxes_and_charges', '')
             is_exempt = validate_if_exempt(template_tax_name, purchase_invoice.get('compras_ventas'))
             tax_category = frappe.db.get_value('Company', {'name': purchase_invoice.get('company')},
@@ -531,76 +532,76 @@ def process_sales_invoices(sales_invoices):
             # Si los items in invoice are mixed then, empty row
             sales_invoice.update({'tipo_ope': validate_invoice_of_goods_or_services(inv_name, type_inv=sales_invoice.get('compras_ventas'))})
 
-            # # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura OK
-            # # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
-            # sales_invoice.update({'status_doc': validate_status_document(sales_invoice)})
+            # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura OK
+            # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
+            sales_invoice.update({'status_doc': validate_status_document(sales_invoice)})
 
-            # # Las validaciones para L y M se basa en si hay data en contact va se por Customer, Supplier
-            # # Si no hay dato se dejara en blanco, especificar bien esto en manual user
-            # # Column L: No. de orden de la cédula, DPI o Pasaporte, OK
-            # contact_name = frappe.db.get_value('Contact', {'address': sales_invoice.get('invoice_address')}, 'name')
-            # ord_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'ip_prefix') or ""
-            # sales_invoice.update({'no_orden_cedula_dpi_pasaporte': ord_doc_entity})
+            # Las validaciones para L y M se basa en si hay data en contact va se por Customer, Supplier
+            # Si no hay dato se dejara en blanco, especificar bien esto en manual user
+            # Column L: No. de orden de la cédula, DPI o Pasaporte, OK
+            contact_name = frappe.db.get_value('Contact', {'address': sales_invoice.get('invoice_address')}, 'name')
+            ord_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'ip_prefix') or ""
+            sales_invoice.update({'no_orden_cedula_dpi_pasaporte': ord_doc_entity})
 
-            # # Coumn M: No. de registro de la cédula, DPI o Pasaporte, OK
-            # no_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'id_number') or ""
-            # sales_invoice.update({'no_regi_cedula_dpi_pasaporte': no_doc_entity})
+            # Coumn M: No. de registro de la cédula, DPI o Pasaporte, OK
+            no_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'id_number') or ""
+            sales_invoice.update({'no_regi_cedula_dpi_pasaporte': no_doc_entity})
 
             # # Column N: Tipo Documento de Operación POR AHORA NO APLICA, puede ser DUA o FAUCA, eaplica solo exportador
             # # Column O: Número del documento de Operación, POR AHORA NO APLICA, solo para exportadores
 
 
-            # # Column P, R Locales, OK
-            # # Si la factura es local, obtenemos el monto de bienes en al factura
-            # # con iva incluido
-            # amt_local = process_sales_invoice_items(inv_name)
-            # template_tax_name = sales_invoice.get('taxes_and_charges', '')
-            # is_exempt = validate_if_exempt(template_tax_name, sales_invoice.get('compras_ventas'))
-            # tax_category = frappe.db.get_value('Company', {'name': sales_invoice.get('company')},
-            #                                    'tax_category')
+            # Column P, R Locales, OK
+            # Si la factura es local, obtenemos el monto de bienes en al factura
+            # con iva incluido
+            amt_local = process_invoice_items(inv_name, type_inv=sales_invoice.get('compras_ventas'))
+            template_tax_name = sales_invoice.get('taxes_and_charges', '')
+            is_exempt = validate_if_exempt(template_tax_name, sales_invoice.get('compras_ventas'))
+            tax_category = frappe.db.get_value('Company', {'name': sales_invoice.get('company')},
+                                               'tax_category')
 
-            # # OPERACIONES LOCALES
-            # if column_i.get('tipo_transaccion') == 'L':
-            #     if tax_category == 'SAT: Pequeño Contribuyente':  # Si company es peque;o contribuyente
-            #             # Column AA: OK
-            #             sales_invoice.update({'peque_contri_total_facturado_ope_local_bienes': amt_local.get('goods')})
-            #             # Column AB, OK
-            #             sales_invoice.update({'peque_contri_total_facturado_ope_local_servicios': amt_local.get('services')})
-            #     else:
-            #         if is_exempt == 1:
-            #             # Column T
-            #             sales_invoice.update({'total_exento_doc_bien_ope_local': amt_local.get('goods')})
-            #             # Column V
-            #             sales_invoice.update({'total_exento_doc_servi_ope_local': amt_local.get('services')})
+            # OPERACIONES LOCALES
+            if column_i.get('tipo_transaccion') == 'L':
+                if tax_category == 'SAT: Pequeño Contribuyente':  # Si company es peque;o contribuyente
+                        # Column AA: OK
+                        sales_invoice.update({'peque_contri_total_facturado_ope_local_bienes': amt_local.get('goods')})
+                        # Column AB, OK
+                        sales_invoice.update({'peque_contri_total_facturado_ope_local_servicios': amt_local.get('services')})
+                else:
+                    if is_exempt == 1:
+                        # Column T
+                        sales_invoice.update({'total_exento_doc_bien_ope_local': amt_local.get('goods')})
+                        # Column V
+                        sales_invoice.update({'total_exento_doc_servi_ope_local': amt_local.get('services')})
 
-            #         else:
-            #             # Actualizamos el valor de ... con el de bienes obtenido de la factura
-            #             sales_invoice.update({'total_gravado_doc_bien_ope_local': amt_local.get('goods')})
-            #             # col r
-            #             sales_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
+                    else:
+                        # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                        sales_invoice.update({'total_gravado_doc_bien_ope_local': amt_local.get('goods')})
+                        # col r
+                        sales_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
 
 
-            # # OPERACIONES EXTERIORES
-            # # Columna Q, S: Si es exterior, OK
-            # if column_i.get('tipo_transaccion') == 'E':
-            #     if tax_category == 'SAT: Pequeño Contribuyente':  # Si company es peque;o contribuyente
-            #             # Column AC: OK
-            #             sales_invoice.update({'peque_contri_total_facturado_ope_exterior_bienes': amt_local.get('goods')})
-            #             # Column AD, OK
-            #             sales_invoice.update({'peque_contri_total_facturado_ope_exterior_servicios': amt_local.get('services')})
+            # OPERACIONES EXTERIORES
+            # Columna Q, S: Si es exterior, OK
+            if column_i.get('tipo_transaccion') == 'E':
+                if tax_category == 'SAT: Pequeño Contribuyente':  # Si company es peque;o contribuyente
+                        # Column AC: OK
+                        sales_invoice.update({'peque_contri_total_facturado_ope_exterior_bienes': amt_local.get('goods')})
+                        # Column AD, OK
+                        sales_invoice.update({'peque_contri_total_facturado_ope_exterior_servicios': amt_local.get('services')})
 
-            #     else:
-            #         if is_exempt == 1:
-            #             # Column U
-            #             sales_invoice.update({'total_exento_doc_bien_ope_exterior': amt_local.get('goods')})
-            #             # Column W
-            #             sales_invoice.update({'total_exento_doc_servi_ope_exterior': amt_local.get('services')})
-            #         else:
-            #             # Actualizamos el valor de ... con el de bienes obtenido de la factura
-            #             sales_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
+                else:
+                    if is_exempt == 1:
+                        # Column U
+                        sales_invoice.update({'total_exento_doc_bien_ope_exterior': amt_local.get('goods')})
+                        # Column W
+                        sales_invoice.update({'total_exento_doc_servi_ope_exterior': amt_local.get('services')})
+                    else:
+                        # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                        sales_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
 
-            #             # col S
-            #             sales_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
+                        # col S
+                        sales_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
 
             # Columna X, Y, Z: Tipo de constancia, solo para ventas
             # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS
