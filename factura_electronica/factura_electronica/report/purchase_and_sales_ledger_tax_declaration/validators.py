@@ -27,7 +27,7 @@ def validate_trasaction(invoice):
         company_country = frappe.db.get_value('Company', {'name': invoice.get('company')}, 'country')
 
         invoice_country = frappe.db.get_value('Address', {'name': invoice.get('invoice_address')},
-                                            'country') or "Guatemala"
+                                              'country') or "Guatemala"
 
         # Local
         if ((company_country == 'Guatemala' and invoice_country == 'Guatemala')
@@ -163,7 +163,7 @@ def validate_document_number(invoice_name):
         return False, 'No encontrado'
 
 
-def validate_invoice_of_goods_or_services(invoice_name):
+def validate_invoice_of_goods_or_services(invoice_name, type_inv='C'):
     """
     Valida si la factura es de bien o servicios, en funcion a la cantidad
     de items de servicios o bienes
@@ -174,8 +174,11 @@ def validate_invoice_of_goods_or_services(invoice_name):
     Returns:
         str: BIEN, SERVICIO O string vacio
     """
+    if type_inv == 'C':
+        items = get_items_purchase_invoice(invoice_name)
 
-    items = get_items_purchase_invoice(invoice_name)
+    if type_inv == 'V':
+        items = get_items_sales_invoice(invoice_name)
 
     # Cargamos a un dataframe
     df = pd.read_json(json.dumps(items))
