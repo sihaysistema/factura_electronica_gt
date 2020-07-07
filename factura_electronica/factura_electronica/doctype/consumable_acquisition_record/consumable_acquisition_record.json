@@ -1,6 +1,6 @@
 {
  "autoname": "CADI.########",
- "creation": "2020-07-03 13:49:52.813014",
+ "creation": "2020-07-06 17:01:47.895625",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -30,12 +30,31 @@
    "label": "Date"
   },
   {
+   "default": "CADI",
+   "fieldname": "consumable_record_type",
+   "fieldtype": "Select",
+   "label": "Consumable Type",
+   "options": "\nCADI"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier"
+  },
+  {
    "fieldname": "company",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Company",
    "options": "Company",
    "reqd": 1
+  },
+  {
+   "fieldname": "tax_id",
+   "fieldtype": "Data",
+   "label": "Tax ID",
+   "read_only": 1
   },
   {
    "collapsible": 1,
@@ -80,25 +99,6 @@
    "label": "Consumable Acquisition Amount"
   },
   {
-   "default": "CADI",
-   "fieldname": "consumable_record_type",
-   "fieldtype": "Select",
-   "label": "Consumable Type",
-   "options": "\nCADI"
-  },
-  {
-   "fieldname": "supplier",
-   "fieldtype": "Link",
-   "label": "Supplier",
-   "options": "Supplier"
-  },
-  {
-   "fieldname": "tax_id",
-   "fieldtype": "Data",
-   "label": "Tax ID",
-   "read_only": 1
-  },
-  {
    "fieldname": "consumable_acquisition_confirmation_prefix",
    "fieldtype": "Data",
    "label": "Consumable Acquisition Confirmation Prefix"
@@ -125,8 +125,7 @@
    "label": "Attach Retention Image"
   }
  ],
- "issingle": 1,
- "modified": "2020-07-03 14:00:08.423276",
+ "modified": "2020-07-06 17:01:47.895625",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Consumable Acquisition Record",

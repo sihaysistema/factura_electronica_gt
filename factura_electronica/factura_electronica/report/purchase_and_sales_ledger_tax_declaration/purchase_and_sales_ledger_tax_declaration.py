@@ -18,17 +18,27 @@ from frappe.utils import cstr, flt, get_site_name, nowdate
 
 
 def execute(filters=None):
+    """
+    Funcion principal de reporte, se ejecuta en cada evento del reporte
+
+    Args:
+        filters (dict, optional): Filtros front end. Defaults to None.
+
+    Returns:
+        tuple: columnas reporte, datos reporte
+    """
+
     columns = get_columns()
     data = get_data(filters)
 
     if len(data) > 0:
         status_file = generate_asl_file(data)
         if status_file[0] == True:
-            with open('asl_report.json', 'w') as f:
-                f.write(json.dumps(data, indent=2, default=str))
+            # with open('asl_report.json', 'w') as f:
+            #     f.write(json.dumps(data, indent=2, default=str))
 
-            frappe.msgprint(msg=_('Press the download button to get the ASL files'),
-                            title=_('Successfully generated ASL report and file'), indicator='green')
+            # frappe.msgprint(msg=_('Press the download button to get the ASL files'),
+            #                 title=_('Successfully generated ASL report and file'), indicator='green')
             return columns, data
 
         else:
@@ -55,13 +65,13 @@ def get_columns():
             "label": _("Establecimiento"),
             "fieldname": "establecimiento",
             "fieldtype": "Data",
-            "width": 100
+            "width": 110
         },
         {
             "label": _("Compras/Ventas"),
             "fieldname": "compras_ventas",
             "fieldtype": "Data",
-            "width": 100
+            "width": 110
         },
         {
             "label": _("Documento"),
@@ -73,19 +83,19 @@ def get_columns():
             "label": _("Serie del documento"),
             "fieldname": "serie_doc",
             "fieldtype": "Data",
-            "width": 100
+            "width": 120
         },
         {
             "label": _("Número del documento"),
             "fieldname": "no_doc",
             "fieldtype": "Data",
-            "width": 100
+            "width": 120
         },
         {
             "label": _("Fecha del documento"),
             "fieldname": "fecha_doc",
             "fieldtype": "Date",
-            "width": 100
+            "width": 115
         },
         {
             "label": _("NIT del cliente/proveedor"),
@@ -97,7 +107,7 @@ def get_columns():
             "label": _("Nombre del cliente/proveedor"),
             "fieldname": "nombre_cliente_proveedor",
             "fieldtype": "Data",
-            "width": 100
+            "width": 125
         },
         {
             "label": _("Tipo de transacción"),
@@ -144,49 +154,57 @@ def get_columns():
         {
             "label": _("Total Valor Gravado del documento, Bienes operación Local"),
             "fieldname": "total_gravado_doc_bien_ope_local",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Total Valor Gravado del documento, Bienes operación del Exterior"),
             "fieldname": "total_gravado_doc_bien_ope_exterior",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Total Valor Gravado del documento Servicios operación Local"),
             "fieldname": "total_gravado_doc_servi_ope_local",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Total Valor Gravado del documento Servicios operación del uso Exterior"),
             "fieldname": "total_gravado_doc_servi_ope_exterior",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Total Valor Exento del documento, Bienes operación Local"),
             "fieldname": "total_exento_doc_bien_ope_local",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Total Valor Exento del documento, Bienes operación del Exterior"),
             "fieldname": "total_exento_doc_bien_ope_exterior",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Total Valor Exento del documento, Servicios operación Local"),
             "fieldname": "total_exento_doc_servi_ope_local",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Total Valor Exento del documento, Servicios operación del Exterior"),
             "fieldname": "total_exento_doc_servi_ope_exterior",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
@@ -204,44 +222,58 @@ def get_columns():
         {
             "label": _("Valor de la constancia de exención/adquisición de insumos/reten-ción del IVA"),
             "fieldname": "valor_constancia_exension_adqui_insu_reten_iva",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Pequeño Contribuyente Total Facturado Operación Local Bienes"),
             "fieldname": "peque_contri_total_facturado_ope_local_bienes",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Pequeño Contribuyente Total Facturado Operación Local Servicios"),
             "fieldname": "peque_contri_total_facturado_ope_local_servicios",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Pequeño Contribuyente Total Facturado Operación al Exterior Bienes"),
             "fieldname": "peque_contri_total_facturado_ope_exterior_bienes",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Pequeño Contribuyente Total Facturado Operación al Exterior Servicios"),
             "fieldname": "peque_contri_total_facturado_ope_exterior_servicios",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("IVA"),
             "fieldname": "iva",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
         },
         {
             "label": _("Total Valor del Documento"),
             "fieldname": "total_valor_doc",
-            "fieldtype": "Data",
+            "fieldtype": "Currency",
+            "options": "currency",
             "width": 100,
+        },
+        {
+            "label": _("Currency"),
+            "fieldname": "currency",
+            "fieldtype": "Link",
+            "options": "Currency",
+            "hidden": 1
         },
     ]
 
@@ -261,16 +293,95 @@ def get_data(filters):
     """
 
     data = []
+
     sales_invoices = get_sales_invoice(filters)
     purchase_invoices = get_purchases_invoice(filters)
+
+    processed_purchase_invoices = process_purchase_invoices(purchase_invoices, filters)
+    data.extend(processed_purchase_invoices)
+
+    processed_sales_invoices = process_sales_invoices(sales_invoices, filters)
+    data.extend(processed_sales_invoices)
+
+    return data
+
+
+def process_invoice_items(invoice_name, type_inv='C'):
+    """
+    Obtiene el monto total de bienes y servicios, iva incluido
+
+    Args:
+        invoice_name (list): Lista de diccionarios con los items de factura
+
+    Returns:
+        dict: total de bien y servicio
+    """
+
+    try:
+        if type_inv == 'C':
+            # Obtenemos items de las facturas de compra, segun su parent = name
+            items = get_items_purchase_invoice(invoice_name)
+
+        if type_inv == 'V':
+            # Obtenemos items de las facturas de compra, segun su parent = name
+            items = get_items_sales_invoice(invoice_name)
+
+        # Cargamos a un dataframe
+        df_items = pd.read_json(json.dumps(items))
+
+        # Localizamos aquellos items que sean bienes, y lo sumamos
+        sum_goods = (df_items.loc[df_items['is_good'] == 1].sum()).to_dict()
+        frappe.msgprint(sum_goods)
+
+        # Localizamos aquellos items que sean servicios, y lo sumamos
+        sum_services = (df_items.loc[df_items['is_service'] == 1].sum()).to_dict()
+
+        # Solo para DEBUG: si quieres ver la estructura de datos descomenta
+        # with open('sum_service.json', 'w') as f:
+        #     f.write(json.dumps(sum_services, indent=2))
+
+        # with open('sum_good.json', 'w') as f:
+        #     f.write(json.dumps(sum_goods, indent=2))
+
+        return {
+            'goods': sum_goods.get('amount', 0),
+            'services': sum_services.get('amount', 0)
+        }
+
+    except:  # Si por alguna razon ocurre error, posiblemente item no configurado retornamos cero
+        # frappe.msgprint(frappe.get_traceback())
+
+        return {
+            'goods': 0,
+            'services': 0
+        }
+
+
+def process_purchase_invoices(purchase_invoices, filters):
+    """
+    Procesa todas facturas de compra, asignando correctamente a un diccionario
+    los datos necesarios para mostrar en reporte
+
+    Args:
+        purchase_invoices (list): Lista diccionarios con data db
+
+    Returns:
+        list: lista diccionarios datos procesados
+    """
+
+    data = []
 
     # Si existen datos
     if len(purchase_invoices) > 0:
         # Procesamos facturas de compra, por cada factura
         for purchase_invoice in purchase_invoices:
+
+            # Actualiza el campo con la moneda de la comp'ia para reflejar el reporte
+            # en la moneda e la compania
+            purchase_invoice.update({'currency': filters.company_currency})
+
             inv_name = purchase_invoice.get('documento')
 
-            get_items_purchase_invoice(inv_name)
             # Column I: OK
             # Validamos tipo de trasaccion
             column_i = validate_trasaction(purchase_invoice)
@@ -312,7 +423,7 @@ def get_data(filters):
             # Si todos los items de la factura son bienes se clasifica como bien
             # Si todos los items de la factura son servicios se clasifica con servicio
             # Si los items in invoice are mixed then, empty row
-            purchase_invoice.update({'tipo_ope': validate_invoice_of_goods_or_services(inv_name)})
+            purchase_invoice.update({'tipo_ope': validate_invoice_of_goods_or_services(inv_name, type_inv=purchase_invoice.get('compras_ventas'))})
 
             # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura OK
             # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
@@ -336,76 +447,201 @@ def get_data(filters):
             # Column P, R Locales, OK
             # Si la factura es local, obtenemos el monto de bienes en al factura
             # con iva incluido
-            amt_local = process_purchase_invoice_items(inv_name)
+            amt_local = process_invoice_items(inv_name, type_inv=purchase_invoice.get('compras_ventas'))
+            template_tax_name = purchase_invoice.get('taxes_and_charges', '')
+            is_exempt = validate_if_exempt(template_tax_name, purchase_invoice.get('compras_ventas'))
+            tax_category = frappe.db.get_value('Company', {'name': purchase_invoice.get('company')},
+                                               'tax_category')
 
+            # OPERACIONES LOCALES
             if column_i.get('tipo_transaccion') == 'L':
-                # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                purchase_invoice.update({'total_gravado_doc_bien_ope_local': amt_local.get('goods')})
+                if tax_category == 'SAT: Pequeño Contribuyente':  # Si company es peque;o contribuyente
+                        # Column AA: OK
+                        purchase_invoice.update({'peque_contri_total_facturado_ope_local_bienes': amt_local.get('goods')})
+                        # Column AB, OK
+                        purchase_invoice.update({'peque_contri_total_facturado_ope_local_servicios': amt_local.get('services')})
+                else:
+                    if is_exempt == 1:
+                        # Column T
+                        purchase_invoice.update({'total_exento_doc_bien_ope_local': amt_local.get('goods')})
+                        # Column V
+                        purchase_invoice.update({'total_exento_doc_servi_ope_local': amt_local.get('services')})
 
-                # col r
-                purchase_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
+                    else:
+                        # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                        purchase_invoice.update({'total_gravado_doc_bien_ope_local': amt_local.get('goods')})
+                        # col r
+                        purchase_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
 
+
+            # OPERACIONES EXTERIORES
             # Columna Q, S: Si es exterior, OK
             if column_i.get('tipo_transaccion') == 'E':
-                # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
+                if tax_category == 'SAT: Pequeño Contribuyente':  # Si company es peque;o contribuyente
+                        # Column AC: OK
+                        purchase_invoice.update({'peque_contri_total_facturado_ope_exterior_bienes': amt_local.get('goods')})
+                        # Column AD, OK
+                        purchase_invoice.update({'peque_contri_total_facturado_ope_exterior_servicios': amt_local.get('services')})
 
-                # col S
-                purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
+                else:
+                    if is_exempt == 1:
+                        # Column U
+                        purchase_invoice.update({'total_exento_doc_bien_ope_exterior': amt_local.get('goods')})
+                        # Column W
+                        purchase_invoice.update({'total_exento_doc_servi_ope_exterior': amt_local.get('services')})
+                    else:
+                        # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                        purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
 
-            # Columna X: Tipo de constancia
+                        # col S
+                        purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
+
+            # Columna X, Y, Z: Tipo de constancia, solo para ventas
             # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS
             # CEXE = CONSTANCIA DE EXENCIÓN DE IVA
             # CRIVA = CONSTANCIA DE RETENCIÓN DE IVA
 
             data.append(purchase_invoice)
 
-    # if len(sales_invoices) > 0:
-    #     # Procesamos facturas de venta
-    #     for sales_invoice in sales_invoices:
-    #         pass
-    #     data.extend(sales_invoices)
+    else:
+        return [{}]
 
     return data
 
 
-def process_sales_invoice_items(invoice_name):
-    pass
+def process_sales_invoices(sales_invoices, filters):
+    """
+    Procesa todas facturas de compra, asignando correctamente a un diccionario
+    los datos necesarios para mostrar en reporte
+
+    Args:
+        purchase_invoices (list): Lista diccionarios con data db
+
+    Returns:
+        list: lista diccionarios datos procesados
+    """
+
+    data = []
+
+    # Si existen datos
+    if len(sales_invoices) > 0:
+        # Procesamos facturas de venta, por cada factura
+        for sales_invoice in sales_invoices:
+
+            sales_invoice.update({'currency': filters.company_currency})
+
+            inv_name = sales_invoice.get('documento')
+
+            # get_items_sales_invoice(inv_name)
+            # Column I: OK
+            # Validamos tipo de trasaccion
+            column_i = validate_trasaction(sales_invoice)
+            # Actualizamos el valor del diccionario iterado
+            sales_invoice.update(column_i)
+
+            # Column A: Establecimiento - OK
+            establ_comp = frappe.db.get_value('Address', {'name': sales_invoice.get('company_address_invoice', '')},
+                                              'facelec_establishment')
+            sales_invoice.update({'establecimiento': establ_comp})
+
+            # Column B: Compras/Ventas (ya viene procesado de la base de datos) C o V, OK
+
+            # Column C: Documento, OK
+            document_inv = validate_serie(sales_invoice.get('serie_doc'))
+            sales_invoice.update({'documento': document_inv})
+
+            # Column D, Serie del documento, OK
+            # Primero se validara en envios FEL, si no existe se usara la data que ya viene procesada de db
+            serie_docu = validate_document_serie(inv_name)
+            if serie_docu[0] == True:
+                sales_invoice.update({'serie_doc': serie_docu[1]})
+
+            # Column E: Numero de factura, se aplica el mism proceso anterior, OK
+            number_docu = validate_document_number(inv_name)
+            if number_docu[0] == True:
+                sales_invoice.update({'no_doc': number_docu[1]})
+
+            # # Si no aplica lo anterior, name de factura se pasa por un limpiador de strings, dejando solamente el numero de la factura
+            sales_invoice.update({'no_doc': string_cleaner(inv_name, opt=True)})
+
+            # Column F, Fecha del documento: se esta usando posting date de la factura, OK
+
+            # Column G, NIT del cliente/proveedor: ya procesado por la db, OK
+
+            # Column H, Nombre del cliente/proveedor: ya procesado por la db, OK
+
+            # Column J, Tipo de Operación (Bien o Servicio): OK
+            # Si todos los items de la factura son bienes se clasifica como bien
+            # Si todos los items de la factura son servicios se clasifica con servicio
+            # Si los items in invoice are mixed then, empty row
+            sales_invoice.update({'tipo_ope': validate_invoice_of_goods_or_services(inv_name, type_inv=sales_invoice.get('compras_ventas'))})
+
+            # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura OK
+            # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
+            sales_invoice.update({'status_doc': validate_status_document(sales_invoice)})
+
+            # Las validaciones para L y M se basa en si hay data en contact va se por Customer, Supplier
+            # Si no hay dato se dejara en blanco, especificar bien esto en manual user
+            # Column L: No. de orden de la cédula, DPI o Pasaporte, OK
+            contact_name = frappe.db.get_value('Contact', {'address': sales_invoice.get('invoice_address')}, 'name')
+            ord_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'ip_prefix') or ""
+            sales_invoice.update({'no_orden_cedula_dpi_pasaporte': ord_doc_entity})
+
+            # Coumn M: No. de registro de la cédula, DPI o Pasaporte, OK
+            no_doc_entity = frappe.db.get_value('Contact Identification', {'parent': contact_name}, 'id_number') or ""
+            sales_invoice.update({'no_regi_cedula_dpi_pasaporte': no_doc_entity})
+
+            # # Column N: Tipo Documento de Operación POR AHORA NO APLICA, puede ser DUA o FAUCA, eaplica solo exportador
+            # # Column O: Número del documento de Operación, POR AHORA NO APLICA, solo para exportadores
 
 
-def process_purchase_invoice_items(invoice_name):
+            # Column P, R Locales, OK
+            # Si la factura es local, obtenemos el monto de bienes en al factura
+            # con iva incluido
+            amt_local = process_invoice_items(inv_name, type_inv=sales_invoice.get('compras_ventas'))
+            template_tax_name = sales_invoice.get('taxes_and_charges', '')
+            is_exempt = validate_if_exempt(template_tax_name, sales_invoice.get('compras_ventas'))
+            tax_category = frappe.db.get_value('Company', {'name': sales_invoice.get('company')},
+                                               'tax_category')
 
-    try:
-        # Obtenemos items de las facturas de compra, segun su parent = name
-        items = get_items_purchase_invoice(invoice_name)
+            # OPERACIONES LOCALES
+            if column_i.get('tipo_transaccion') == 'L':
+                if is_exempt == 1:
+                    # Column T
+                    sales_invoice.update({'total_exento_doc_bien_ope_local': amt_local.get('goods')})
+                    # Column V
+                    sales_invoice.update({'total_exento_doc_servi_ope_local': amt_local.get('services')})
 
-        # Cargamos a un dataframe
-        df_items = pd.read_json(json.dumps(items))
+                else:
+                    # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                    sales_invoice.update({'total_gravado_doc_bien_ope_local': amt_local.get('goods')})
+                    # col r
+                    sales_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
 
-        # Localizamos aquellos items que sean bienes, y lo sumamos
-        sum_goods = (df_items.loc[df_items['is_good'] == 1].sum()).to_dict()
-        frappe.msgprint(sum_goods)
 
-        # Localizamos aquellos items que sean servicios, y lo sumamos
-        sum_services = (df_items.loc[df_items['is_service'] == 1].sum()).to_dict()
+            # OPERACIONES EXTERIORES
+            # Columna Q, S: Si es exterior, OK
+            if column_i.get('tipo_transaccion') == 'E':
+                if is_exempt == 1:
+                    # Column U
+                    sales_invoice.update({'total_exento_doc_bien_ope_exterior': amt_local.get('goods')})
+                    # Column W
+                    sales_invoice.update({'total_exento_doc_servi_ope_exterior': amt_local.get('services')})
+                else:
+                    # Actualizamos el valor de ... con el de bienes obtenido de la factura
+                    sales_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
 
-        # Solo para DEBUG: si quieres ver la estructura de datos descomenta
-        # with open('sum_service.json', 'w') as f:
-        #     f.write(json.dumps(sum_services, indent=2))
+                    # col S
+                    sales_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
 
-        # with open('sum_good.json', 'w') as f:
-        #     f.write(json.dumps(sum_goods, indent=2))
+            # Columna X, Y, Z: Tipo de constancia, solo para ventas, OK viene procesado desde la DB
+            # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS
+            # CEXE = CONSTANCIA DE EXENCIÓN DE IVA
+            # CRIVA = CONSTANCIA DE RETENCIÓN DE IVA
 
-        return {
-            'goods': sum_goods.get('amount', 0),
-            'services': sum_services.get('amount', 0)
-        }
+            data.append(sales_invoice)
 
-    except:  # Si por alguna razon ocurre error, posiblemente item no configurado retornamos cero
-        # frappe.msgprint(frappe.get_traceback())
+    else:
+        return [{}]
 
-        return {
-            'goods': 0,
-            'services': 0
-        }
-
+    return data
