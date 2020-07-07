@@ -65,21 +65,30 @@ def get_sales_invoice(filters):
         f"""SELECT DISTINCT name AS documento, 'V' AS compras_ventas, naming_series AS serie_doc, posting_date AS fecha_doc,
             nit_face_customer AS nit_cliente_proveedor, customer AS nombre_cliente_proveedor, company,
             customer_address AS invoice_address, net_total, shs_total_iva_fac AS iva, company_address AS company_address_invoice,
-            docstatus, taxes_and_charges
+            docstatus, taxes_and_charges, facelec_record_type, facelec_record_number AS no_constancia_exension_adqui_insu_reten_iva,
+            facelec_consumable_record_type AS tipo_constancia, facelec_record_value AS valor_constancia_exension_adqui_insu_reten_iva
             FROM `tabSales Invoice`
             WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND (docstatus=1 OR docstatus=2)
             AND company='{filters.company}';
         """, as_dict=True
     )
 
-    with open('sales_invoices.json', 'w') as f:
-        f.write(json.dumps(sales_invoices, default=str, indent=2))
+    # with open('sales_invoices.json', 'w') as f:
+    #     f.write(json.dumps(sales_invoices, default=str, indent=2))
 
     return sales_invoices
 
 
 def get_items_purchase_invoice(invoice_name):
+    """
+    Query para obtener items de facturas de compra
 
+    Args:
+        invoice_name (str): name factura
+
+    Returns:
+        list: Lista diccionarios
+    """
     items = frappe.db.sql(
         f"""SELECT DISTINCT parent, net_amount, amount, facelec_p_is_good AS is_good,
             facelec_p_is_service AS is_service, facelec_p_is_fuel AS is_fuel,
@@ -96,7 +105,15 @@ def get_items_purchase_invoice(invoice_name):
 
 
 def get_items_sales_invoice(invoice_name):
+    """
+    Query para obtener items de facturas de venta
 
+    Args:
+        invoice_name (str): name factura
+
+    Returns:
+        list: lista de diccionarios
+    """
     # facelec_gt_tax_net_goods_amt AS net_good, facelec_gt_tax_net_services_amt AS net_service
 
     items = frappe.db.sql(
