@@ -92,7 +92,17 @@ frappe.ui.form.on("Company", {
     tax_id: function (frm) {
         // valNit(frm.doc.tax_id, frm.doc.name, frm);
         frm.set_value('nit_face_company', frm.doc.tax_id);
-    }
+    },
+    setup: function (frm) {
+    frm.set_query('isr_account_payable', 'tax_witholding_ranges', () => {
+      return {
+        filters: {
+          company: frm.doc.name
+        }
+      }
+    });
+    cur_frm.refresh_field('report_list');
+  },
 });
 /* en-US: INDIVIDUAL SOURCE CODE FROM .js FILES IN THIS DIRECTORY WILL BE ADDED WHEN DOING A BENCH BUILD
    es-GT: CODIGO FUENTE INDIVIDUAL DE ARCHIVOS .js EN ESTE DIRECTORIO SE AGREGARAN ABAJO AL HACER BENCH BUILD */
