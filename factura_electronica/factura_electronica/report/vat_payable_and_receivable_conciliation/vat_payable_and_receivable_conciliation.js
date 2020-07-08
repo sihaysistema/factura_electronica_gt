@@ -105,17 +105,11 @@ function get_start_yr_mo() {
         11: __("November"),
         12: __("December")
     };
-    var test = {
+    var yr_mo = {
         "year": today.getFullYear(),
         "month": word_month[today.getMonth()+1],
     }
-    return test;
-};
-
-function get_start_month() {
-    var today = new Date(); // Obtiene la fecha actual
-    var yyyy = today.getFullYear();
-    return yyyy;
+    return yr_mo;
 };
 
 /*
