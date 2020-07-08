@@ -43,14 +43,16 @@ frappe.query_reports["VAT Payable and Receivable Conciliation"] = {
             fieldname: "month",
             label: __("Month"),
             fieldtype: "Select",
+            default: get_start_yr_mo().month,
             options: [__("January"), __("February"), __("March"), __("April"),
-            __("May"), __("Jun"), __("July"), __("August"), __("September"),
+            __("May"), __("June"), __("July"), __("August"), __("September"), __("October"),
             __("November"), __("December")],
             reqd: 1,
         },
         {
             fieldname: "year",
             label: __("Year"),
+            default: get_start_yr_mo().year,
             fieldtype: "Link",
             options: "Fiscal Year",
             reqd: 1,
@@ -86,3 +88,46 @@ frappe.query_reports["VAT Payable and Receivable Conciliation"] = {
         });
     },
 };
+
+function get_start_yr_mo() {
+    var today = new Date(); // Obtiene la fecha actual
+    const word_month = {
+        1: __("January"),
+        2: __("February"),
+        3: __("March"),
+        4: __("April"),
+        5: __("May"),
+        6: __("June"),
+        7: __("July"),
+        8: __("August"),
+        9: __("September"),
+        10: __("October"),
+        11: __("November"),
+        12: __("December")
+    };
+    var test = {
+        "year": today.getFullYear(),
+        "month": word_month[today.getMonth()+1],
+    }
+    return test;
+};
+
+function get_start_month() {
+    var today = new Date(); // Obtiene la fecha actual
+    var yyyy = today.getFullYear();
+    return yyyy;
+};
+
+/*
+var today = new Date();
+var dd = today.getDate();
+var mm = today.getMonth()+1;
+var yyyy = today.getFullYear();
+if(dd<10){
+    dd='0'+dd;
+} 
+if(mm<10){
+    mm='0'+mm;
+} 
+var today = dd+'-'+mm+'-'+yyyy;
+*/
