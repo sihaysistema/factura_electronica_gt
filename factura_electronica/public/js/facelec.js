@@ -101,6 +101,13 @@ frappe.ui.form.on("Company", {
         }
       }
     });
+    frm.set_query('iva_account_payable', 'tax_witholding_ranges', () => {
+      return {
+        filters: {
+          company: frm.doc.name
+        }
+      }
+    });
     cur_frm.refresh_field('report_list');
   },
 });
