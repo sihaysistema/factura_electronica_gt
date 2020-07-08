@@ -282,7 +282,8 @@ def fill_fixtures():
                     "Sales Invoice-facelec_record_number",
                     "Sales Invoice-facelec_record_value"
                     "Sales Invoice-facelec_exports",
-                    "Address-facelec_establishment"
+                    "Address-facelec_establishment",
+                    "Sales Invoice-facelec_consumable_record_type"
                 ]
             ]
         ]
