@@ -23,18 +23,14 @@ def get_vat_accounts(filters):
                         as_dict=1)
     return vat_accounts[0]
 
+
 def get_vat_payable_data(filters):
     vat_acct_payable = get_vat_accounts(filters)['iva_account_payable']
     # account = val['iva_account_payable']
     vat_payable_data = frappe.db.sql(f"""
-        SELECT
-        posting_date AS trans_date,
-        voucher_type AS doc_type,
-        voucher_no AS doc_id,
-        debit_in_account_currency AS debit,
-        credit_in_account_currency AS vat_amount,
-        FROM `tabGL Entry`
-        WHERE company='{filters.company}'
+        SELECT posting_date AS trans_date, voucher_type AS doc_type, voucher_no AS doc_id,
+        debit_in_account_currency AS debit, credit_in_account_currency AS vat_amount
+        FROM `tabGL Entry` WHERE company='{filters.company}'
         AND account='{vat_acct_payable}'
         AND MONTH(posting_date) = '{filters.month}' AND YEAR(posting_date) = '{filters.year}'
         """, as_dict=1)
@@ -47,6 +43,6 @@ def get_vat_payable_data(filters):
 ##  PURCHASE VAT
 #  Obtain VAT Payable accounts from all Sales Taxes & Charges Templates that apply the filtered company.
 
-# GL Entry  where account = 
+# GL Entry  where account =
 # Credit Amount in Account Currency  =  RESTA
 # Debit Amount in Account Currency  =  SUMA

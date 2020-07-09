@@ -17,9 +17,11 @@ from factura_electronica.factura_electronica.report.vat_payable_and_receivable_c
 from frappe import _, _dict, scrub
 from frappe.utils import cstr, flt, get_site_name, nowdate
 
+
 def execute(filters=None):
     columns, data = get_columns(), get_data(filters)
     return columns, data
+
 
 def get_columns():
     """
@@ -84,7 +86,7 @@ def get_data(filters):
     empty_row = {}
     data = [empty_row]
     initial_vat_payable = {
-        "doc_type", "",
+        "doc_type": "",
         # "doc_id": "<strong>Saldo Inicial IVA por pagar</strong>",
         "doc_id": "<strong>Saldo Inicial IVA por pagar</strong>",
         "trans_date": "",
@@ -94,7 +96,7 @@ def get_data(filters):
         "currency": "GTQ"
     }
     por_pagar_header = {
-        "doc_type", "",
+        "doc_type": "",
         "doc_id": "<strong>IVA POR PAGAR</strong>",
         "trans_date": "",
         "net_total": "",
@@ -103,7 +105,7 @@ def get_data(filters):
         "currency": "GTQ"
     }
     por_pagar_footer = {
-        "doc_type", "",
+        "doc_type": "",
         "doc_id": "<strong>SUBTOTAL IVA POR PAGAR</strong>",
         "trans_date": "",
         "net_total": "",
@@ -112,7 +114,7 @@ def get_data(filters):
         "currency": "GTQ"
     }
     por_cobrar_header = {
-        "doc_type", "",
+        "doc_type": "",
         "doc_id": "<strong>IVA POR COBRAR</strong>",
         "trans_date": "",
         "net_total": "",
@@ -121,7 +123,7 @@ def get_data(filters):
         "currency": "GTQ"
     }
     por_cobrar_footer = {
-        "doc_type", "",
+        "doc_type": "",
         "doc_id": "<strong>SUBTOTAL IVA POR COBRAR</strong>",
         "trans_date": "",
         "net_total": "",
@@ -130,7 +132,7 @@ def get_data(filters):
         "currency": "GTQ"
     }
     payable_vat_this_month = {
-        "doc_type", "",
+        "doc_type": "",
         "doc_id": "<strong>IVA a liquidar este mes</strong>",
         "trans_date": "",
         "net_total": "",
@@ -139,7 +141,7 @@ def get_data(filters):
         "currency": "GTQ"
     }
     total_vat_payable_now = {
-        "doc_type", "",
+        "doc_type": "",
         "doc_id": "<strong>Monto a Liquidar Incluyendo Saldos pendientes</strong>",
         "trans_date": "",
         "net_total": "",

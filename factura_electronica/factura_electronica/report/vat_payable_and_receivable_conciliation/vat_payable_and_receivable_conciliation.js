@@ -107,7 +107,7 @@ function get_start_yr_mo() {
     };
     var yr_mo = {
         "year": today.getFullYear(),
-        "month": word_month[today.getMonth()+1],
+        "month": word_month[today.getMonth() + 1],
     }
     return yr_mo;
 };
@@ -119,9 +119,9 @@ var mm = today.getMonth()+1;
 var yyyy = today.getFullYear();
 if(dd<10){
     dd='0'+dd;
-} 
+}
 if(mm<10){
     mm='0'+mm;
-} 
+}
 var today = dd+'-'+mm+'-'+yyyy;
 */
