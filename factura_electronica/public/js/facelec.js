@@ -101,7 +101,21 @@ frappe.ui.form.on("Company", {
         }
       }
     });
+    frm.set_query('isr_account_receivable', 'tax_witholding_ranges', () => {
+      return {
+        filters: {
+          company: frm.doc.name
+        }
+      }
+    });
     frm.set_query('iva_account_payable', 'tax_witholding_ranges', () => {
+      return {
+        filters: {
+          company: frm.doc.name
+        }
+      }
+    });
+    frm.set_query('vat_account_receivable', 'tax_witholding_ranges', () => {
       return {
         filters: {
           company: frm.doc.name

@@ -8,7 +8,9 @@
   "company",
   "rententions_section",
   "isr_account_payable",
+  "isr_account_receivable",
   "iva_account_payable",
+  "vat_account_receivable",
   "column_break_5",
   "isr_percentage_rate",
   "iva_percentage_rate"
@@ -26,6 +28,7 @@
    "label": "Rententions"
   },
   {
+   "columns": 2,
    "fieldname": "isr_account_payable",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -34,10 +37,11 @@
    "search_index": 1
   },
   {
+   "columns": 2,
    "fieldname": "iva_account_payable",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "IVA Account Payable",
+   "label": "VAT Account Payable",
    "options": "Account",
    "search_index": 1
   },
@@ -58,10 +62,28 @@
    "in_list_view": 1,
    "label": "IVA percentage rate",
    "search_index": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "vat_account_receivable",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "VAT Account Receivable",
+   "options": "Account",
+   "search_index": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "isr_account_receivable",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "ISR Account Receivable",
+   "options": "Account",
+   "search_index": 1
   }
  ],
  "istable": 1,
- "modified": "2020-06-25 17:42:10.791183",
+ "modified": "2020-07-08 18:06:05.444954",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Tax Witholding Ranges",
