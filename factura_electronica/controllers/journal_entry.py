@@ -37,8 +37,8 @@ class JournalEntryISR():
         self.remarks = descr
         self.docstatus = 0
         self.rows_journal_entry = []
-        self.is_isr_retention = is_isr_ret
-        self.is_iva_retention = is_iva_ret
+        self.is_isr_retention = int(is_isr_ret)
+        self.is_iva_retention = int(is_iva_ret)
 
     def create(self):
         '''Funcion encargada de crear journal entry haciendo referencia a x factura'''

@@ -839,7 +839,12 @@ frappe.ui.form.on("Sales Invoice", {
                             label: 'Cost Center',
                             fieldname: 'cost_center',
                             fieldtype: 'Link',
-                            options: 'Cost Center'
+                            options: 'Cost Center',
+                            "get_query": function () {
+                                return {
+                                    filters: { 'company': frm.doc.company }
+                                }
+                            }
                         },
                         {
                             label: 'Target account',
