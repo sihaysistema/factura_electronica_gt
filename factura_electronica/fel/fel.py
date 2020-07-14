@@ -187,13 +187,15 @@ class ElectronicInvoice:
             # De la compañia, obtenemos direccion 1, email, codigo postal, departamento, municipio, pais
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['company_address']},
                                                  fieldname=['address_line1', 'email_id', 'pincode',
-                                                            'state', 'city', 'country'], as_dict=1)
+                                                            'state', 'city', 'country', 'facelec_establishment'],
+                                                 as_dict=1)
             if len(dat_direccion) == 0:
                 return False, f'No se encontro ninguna direccion de la compania {dat_compania[0]["company_name"]},\
                                 verifica que exista una, con data en los campos address_line1, email_id, pincode, state,\
                                 city, country, y vuelve a generar la factura'
 
 
+            # TODO: USAR VALORES DEFAULT SI LA DIRECCION NO TIENE DATA
             # Validacion de existencia en los campos de direccion, ya que son obligatorio por parte de la API FEL
             # Usaremos la primera que se encuentre
             for dire in dat_direccion[0]:
@@ -201,16 +203,23 @@ class ElectronicInvoice:
                     return False, '''No se puede completar la operacion ya que el campo {} de la direccion de compania no\
                                      tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire))
 
+            # Si en configuracion de factura electronica esta seleccionada la opcion de usar datos de prueba
+            if frappe.db.get_value('Configuracion Factura Electronica',
+                                  {'name': self.__config_name}, 'usar_datos_prueba') == 1:
+                nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
+                                                   {'name': self.__config_name}, 'nombre_empresa_prueba')
+            else:
+                nom_comercial = dat_compania[0]['company_name']
+
             # Asignacion data
             self.__d_emisor = {
                 "@AfiliacionIVA": frappe.db.get_value('Configuracion Factura Electronica',
                                                      {'name': self.__config_name}, 'afiliacion_iva'),
-                "@CodigoEstablecimiento": frappe.db.get_value('Configuracion Factura Electronica',
-                                                             {'name': self.__config_name}, 'codigo_establecimiento'),  #"1",
+                "@CodigoEstablecimiento": dat_direccion[0]['facelec_establishment'],
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
                 "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', ''),
-                "@NombreComercial": dat_compania[0]['company_name'],
-                "@NombreEmisor": dat_compania[0]['company_name'],
+                "@NombreComercial": nom_comercial,
+                "@NombreEmisor": nom_comercial,
                 "dte:DireccionEmisor": {
                     "dte:Direccion": dat_direccion[0]['address_line1'],
                     "dte:CodigoPostal": dat_direccion[0]['pincode'],  # Codig postal
@@ -360,15 +369,15 @@ class ElectronicInvoice:
 
                     # Calculo precio unitario
                     precio_uni = 0
-                    precio_uni = float(self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])
+                    precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
 
                     # Calculo precio item
                     precio_item = 0
-                    precio_item = float(self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])
+                    precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
 
                     # Calculo descuento item
                     desc_item = 0
-                    desc_item = float(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])
+                    desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
 
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
@@ -419,11 +428,11 @@ class ElectronicInvoice:
             self.__d_totales = {
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
-                        "@NombreCorto": "IVA",
-                        "@TotalMontoImpuesto": '{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges']))
+                        "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
+                        "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
                     }
                 },
-                "dte:GranTotal": '{0:.2f}'.format(float(self.dat_fac[0]['grand_total']))
+                "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
             }
 
             return True, 'OK'
@@ -443,8 +452,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('mi_factura.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('mi_factura.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
