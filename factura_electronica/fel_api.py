@@ -81,7 +81,7 @@ def api_facelec(invoice_name, naming_serie):
 
     try:
         # llamamos a la funcion que se encarga de validaciones y finalmente generar facelec
-        state_of_facelec = generate_electronic_invoice(invoice_name, naming_serie)
+        state_of_facelec = generate_electronic_invoice(invoice_name, str(naming_serie))
         if state_of_facelec[0] == False:
             dict_response = {
                 'status': 'NO PROCESADO',
