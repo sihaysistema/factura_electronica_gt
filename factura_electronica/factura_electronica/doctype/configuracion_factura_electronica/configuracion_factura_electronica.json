@@ -12,6 +12,8 @@
   "configuracion_pdf",
   "descargar_pdf_factura_electronica",
   "company",
+  "usar_datos_prueba",
+  "nombre_empresa_prueba",
   "datos_proveedor_factura_electronica",
   "clave",
   "usuario",
@@ -372,11 +374,23 @@
    "label": "Local Currency",
    "options": "\nGTQ",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "usar_datos_prueba",
+   "fieldtype": "Check",
+   "label": "Usar datos prueba"
+  },
+  {
+   "depends_on": "eval:doc.usar_datos_prueba",
+   "fieldname": "nombre_empresa_prueba",
+   "fieldtype": "Data",
+   "label": "Nombre empresa prueba"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-07-06 01:31:54.597682",
+ "modified": "2020-07-14 12:15:13.354885",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

@@ -203,6 +203,13 @@ class ElectronicInvoice:
                     return False, '''No se puede completar la operacion ya que el campo {} de la direccion de compania no\
                                      tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire))
 
+            # Si en configuracion de factura electronica esta seleccionada la opcion de usar datos de prueba
+            if frappe.db.get_value('Configuracion Factura Electronica',
+                                  {'name': self.__config_name}, 'usar_datos_prueba') == 1:
+                nom_comercial = dat_compania[0]['company_name']
+            else:
+                nom_comercial = dat_compania[0]['company_name']
+
             # Asignacion data
             self.__d_emisor = {
                 "@AfiliacionIVA": frappe.db.get_value('Configuracion Factura Electronica',
@@ -210,8 +217,8 @@ class ElectronicInvoice:
                 "@CodigoEstablecimiento": dat_direccion[0]['facelec_establishment'],
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
                 "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', ''),
-                "@NombreComercial": dat_compania[0]['company_name'],
-                "@NombreEmisor": dat_compania[0]['company_name'],
+                "@NombreComercial": nom_comercial,
+                "@NombreEmisor": nom_comercial,
                 "dte:DireccionEmisor": {
                     "dte:Direccion": dat_direccion[0]['address_line1'],
                     "dte:CodigoPostal": dat_direccion[0]['pincode'],  # Codig postal
@@ -444,8 +451,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('mi_factura.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('mi_factura.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
