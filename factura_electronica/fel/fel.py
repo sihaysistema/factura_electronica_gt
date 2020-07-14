@@ -187,13 +187,15 @@ class ElectronicInvoice:
             # De la compañia, obtenemos direccion 1, email, codigo postal, departamento, municipio, pais
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['company_address']},
                                                  fieldname=['address_line1', 'email_id', 'pincode',
-                                                            'state', 'city', 'country'], as_dict=1)
+                                                            'state', 'city', 'country', 'facelec_establishment'],
+                                                 as_dict=1)
             if len(dat_direccion) == 0:
                 return False, f'No se encontro ninguna direccion de la compania {dat_compania[0]["company_name"]},\
                                 verifica que exista una, con data en los campos address_line1, email_id, pincode, state,\
                                 city, country, y vuelve a generar la factura'
 
 
+            # TODO: USAR VALORES DEFAULT SI LA DIRECCION NO TIENE DATA
             # Validacion de existencia en los campos de direccion, ya que son obligatorio por parte de la API FEL
             # Usaremos la primera que se encuentre
             for dire in dat_direccion[0]:
@@ -205,8 +207,7 @@ class ElectronicInvoice:
             self.__d_emisor = {
                 "@AfiliacionIVA": frappe.db.get_value('Configuracion Factura Electronica',
                                                      {'name': self.__config_name}, 'afiliacion_iva'),
-                "@CodigoEstablecimiento": frappe.db.get_value('Configuracion Factura Electronica',
-                                                             {'name': self.__config_name}, 'codigo_establecimiento'),  #"1",
+                "@CodigoEstablecimiento": dat_direccion[0]['facelec_establishment'],
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
                 "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', ''),
                 "@NombreComercial": dat_compania[0]['company_name'],
