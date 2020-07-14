@@ -217,13 +217,13 @@ def check_invoice_records(invoice_code):
     """
 
     # Verifica si existe una factura con la misma serie, evita duplicadas
-    if frappe.db.exists('Envio FEL', {'name': invoice_code}):
+    if frappe.db.exists('Envio FEL', {'serie_para_factura': invoice_code}):
         facelec = frappe.db.get_values('Envio FEL',
-                                       filters={'name': invoice_code},
+                                       filters={'serie_para_factura': invoice_code},
                                        fieldname=['serie_factura_original', 'uuid'],
                                        as_dict=1)
 
-        return True, str(facelec[0]['uiid'])
+        return True, str(facelec[0]['uuid'])
 
     else:
         return False, 'A generar una nueva'
