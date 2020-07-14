@@ -25,24 +25,34 @@ def batch_generator_api(invoices):
 
 
 @frappe.whitelist()
-def journal_entry_isr(data_invoice):
+def journal_entry_isr(invoice_name, is_isr_ret, is_iva_ret, cost_center,
+                      debit_in_acc_currency, is_multicurrency):
     """
     Funciona llamada desde boton Sales Invoice, encargada de crear Journal
     Entry, en funcion a los parametros pasados
 
     Args:
-        data_invoice (dict): Diccionario con las propiedades de la factura
+        invoice_name (dict): Diccionario con las propiedades de la factura
     """
     try:
         # NOTE: Escenarios posibles para polizas contables
         # 1. Poliza normal
         # 2. Poliza con retencion ISR
         # 3. Poliza con retension ISR e IVA
+        sales_invoice_info = frappe.get_doc('Sales Invoice', {'name': invoice_name})
 
-        new_je = JournalEntryISR(json.loads(data_invoice))  # Creamos una nueva instancia
-        new_je.validate_dependencies()  # Aplicamos validaciones
-        new_je.generate_je_accounts()  # Generamos las filas para el journal entry
-        new_je.create_journal_entry()  # Guardamos registro en base de datos
+        new_je = JournalEntryISR(sales_invoice_info, is_isr_ret, is_iva_ret, cost_center,
+                                 debit_in_acc_currency, is_multicurrency).create()
+
+        if new_je[0] == False:
+            frappe.msgprint(msg=_(f'More details in the following log \n {new_je[1]}'),
+                        title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
+            return
+        if new_je[0] == True:
+            frappe.msgprint(msg=_(f'Generated with the series \n {new_je[1]}'),
+                        title=_('Successfully generated'), indicator='green')
+            return
+
     except:
         frappe.msgprint(msg=_(f'More details in the following log \n {frappe.get_traceback()}'),
                         title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')

@@ -53,7 +53,7 @@ def apply_formula_isr(monto, invoice_name, company):
         frappe.msgprint(_('No se encontro tasa de iva'))
         return
 
-    tasa_iva = float(frappe.db.get_value('Sales Taxes and Charges', {'parent': invoice_name}, 'rate') / 100) + 1  # 1.12
-    tasa_isr = float(frappe.db.get_value('Tax Witholding Ranges', {'parent': company}, 'isr_percentage_rate')) / 100
+    tasa_iva = (frappe.db.get_value('Sales Taxes and Charges', {'parent': invoice_name}, 'rate') / 100) + 1  # 1.12
+    tasa_isr = (frappe.db.get_value('Tax Witholding Ranges', {'parent': company}, 'isr_percentage_rate')) / 100
 
-    return (monto/tasa_iva) * tasa_isr
+    return float('{0:.2f}'.format((float('{0:.2f}'.format(monto))/tasa_iva) * tasa_isr))
