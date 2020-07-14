@@ -859,9 +859,29 @@ frappe.ui.form.on("Sales Invoice", {
                             }
                         },
                         {
+                            fieldname: 'col_br_asdffg',
+                            fieldtype: 'Column Break'
+                        },
+                        {
                             label: 'Is Multicurrency',
                             fieldname: 'is_multicurrency',
                             fieldtype: 'Check'
+                        },
+                        {
+                            label: 'Applies for VAT withholding',
+                            fieldname: 'is_iva_withholding',
+                            fieldtype: 'Check'
+                        },
+                        {
+                            label: 'Applies for ISR withholding',
+                            fieldname: 'is_isr_withholding',
+                            fieldtype: 'Check'
+                        },
+                        {
+                            label: 'Description',
+                            fieldname: 'section_asdads',
+                            fieldtype: 'Section Break',
+                            "collapsible": 1
                         },
                         {
                             label: 'Description',
@@ -871,7 +891,6 @@ frappe.ui.form.on("Sales Invoice", {
                     ],
                     primary_action_label: 'Create',
                     primary_action(values) {
-                        console.log(values);
 
                         frappe.call({
                             method: 'factura_electronica.api_erp.journal_entry_isr',
@@ -887,6 +906,7 @@ frappe.ui.form.on("Sales Invoice", {
                             callback: function (r) {
                                 console.log(r.message);
                                 d.hide();
+                                frm.refresh()
                             },
                         });
                     }
