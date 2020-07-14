@@ -830,29 +830,95 @@ frappe.ui.form.on("Sales Invoice", {
 
         if (frm.doc.docstatus === 1 && frm.doc.status !== 'Paid') {
             cur_frm.page.add_action_item(__("ISR"), function () {
-                frappe.call({
-                    method: 'factura_electronica.api_erp.journal_entry_isr',
-                    args: {
-                        data_invoice: {
-                            company: frm.doc.company,
-                            posting_date: frm.doc.posting_date,
-                            grand_total: frm.doc.grand_total,
-                            debit_to: frm.doc.debit_to,
-                            currency: frm.doc.currency,
-                            curr_exch: frm.doc.plc_conversion_rate,
-                            customer: frm.doc.customer,
-                            name_inv: frm.doc.name,
-                            taxes_and_charges: frm.doc.taxes_and_charges
+
+
+                let d = new frappe.ui.Dialog({
+                    title: 'New Journal Entry with Withholding Tax',
+                    fields: [
+                        {
+                            label: 'Cost Center',
+                            fieldname: 'cost_center',
+                            fieldtype: 'Link',
+                            options: 'Cost Center',
+                            "get_query": function () {
+                                return {
+                                    filters: { 'company': frm.doc.company }
+                                }
+                            }
+                        },
+                        {
+                            label: 'Target account',
+                            fieldname: 'debit_in_acc_currency',
+                            fieldtype: 'Link',
+                            options: 'Account',
+                            "reqd": 1,
+                            "get_query": function () {
+                                return {
+                                    filters: { 'company': frm.doc.company }
+                                }
+                            }
+                        },
+                        {
+                            fieldname: 'col_br_asdffg',
+                            fieldtype: 'Column Break'
+                        },
+                        {
+                            label: 'Is Multicurrency',
+                            fieldname: 'is_multicurrency',
+                            fieldtype: 'Check'
+                        },
+                        {
+                            label: 'Applies for VAT withholding',
+                            fieldname: 'is_iva_withholding',
+                            fieldtype: 'Check'
+                        },
+                        {
+                            label: 'Applies for ISR withholding',
+                            fieldname: 'is_isr_withholding',
+                            fieldtype: 'Check'
+                        },
+                        {
+                            label: 'Description',
+                            fieldname: 'section_asdads',
+                            fieldtype: 'Section Break',
+                            "collapsible": 1
+                        },
+                        {
+                            label: 'Description',
+                            fieldname: 'description',
+                            fieldtype: 'Long Text'
                         }
-                    },
-                    callback: function (r) {
-                        console.log(r.message);
-                    },
+                    ],
+                    primary_action_label: 'Create',
+                    primary_action(values) {
+
+                        frappe.call({
+                            method: 'factura_electronica.api_erp.journal_entry_isr',
+                            args: {
+                                invoice_name: frm.doc.name,
+                                is_iva_ret: 0,
+                                is_isr_ret: 1,
+                                cost_center: values.cost_center,
+                                debit_in_acc_currency: values.debit_in_acc_currency,
+                                is_multicurrency: values.is_multicurrency,
+                                description: values.description
+                            },
+                            callback: function (r) {
+                                console.log(r.message);
+                                d.hide();
+                                frm.refresh()
+                            },
+                        });
+                    }
                 });
+
+                d.show();
+
+
             });
 
             cur_frm.page.add_action_item(__("ISR-IVA"), function () {
-                frappe.msgprint("Approved");
+                frappe.msgprint("WORK IN PROGRESS");
             });
         }
 
