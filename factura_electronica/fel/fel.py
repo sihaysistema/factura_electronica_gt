@@ -206,7 +206,8 @@ class ElectronicInvoice:
             # Si en configuracion de factura electronica esta seleccionada la opcion de usar datos de prueba
             if frappe.db.get_value('Configuracion Factura Electronica',
                                   {'name': self.__config_name}, 'usar_datos_prueba') == 1:
-                nom_comercial = dat_compania[0]['company_name']
+                nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
+                                                   {'name': self.__config_name}, 'nombre_empresa_prueba')
             else:
                 nom_comercial = dat_compania[0]['company_name']
 
@@ -368,15 +369,15 @@ class ElectronicInvoice:
 
                     # Calculo precio unitario
                     precio_uni = 0
-                    precio_uni = float(self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])
+                    precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
 
                     # Calculo precio item
                     precio_item = 0
-                    precio_item = float(self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])
+                    precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
 
                     # Calculo descuento item
                     desc_item = 0
-                    desc_item = float(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])
+                    desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
 
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
@@ -427,11 +428,11 @@ class ElectronicInvoice:
             self.__d_totales = {
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
-                        "@NombreCorto": "IVA",
-                        "@TotalMontoImpuesto": '{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges']))
+                        "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
+                        "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
                     }
                 },
-                "dte:GranTotal": '{0:.2f}'.format(float(self.dat_fac[0]['grand_total']))
+                "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
             }
 
             return True, 'OK'
