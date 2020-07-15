@@ -1,5 +1,5 @@
 {
- "creation": "2020-07-14 20:21:39.200094",
+ "creation": "2020-07-15 13:07:11.113777",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -15,24 +15,13 @@
    "options": "Tax Retention Guatemala"
   }
  ],
- "issingle": 1,
- "modified": "2020-07-14 20:21:39.200094",
+ "istable": 1,
+ "modified": "2020-07-15 13:07:14.695630",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Withholding Tax References",
  "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "print": 1,
-   "read": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
+ "permissions": [],
  "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
