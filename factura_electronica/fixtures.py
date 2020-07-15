@@ -283,7 +283,12 @@ def fill_fixtures():
                     "Sales Invoice-facelec_record_value",
                     "Sales Invoice-facelec_exports",
                     "Address-facelec_establishment",
-                    "Sales Invoice-facelec_consumable_record_type"
+                    "Sales Invoice-facelec_consumable_record_type",
+                    "facelec_withholding_tax_references",
+                    "Sales Invoice-withholding_tax_reference",
+                    "Sales Invoice-facelec_withholding_tax_references",
+                    "Journal Entry-withholding_tax_references",
+                    "Journal Entry-facelec_withholding_tax_references"
                 ]
             ]
         ]

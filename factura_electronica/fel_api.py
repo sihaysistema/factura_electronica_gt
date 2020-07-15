@@ -81,7 +81,7 @@ def api_facelec(invoice_name, naming_serie):
 
     try:
         # llamamos a la funcion que se encarga de validaciones y finalmente generar facelec
-        state_of_facelec = generate_electronic_invoice(invoice_name, naming_serie)
+        state_of_facelec = generate_electronic_invoice(invoice_name, str(naming_serie))
         if state_of_facelec[0] == False:
             dict_response = {
                 'status': 'NO PROCESADO',
@@ -217,13 +217,13 @@ def check_invoice_records(invoice_code):
     """
 
     # Verifica si existe una factura con la misma serie, evita duplicadas
-    if frappe.db.exists('Envio FEL', {'name': invoice_code}):
+    if frappe.db.exists('Envio FEL', {'serie_para_factura': invoice_code}):
         facelec = frappe.db.get_values('Envio FEL',
-                                       filters={'name': invoice_code},
+                                       filters={'serie_para_factura': invoice_code},
                                        fieldname=['serie_factura_original', 'uuid'],
                                        as_dict=1)
 
-        return True, str(facelec[0]['uiid'])
+        return True, str(facelec[0]['uuid'])
 
     else:
         return False, 'A generar una nueva'
