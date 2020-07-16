@@ -829,8 +829,12 @@ frappe.ui.form.on("Sales Invoice", {
         }
 
         if (frm.doc.docstatus === 1 && frm.doc.status !== 'Paid') {
-            cur_frm.page.add_action_item(__("ISR"), function () {
 
+            cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
+                frappe.msgprint("WORK IN PROGRESS");
+            });
+
+            cur_frm.page.add_action_item(__("ISR"), function () {
 
                 let d = new frappe.ui.Dialog({
                     title: 'New Journal Entry with Withholding Tax',
@@ -917,9 +921,6 @@ frappe.ui.form.on("Sales Invoice", {
 
             });
 
-            cur_frm.page.add_action_item(__("ISR-IVA"), function () {
-                frappe.msgprint("WORK IN PROGRESS");
-            });
         }
 
     },
