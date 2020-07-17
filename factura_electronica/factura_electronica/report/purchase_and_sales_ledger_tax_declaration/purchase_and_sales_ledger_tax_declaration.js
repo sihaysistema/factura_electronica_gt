@@ -96,6 +96,12 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
             // window.open("sihaysistema.com", "_blank");
         });
     },
+    declared: function (report) {
+        report.page.add_inner_button(__("Generate Labels"), function () {
+            //window.open("/api/method/factura_electronica.api_erp.download_asl_files");
+            window.open("sihaysistema.com", "_blank");
+        });
+    },
 };
 
 function get_start_yr_mo() {
