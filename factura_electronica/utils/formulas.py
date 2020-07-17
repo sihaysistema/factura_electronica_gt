@@ -70,14 +70,17 @@ def apply_formula_isr(monto, invoice_name, company, applicable_tax_rate, scenari
         grand_total_isr_5 = (monto - grand_total_isr_7)
 
         net_total_isr_7 = (grand_total_isr_7 / tasa_iva)
-        monto_retencion_isr_7 = net_total_isr_7 * tasas_isr
+        monto_retencion_isr_7 = net_total_isr_7 * tasa_isr
 
         net_total_isr_5 = (grand_total_isr_5 / tasa_iva)
-        monto_retencion_isr_5 = net_total_isr_5 * tasas_isr
+        monto_retencion_isr_5 = net_total_isr_5 * tasa_isr
 
         total = monto_retencion_isr_5 + monto_retencion_isr_7
 
-        return float('{0:2.f}'.format(total))
+        with open('resultado.txt', 'w') as f:
+            f.write(str('{0:.2f}'.format(total)))
+
+        return float('{0:.2f}'.format(total))
 
     else:
         frappe.msgprint(_('Escenario ISR no completado, no se aplico ningun escenario'))

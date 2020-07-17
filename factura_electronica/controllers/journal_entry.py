@@ -178,6 +178,7 @@ class JournalEntryISR():
             # Si es menor o igual a 30000
             if grand_total_gtq <= RANGO_ISR[1]:
                 applicable_rate = TASAS_ISR[0]
+                scenario = 1
 
             # Si es mayor de 30000
             if grand_total_gtq > RANGO_ISR[1]:
