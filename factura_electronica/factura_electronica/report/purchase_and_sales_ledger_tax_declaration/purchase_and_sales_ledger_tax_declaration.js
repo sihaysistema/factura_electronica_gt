@@ -98,6 +98,7 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
                 else { 
                     report.page.remove_inner_button(__("Generate Declaration"));
                 }
+            console.log(report);
             },
         }
     ],
