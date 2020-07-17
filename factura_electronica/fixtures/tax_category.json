@@ -2,6 +2,16 @@
  {
   "docstatus": 0,
   "doctype": "Tax Category",
+  "modified": "2020-07-10 14:39:41.603634",
+  "name": "SAT: Agente Retenedor IVA",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: Agente Retenedor IVA"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
   "modified": "2020-07-10 15:37:33.501888",
   "name": "SAT: Agente Retenedor de IVA",
   "parent": null,
