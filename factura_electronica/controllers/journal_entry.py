@@ -173,10 +173,19 @@ class JournalEntryISR():
                                                from_currency=self.currency, to_currency='GTQ')
 
             # Puede ser 0.05 o 0.07
-            applicable_rate = TASAS_ISR[0] if (grand_total_gtq <= RANGO_ISR[1]) else TASAS_ISR[1]
+            scenario = 1
+            applicable_rate = TASAS_ISR[0]
+            # Si es menor o igual a 30000
+            if grand_total_gtq <= RANGO_ISR[1]:
+                applicable_rate = TASAS_ISR[0]
+
+            # Si es mayor de 30000
+            if grand_total_gtq > RANGO_ISR[1]:
+                applicable_rate = TASAS_ISR[1]
+                scenario = 2
 
             # Calculo fila dos
-            ISR_PAYABLE = apply_formula_isr(self.grand_total, self.name_inv, self.company, applicable_rate)
+            ISR_PAYABLE = apply_formula_isr(self.grand_total, self.name_inv, self.company, applicable_rate, scenario)
             amt_without_isr = (self.grand_total - ISR_PAYABLE)
             calc_row_two = amount_converter(amt_without_isr, self.curr_exch,
                                             from_currency=self.currency, to_currency=curr_row_b)
@@ -396,10 +405,19 @@ class JournalEntryAutomatedRetention():
                                                from_currency=self.currency, to_currency='GTQ')
 
             # Puede ser 0.05 o 0.07
-            applicable_rate = TASAS_ISR[0] if (grand_total_gtq <= RANGO_ISR[1]) else TASAS_ISR[1]
+            scenario = 1
+            applicable_rate = TASAS_ISR[0]
+            # Si es menor o igual a 30000
+            if grand_total_gtq <= RANGO_ISR[1]:
+                applicable_rate = TASAS_ISR[0]
+
+            # Si es mayor de 30000
+            if grand_total_gtq > RANGO_ISR[1]:
+                applicable_rate = TASAS_ISR[1]
+                scenario = 2
 
             # Calculo fila dos
-            ISR_PAYABLE = apply_formula_isr(self.grand_total, self.name_inv, self.company, applicable_rate)
+            ISR_PAYABLE = apply_formula_isr(self.grand_total, self.name_inv, self.company, applicable_rate, scenario)
 
             amt_without_isr = (self.grand_total - ISR_PAYABLE)
             calc_row_two = amount_converter(amt_without_isr, self.curr_exch,

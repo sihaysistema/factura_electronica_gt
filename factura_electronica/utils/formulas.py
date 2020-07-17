@@ -39,7 +39,7 @@ def amount_converter(monto, currency_exchange, from_currency="GTQ", to_currency=
 
 # Aplicara el calculo no importando la moneda
 # Nota aplicarle conversion si es necesario
-def apply_formula_isr(monto, invoice_name, company, applicable_tax_rate):
+def apply_formula_isr(monto, invoice_name, company, applicable_tax_rate, scenario):
     """
     Formula para obtener ISR
 
@@ -52,11 +52,32 @@ def apply_formula_isr(monto, invoice_name, company, applicable_tax_rate):
     if not invoice_name:
         frappe.msgprint(_('No se encontro tasa de iva'))
         return
+    rango_isr = (0, 30000,)
 
     tasa_iva = (frappe.db.get_value('Sales Taxes and Charges', {'parent': invoice_name}, 'rate') / 100) + 1  # 1.12
-    # tasa_isr = (frappe.db.get_value('Tax Witholding Ranges', {'parent': company}, 'isr_percentage_rate')) / 100
 
     # POR AHORA LA TASA ISR LA OBTENEMOS SEGUN LA VALIDACION DE GRAND TOTAL DE LA FACTURA
     tasa_isr = applicable_tax_rate
 
-    return float('{0:.2f}'.format((float('{0:.2f}'.format(monto))/tasa_iva) * tasa_isr))
+    # Segun el escenario, aplicamos la formula
+    if scenario == 1:
+        # tasa_isr = (frappe.db.get_value('Tax Witholding Ranges', {'parent': company}, 'isr_percentage_rate')) / 100
+        return float('{0:.2f}'.format((float('{0:.2f}'.format(monto))/tasa_iva) * tasa_isr))
+
+    elif scenario == 2:
+        grand_total_isr_7 = (monto - rango_isr[1])
+        grand_total_isr_5 = (monto - grand_total_isr_7)
+
+        net_total_isr_7 = (grand_total_isr_7 / tasa_iva)
+        monto_retencion_isr_7 = net_total_isr_7 * tasas_isr
+
+        net_total_isr_5 = (grand_total_isr_5 / tasa_iva)
+        monto_retencion_isr_5 = net_total_isr_5 * tasas_isr
+
+        total = monto_retencion_isr_5 + monto_retencion_isr_7
+
+        return float('{0:2.f}'.format(total))
+
+    else:
+        frappe.msgprint(_('Escenario ISR no completado, no se aplico ningun escenario'))
+        return
