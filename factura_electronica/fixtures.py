@@ -316,7 +316,9 @@ def fill_fixtures():
                     "VAT Retentions",
                     "VAT and Income Tax Retention Report",
                     "Es Factura Especial",
-                    "Is Special Invoice"
+                    "Is Special Invoice",
+                    "Declaration Date",
+                    "Documents In Declaration"
                 ]
             ]
         ]
