@@ -288,7 +288,9 @@ def fill_fixtures():
                     "Sales Invoice-withholding_tax_reference",
                     "Sales Invoice-facelec_withholding_tax_references",
                     "Journal Entry-withholding_tax_references",
-                    "Journal Entry-facelec_withholding_tax_references"
+                    "Journal Entry-facelec_withholding_tax_references",
+                    "Purchase Invoice-facelec_p_vat_declaration",
+                    "Sales Invoice-facelec_s_vat_declaration"
                 ]
             ]
         ]
