@@ -39,7 +39,7 @@ def amount_converter(monto, currency_exchange, from_currency="GTQ", to_currency=
 
 # Aplicara el calculo no importando la moneda
 # Nota aplicarle conversion si es necesario
-def apply_formula_isr(monto, invoice_name, company):
+def apply_formula_isr(monto, invoice_name, company, applicable_tax_rate):
     """
     Formula para obtener ISR
 
@@ -54,6 +54,9 @@ def apply_formula_isr(monto, invoice_name, company):
         return
 
     tasa_iva = (frappe.db.get_value('Sales Taxes and Charges', {'parent': invoice_name}, 'rate') / 100) + 1  # 1.12
-    tasa_isr = (frappe.db.get_value('Tax Witholding Ranges', {'parent': company}, 'isr_percentage_rate')) / 100
+    # tasa_isr = (frappe.db.get_value('Tax Witholding Ranges', {'parent': company}, 'isr_percentage_rate')) / 100
+
+    # POR AHORA LA TASA ISR LA OBTENEMOS SEGUN LA VALIDACION DE GRAND TOTAL DE LA FACTURA
+    tasa_isr = applicable_tax_rate
 
     return float('{0:.2f}'.format((float('{0:.2f}'.format(monto))/tasa_iva) * tasa_isr))

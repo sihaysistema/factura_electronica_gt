@@ -10,6 +10,9 @@ import frappe
 from factura_electronica.utils.formulas import amount_converter, apply_formula_isr
 from frappe import _
 
+# Constante con montos fijos para escenarios ISR
+TASAS_ISR = (0.05, 0.07,)
+RANGO_ISR = (0, 30000,)
 
 class JournalEntryISR():
     def __init__(self, data_invoice, is_isr_ret, is_iva_ret, cost_center,
@@ -163,8 +166,17 @@ class JournalEntryISR():
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_b = 1 if (curr_row_b == "GTQ") else self.curr_exch
 
+            # Validamos que tasa isr aplica
+            # validamos el monto en quetzales, si la factura esta en dolares convertimos a quetzales
+            # para validar el escenario
+            grand_total_gtq = amount_converter(self.grand_total, self.curr_exch,
+                                               from_currency=self.currency, to_currency='GTQ')
+
+            # Puede ser 0.05 o 0.07
+            applicable_rate = TASAS_ISR[0] if (grand_total_gtq <= RANGO_ISR[1]) else TASAS_ISR[1]
+
             # Calculo fila dos
-            ISR_PAYABLE = apply_formula_isr(self.grand_total, self.name_inv, self.company)
+            ISR_PAYABLE = apply_formula_isr(self.grand_total, self.name_inv, self.company, applicable_rate)
             amt_without_isr = (self.grand_total - ISR_PAYABLE)
             calc_row_two = amount_converter(amt_without_isr, self.curr_exch,
                                             from_currency=self.currency, to_currency=curr_row_b)
@@ -222,7 +234,6 @@ class JournalEntryISR():
         ]
 
         return True, 'OK'
-
 
 
 
@@ -378,8 +389,18 @@ class JournalEntryAutomatedRetention():
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_b = 1 if (curr_row_b == "GTQ") else self.curr_exch
 
+            # Validamos que tasa isr aplica
+            # validamos el monto en quetzales, si la factura esta en dolares convertimos a quetzales
+            # para validar el escenario
+            grand_total_gtq = amount_converter(self.grand_total, self.curr_exch,
+                                               from_currency=self.currency, to_currency='GTQ')
+
+            # Puede ser 0.05 o 0.07
+            applicable_rate = TASAS_ISR[0] if (grand_total_gtq <= RANGO_ISR[1]) else TASAS_ISR[1]
+
             # Calculo fila dos
-            ISR_PAYABLE = apply_formula_isr(self.grand_total, self.name_inv, self.company)
+            ISR_PAYABLE = apply_formula_isr(self.grand_total, self.name_inv, self.company, applicable_rate)
+
             amt_without_isr = (self.grand_total - ISR_PAYABLE)
             calc_row_two = amount_converter(amt_without_isr, self.curr_exch,
                                             from_currency=self.currency, to_currency=curr_row_b)
