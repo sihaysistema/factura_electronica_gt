@@ -80,11 +80,26 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
             read_only: 1,
             hidden: 1,
         },
+        {
+            fieldname: "declared",
+            label: __("Declaration Status"),
+            fieldtype: "Select",
+            options: [__("Not Declared"),__("Declared"),__("All")],
+            default: "All",
+            read_only: 0,
+            hidden: 0
+        },
     ],
     onload: function (report) {
         report.page.add_inner_button(__("Download ASL Files"), function () {
             window.open("/api/method/factura_electronica.api_erp.download_asl_files");
             // window.open("sihaysistema.com", "_blank");
+        });
+    },
+    declared: function (report) {
+        report.page.add_inner_button(__("Generate Labels"), function () {
+            //window.open("/api/method/factura_electronica.api_erp.download_asl_files");
+            window.open("sihaysistema.com", "_blank");
         });
     },
 };
