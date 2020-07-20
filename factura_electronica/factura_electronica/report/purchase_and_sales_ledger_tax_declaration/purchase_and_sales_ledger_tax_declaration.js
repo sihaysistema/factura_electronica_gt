@@ -9,7 +9,7 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
             label: __("Company"),
             fieldtype: "Link",
             options: "Company",
-            default: "",
+            default: "SHS",
             reqd: 1,
             on_change: function (report) {
                 console.log(report.filters);
@@ -89,19 +89,44 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
             options: [__("Not Declared"), __("Declared"), __("All")],
             default: "All",
             read_only: 0,
-            hidden: 0
-        },
+            hidden: 0,
+            on_change: function (report) {
+                if (frappe.query_report.get_filter_value('declared') == "Not Declared") {
+                    report.page.add_inner_button(__("Generate Declaration"), function () {
+                        //window.open("/api/method/factura_electronica.api_erp.download_asl_files");
+                        // window.open("sihaysistema.com", "_blank");
+                        //console.log(report.filters);
+                        //console.log(report.data);
+                        frappe.call({
+                            method: "factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.generate_tax_declaration.generate_vat_declaration",
+                            args: {
+                            // Dummy Data
+                                company: frappe.query_report.get_filter_value('company'),
+                                year: frappe.query_report.get_filter_value('year'),
+                                month: frappe.query_report.get_filter_value('month'),
+                                declared: frappe.query_report.get_filter_value('declared')
+
+                            },
+                            callback: function (r) {
+                                // We show an alert that the vat declaration was generated.
+                                frappe.show_alert({
+                                    indicator: 'orange',
+                                    message: __("Declaration created") //r.message
+                                });
+                            }
+                        });
+                    }).addClass("btn-danger");
+                }
+                else { 
+                    report.page.remove_inner_button(__("Generate Declaration"));
+                }
+            },
+        }
     ],
     onload: function (report) {
         report.page.add_inner_button(__("Download ASL Files"), function () {
             window.open("/api/method/factura_electronica.api_erp.download_asl_files");
             // window.open("sihaysistema.com", "_blank");
-        });
-    },
-    declared: function (report) {
-        report.page.add_inner_button(__("Generate Labels"), function () {
-            //window.open("/api/method/factura_electronica.api_erp.download_asl_files");
-            window.open("sihaysistema.com", "_blank");
         });
     },
 };
