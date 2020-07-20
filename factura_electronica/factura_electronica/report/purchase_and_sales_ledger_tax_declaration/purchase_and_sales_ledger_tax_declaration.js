@@ -11,7 +11,9 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
             options: "Company",
             default: "",
             reqd: 1,
-            on_change: function () {
+            on_change: function (report) {
+                console.log(report.filters);
+                // console.log(report.data);
                 frappe.db
                     .get_value("Company", frappe.query_report.get_filter_value("company"), "tax_id")
                     .then((r) => {
@@ -84,7 +86,7 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
             fieldname: "declared",
             label: __("Declaration Status"),
             fieldtype: "Select",
-            options: [__("Not Declared"),__("Declared"),__("All")],
+            options: [__("Not Declared"), __("Declared"), __("All")],
             default: "All",
             read_only: 0,
             hidden: 0

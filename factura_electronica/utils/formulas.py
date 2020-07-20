@@ -77,9 +77,6 @@ def apply_formula_isr(monto, invoice_name, company, applicable_tax_rate, scenari
 
         total = monto_retencion_isr_5 + monto_retencion_isr_7
 
-        with open('resultado.txt', 'w') as f:
-            f.write(str('{0:.2f}'.format(total)))
-
         return float('{0:.2f}'.format(total))
 
     else:
