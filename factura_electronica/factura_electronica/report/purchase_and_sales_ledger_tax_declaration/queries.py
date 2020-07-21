@@ -42,8 +42,17 @@ def get_purchases_invoice(filters):
         """, as_dict=True
     )
 
-    # with open('items_purchase_invoice.json', 'w') as f:
-    #     f.write(json.dumps(items, indent=2))
+    # Iteramos la data obtenida para resolver el issue #172 de Factura Electronica
+    if len(purchase_invoices) > 0:
+        for index, purchase in enumerate(purchase_invoices):
+            # Obtenemos el nombre del template de impuestos usado en la factura
+            tax_template_name = purchase.get('taxes_and_charges', '')
+            if (frappe.db.exists('Purchase Taxes and Charges Template', {'name': tax_template_name, 'facelec_is_exempt': 1}) or
+                frappe.db.exists('Purchase Taxes and Charges Template', {'name': tax_template_name, 'tax_category': 'SAT: Asociacion sin fines de Lucro'})):
+                purchase_invoices.pop(index)
+
+    # with open('purchases_invoice.json', 'w') as f:
+    #     f.write(json.dumps(purchase_invoices, default=str, indent=2))
 
     return purchase_invoices
 
