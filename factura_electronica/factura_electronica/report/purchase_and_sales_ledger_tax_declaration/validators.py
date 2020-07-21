@@ -16,16 +16,22 @@ from frappe.utils import cstr, flt
 
 def validate_trasaction(invoice):
     """
-    Validaciones para la columna I
+    Validaciones para la columna I puede ser:
+    L = Local
+    I = Importación
+    E = Exportación
+    A = Adquisición
+    T = Transferencia
 
     Args:
         invoice ([type]): [description]
     """
 
     try:
-        venta_o_compra = invoice.get('compras_ventas')
+        venta_o_compra = invoice.get('compras_ventas')  # puede ser V o C
         company_country = frappe.db.get_value('Company', {'name': invoice.get('company')}, 'country')
 
+        # Si no encuentra nada, usamos Guatemala por default
         invoice_country = frappe.db.get_value('Address', {'name': invoice.get('invoice_address')},
                                               'country') or "Guatemala"
 
@@ -84,7 +90,23 @@ def validate_status_document(invoice):
 def validate_serie(naming_serie):
     """
     Busca el tipo de documento relacionado a la serie usado en la factura venta/compra
-    esto en configuraciones de series de factura electronica
+    esto en configuraciones de series de factura electronica,
+    las series posibles pueden ser (CONSULTAR A LA SAT FUTUROS CAMBIOS):
+    FC
+    FE
+    FCE
+    NC
+    ND
+    FPC
+    FPE
+    FAPE
+    FACA
+    FAAE
+    DA
+    FA
+    FO
+    EP
+    FDU
 
     Args:
         naming_serie (str): Serie utilizada en factura compra/venta
@@ -106,7 +128,7 @@ def validate_serie(naming_serie):
                                             {'parent': name_conf, 'serie': naming_serie},
                                              'serie_sat')
 
-        # Buscamos para las facturas de compra
+        # Buscamos para las facturas de compra, en configuracion de factura electronica
         if not doc_ok_invoice:
             doc_ok_invoice = frappe.db.get_value('Serial Configuration For Purchase Invoice',
                                                 {'parent': name_conf, 'serie': naming_serie},

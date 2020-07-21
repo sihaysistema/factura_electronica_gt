@@ -296,9 +296,12 @@ def get_data(filters):
 
     data = []
 
+    # Obtenemos facturas de venta
     sales_invoices = get_sales_invoice(filters)
+    # Obtenemos facturas de compra
     purchase_invoices = get_purchases_invoice(filters)
 
+    # Procesamos las facturas de compras, segun los escenario encontrados
     processed_purchase_invoices = process_purchase_invoices(purchase_invoices, filters)
     data.extend(processed_purchase_invoices)
 
@@ -375,27 +378,36 @@ def process_purchase_invoices(purchase_invoices, filters):
 
     # Si existen datos
     if len(purchase_invoices) > 0:
-        # Procesamos facturas de compra, por cada factura
+        # Por cada factura de compra, del listado de facturas de compras
         for purchase_invoice in purchase_invoices:
+            # NOTA: CADA ITERACION SE AUTO-ACTUALIZA, PARA SER RETORNADO CON LAS NUEVAS
+            # MODIFICACIONES
 
             # Actualiza el campo con la moneda de la comp'ia para reflejar el reporte
             # en la moneda e la compania
             purchase_invoice.update({'currency': filters.company_currency})
 
+            # Guarda name de la factura
             inv_name = purchase_invoice.get('documento')
 
             # Column I: OK
+            # puede ser
+            # L = Local
+            # I = Importación
+            # E = Exportación
+            # A= Adquisición
+            # T= Transferencia
             # Validamos tipo de trasaccion
             column_i = validate_trasaction(purchase_invoice)
             # Actualizamos el valor del diccionario iterado
             purchase_invoice.update(column_i)
 
-            # Column A: Establecimiento - OK
+            # Column A: Establecimiento - OK, sirve tambien para factura electronica
             establ_comp = frappe.db.get_value('Address', {'name': purchase_invoice.get('company_address_invoice', '')},
                                               'facelec_establishment')
             purchase_invoice.update({'establecimiento': establ_comp})
 
-            # Column B: Compras/Ventas (ya viene procesado de la base de datos) C o V, OK
+            # Column B: Compras/Ventas (ya viene procesado desde la base de datos) C o V, OK
 
             # Column C: Documento, OK
             document_inv = validate_serie(purchase_invoice.get('serie_doc'))
@@ -407,13 +419,15 @@ def process_purchase_invoices(purchase_invoices, filters):
             if serie_docu[0] == True:
                 purchase_invoice.update({'serie_doc': serie_docu[1]})
 
-            # Column E: Numero de factura, se aplica el mism proceso anterior, OK
+            # Column E: Numero de factura, se aplica el mism proceso anterior, OK\
+            # Primero verificamos si se genero como documento electronico a la SAT
             number_docu = validate_document_number(inv_name)
             if number_docu[0] == True:
                 purchase_invoice.update({'no_doc': number_docu[1]})
-
-            # Si no aplica lo anterior, name de factura se pasa por un limpiador de strings, dejando solamente el numero de la factura
+            # Si no aplica lo anterior, name de factura se pasa por un limpiador de strings,
+            # dejando solamente el numero de la factura
             purchase_invoice.update({'no_doc': string_cleaner(inv_name, opt=True)})
+
 
             # Column F, Fecha del documento: se esta usando posting date de la factura, OK
 
@@ -425,7 +439,10 @@ def process_purchase_invoices(purchase_invoices, filters):
             # Si todos los items de la factura son bienes se clasifica como bien
             # Si todos los items de la factura son servicios se clasifica con servicio
             # Si los items in invoice are mixed then, empty row
-            purchase_invoice.update({'tipo_ope': validate_invoice_of_goods_or_services(inv_name, type_inv=purchase_invoice.get('compras_ventas'))})
+            purchase_invoice.update({
+                'tipo_ope': validate_invoice_of_goods_or_services(inv_name,
+                                                                  type_inv=purchase_invoice.get('compras_ventas'))
+            })
 
             # Column K: Si es compra, va vacio, si en el libro se incluyen ventas/compras y tiene descuento la factura OK
             # debe ir D, Si es venta ok E de emitido, si es factura de venta cancelada debe ir A de anulado
@@ -498,7 +515,7 @@ def process_purchase_invoices(purchase_invoices, filters):
                         # col S
                         purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
 
-            # Columna X, Y, Z: Tipo de constancia, solo para ventas
+            # Columna X, Y, Z: Tipo de constancia, APLICA SOLO PARA VENTAS :) Don't worry
             # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS
             # CEXE = CONSTANCIA DE EXENCIÓN DE IVA
             # CRIVA = CONSTANCIA DE RETENCIÓN DE IVA
@@ -637,6 +654,7 @@ def process_sales_invoices(sales_invoices, filters):
                     sales_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
 
             # Columna X, Y, Z: Tipo de constancia, solo para ventas, OK viene procesado desde la DB
+            # Don't Worry :)
             # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS
             # CEXE = CONSTANCIA DE EXENCIÓN DE IVA
             # CRIVA = CONSTANCIA DE RETENCIÓN DE IVA
