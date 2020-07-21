@@ -39,7 +39,7 @@ def amount_converter(monto, currency_exchange, from_currency="GTQ", to_currency=
 
 # Aplicara el calculo no importando la moneda
 # Nota aplicarle conversion si es necesario
-def apply_formula_isr(monto, invoice_name, company, applicable_tax_rate, scenario):
+def apply_formula_isr(monto, invoice_name, company):
     """
     Formula para obtener ISR
 
@@ -52,36 +52,41 @@ def apply_formula_isr(monto, invoice_name, company, applicable_tax_rate, scenari
     if not invoice_name:
         frappe.msgprint(_('No se encontro tasa de iva'))
         return
-    rango_isr = (0, 30000,)
 
-    # TODO: hcer un .get_doc para obtener la metada de taxes por factura
+    RANGO_ISR = (0, 30000,)
+    TASA_ISR = (0.05, 0.07,)
+
+    # Buscamos la primera referencia en Sales Taxes and Charges
     tasa_iva = (frappe.db.get_value('Sales Taxes and Charges', {'parent': invoice_name}, 'rate') / 100) + 1  # 1.12
+    monto_sin_iva = monto/tasa_iva
 
-    # POR AHORA LA TASA ISR LA OBTENEMOS SEGUN LA VALIDACION DE GRAND TOTAL DE LA FACTURA
-    tasa_isr = applicable_tax_rate
+    # ESCENARIO 5%
+    if monto_sin_iva <= RANGO_ISR[1]:
+        isr_5 = monto_sin_iva * TASA_ISR[0]
+        total_que_me_queda = monto - isr_5
 
-    # Segun el escenario, aplicamos la formula
-    if scenario == 1:
-        # tasa_isr = (frappe.db.get_value('Tax Witholding Ranges', {'parent': company}, 'isr_percentage_rate')) / 100
-        return float('{0:.2f}'.format((float('{0:.2f}'.format(monto))/tasa_iva) * tasa_isr))
+        # print('El monto de la factura es:', grand_total, '\n')
+        # print('El IVA de la factura es:', iva_de_factura, '\n')
+        # print('El ISR de la factura es:', isr_5, '\n')
+        # print('El monto que me queda es: ', total_que_me_queda)
 
-    elif scenario == 2:
-        grand_total_isr_7 = (monto - rango_isr[1])
-        grand_total_isr_5 = (monto - grand_total_isr_7)
+        return float('{0:.2f}'.format((float('{0:.2f}'.format(isr_5)))))
 
-        net_total_isr_7 = (grand_total_isr_7 / tasa_iva)
-        monto_retencion_isr_7 = net_total_isr_7 * tasa_isr
+    # ESCENARIO 7%
+    if monto_sin_iva > 30000:
+        isr_7 = monto_sin_iva * TASA_ISR[1]
+        total_que_me_queda = monto - isr_7
 
-        net_total_isr_5 = (grand_total_isr_5 / tasa_iva)
-        monto_retencion_isr_5 = net_total_isr_5 * tasa_isr
+        # print('El monto de la factura es:', grand_total, '\n')
+        # print('El IVA de la factura es:', iva_de_factura, '\n')
+        # print('El ISR de la factura es:', isr_7, '\n')
+        # print('El monto que me queda es: ', total_que_me_queda)
 
-        total = monto_retencion_isr_5 + monto_retencion_isr_7
+        return float('{0:.2f}'.format((float('{0:.2f}'.format(isr_7)))))
 
-        return float('{0:.2f}'.format(total))
 
     else:
         frappe.msgprint(_('Escenario ISR no completado, no se aplico ningun escenario'))
-        return
 
 
 def apply_formula_isr_iva(grand_total, invoice_name, supplier_type, item_tax_category,

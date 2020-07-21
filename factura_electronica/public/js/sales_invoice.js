@@ -882,6 +882,13 @@ frappe.ui.form.on("Sales Invoice", {
                             fieldtype: 'Check'
                         },
                         {
+                            label: 'NOTE',
+                            fieldname: 'note',
+                            fieldtype: 'Data',
+                            read_only: 1,
+                            default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el iva va incluido en la factura'
+                        },
+                        {
                             label: 'Description',
                             fieldname: 'section_asdads',
                             fieldtype: 'Section Break',

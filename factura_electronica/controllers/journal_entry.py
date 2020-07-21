@@ -10,10 +10,13 @@ import frappe
 from factura_electronica.utils.formulas import amount_converter, apply_formula_isr
 from frappe import _
 
+
 # Constante con montos fijos para escenarios ISR
 TASAS_ISR = (0.05, 0.07,)
 RANGO_ISR = (0, 30000,)
 
+
+# PARA SALES INVOICE
 class JournalEntryISR():
     def __init__(self, data_invoice, is_isr_ret, is_iva_ret, cost_center,
                  debit_in_acc_currency, is_multicurrency, descr):
@@ -166,28 +169,19 @@ class JournalEntryISR():
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_b = 1 if (curr_row_b == "GTQ") else self.curr_exch
 
-            # Validamos que tasa isr aplica
-            # validamos el monto en quetzales, si la factura esta en dolares convertimos a quetzales
-            # para validar el escenario
+            # VALIDACION GRAND TOTAL DE FACTURA
+            # Para una correcta validacion convertimos los montos a quetzales, si la factura esta en quetzales
+            # se usara el mismo monto
             grand_total_gtq = amount_converter(self.grand_total, self.curr_exch,
                                                from_currency=self.currency, to_currency='GTQ')
 
-            # Puede ser 0.05 o 0.07
-            scenario = 1
-            applicable_rate = TASAS_ISR[0]
-            # Si es menor o igual a 30000
-            if grand_total_gtq <= RANGO_ISR[1]:
-                applicable_rate = TASAS_ISR[0]
-                scenario = 1
+            # El monto en quetzales lo pasamos a la funcion que calcula automaticamente el ISR
+            ISR_PAYABLE_GTQ = apply_formula_isr(self.grand_total, self.name_inv, self.company)
+            ISR_IN_CURRENCY_ACC = amount_converter(ISR_PAYABLE_GTQ, self.curr_exch,
+                                                   from_currency='GTQ', to_currency=curr_row_b)
 
-            # Si es mayor de 30000
-            if grand_total_gtq > RANGO_ISR[1]:
-                applicable_rate = TASAS_ISR[1]
-                scenario = 2
-
-            # Calculo fila dos
-            ISR_PAYABLE = apply_formula_isr(self.grand_total, self.name_inv, self.company, applicable_rate, scenario)
-            amt_without_isr = (self.grand_total - ISR_PAYABLE)
+            # El monto que me quedara sin el isr
+            amt_without_isr = self.grand_total - ISR_IN_CURRENCY_ACC
             calc_row_two = amount_converter(amt_without_isr, self.curr_exch,
                                             from_currency=self.currency, to_currency=curr_row_b)
 
@@ -207,7 +201,7 @@ class JournalEntryISR():
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_c = 1 if (curr_row_c == "GTQ") else self.curr_exch
-            isr_curr_acc = amount_converter(ISR_PAYABLE, self.curr_exch, from_currency=self.currency, to_currency=curr_row_c)
+            isr_curr_acc = amount_converter(ISR_PAYABLE_GTQ, self.curr_exch, from_currency=self.currency, to_currency=curr_row_c)
 
             row_three = {
                 "account": self.isr_account_payable,  #Cuenta a que se va a utilizar
