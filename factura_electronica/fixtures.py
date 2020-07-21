@@ -49,7 +49,7 @@ def fill_fixtures():
                     "Company-nit_face_company",
                     "Sales Invoice-shs_numero_resolucion",
                     "Address-tax_category",
-                    "Journal Entry-tipo_poliza",
+                    # "Journal Entry-tipo_poliza",
                     "Quotation Item-facelec_qt_three_digit_uom_code",
                     "Sales Invoice Item-facelec_three_digit_uom_code",
                     "Delivery Note Item-shs_three_digit_uom_code",
