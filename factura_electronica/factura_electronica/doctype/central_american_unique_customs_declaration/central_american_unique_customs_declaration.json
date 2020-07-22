@@ -11,7 +11,19 @@
   "document_number",
   "company",
   "tax_id",
-  "amended_from"
+  "amended_from",
+  "exportadorproveedor_section",
+  "importadordestinatario_section",
+  "declarante_section",
+  "transportista_section",
+  "conducto_section",
+  "valores_totales_section",
+  "mercanc\u00edas_section",
+  "documentos_de_soporte_section",
+  "observaciones_y_firmas_section",
+  "aduana_de_partida_section",
+  "aduana_de_paso_section",
+  "mercac\u00edas_section"
  ],
  "fields": [
   {
@@ -54,10 +66,70 @@
    "options": "Central American Unique Customs Declaration",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "exportadorproveedor_section",
+   "fieldtype": "Section Break",
+   "label": "Exportador/Proveedor"
+  },
+  {
+   "fieldname": "importadordestinatario_section",
+   "fieldtype": "Section Break",
+   "label": "Importador/Destinatario"
+  },
+  {
+   "fieldname": "declarante_section",
+   "fieldtype": "Section Break",
+   "label": "Declarante"
+  },
+  {
+   "fieldname": "transportista_section",
+   "fieldtype": "Section Break",
+   "label": "Transportista"
+  },
+  {
+   "fieldname": "conducto_section",
+   "fieldtype": "Section Break",
+   "label": "Conducto"
+  },
+  {
+   "fieldname": "valores_totales_section",
+   "fieldtype": "Section Break",
+   "label": "Valores Totales"
+  },
+  {
+   "fieldname": "mercanc\u00edas_section",
+   "fieldtype": "Section Break",
+   "label": "Mercanc\u00edas"
+  },
+  {
+   "fieldname": "documentos_de_soporte_section",
+   "fieldtype": "Section Break",
+   "label": "Documentos de soporte"
+  },
+  {
+   "fieldname": "observaciones_y_firmas_section",
+   "fieldtype": "Section Break",
+   "label": "Observaciones y firmas"
+  },
+  {
+   "fieldname": "aduana_de_partida_section",
+   "fieldtype": "Section Break",
+   "label": "Aduana de Partida"
+  },
+  {
+   "fieldname": "aduana_de_paso_section",
+   "fieldtype": "Section Break",
+   "label": "Aduana de Paso"
+  },
+  {
+   "fieldname": "mercac\u00edas_section",
+   "fieldtype": "Section Break",
+   "label": "Mercac\u00edas"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-07-22 14:59:14.040375",
+ "modified": "2020-07-22 17:36:00.568804",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Central American Unique Customs Declaration",
