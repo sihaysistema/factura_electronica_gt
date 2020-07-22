@@ -55,7 +55,6 @@ def get_purchases_invoice(filters):
                 clean_invoices.pop(index)
                 # frappe.msgprint("Se elimino factura")
 
-
     # with open('purchases_invoice.json', 'w') as f:
     #     f.write(json.dumps(clean_invoices, default=str, indent=2))
 
@@ -89,10 +88,22 @@ def get_sales_invoice(filters):
         """, as_dict=True
     )
 
+# Iteramos la data obtenida para resolver el issue #172 de Factura Electronica
+    # frappe.msgprint("Ejecutando IF para remover comprobantes")
+    clean_sales_invoices = sales_invoices
+    if len(clean_sales_invoices) > 0:
+        for index, sales in enumerate(clean_sales_invoices):
+            # Obtenemos el nombre del template de impuestos usado en la factura
+            tax_template_name = sales.get('taxes_and_charges', '')
+            # (frappe.db.exists('Sales Taxes and Charges Template', {'name': tax_template_name, 'facelec_is_exempt': 1})
+            if frappe.db.exists('Sales Taxes and Charges Template', {'name': tax_template_name, 'tax_category': 'SAT: Asociacion sin fines de lucro'}):
+                clean_sales_invoices.pop(index)
+                # frappe.msgprint("Se elimino factura")
+
     # with open('sales_invoices.json', 'w') as f:
     #     f.write(json.dumps(sales_invoices, default=str, indent=2))
 
-    return sales_invoices
+    return clean_sales_invoices
 
 
 def get_items_purchase_invoice(invoice_name):
@@ -118,7 +129,6 @@ def get_items_purchase_invoice(invoice_name):
     #     f.write(json.dumps(items, default=str, indent=2))
 
     return items
-
 
 def get_items_sales_invoice(invoice_name):
     """
