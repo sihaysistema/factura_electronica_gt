@@ -78,12 +78,12 @@ def get_data():
                     "description": _("VAT Exemption Record"),
                     "onboard": 1
                 },
-                {
-                    "type": "doctype",
-                    "name": "FYDUCA",
-                    "description": _("FYDUCA"),
-                    "onboard": 1
-                },
+                # {
+                #     "type": "doctype",
+                #     "name": "FYDUCA",
+                #     "description": _("FYDUCA"),
+                #     "onboard": 1
+                # },
                 {
                     "type": "doctype",
                     "name": "Public Writ",
@@ -96,12 +96,12 @@ def get_data():
                     "description": _("SAT Form"),
                     "onboard": 1
                 },
-                {
-                    "type": "doctype",
-                    "name": "FAUCA",
-                    "description": _("FAUCA"),
-                    "onboard": 1
-                },
+                # {
+                #     "type": "doctype",
+                #     "name": "FAUCA",
+                #     "description": _("FAUCA"),
+                #     "onboard": 1
+                # },
                 {
                     "type": "doctype",
                     "name": "Unique Customs Declaration",
