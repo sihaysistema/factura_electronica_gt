@@ -44,7 +44,7 @@ def get_purchases_invoice(filters):
     )
 
     # Iteramos la data obtenida para resolver el issue #172 de Factura Electronica
-    frappe.msgprint("Ejecutando IF para remover comprobantes")
+    # frappe.msgprint("Ejecutando IF para remover comprobantes")
     clean_invoices = purchase_invoices
     if len(clean_invoices) > 0:
         for index, purchase in enumerate(clean_invoices):
@@ -56,8 +56,8 @@ def get_purchases_invoice(filters):
                 # frappe.msgprint("Se elimino factura")
 
 
-    with open('purchases_invoice.json', 'w') as f:
-         f.write(json.dumps(clean_invoices, default=str, indent=2))
+    # with open('purchases_invoice.json', 'w') as f:
+    #     f.write(json.dumps(clean_invoices, default=str, indent=2))
 
     return clean_invoices
 
