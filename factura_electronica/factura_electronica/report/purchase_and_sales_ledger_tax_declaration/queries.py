@@ -48,8 +48,8 @@ def get_purchases_invoice(filters):
         for index, purchase in enumerate(purchase_invoices):
             # Obtenemos el nombre del template de impuestos usado en la factura
             tax_template_name = purchase.get('taxes_and_charges', '')
-            if (frappe.db.exists('Purchase Taxes and Charges Template', {'name': tax_template_name, 'facelec_is_exempt': 1}) or
-                frappe.db.exists('Purchase Taxes and Charges Template', {'name': tax_template_name, 'tax_category': 'SAT: Asociacion sin fines de Lucro'})):
+            # (frappe.db.exists('Purchase Taxes and Charges Template', {'name': tax_template_name, 'facelec_is_exempt': 1})
+            if frappe.db.exists('Purchase Taxes and Charges Template', {'name': tax_template_name, 'tax_category': 'SAT: Asociacion sin fines de lucro'}):
                 purchase_invoices.pop(index)
 
     # with open('purchases_invoice.json', 'w') as f:
