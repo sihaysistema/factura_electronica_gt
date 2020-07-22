@@ -88,7 +88,7 @@ def get_sales_invoice(filters):
         """, as_dict=True
     )
 
-# Iteramos la data obtenida para resolver el issue #172 de Factura Electronica
+    # Iteramos la data obtenida para resolver el issue #172 de Factura Electronica
     # frappe.msgprint("Ejecutando IF para remover comprobantes")
     clean_sales_invoices = sales_invoices
     if len(clean_sales_invoices) > 0:

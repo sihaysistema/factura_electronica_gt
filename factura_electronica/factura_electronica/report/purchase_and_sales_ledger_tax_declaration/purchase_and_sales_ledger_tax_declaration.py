@@ -12,6 +12,7 @@ import pandas as pd
 import frappe
 from factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.queries import *
 from factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.validators import *
+from factura_electronica.utils.formulas import amount_converter
 from factura_electronica.utils.utilities_facelec import generate_asl_file, string_cleaner, validar_configuracion
 from frappe import _, _dict, scrub
 from frappe.utils import cstr, flt, get_site_name, nowdate
@@ -311,9 +312,11 @@ def get_data(filters):
     return data
 
 
+# Aplica para facturas de compra como para ventas
 def process_invoice_items(invoice_name, type_inv='C'):
     """
-    Obtiene el monto total de bienes y servicios, iva incluido
+    Obtiene el monto total de bienes y servicios, iva incluido, solamente de los items por factura
+    no se aplica tipo de cambio
 
     Args:
         invoice_name (list): Lista de diccionarios con los items de factura
@@ -336,7 +339,7 @@ def process_invoice_items(invoice_name, type_inv='C'):
 
         # Localizamos aquellos items que sean bienes, y lo sumamos
         sum_goods = (df_items.loc[df_items['is_good'] == 1].sum()).to_dict()
-        frappe.msgprint(sum_goods)
+        # frappe.msgprint(sum_goods)
 
         # Localizamos aquellos items que sean servicios, y lo sumamos
         sum_services = (df_items.loc[df_items['is_service'] == 1].sum()).to_dict()
@@ -375,6 +378,7 @@ def process_purchase_invoices(purchase_invoices, filters):
     """
 
     data = []
+    company_currency = filters.company_currency
 
     # Si existen datos
     if len(purchase_invoices) > 0:
@@ -382,10 +386,14 @@ def process_purchase_invoices(purchase_invoices, filters):
         for purchase_invoice in purchase_invoices:
             # NOTA: CADA ITERACION SE AUTO-ACTUALIZA, PARA SER RETORNADO CON LAS NUEVAS
             # MODIFICACIONES
+            # Obtenemos el tipo de cambio por cada factura, sino se detecta, usamos 1
+            exchange_rate_per_invoice = purchase_invoice.get('conversion_rate', 1)
+            # Obtenemos la moneda usada en la factura
+            invoice_currency = purchase_invoice.get('currency', 'GTQ')
 
             # Actualiza el campo con la moneda de la comp'ia para reflejar el reporte
             # en la moneda e la compania
-            # purchase_invoice.update({'currency': filters.company_currency})
+            purchase_invoice.update({'currency': filters.company_currency})
 
             # Guarda name de la factura
             inv_name = purchase_invoice.get('documento')
@@ -435,7 +443,7 @@ def process_purchase_invoices(purchase_invoices, filters):
 
             # Column H, Nombre del cliente/proveedor: ya procesado por la db, OK
 
-            # Column J, Tipo de Operación (Bien o Servicio): OK
+            # Column J, Tipo de Operación (Bien o Servicio): OK, puede ser `C` o `V`
             # Si todos los items de la factura son bienes se clasifica como bien
             # Si todos los items de la factura son servicios se clasifica con servicio
             # Si los items in invoice are mixed then, empty row
@@ -476,21 +484,28 @@ def process_purchase_invoices(purchase_invoices, filters):
             if column_i.get('tipo_transaccion') == 'L':
                 if tax_category == 'SAT: Pequeño Contribuyente':  # Si company es peque;o contribuyente
                         # Column AA: OK
-                        purchase_invoice.update({'peque_contri_total_facturado_ope_local_bienes': amt_local.get('goods')})
+                        purchase_invoice.update({'peque_contri_total_facturado_ope_local_bienes': amount_converter(amt_local.get('goods'), exchange_rate_per_invoice,
+                                                                                                                   invoice_currency, company_currency)})
                         # Column AB, OK
-                        purchase_invoice.update({'peque_contri_total_facturado_ope_local_servicios': amt_local.get('services')})
+                        purchase_invoice.update({'peque_contri_total_facturado_ope_local_servicios': amount_converter(amt_local.get('services'), exchange_rate_per_invoice,
+                                                                                                                      invoice_currency, company_currency)})
                 else:
+                    # SI ES EXENTO DE IVA
                     if is_exempt == 1:
                         # Column T
-                        purchase_invoice.update({'total_exento_doc_bien_ope_local': amt_local.get('goods')})
+                        purchase_invoice.update({'total_exento_doc_bien_ope_local': amount_converter(amt_local.get('goods'), exchange_rate_per_invoice,
+                                                                                                     invoice_currency, company_currency)})
                         # Column V
-                        purchase_invoice.update({'total_exento_doc_servi_ope_local': amt_local.get('services')})
+                        purchase_invoice.update({'total_exento_doc_servi_ope_local': amount_converter(amt_local.get('services'), exchange_rate_per_invoice,
+                                                                                                      invoice_currency, company_currency)})
 
                     else:
                         # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                        purchase_invoice.update({'total_gravado_doc_bien_ope_local': amt_local.get('goods')})
+                        purchase_invoice.update({'total_gravado_doc_bien_ope_local': amount_converter(amt_local.get('goods'), exchange_rate_per_invoice,
+                                                                                                      invoice_currency, company_currency)})
                         # col r
-                        purchase_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
+                        purchase_invoice.update({'total_gravado_doc_servi_ope_local': amount_converter(amt_local.get('services'), exchange_rate_per_invoice,
+                                                                                                       invoice_currency, company_currency)})
 
 
             # OPERACIONES EXTERIORES
@@ -498,22 +513,31 @@ def process_purchase_invoices(purchase_invoices, filters):
             if column_i.get('tipo_transaccion') == 'E':
                 if tax_category == 'SAT: Pequeño Contribuyente':  # Si company es peque;o contribuyente
                         # Column AC: OK
-                        purchase_invoice.update({'peque_contri_total_facturado_ope_exterior_bienes': amt_local.get('goods')})
+                        purchase_invoice.update({'peque_contri_total_facturado_ope_exterior_bienes': amount_converter(amt_local.get('goods'), exchange_rate_per_invoice,
+                                                                                                                      invoice_currency, company_currency)})
                         # Column AD, OK
-                        purchase_invoice.update({'peque_contri_total_facturado_ope_exterior_servicios': amt_local.get('services')})
+                        purchase_invoice.update({'peque_contri_total_facturado_ope_exterior_servicios': amount_converter(amt_local.get('services'), exchange_rate_per_invoice,
+                                                                                                                         invoice_currency, company_currency)})
 
                 else:
                     if is_exempt == 1:
                         # Column U
-                        purchase_invoice.update({'total_exento_doc_bien_ope_exterior': amt_local.get('goods')})
+                        purchase_invoice.update({'total_exento_doc_bien_ope_exterior': amount_converter(amt_local.get('goods'), exchange_rate_per_invoice,
+                                                                                                        invoice_currency, company_currency)})
                         # Column W
-                        purchase_invoice.update({'total_exento_doc_servi_ope_exterior': amt_local.get('services')})
+                        purchase_invoice.update({'total_exento_doc_servi_ope_exterior': amount_converter(amt_local.get('services'), exchange_rate_per_invoice,
+                                                                                                         invoice_currency, company_currency)})
                     else:
                         # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                        purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
+                        purchase_invoice.update({'total_gravado_doc_bien_ope_exterior': amount_converter(amt_local.get('goods'), exchange_rate_per_invoice,
+                                                                                                         invoice_currency, company_currency)})
 
                         # col S
-                        purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
+                        purchase_invoice.update({'total_gravado_doc_servi_ope_exterior': amount_converter(amt_local.get('services'), exchange_rate_per_invoice,
+                                                                                                          invoice_currency, company_currency)})
+
+            purchase_invoice.update({'iva': amount_converter(purchase_invoice.get('iva'), exchange_rate_per_invoice,
+                                                             invoice_currency, company_currency)})
 
             # Columna X, Y, Z: Tipo de constancia, APLICA SOLO PARA VENTAS :) Don't worry
             # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS
@@ -541,14 +565,21 @@ def process_sales_invoices(sales_invoices, filters):
     """
 
     data = []
+    company_currency = filters.company_currency
 
     # Si existen datos
     if len(sales_invoices) > 0:
         # Procesamos facturas de venta, por cada factura
         for sales_invoice in sales_invoices:
+            # NOTA: CADA ITERACION SE AUTO-ACTUALIZA, PARA SER RETORNADO CON LAS NUEVAS
+            # MODIFICACIONES
+            # Obtenemos el tipo de cambio por cada factura, sino se detecta, usamos 1
+            exchange_rate_per_invoice = sales_invoice.get('conversion_rate', 1)
+            # Obtenemos la moneda usada en la factura
+            invoice_currency = sales_invoice.get('currency', 'GTQ')
 
             # Esto hace que se use la moneda de la empresa
-            # sales_invoice.update({'currency': filters.company_currency})
+            sales_invoice.update({'currency': filters.company_currency})
 
             inv_name = sales_invoice.get('documento')
 
@@ -628,15 +659,19 @@ def process_sales_invoices(sales_invoices, filters):
             if column_i.get('tipo_transaccion') == 'L':
                 if is_exempt == 1:
                     # Column T
-                    sales_invoice.update({'total_exento_doc_bien_ope_local': amt_local.get('goods')})
+                    sales_invoice.update({'total_exento_doc_bien_ope_local': amount_converter(amt_local.get('goods'), exchange_rate_per_invoice,
+                                                                                              invoice_currency, company_currency)})
                     # Column V
-                    sales_invoice.update({'total_exento_doc_servi_ope_local': amt_local.get('services')})
+                    sales_invoice.update({'total_exento_doc_servi_ope_local': amount_converter(amt_local.get('services'), exchange_rate_per_invoice,
+                                                                                               invoice_currency, company_currency)})
 
                 else:
                     # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                    sales_invoice.update({'total_gravado_doc_bien_ope_local': amt_local.get('goods')})
+                    sales_invoice.update({'total_gravado_doc_bien_ope_local': amount_converter(amt_local.get('goods'), exchange_rate_per_invoice,
+                                                                                              invoice_currency, company_currency)})
                     # col r
-                    sales_invoice.update({'total_gravado_doc_servi_ope_local': amt_local.get('services')})
+                    sales_invoice.update({'total_gravado_doc_servi_ope_local': amount_converter(amt_local.get('services'), exchange_rate_per_invoice,
+                                                                                                invoice_currency, company_currency)})
 
 
             # OPERACIONES EXTERIORES
@@ -644,16 +679,22 @@ def process_sales_invoices(sales_invoices, filters):
             if column_i.get('tipo_transaccion') == 'E':
                 if is_exempt == 1:
                     # Column U
-                    sales_invoice.update({'total_exento_doc_bien_ope_exterior': amt_local.get('goods')})
+                    sales_invoice.update({'total_exento_doc_bien_ope_exterior': amount_converter(amt_local.get('goods'), exchange_rate_per_invoice,
+                                                                                                 invoice_currency, company_currency)})
                     # Column W
-                    sales_invoice.update({'total_exento_doc_servi_ope_exterior': amt_local.get('services')})
+                    sales_invoice.update({'total_exento_doc_servi_ope_exterior': amount_converter(amt_local.get('services'), exchange_rate_per_invoice,
+                                                                                                  invoice_currency, company_currency)})
                 else:
                     # Actualizamos el valor de ... con el de bienes obtenido de la factura
-                    sales_invoice.update({'total_gravado_doc_bien_ope_exterior': amt_local.get('goods')})
+                    sales_invoice.update({'total_gravado_doc_bien_ope_exterior': amount_converter(amt_local.get('goods'), exchange_rate_per_invoice,
+                                                                                                  invoice_currency, company_currency)})
 
                     # col S
-                    sales_invoice.update({'total_gravado_doc_servi_ope_exterior': amt_local.get('services')})
+                    sales_invoice.update({'total_gravado_doc_servi_ope_exterior': amount_converter(amt_local.get('services'), exchange_rate_per_invoice,
+                                                                                                   invoice_currency, company_currency)})
 
+            sales_invoice.update({'iva': amount_converter(sales_invoice.get('iva'), exchange_rate_per_invoice,
+                                                          invoice_currency, company_currency)})
             # Columna X, Y, Z: Tipo de constancia, solo para ventas, OK viene procesado desde la DB
             # Don't Worry :)
             # CADI = CONSTANCIA DE ADQUISICIÓN DE INSUMOS
