@@ -12,6 +12,7 @@ import pandas as pd
 import frappe
 from factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.queries import *
 from factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.validators import *
+from factura_electronica.utils.formulas import amount_converter
 from factura_electronica.utils.utilities_facelec import generate_asl_file, string_cleaner, validar_configuracion
 from frappe import _, _dict, scrub
 from frappe.utils import cstr, flt, get_site_name, nowdate
@@ -311,6 +312,7 @@ def get_data(filters):
     return data
 
 
+# Aplica para facturas de compra como para ventas
 def process_invoice_items(invoice_name, type_inv='C'):
     """
     Obtiene el monto total de bienes y servicios, iva incluido
@@ -382,6 +384,8 @@ def process_purchase_invoices(purchase_invoices, filters):
         for purchase_invoice in purchase_invoices:
             # NOTA: CADA ITERACION SE AUTO-ACTUALIZA, PARA SER RETORNADO CON LAS NUEVAS
             # MODIFICACIONES
+            # Obtenemos el tipo de cambio por cada factura, sino se detecta, usamos 1
+            exchange_rate_per_invoice = purchase_invoice.get('conversion_rate', 1)
 
             # Actualiza el campo con la moneda de la comp'ia para reflejar el reporte
             # en la moneda e la compania
@@ -435,7 +439,7 @@ def process_purchase_invoices(purchase_invoices, filters):
 
             # Column H, Nombre del cliente/proveedor: ya procesado por la db, OK
 
-            # Column J, Tipo de Operación (Bien o Servicio): OK
+            # Column J, Tipo de Operación (Bien o Servicio): OK, puede ser `C` o `V`
             # Si todos los items de la factura son bienes se clasifica como bien
             # Si todos los items de la factura son servicios se clasifica con servicio
             # Si los items in invoice are mixed then, empty row
@@ -480,6 +484,7 @@ def process_purchase_invoices(purchase_invoices, filters):
                         # Column AB, OK
                         purchase_invoice.update({'peque_contri_total_facturado_ope_local_servicios': amt_local.get('services')})
                 else:
+                    # SI ES EXENTO DE IVA
                     if is_exempt == 1:
                         # Column T
                         purchase_invoice.update({'total_exento_doc_bien_ope_local': amt_local.get('goods')})
