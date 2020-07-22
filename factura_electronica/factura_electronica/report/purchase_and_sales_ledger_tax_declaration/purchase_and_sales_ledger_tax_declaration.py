@@ -385,7 +385,7 @@ def process_purchase_invoices(purchase_invoices, filters):
 
             # Actualiza el campo con la moneda de la comp'ia para reflejar el reporte
             # en la moneda e la compania
-            purchase_invoice.update({'currency': filters.company_currency})
+            # purchase_invoice.update({'currency': filters.company_currency})
 
             # Guarda name de la factura
             inv_name = purchase_invoice.get('documento')
@@ -547,7 +547,8 @@ def process_sales_invoices(sales_invoices, filters):
         # Procesamos facturas de venta, por cada factura
         for sales_invoice in sales_invoices:
 
-            sales_invoice.update({'currency': filters.company_currency})
+            # Esto hace que se use la moneda de la empresa
+            # sales_invoice.update({'currency': filters.company_currency})
 
             inv_name = sales_invoice.get('documento')
 

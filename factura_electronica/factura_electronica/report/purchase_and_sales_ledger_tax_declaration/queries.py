@@ -33,6 +33,7 @@ def get_purchases_invoice(filters):
     purchase_invoices = frappe.db.sql(
         f"""SELECT DISTINCT name AS documento, 'C' AS compras_ventas, naming_series AS serie_doc, posting_date AS fecha_doc,
             facelec_nit_fproveedor AS nit_cliente_proveedor, supplier AS nombre_cliente_proveedor, company,
+            currency, conversion_rate,
             supplier_address AS invoice_address, net_total, facelec_p_gt_tax_fuel AS total_fuel, facelec_p_gt_tax_goods AS total_goods,
             facelec_p_gt_tax_services AS total_services, facelec_p_total_iva AS iva, grand_total AS total_valor_doc,
             shipping_address AS company_address_invoice, docstatus, taxes_and_charges
@@ -73,6 +74,7 @@ def get_sales_invoice(filters):
     sales_invoices = frappe.db.sql(
         f"""SELECT DISTINCT name AS documento, 'V' AS compras_ventas, naming_series AS serie_doc, posting_date AS fecha_doc,
             nit_face_customer AS nit_cliente_proveedor, customer AS nombre_cliente_proveedor, company,
+            currency, conversion_rate,
             customer_address AS invoice_address, net_total, shs_total_iva_fac AS iva, company_address AS company_address_invoice,
             docstatus, taxes_and_charges, facelec_record_type, facelec_record_number AS no_constancia_exension_adqui_insu_reten_iva,
             facelec_consumable_record_type AS tipo_constancia, facelec_record_value AS valor_constancia_exension_adqui_insu_reten_iva,

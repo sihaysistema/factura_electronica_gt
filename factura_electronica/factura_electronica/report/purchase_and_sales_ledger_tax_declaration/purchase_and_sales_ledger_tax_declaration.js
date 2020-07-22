@@ -9,7 +9,7 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
             label: __("Company"),
             fieldtype: "Link",
             options: "Company",
-            default: "SHS",
+            // default: "SHS",
             reqd: 1,
             on_change: function (report) {
                 console.log(report.filters);
@@ -100,7 +100,7 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
                         frappe.call({
                             method: "factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.generate_tax_declaration.generate_vat_declaration",
                             args: {
-                            // Dummy Data
+                                // Dummy Data
                                 company: frappe.query_report.get_filter_value('company'),
                                 year: frappe.query_report.get_filter_value('year'),
                                 month: frappe.query_report.get_filter_value('month'),
@@ -117,7 +117,7 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
                         });
                     }).addClass("btn-danger");
                 }
-                else { 
+                else {
                     report.page.remove_inner_button(__("Generate Declaration"));
                 }
             },
