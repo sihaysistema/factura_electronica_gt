@@ -1,0 +1,812 @@
+{
+ "autoname": "field:title",
+ "creation": "2020-07-22 14:59:10.544300",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "amended_from",
+  "company",
+  "duca_purpose",
+  "tax_id",
+  "document_prefix",
+  "declaration_id_section",
+  "1_reference_number",
+  "2_document_number",
+  "3_acceptance_date",
+  "7_initial_transit_customs_office",
+  "8_exit_customs_office",
+  "9_entry_customs_office",
+  "10_destination_customs_office",
+  "exporter_section",
+  "exporter_id_link",
+  "4_1_exporter_id_number",
+  "4_2_exporter_id_type",
+  "4_3_exporter_id_issuing_country",
+  "4_4_exporter_name",
+  "4_5_exporter_fiscal_address",
+  "importer_section",
+  "importer_id_link",
+  "5_1_importer_id_number",
+  "5_2_importer_id_type",
+  "5_3_importer_issuing_country",
+  "5_4_importer_name",
+  "5_5_importer_fiscal_address",
+  "declaring_party_section",
+  "6_1_declaring_party_code",
+  "6_2_declaring_party_id_no",
+  "6_3_declaring_party_name",
+  "5_5_declaring_party_fiscal_address",
+  "11_declaring_party_regime",
+  "12_declaring_party_modality",
+  "13_declaring_party_class",
+  "14_declaring_party_exp_date",
+  "15_country_of_origin",
+  "16_exporting_country",
+  "17_destination_country",
+  "18_fiscal_deposit",
+  "carrier_section",
+  "19_1_carrier_code",
+  "19_2_carrier_name",
+  "20_transportation_mode",
+  "21_embarkation_place",
+  "22_disembarkation_place",
+  "conductor_section",
+  "23_1_driver_id",
+  "23_2_driver_license_number",
+  "23_3_driver_license_issue_country",
+  "23_4_drivers_full_name",
+  "transportation_unit_section",
+  "24_1_transport_unit_id",
+  "24_2_trans_unit_registration_country",
+  "24_3_trans_unit_make",
+  "24_4_transport_unit_vin",
+  "24_5_semi_trailer_id",
+  "24_6_semi_trailer_quantity",
+  "24_7_security_device_id",
+  "24_8_equipment",
+  "24_9_equipment_size",
+  "24_10_cargo_type",
+  "24_11_container_ids",
+  "total_values_section",
+  "transaction_currency",
+  "25_transaction_value",
+  "26_transportation_expenses",
+  "27_insurance_costs",
+  "29_total_customs_value",
+  "30_incoterm",
+  "31_exchange_rate",
+  "32_total_gross_weight",
+  "total_gross_weight_uom",
+  "33_total_net_weight",
+  "total_net_weight_uom",
+  "general_tax_liquidations",
+  "34_4_general_tax_total",
+  "goods_section",
+  "35_package_quantity",
+  "36_package_kinds",
+  "37_net_weight",
+  "net_weight_uom",
+  "38_gross_weight",
+  "gross_weight_uom",
+  "39_contingent_fee",
+  "40_numero_de_linea",
+  "41_country_of_origin",
+  "42_unit_of_measure",
+  "43_quantity",
+  "44_agreement",
+  "45_tariff_classification",
+  "46_description_of_the_goods",
+  "47_1_criteria_to_certify_origin",
+  "47_2_accessory_rules",
+  "48_transaction_value",
+  "49_transportation_expenses",
+  "50_insurance_cost",
+  "51_other_expenses",
+  "52_customs_value",
+  "support_documents_section",
+  "observation_and_signature_section",
+  "aduana_de_partida_section",
+  "aduana_de_paso_section",
+  "mercac\u00edas_section"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "unique": 1
+  },
+  {
+   "fieldname": "document_prefix",
+   "fieldtype": "Data",
+   "label": "Document Prefix"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "tax_id",
+   "fieldtype": "Data",
+   "label": "Tax ID"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Central American Unique Customs Declaration",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "aduana_de_partida_section",
+   "fieldtype": "Section Break",
+   "label": "Aduana de Partida"
+  },
+  {
+   "fieldname": "aduana_de_paso_section",
+   "fieldtype": "Section Break",
+   "label": "Aduana de Paso"
+  },
+  {
+   "fieldname": "mercac\u00edas_section",
+   "fieldtype": "Section Break",
+   "label": "Mercac\u00edas"
+  },
+  {
+   "fieldname": "exporter_section",
+   "fieldtype": "Section Break",
+   "label": "Exporter or Supplier"
+  },
+  {
+   "fieldname": "importer_section",
+   "fieldtype": "Section Break",
+   "label": "Importer or Receiver"
+  },
+  {
+   "fieldname": "carrier_section",
+   "fieldtype": "Section Break",
+   "label": "Carrier"
+  },
+  {
+   "fieldname": "conductor_section",
+   "fieldtype": "Section Break",
+   "label": "Conductor"
+  },
+  {
+   "fieldname": "total_values_section",
+   "fieldtype": "Section Break",
+   "label": "Total Values"
+  },
+  {
+   "fieldname": "goods_section",
+   "fieldtype": "Section Break",
+   "label": "Goods"
+  },
+  {
+   "fieldname": "support_documents_section",
+   "fieldtype": "Section Break",
+   "label": "Support Documents"
+  },
+  {
+   "fieldname": "observation_and_signature_section",
+   "fieldtype": "Section Break",
+   "label": "Observations and Signatures"
+  },
+  {
+   "description": "3. Acceptance Date",
+   "fieldname": "3_acceptance_date",
+   "fieldtype": "Date",
+   "label": "Acceptance Date"
+  },
+  {
+   "description": "1. DUCA Number",
+   "fieldname": "2_document_number",
+   "fieldtype": "Data",
+   "label": "Document Number"
+  },
+  {
+   "description": "1. Reference or Serial Number",
+   "fieldname": "1_reference_number",
+   "fieldtype": "Data",
+   "label": "Reference Number"
+  },
+  {
+   "fieldname": "declaration_id_section",
+   "fieldtype": "Section Break",
+   "label": "Declaration ID"
+  },
+  {
+   "description": "8. Exit Customs Office",
+   "fieldname": "8_exit_customs_office",
+   "fieldtype": "Data",
+   "label": "Exit Customs Office"
+  },
+  {
+   "description": "7. Initial Transit Customs Office",
+   "fieldname": "7_initial_transit_customs_office",
+   "fieldtype": "Data",
+   "label": "Initial Transit Customs Office"
+  },
+  {
+   "description": "9. Entry Customs Office",
+   "fieldname": "9_entry_customs_office",
+   "fieldtype": "Data",
+   "label": "Entry Customs Office"
+  },
+  {
+   "description": "10. Destination Customs Office",
+   "fieldname": "10_destination_customs_office",
+   "fieldtype": "Data",
+   "label": "Destination Customs Office"
+  },
+  {
+   "fieldname": "duca_purpose",
+   "fieldtype": "Select",
+   "label": "Purpose",
+   "options": "\nImport\nExport"
+  },
+  {
+   "description": "4.1",
+   "fetch_from": "exporter_id_link.id_number",
+   "fieldname": "4_1_exporter_id_number",
+   "fieldtype": "Data",
+   "label": "Exporter ID number",
+   "read_only": 1
+  },
+  {
+   "description": "4.1, 4.2 - Exporter Identification Type and Number",
+   "fieldname": "exporter_id_link",
+   "fieldtype": "Link",
+   "label": "Exporter Identification",
+   "options": "Contact Identification"
+  },
+  {
+   "fetch_from": "exporter_id_link.id_prefix",
+   "fieldname": "4_2_exporter_id_type",
+   "fieldtype": "Data",
+   "label": "Exporter ID type",
+   "read_only": 1
+  },
+  {
+   "description": "4.3",
+   "fetch_from": "exporter_id_link.id_issuing_country",
+   "fieldname": "4_3_exporter_id_issuing_country",
+   "fieldtype": "Data",
+   "label": "Exporter ID issuing country",
+   "read_only": 1
+  },
+  {
+   "fieldname": "4_4_exporter_name",
+   "fieldtype": "Link",
+   "label": "Exporter Name",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "4_5_exporter_fiscal_address",
+   "fieldtype": "Small Text",
+   "label": "Exporter fiscal address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "importer_id_link",
+   "fieldtype": "Link",
+   "label": "Importer ID Link",
+   "options": "Contact Identification"
+  },
+  {
+   "description": "5.1",
+   "fieldname": "5_1_importer_id_number",
+   "fieldtype": "Data",
+   "label": "Importer ID number"
+  },
+  {
+   "description": "5.3",
+   "fieldname": "5_2_importer_id_type",
+   "fieldtype": "Data",
+   "label": "Importer ID type"
+  },
+  {
+   "description": "5.3",
+   "fieldname": "5_3_importer_issuing_country",
+   "fieldtype": "Data",
+   "label": "Importer ID issuing country"
+  },
+  {
+   "fieldname": "5_4_importer_name",
+   "fieldtype": "Link",
+   "label": "Importer Name",
+   "options": "DocType"
+  },
+  {
+   "description": "5.5",
+   "fieldname": "5_5_importer_fiscal_address",
+   "fieldtype": "Small Text",
+   "label": "Importer Fiscal Address"
+  },
+  {
+   "description": "6.1",
+   "fieldname": "6_1_declaring_party_code",
+   "fieldtype": "Data",
+   "label": "Declaring Party Code"
+  },
+  {
+   "fieldname": "6_2_declaring_party_id_no",
+   "fieldtype": "Data",
+   "label": "Declaring Party ID"
+  },
+  {
+   "description": "6.3",
+   "fieldname": "6_3_declaring_party_name",
+   "fieldtype": "Data",
+   "label": "Declaring Party Name"
+  },
+  {
+   "description": "5.5",
+   "fieldname": "5_5_declaring_party_fiscal_address",
+   "fieldtype": "Small Text",
+   "label": "Declaring Party Fiscal Address"
+  },
+  {
+   "fieldname": "11_declaring_party_regime",
+   "fieldtype": "Data",
+   "label": "Declaring Party Regime"
+  },
+  {
+   "description": "12",
+   "fieldname": "12_declaring_party_modality",
+   "fieldtype": "Data",
+   "label": "Declaring Party Modality"
+  },
+  {
+   "description": "13",
+   "fieldname": "13_declaring_party_class",
+   "fieldtype": "Data",
+   "label": "Declaring Party Class"
+  },
+  {
+   "description": "14",
+   "fieldname": "14_declaring_party_exp_date",
+   "fieldtype": "Date",
+   "label": "Declaring Party Expiration Date"
+  },
+  {
+   "description": "15",
+   "fieldname": "15_country_of_origin",
+   "fieldtype": "Link",
+   "label": "Country of Origin",
+   "options": "Country"
+  },
+  {
+   "description": "16",
+   "fieldname": "16_exporting_country",
+   "fieldtype": "Link",
+   "label": "Exporting Country",
+   "options": "Country"
+  },
+  {
+   "description": "17",
+   "fieldname": "17_destination_country",
+   "fieldtype": "Link",
+   "label": "Destination Country",
+   "options": "Country"
+  },
+  {
+   "fieldname": "declaring_party_section",
+   "fieldtype": "Section Break",
+   "label": "Declaring Party"
+  },
+  {
+   "fieldname": "18_fiscal_deposit",
+   "fieldtype": "Data",
+   "label": "Fiscal Deposit or Customs Free Zone"
+  },
+  {
+   "description": "19.1",
+   "fieldname": "19_1_carrier_code",
+   "fieldtype": "Data",
+   "label": "Carrier Code"
+  },
+  {
+   "description": "19.2",
+   "fieldname": "19_2_carrier_name",
+   "fieldtype": "Link",
+   "label": "Carrier Name",
+   "options": "Supplier"
+  },
+  {
+   "description": "20",
+   "fieldname": "20_transportation_mode",
+   "fieldtype": "Data",
+   "label": "Transportation Mode"
+  },
+  {
+   "description": "21",
+   "fieldname": "21_embarkation_place",
+   "fieldtype": "Data",
+   "label": "Embarkation Place"
+  },
+  {
+   "description": "22",
+   "fieldname": "22_disembarkation_place",
+   "fieldtype": "Data",
+   "label": "Disembarkation Place"
+  },
+  {
+   "description": "23.1",
+   "fieldname": "23_1_driver_id",
+   "fieldtype": "Link",
+   "label": "Driver ID",
+   "options": "Contact Identification"
+  },
+  {
+   "description": "23.2",
+   "fieldname": "23_2_driver_license_number",
+   "fieldtype": "Data",
+   "label": "Driver License Number"
+  },
+  {
+   "description": "23.3",
+   "fieldname": "23_3_driver_license_issue_country",
+   "fieldtype": "Link",
+   "label": "Driver License Issuing Country",
+   "options": "Country"
+  },
+  {
+   "description": "23.4",
+   "fieldname": "23_4_drivers_full_name",
+   "fieldtype": "Data",
+   "label": "Driver's Full Name"
+  },
+  {
+   "fieldname": "transportation_unit_section",
+   "fieldtype": "Section Break",
+   "label": "Transportation Unit"
+  },
+  {
+   "description": "24.1",
+   "fieldname": "24_1_transport_unit_id",
+   "fieldtype": "Data",
+   "label": "Transportation Unit ID"
+  },
+  {
+   "description": "24.2",
+   "fieldname": "24_2_trans_unit_registration_country",
+   "fieldtype": "Link",
+   "label": "Transport Unit Registration Country",
+   "options": "Country"
+  },
+  {
+   "description": "24.3",
+   "fieldname": "24_3_trans_unit_make",
+   "fieldtype": "Data",
+   "label": "Make"
+  },
+  {
+   "description": "24.4",
+   "fieldname": "24_4_transport_unit_vin",
+   "fieldtype": "Data",
+   "label": "VIN"
+  },
+  {
+   "description": "24.5",
+   "fieldname": "24_5_semi_trailer_id",
+   "fieldtype": "Data",
+   "label": "Semi-Trailer Identification"
+  },
+  {
+   "description": "24.6",
+   "fieldname": "24_6_semi_trailer_quantity",
+   "fieldtype": "Data",
+   "label": "Semi-trailer Quantity"
+  },
+  {
+   "description": "24.7",
+   "fieldname": "24_7_security_device_id",
+   "fieldtype": "Data",
+   "label": "Security Device ID"
+  },
+  {
+   "description": "24.8",
+   "fieldname": "24_8_equipment",
+   "fieldtype": "Data",
+   "label": "Equipment"
+  },
+  {
+   "description": "24.9",
+   "fieldname": "24_9_equipment_size",
+   "fieldtype": "Data",
+   "label": "Equipment size"
+  },
+  {
+   "description": "24.10",
+   "fieldname": "24_10_cargo_type",
+   "fieldtype": "Data",
+   "label": "Cargo type"
+  },
+  {
+   "description": "24.11",
+   "fieldname": "24_11_container_ids",
+   "fieldtype": "Small Text",
+   "label": "Container Identifications"
+  },
+  {
+   "fieldname": "25_transaction_value",
+   "fieldtype": "Currency",
+   "label": "Transaction Value",
+   "precision": "6"
+  },
+  {
+   "fieldname": "transaction_currency",
+   "fieldtype": "Link",
+   "label": "Transaction Currency",
+   "options": "Currency"
+  },
+  {
+   "description": "26",
+   "fieldname": "26_transportation_expenses",
+   "fieldtype": "Currency",
+   "label": "Transportation Expenses",
+   "precision": "6"
+  },
+  {
+   "description": "27",
+   "fieldname": "27_insurance_costs",
+   "fieldtype": "Currency",
+   "label": "Insurance Costs",
+   "precision": "6"
+  },
+  {
+   "description": "29",
+   "fieldname": "29_total_customs_value",
+   "fieldtype": "Currency",
+   "label": "Total Customs Value",
+   "precision": "6"
+  },
+  {
+   "description": "30",
+   "fieldname": "30_incoterm",
+   "fieldtype": "Data",
+   "label": "Incoterm"
+  },
+  {
+   "description": "31",
+   "fieldname": "31_exchange_rate",
+   "fieldtype": "Link",
+   "label": "Exchange Rate",
+   "options": "Currency Exchange"
+  },
+  {
+   "description": "32",
+   "fieldname": "32_total_gross_weight",
+   "fieldtype": "Data",
+   "label": "Total Gross Weight"
+  },
+  {
+   "fieldname": "total_gross_weight_uom",
+   "fieldtype": "Link",
+   "label": "Total Gross Weight UOM",
+   "options": "UOM"
+  },
+  {
+   "description": "33",
+   "fieldname": "33_total_net_weight",
+   "fieldtype": "Data",
+   "label": "Total Net Weight"
+  },
+  {
+   "fieldname": "total_net_weight_uom",
+   "fieldtype": "Link",
+   "label": "Total Net Weight UOM",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "general_tax_liquidations",
+   "fieldtype": "Table",
+   "label": "General Tax Liquidations",
+   "options": "Customs Taxes and Charges"
+  },
+  {
+   "description": "34.4",
+   "fieldname": "34_4_general_tax_total",
+   "fieldtype": "Currency",
+   "label": "General Tax Total"
+  },
+  {
+   "description": "35",
+   "fieldname": "35_package_quantity",
+   "fieldtype": "Int",
+   "label": "Package Quantity"
+  },
+  {
+   "description": "36",
+   "fieldname": "36_package_kinds",
+   "fieldtype": "Data",
+   "label": "Package Kinds"
+  },
+  {
+   "description": "37",
+   "fieldname": "37_net_weight",
+   "fieldtype": "Float",
+   "label": "Net Weight",
+   "precision": "6"
+  },
+  {
+   "fieldname": "net_weight_uom",
+   "fieldtype": "Link",
+   "label": "Net Weight UOM",
+   "options": "UOM"
+  },
+  {
+   "description": "38",
+   "fieldname": "38_gross_weight",
+   "fieldtype": "Float",
+   "label": "Gross Weight"
+  },
+  {
+   "fieldname": "gross_weight_uom",
+   "fieldtype": "Link",
+   "label": "Gross Weight UOM",
+   "options": "UOM"
+  },
+  {
+   "description": "39",
+   "fieldname": "39_contingent_fee",
+   "fieldtype": "Data",
+   "label": "Contingent Fee"
+  },
+  {
+   "description": "40",
+   "fieldname": "40_numero_de_linea",
+   "fieldtype": "Data",
+   "label": "Numero de Linea"
+  },
+  {
+   "description": "41",
+   "fieldname": "41_country_of_origin",
+   "fieldtype": "Data",
+   "label": "Country of Origin"
+  },
+  {
+   "fieldname": "42_unit_of_measure",
+   "fieldtype": "Link",
+   "label": "Unit of Measure",
+   "options": "UOM"
+  },
+  {
+   "description": "43",
+   "fieldname": "43_quantity",
+   "fieldtype": "Float",
+   "label": "Quantity"
+  },
+  {
+   "description": "44",
+   "fieldname": "44_agreement",
+   "fieldtype": "Data",
+   "label": "Agreement"
+  },
+  {
+   "description": "45",
+   "fieldname": "45_tariff_classification",
+   "fieldtype": "Data",
+   "label": "Tariff Classification"
+  },
+  {
+   "description": "46",
+   "fieldname": "46_description_of_the_goods",
+   "fieldtype": "Small Text",
+   "label": "Description of the goods"
+  },
+  {
+   "description": "47.1",
+   "fieldname": "47_1_criteria_to_certify_origin",
+   "fieldtype": "Data",
+   "label": "Criteria to certify origin"
+  },
+  {
+   "description": "47.2",
+   "fieldname": "47_2_accessory_rules",
+   "fieldtype": "Data",
+   "label": "Accessory rules"
+  },
+  {
+   "description": "48",
+   "fieldname": "48_transaction_value",
+   "fieldtype": "Currency",
+   "label": "Transaction Value",
+   "precision": "6"
+  },
+  {
+   "description": "48",
+   "fieldname": "49_transportation_expenses",
+   "fieldtype": "Currency",
+   "label": "Transportation Expenses",
+   "precision": "6"
+  },
+  {
+   "description": "50",
+   "fieldname": "50_insurance_cost",
+   "fieldtype": "Currency",
+   "label": "Insurance Cost",
+   "precision": "6"
+  },
+  {
+   "description": "51",
+   "fieldname": "51_other_expenses",
+   "fieldtype": "Currency",
+   "label": "Other Expenses"
+  },
+  {
+   "description": "52",
+   "fieldname": "52_customs_value",
+   "fieldtype": "Currency",
+   "label": "Customs Value",
+   "precision": "6"
+  }
+ ],
+ "is_submittable": 1,
+ "modified": "2020-07-23 00:10:53.810428",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Central American Unique Customs Declaration",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

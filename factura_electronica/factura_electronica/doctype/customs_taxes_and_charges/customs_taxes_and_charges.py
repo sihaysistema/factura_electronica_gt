@@ -6,5 +6,5 @@ from __future__ import unicode_literals
 # import frappe
 from frappe.model.document import Document
 
-class FYDUCA(Document):
+class CustomsTaxesandCharges(Document):
 	pass
