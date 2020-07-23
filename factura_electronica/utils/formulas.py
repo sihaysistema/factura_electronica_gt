@@ -66,11 +66,6 @@ def apply_formula_isr(monto, invoice_name, company):
         isr_5 = monto_sin_iva * TASA_ISR[0]
         total_que_me_queda = monto - isr_5
 
-        # print('El monto de la factura es:', grand_total, '\n')
-        # print('El IVA de la factura es:', iva_de_factura, '\n')
-        # print('El ISR de la factura es:', isr_5, '\n')
-        # print('El monto que me queda es: ', total_que_me_queda)
-
         return float('{0:.2f}'.format((float('{0:.2f}'.format(isr_5)))))
 
     # ESCENARIO 7%

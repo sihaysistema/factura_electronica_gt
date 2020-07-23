@@ -389,23 +389,25 @@ class JournalEntrySpecialISR():
 
             # Obtenemos el monto sin IVA del grand total moneda de company "GTQ"
             GRAND_TOTAL_NO_IVA = grand_total_gtq/1.12
+            IVA_OPE = GRAND_TOTAL_NO_IVA * 0.12
 
             # convertimos el monto a la moneda de la cuenta en caso aplique
             GRAND_TOTAL_IVA_ACC = amount_converter(GRAND_TOTAL_NO_IVA, self.curr_exch,
-                                                   from_currency=self.currency, to_currency=curr_row_b)
+                                                   from_currency="GTQ", to_currency=curr_row_b)
 
             # El monto en quetzales lo pasamos a la funcion que calcula automaticamente el ISR
             ISR_PAYABLE_GTQ = apply_formula_isr(GRAND_TOTAL_NO_IVA, self.name_inv, self.company)
             # Convertimso el ISR a la moneda de la cuenta, en cas aplique
             ISR_IN_CURRENCY_ACC = amount_converter(ISR_PAYABLE_GTQ, self.curr_exch,
-                                                   from_currency=self.currency, to_currency=curr_row_b)
+                                                   from_currency="GTQ", to_currency=curr_row_b)
 
             # El monto que me quedara sin el isr ni el iva, la operacion se realiza con montos
             # convetidos a la moneda de la cuenta, para mantener consistencia en los mntos
-            amt_without_isr_iva = self.grand_total - (GRAND_TOTAL_IVA_ACC + ISR_IN_CURRENCY_ACC)
+            amt_without_isr_iva = (grand_total_gtq - (IVA_OPE + ISR_PAYABLE_GTQ))
+            # frappe.msgprint(str(amt_without_isr_iva))
             # Se vuelve a validar la conversion en caso aplique
-            calc_row_two = amount_converter(amt_without_isr_iva, self.curr_exch,
-                                            from_currency=self.currency, to_currency=curr_row_b)
+            calc_row_two = amt_without_isr_iva  #amount_converter(amt_without_isr_iva, self.curr_exch,
+            #                                 from_currency=self.currency, to_currency=curr_row_b)
 
             row_two = {
                 "account": self.credit_in_acc_currency,  #Cuenta a que se va a utilizar
@@ -423,7 +425,7 @@ class JournalEntrySpecialISR():
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_c = 1 if (curr_row_c == "GTQ") else self.curr_exch
-            iva_curr_acc = amount_converter((GRAND_TOTAL_NO_IVA*0.12), self.curr_exch, from_currency=self.currency, to_currency=curr_row_c)
+            iva_curr_acc = amount_converter((GRAND_TOTAL_NO_IVA*0.12), self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
 
             row_three = {
                 "account": self.iva_account_payable,  #Cuenta a que se va a utilizar
@@ -441,7 +443,7 @@ class JournalEntrySpecialISR():
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_d = 1 if (curr_row_d == "GTQ") else self.curr_exch
-            isr_curr_acc = amount_converter(ISR_PAYABLE_GTQ, self.curr_exch, from_currency=self.currency, to_currency=curr_row_c)
+            isr_curr_acc = amount_converter(ISR_PAYABLE_GTQ, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
 
             row_four = {
                 "account": self.isr_account_payable,  #Cuenta a que se va a utilizar
