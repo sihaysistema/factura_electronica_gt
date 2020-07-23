@@ -1,0 +1,56 @@
+{
+ "creation": "2020-07-22 23:19:53.924468",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "34_1_tax_type",
+  "34_2_total_amount_per_tax",
+  "total_amount_currency",
+  "34_3_payment_mode"
+ ],
+ "fields": [
+  {
+   "columns": 3,
+   "description": "34.1",
+   "fieldname": "34_1_tax_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Tax Type"
+  },
+  {
+   "columns": 3,
+   "description": "34.2",
+   "fieldname": "34_2_total_amount_per_tax",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Amount per Tax",
+   "precision": "6"
+  },
+  {
+   "columns": 1,
+   "description": "34.3",
+   "fieldname": "34_3_payment_mode",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Payment Mode"
+  },
+  {
+   "fieldname": "total_amount_currency",
+   "fieldtype": "Link",
+   "label": "Total Amount Currency",
+   "options": "Currency"
+  }
+ ],
+ "istable": 1,
+ "modified": "2020-07-22 23:30:46.085043",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Customs Taxes and Charges",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
