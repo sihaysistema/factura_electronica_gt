@@ -300,99 +300,7 @@ frappe.ui.form.on("Purchase Invoice", {
         if (frm.doc.docstatus === 1) {
 
             cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
-
-                let d = new frappe.ui.Dialog({
-                    title: 'New Journal Entry with Withholding Tax',
-                    fields: [
-                        {
-                            label: 'Cost Center',
-                            fieldname: 'cost_center',
-                            fieldtype: 'Link',
-                            options: 'Cost Center',
-                            "get_query": function () {
-                                return {
-                                    filters: { 'company': frm.doc.company }
-                                }
-                            }
-                        },
-                        {
-                            label: 'Target account',
-                            fieldname: 'debit_in_acc_currency',
-                            fieldtype: 'Link',
-                            options: 'Account',
-                            "reqd": 1,
-                            "get_query": function () {
-                                return {
-                                    filters: { 'company': frm.doc.company }
-                                }
-                            }
-                        },
-                        {
-                            fieldname: 'col_br_asdffg',
-                            fieldtype: 'Column Break'
-                        },
-                        {
-                            label: 'Is Multicurrency',
-                            fieldname: 'is_multicurrency',
-                            fieldtype: 'Check'
-                        },
-                        {
-                            label: 'Applies for VAT withholding',
-                            fieldname: 'is_iva_withholding',
-                            fieldtype: 'Check'
-                        },
-                        {
-                            label: 'Applies for ISR withholding',
-                            fieldname: 'is_isr_withholding',
-                            fieldtype: 'Check'
-                        },
-                        {
-                            label: 'Is Special Invoice',
-                            fieldname: 'is_special_invoice',
-                            fieldtype: 'Check'
-                        },
-                        {
-                            label: 'NOTE',
-                            fieldname: 'note',
-                            fieldtype: 'Data',
-                            read_only: 1,
-                            default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el iva va incluido en la factura'
-                        },
-                        {
-                            label: 'Description',
-                            fieldname: 'section_asdads',
-                            fieldtype: 'Section Break',
-                            "collapsible": 1
-                        },
-                        {
-                            label: 'Description',
-                            fieldname: 'description',
-                            fieldtype: 'Long Text'
-                        }
-                    ],
-                    primary_action_label: 'Create',
-                    primary_action(values) {
-                        frappe.call({
-                            method: 'factura_electronica.api_erp.journal_entry_isr',
-                            args: {
-                                invoice_name: frm.doc.name,
-                                is_iva_ret: 0,
-                                is_isr_ret: 1,
-                                cost_center: values.cost_center,
-                                debit_in_acc_currency: values.debit_in_acc_currency,
-                                is_multicurrency: values.is_multicurrency,
-                                description: values.description,
-                            },
-                            callback: function (r) {
-                                console.log(r.message);
-                                d.hide();
-                                frm.refresh()
-                            },
-                        });
-                    }
-                });
-
-                d.show();
+                frappe.msgprint("WORK IN PROGRESS");
             });
 
             cur_frm.page.add_action_item(__("SPECIAL INVOICE"), function () {
@@ -454,9 +362,11 @@ frappe.ui.form.on("Purchase Invoice", {
                     primary_action_label: 'Create',
                     primary_action(values) {
                         frappe.call({
-                            method: 'factura_electronica.api_erp.journal_entry_isr',
+                            method: 'factura_electronica.api_erp.journal_entry_isr_purchase_inv',
                             args: {
                                 invoice_name: frm.doc.name,
+                                is_iva_ret: 0,
+                                is_isr_ret: 0,
                                 cost_center: values.cost_center,
                                 credit_in_acc_currency: values.credit_in_acc_currency,
                                 is_multicurrency: values.is_multicurrency,

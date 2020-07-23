@@ -57,8 +57,9 @@ def apply_formula_isr(monto, invoice_name, company):
     TASA_ISR = (0.05, 0.07,)
 
     # Buscamos la primera referencia en Sales Taxes and Charges
-    tasa_iva = (frappe.db.get_value('Sales Taxes and Charges', {'parent': invoice_name}, 'rate') / 100) + 1  # 1.12
-    monto_sin_iva = monto/tasa_iva
+    # tasa_iva = (frappe.db.get_value('Sales Taxes and Charges', {'parent': invoice_name}, 'rate') / 100) + 1  # 1.12
+    # monto_sin_iva = monto/tasa_iva
+    monto_sin_iva = monto
 
     # ESCENARIO 5%
     if monto_sin_iva <= RANGO_ISR[1]:
