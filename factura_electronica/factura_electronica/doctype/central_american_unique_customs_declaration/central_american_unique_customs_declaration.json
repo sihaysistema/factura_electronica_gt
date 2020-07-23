@@ -84,6 +84,27 @@
   "general_tax_liquidations",
   "34_4_general_tax_total",
   "goods_section",
+  "35_package_quantity",
+  "36_package_kinds",
+  "37_net_weight",
+  "net_weight_uom",
+  "38_gross_weight",
+  "gross_weight_uom",
+  "39_contingent_fee",
+  "40_numero_de_linea",
+  "41_country_of_origin",
+  "42_unit_of_measure",
+  "43_quantity",
+  "44_agreement",
+  "45_tariff_classification",
+  "46_description_of_the_goods",
+  "47_1_criteria_to_certify_origin",
+  "47_2_accessory_rules",
+  "48_transaction_value",
+  "49_transportation_expenses",
+  "50_insurance_cost",
+  "51_other_expenses",
+  "52_customs_value",
   "support_documents_section",
   "observation_and_signature_section",
   "aduana_de_partida_section",
@@ -595,10 +616,141 @@
    "fieldname": "34_4_general_tax_total",
    "fieldtype": "Currency",
    "label": "General Tax Total"
+  },
+  {
+   "description": "35",
+   "fieldname": "35_package_quantity",
+   "fieldtype": "Int",
+   "label": "Package Quantity"
+  },
+  {
+   "description": "36",
+   "fieldname": "36_package_kinds",
+   "fieldtype": "Data",
+   "label": "Package Kinds"
+  },
+  {
+   "description": "37",
+   "fieldname": "37_net_weight",
+   "fieldtype": "Float",
+   "label": "Net Weight",
+   "precision": "6"
+  },
+  {
+   "fieldname": "net_weight_uom",
+   "fieldtype": "Link",
+   "label": "Net Weight UOM",
+   "options": "UOM"
+  },
+  {
+   "description": "38",
+   "fieldname": "38_gross_weight",
+   "fieldtype": "Float",
+   "label": "Gross Weight"
+  },
+  {
+   "fieldname": "gross_weight_uom",
+   "fieldtype": "Link",
+   "label": "Gross Weight UOM",
+   "options": "UOM"
+  },
+  {
+   "description": "39",
+   "fieldname": "39_contingent_fee",
+   "fieldtype": "Data",
+   "label": "Contingent Fee"
+  },
+  {
+   "description": "40",
+   "fieldname": "40_numero_de_linea",
+   "fieldtype": "Data",
+   "label": "Numero de Linea"
+  },
+  {
+   "description": "41",
+   "fieldname": "41_country_of_origin",
+   "fieldtype": "Data",
+   "label": "Country of Origin"
+  },
+  {
+   "fieldname": "42_unit_of_measure",
+   "fieldtype": "Link",
+   "label": "Unit of Measure",
+   "options": "UOM"
+  },
+  {
+   "description": "43",
+   "fieldname": "43_quantity",
+   "fieldtype": "Float",
+   "label": "Quantity"
+  },
+  {
+   "description": "44",
+   "fieldname": "44_agreement",
+   "fieldtype": "Data",
+   "label": "Agreement"
+  },
+  {
+   "description": "45",
+   "fieldname": "45_tariff_classification",
+   "fieldtype": "Data",
+   "label": "Tariff Classification"
+  },
+  {
+   "description": "46",
+   "fieldname": "46_description_of_the_goods",
+   "fieldtype": "Small Text",
+   "label": "Description of the goods"
+  },
+  {
+   "description": "47.1",
+   "fieldname": "47_1_criteria_to_certify_origin",
+   "fieldtype": "Data",
+   "label": "Criteria to certify origin"
+  },
+  {
+   "description": "47.2",
+   "fieldname": "47_2_accessory_rules",
+   "fieldtype": "Data",
+   "label": "Accessory rules"
+  },
+  {
+   "description": "48",
+   "fieldname": "48_transaction_value",
+   "fieldtype": "Currency",
+   "label": "Transaction Value",
+   "precision": "6"
+  },
+  {
+   "description": "48",
+   "fieldname": "49_transportation_expenses",
+   "fieldtype": "Currency",
+   "label": "Transportation Expenses",
+   "precision": "6"
+  },
+  {
+   "description": "50",
+   "fieldname": "50_insurance_cost",
+   "fieldtype": "Currency",
+   "label": "Insurance Cost",
+   "precision": "6"
+  },
+  {
+   "description": "51",
+   "fieldname": "51_other_expenses",
+   "fieldtype": "Currency",
+   "label": "Other Expenses"
+  },
+  {
+   "description": "52",
+   "fieldname": "52_customs_value",
+   "fieldtype": "Currency",
+   "label": "Customs Value",
+   "precision": "6"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-07-22 23:27:50.164822",
+ "modified": "2020-07-23 00:10:53.810428",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Central American Unique Customs Declaration",
