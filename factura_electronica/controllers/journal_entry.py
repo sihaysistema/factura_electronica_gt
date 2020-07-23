@@ -19,7 +19,7 @@ RANGO_ISR = (0, 30000,)
 # PARA SALES INVOICE
 class JournalEntryISR():
     def __init__(self, data_invoice, is_isr_ret, is_iva_ret, cost_center,
-                 debit_in_acc_currency, is_multicurrency, descr, is_special_inv):
+                 debit_in_acc_currency, is_multicurrency, descr):
         """
         Constructor de la clase
 
@@ -47,7 +47,6 @@ class JournalEntryISR():
         self.rows_journal_entry = []
         self.is_isr_retention = int(is_isr_ret)
         self.is_iva_retention = int(is_iva_ret)
-        self.is_special_invoice = int(is_special_inv)
         self.amount_rentetion_isr = 0
 
     def create(self):
@@ -244,7 +243,7 @@ class JournalEntryISR():
 
 # PARA FACTURA ESPECIAL - PURCHASE INVOICE
 
-class JournalEntryISR():
+class JournalEntrySpecialISR():
     def __init__(self, data_invoice, is_isr_ret, is_iva_ret, cost_center,
                  debit_in_acc_currency, is_multicurrency, descr, is_special_inv):
         """
@@ -261,7 +260,7 @@ class JournalEntryISR():
         self.posting_date = data_invoice.get("posting_date")
         self.posting_time = data_invoice.get("posting_time", "")
         self.grand_total = data_invoice.get("grand_total")
-        self.debit_to = data_invoice.get("debit_to")
+        self.credit_to = data_invoice.get("credit_to")
         self.currency = data_invoice.get("currency")
         self.curr_exch = data_invoice.get("conversion_rate")  # Se usara el de la factura ya generada
         self.customer = data_invoice.get("customer")
@@ -349,8 +348,8 @@ class JournalEntryISR():
     def apply_special_inv_scenario(self):
         try:
             # FILA 1
-            # Moneda de la cuenta por cobrar
-            curr_row_a = frappe.db.get_value("Account", {"name": self.debit_to}, "account_currency")
+            # Moneda de la cuenta por pagar
+            curr_row_a = frappe.db.get_value("Account", {"name": self.credit_to}, "account_currency")
 
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
@@ -405,6 +404,8 @@ class JournalEntryISR():
                 "credit_in_account_currency": '{0:.2f}'.format(calc_row_two),  #Valor del monto a debitar
             }
             self.rows_journal_entry.append(row_two)
+
+            # FILA 3
 
             # FILA 4
             # moneda de la cuenta

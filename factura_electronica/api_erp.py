@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from factura_electronica.factura_electronica.doctype.batch_electronic_invoice.batch_electronic_invoice import \
     batch_generator
-from factura_electronica.controllers.journal_entry import JournalEntryISR
+from factura_electronica.controllers.journal_entry import JournalEntryISR, JournalEntrySpecialISR
 from frappe import _
 
 import json
@@ -42,9 +42,16 @@ def journal_entry_isr(invoice_name, is_isr_ret, is_iva_ret, cost_center,
         # 3. Poliza con retension ISR e IVA
         sales_invoice_info = frappe.get_doc('Sales Invoice', {'name': invoice_name})
 
-        new_je = JournalEntryISR(sales_invoice_info, is_isr_ret, is_iva_ret, cost_center,
-                                 debit_in_acc_currency, is_multicurrency, description,
-                                 is_special_inv).create()
+        # normal
+        if is_special_inv == 0:
+            new_je = JournalEntryISR(sales_invoice_info, is_isr_ret, is_iva_ret, cost_center,
+                                    debit_in_acc_currency, is_multicurrency, description).create()
+
+        # Si es para una factura especial
+        if is_special_inv == 1:
+            new_je = JournalEntrySpecialISR(sales_invoice_info, is_isr_ret, is_iva_ret, cost_center,
+                                            debit_in_acc_currency, is_multicurrency, description,
+                                            is_special_inv).create()
 
         if new_je[0] == False:
             frappe.msgprint(msg=_(f'More details in the following log \n {new_je[1]}'),
