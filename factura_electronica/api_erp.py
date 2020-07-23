@@ -26,7 +26,7 @@ def batch_generator_api(invoices):
 
 @frappe.whitelist()
 def journal_entry_isr(invoice_name, is_isr_ret, is_iva_ret, cost_center,
-                      debit_in_acc_currency, is_multicurrency=0, description='',
+                      debit_or_credit_in_acc_currency, is_multicurrency=0, description='',
                       is_special_inv=0):
     """
     Funciona llamada desde boton Sales Invoice, encargada de crear Journal
@@ -45,13 +45,12 @@ def journal_entry_isr(invoice_name, is_isr_ret, is_iva_ret, cost_center,
         # normal
         if is_special_inv == 0:
             new_je = JournalEntryISR(sales_invoice_info, is_isr_ret, is_iva_ret, cost_center,
-                                    debit_in_acc_currency, is_multicurrency, description).create()
+                                     debit_or_credit_in_acc_currency, is_multicurrency, description).create()
 
         # Si es para una factura especial
         if is_special_inv == 1:
-            new_je = JournalEntrySpecialISR(sales_invoice_info, is_isr_ret, is_iva_ret, cost_center,
-                                            debit_in_acc_currency, is_multicurrency, description,
-                                            is_special_inv).create()
+            new_je = JournalEntrySpecialISR(sales_invoice_info, cost_center, debit_or_credit_in_acc_currency,
+                                            is_multicurrency, description).create()
 
         if new_je[0] == False:
             frappe.msgprint(msg=_(f'More details in the following log \n {new_je[1]}'),

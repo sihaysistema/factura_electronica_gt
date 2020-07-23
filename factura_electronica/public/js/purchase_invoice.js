@@ -433,16 +433,6 @@ frappe.ui.form.on("Purchase Invoice", {
                             fieldtype: 'Check'
                         },
                         {
-                            label: 'Applies for VAT withholding',
-                            fieldname: 'is_iva_withholding',
-                            fieldtype: 'Check'
-                        },
-                        {
-                            label: 'Applies for ISR withholding',
-                            fieldname: 'is_isr_withholding',
-                            fieldtype: 'Check'
-                        },
-                        {
                             label: 'NOTE',
                             fieldname: 'note',
                             fieldtype: 'Data',
@@ -464,15 +454,14 @@ frappe.ui.form.on("Purchase Invoice", {
                     primary_action_label: 'Create',
                     primary_action(values) {
                         frappe.call({
-                            method: 'factura_electronica.api_erp.journal_entry_isr_special',
+                            method: 'factura_electronica.api_erp.journal_entry_isr',
                             args: {
                                 invoice_name: frm.doc.name,
-                                is_iva_ret: 0,
-                                is_isr_ret: 1,
                                 cost_center: values.cost_center,
                                 credit_in_acc_currency: values.credit_in_acc_currency,
                                 is_multicurrency: values.is_multicurrency,
                                 description: values.description,
+                                is_special_inv: 1
                             },
                             callback: function (r) {
                                 console.log(r.message);
