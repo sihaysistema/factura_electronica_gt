@@ -57,32 +57,30 @@ def apply_formula_isr(monto, invoice_name, company):
     TASA_ISR = (0.05, 0.07,)
 
     # Buscamos la primera referencia en Sales Taxes and Charges
-    tasa_iva = (frappe.db.get_value('Sales Taxes and Charges', {'parent': invoice_name}, 'rate') / 100) + 1  # 1.12
-    monto_sin_iva = monto/tasa_iva
+    # tasa_iva = (frappe.db.get_value('Sales Taxes and Charges', {'parent': invoice_name}, 'rate') / 100) + 1  # 1.12
+    # monto_sin_iva = monto/tasa_iva
+    monto_sin_iva = monto
 
     # ESCENARIO 5%
     if monto_sin_iva <= RANGO_ISR[1]:
         isr_5 = monto_sin_iva * TASA_ISR[0]
         total_que_me_queda = monto - isr_5
 
-        # print('El monto de la factura es:', grand_total, '\n')
-        # print('El IVA de la factura es:', iva_de_factura, '\n')
-        # print('El ISR de la factura es:', isr_5, '\n')
-        # print('El monto que me queda es: ', total_que_me_queda)
-
         return float('{0:.2f}'.format((float('{0:.2f}'.format(isr_5)))))
 
     # ESCENARIO 7%
     if monto_sin_iva > 30000:
-        isr_7 = monto_sin_iva * TASA_ISR[1]
-        total_que_me_queda = monto - isr_7
+        isr_5 = RANGO_ISR[1] * 0.05
+        isr_7 = (monto_sin_iva - 30000) * TASA_ISR[1]
+
+        total_isr_7_reten = isr_5 + isr_7
 
         # print('El monto de la factura es:', grand_total, '\n')
         # print('El IVA de la factura es:', iva_de_factura, '\n')
         # print('El ISR de la factura es:', isr_7, '\n')
         # print('El monto que me queda es: ', total_que_me_queda)
 
-        return float('{0:.2f}'.format((float('{0:.2f}'.format(isr_7)))))
+        return float('{0:.2f}'.format((float('{0:.2f}'.format(total_isr_7_reten)))))
 
 
     else:
