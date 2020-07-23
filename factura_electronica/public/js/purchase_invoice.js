@@ -347,6 +347,18 @@ frappe.ui.form.on("Purchase Invoice", {
                             fieldtype: 'Check'
                         },
                         {
+                            label: 'Is Special Invoice',
+                            fieldname: 'is_special_invoice',
+                            fieldtype: 'Check'
+                        },
+                        {
+                            label: 'NOTE',
+                            fieldname: 'note',
+                            fieldtype: 'Data',
+                            read_only: 1,
+                            default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el iva va incluido en la factura'
+                        },
+                        {
                             label: 'Description',
                             fieldname: 'section_asdads',
                             fieldtype: 'Section Break',
@@ -370,7 +382,8 @@ frappe.ui.form.on("Purchase Invoice", {
                                 cost_center: values.cost_center,
                                 debit_in_acc_currency: values.debit_in_acc_currency,
                                 is_multicurrency: values.is_multicurrency,
-                                description: values.description
+                                description: values.description,
+                                is_special_inv: values.is_special_invoice
                             },
                             callback: function (r) {
                                 console.log(r.message);
