@@ -6,21 +6,34 @@
  "engine": "InnoDB",
  "field_order": [
   "title",
-  "issue_date",
-  "document_prefix",
-  "document_number",
-  "company",
-  "tax_id",
   "amended_from",
-  "exportadorproveedor_section",
-  "importadordestinatario_section",
-  "declarante_section",
-  "transportista_section",
-  "conducto_section",
-  "valores_totales_section",
-  "mercanc\u00edas_section",
-  "documentos_de_soporte_section",
-  "observaciones_y_firmas_section",
+  "company",
+  "duca_purpose",
+  "tax_id",
+  "document_prefix",
+  "declaration_id_section",
+  "1_reference_number",
+  "2_document_number",
+  "3_acceptance_date",
+  "7_initial_transit_customs_office",
+  "8_exit_customs_office",
+  "9_entry_customs_office",
+  "10_destination_customs_office",
+  "exporter_section",
+  "exporter_id_link",
+  "4_1_exporter_id_number",
+  "4_2_exporter_id_type",
+  "4_3_exporter_id_issuing_country",
+  "4_4_exporter_name",
+  "4_5_exporter_fiscal_address",
+  "importer_section",
+  "declarant_section",
+  "carrier_section",
+  "conductor_section",
+  "total_values_section",
+  "goods_section",
+  "support_documents_section",
+  "observation_and_signature_section",
   "aduana_de_partida_section",
   "aduana_de_paso_section",
   "mercac\u00edas_section"
@@ -33,19 +46,9 @@
    "unique": 1
   },
   {
-   "fieldname": "issue_date",
-   "fieldtype": "Date",
-   "label": "Issue Date"
-  },
-  {
    "fieldname": "document_prefix",
    "fieldtype": "Data",
    "label": "Document Prefix"
-  },
-  {
-   "fieldname": "document_number",
-   "fieldtype": "Data",
-   "label": "Document Number"
   },
   {
    "fieldname": "company",
@@ -68,51 +71,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "exportadorproveedor_section",
-   "fieldtype": "Section Break",
-   "label": "Exportador/Proveedor"
-  },
-  {
-   "fieldname": "importadordestinatario_section",
-   "fieldtype": "Section Break",
-   "label": "Importador/Destinatario"
-  },
-  {
-   "fieldname": "declarante_section",
-   "fieldtype": "Section Break",
-   "label": "Declarante"
-  },
-  {
-   "fieldname": "transportista_section",
-   "fieldtype": "Section Break",
-   "label": "Transportista"
-  },
-  {
-   "fieldname": "conducto_section",
-   "fieldtype": "Section Break",
-   "label": "Conducto"
-  },
-  {
-   "fieldname": "valores_totales_section",
-   "fieldtype": "Section Break",
-   "label": "Valores Totales"
-  },
-  {
-   "fieldname": "mercanc\u00edas_section",
-   "fieldtype": "Section Break",
-   "label": "Mercanc\u00edas"
-  },
-  {
-   "fieldname": "documentos_de_soporte_section",
-   "fieldtype": "Section Break",
-   "label": "Documentos de soporte"
-  },
-  {
-   "fieldname": "observaciones_y_firmas_section",
-   "fieldtype": "Section Break",
-   "label": "Observaciones y firmas"
-  },
-  {
    "fieldname": "aduana_de_partida_section",
    "fieldtype": "Section Break",
    "label": "Aduana de Partida"
@@ -126,10 +84,150 @@
    "fieldname": "mercac\u00edas_section",
    "fieldtype": "Section Break",
    "label": "Mercac\u00edas"
+  },
+  {
+   "fieldname": "exporter_section",
+   "fieldtype": "Section Break",
+   "label": "Exportador/Proveedor"
+  },
+  {
+   "fieldname": "importer_section",
+   "fieldtype": "Section Break",
+   "label": "Importador/Destinatario"
+  },
+  {
+   "fieldname": "declarant_section",
+   "fieldtype": "Section Break",
+   "label": "Declarant"
+  },
+  {
+   "fieldname": "carrier_section",
+   "fieldtype": "Section Break",
+   "label": "Carrier"
+  },
+  {
+   "fieldname": "conductor_section",
+   "fieldtype": "Section Break",
+   "label": "Conductor"
+  },
+  {
+   "fieldname": "total_values_section",
+   "fieldtype": "Section Break",
+   "label": "Total Values"
+  },
+  {
+   "fieldname": "goods_section",
+   "fieldtype": "Section Break",
+   "label": "Goods"
+  },
+  {
+   "fieldname": "support_documents_section",
+   "fieldtype": "Section Break",
+   "label": "Support Documents"
+  },
+  {
+   "fieldname": "observation_and_signature_section",
+   "fieldtype": "Section Break",
+   "label": "Observations and Signatures"
+  },
+  {
+   "description": "3. Acceptance Date",
+   "fieldname": "3_acceptance_date",
+   "fieldtype": "Date",
+   "label": "Acceptance Date"
+  },
+  {
+   "description": "1. DUCA Number",
+   "fieldname": "2_document_number",
+   "fieldtype": "Data",
+   "label": "Document Number"
+  },
+  {
+   "description": "1. Reference or Serial Number",
+   "fieldname": "1_reference_number",
+   "fieldtype": "Data",
+   "label": "Reference Number"
+  },
+  {
+   "fieldname": "declaration_id_section",
+   "fieldtype": "Section Break",
+   "label": "Declaration ID"
+  },
+  {
+   "description": "8. Exit Customs Office",
+   "fieldname": "8_exit_customs_office",
+   "fieldtype": "Data",
+   "label": "Exit Customs Office"
+  },
+  {
+   "description": "7. Initial Transit Customs Office",
+   "fieldname": "7_initial_transit_customs_office",
+   "fieldtype": "Data",
+   "label": "Initial Transit Customs Office"
+  },
+  {
+   "description": "9. Entry Customs Office",
+   "fieldname": "9_entry_customs_office",
+   "fieldtype": "Data",
+   "label": "Entry Customs Office"
+  },
+  {
+   "description": "10. Destination Customs Office",
+   "fieldname": "10_destination_customs_office",
+   "fieldtype": "Data",
+   "label": "Destination Customs Office"
+  },
+  {
+   "fieldname": "duca_purpose",
+   "fieldtype": "Select",
+   "label": "Purpose",
+   "options": "\nImport\nExport"
+  },
+  {
+   "description": "4.1",
+   "fetch_from": "exporter_id_link.id_number",
+   "fieldname": "4_1_exporter_id_number",
+   "fieldtype": "Data",
+   "label": "Exporter ID number",
+   "read_only": 1
+  },
+  {
+   "description": "4.1, 4.2 - Exporter Identification Type and Number",
+   "fieldname": "exporter_id_link",
+   "fieldtype": "Link",
+   "label": "Exporter Identification",
+   "options": "Contact Identification"
+  },
+  {
+   "fetch_from": "exporter_id_link.id_prefix",
+   "fieldname": "4_2_exporter_id_type",
+   "fieldtype": "Data",
+   "label": "Exporter ID type",
+   "read_only": 1
+  },
+  {
+   "description": "4.3",
+   "fetch_from": "exporter_id_link.id_issuing_country",
+   "fieldname": "4_3_exporter_id_issuing_country",
+   "fieldtype": "Data",
+   "label": "Exporter ID issuing country",
+   "read_only": 1
+  },
+  {
+   "fieldname": "4_4_exporter_name",
+   "fieldtype": "Link",
+   "label": "Exporter Name",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "4_5_exporter_fiscal_address",
+   "fieldtype": "Small Text",
+   "label": "Exporter fiscal address",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2020-07-22 17:36:00.568804",
+ "modified": "2020-07-22 19:11:54.468626",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Central American Unique Customs Declaration",
@@ -144,6 +242,42 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
    "share": 1,
    "write": 1
   }
