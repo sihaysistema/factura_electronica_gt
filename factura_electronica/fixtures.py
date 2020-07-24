@@ -292,7 +292,9 @@ def fill_fixtures():
                     "Purchase Invoice-facelec_p_vat_declaration",
                     "Sales Invoice-facelec_s_vat_declaration",
                     "Sales Invoice-is_exchange_invoice",
-                    "Purchase Invoice-is_exchange_invoice"
+                    "Purchase Invoice-is_exchange_invoice",
+                    "Purchase Invoice Item-facelec_pr_is_exempt",
+                    "Sales Invoice Item-facelec_si_is_exempt"
                 ]
             ]
         ]
