@@ -290,7 +290,9 @@ def fill_fixtures():
                     "Journal Entry-withholding_tax_references",
                     "Journal Entry-facelec_withholding_tax_references",
                     "Purchase Invoice-facelec_p_vat_declaration",
-                    "Sales Invoice-facelec_s_vat_declaration"
+                    "Sales Invoice-facelec_s_vat_declaration",
+                    "Sales Invoice-is_exchange_invoice",
+                    "Purchase Invoice-is_exchange_invoice"
                 ]
             ]
         ]
@@ -300,6 +302,7 @@ def fill_fixtures():
         "dt": "Translation", "filters": [
             [
                 "source_name", "in", [
+                    "Is Exchange Invoice",
                     "Public Writ",
                     "VAT Exemption Record",
                     "Consumable Acquisition Record",
