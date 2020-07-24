@@ -302,8 +302,8 @@ def fill_fixtures():
         "dt": "Translation", "filters": [
             [
                 "source_name", "in", [
-                    "Excise Taxes Categories and Exemptions"
-                    """
+                    "Value Added Tax Exempt",
+                    "Excise Taxes Categories and Exemptions",
                     "Is Exchange Invoice",
                     "Public Writ",
                     "VAT Exemption Record",
@@ -326,7 +326,6 @@ def fill_fixtures():
                     "Is Special Invoice",
                     "Declaration Date",
                     "Documents In Declaration"
-                    """
                 ]
             ]
         ]
