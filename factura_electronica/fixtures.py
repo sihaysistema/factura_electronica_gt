@@ -349,12 +349,24 @@ def fill_fixtures():
         ]
     }
 
+    id_doctype = {
+        "dt": "Identification Document Type", "filters": [
+            [
+                "identification_document_type", "in", [
+                    "PAS",
+                    "PASSPORT",
+                    "DUI",
+                    "DPI"
+                ]
+            ]
+        ]
+    }
 
     # NEW FUNCTIONALITY FOR EXPORTING
     fixtures_fillup.append(custom_field)
     fixtures_fillup.append(translation)
-    fixtures_fillup.append('Tax Category')
-    fixtures_fillup.append('Identification Document Type')
+    fixtures_fillup.append(tax_category)
+    fixtures_fillup.append(id_doctype)
 
     return fixtures_fillup
 
