@@ -329,6 +329,26 @@ def fill_fixtures():
         ]
     }
 
+    tax_category = {
+        "dt": "Tax Category", "filters": [
+            [
+                "title", "in", [
+                    "SAT: General",
+                    "SAT: Agente Retenedor de IVA",
+                    "SAT: Regimen Especial Contribuyente Agropecuario",
+                    "SAT: Asociacion sin fines de lucro",
+                    "SAT: Pequeno Contribuyente",
+                    "SAT: Gasolinera",
+                    "SAT: Otros Calificados por SAT",
+                    "SAT: Contribuyente Especial",
+                    "SAT: Operador de Tarjeta de Credito o Debito",
+                    "SAT: Entidad Publica",
+                    "SAT: Exportador"
+                ]
+            ]
+        ]
+    }
+
 
     # NEW FUNCTIONALITY FOR EXPORTING
     fixtures_fillup.append(custom_field)
