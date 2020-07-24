@@ -202,3 +202,9 @@ def apply_formula_isr_iva(grand_total, invoice_name, supplier_type, item_tax_cat
         expected_cash_payment = grand_total_purchase_inv - vat_retention_amount
 
         return vat_retention_amount
+
+
+def number_of_decimals(number):
+    number_dec = len(str(number).split('.')[1])
+
+    return number_dec
