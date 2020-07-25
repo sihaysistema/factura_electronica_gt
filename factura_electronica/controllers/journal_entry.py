@@ -467,10 +467,12 @@ class JournalEntrySpecialISR():
                 "debit_in_account_currency": 0,  #Valor del monto a acreditar
                 "exchange_rate": exch_rate_row_c,  # Tipo de cambio
                 "account_currency": curr_row_c,  # Moneda de la cuenta
-                "credit_in_account_currency": '{0:.2f}'.format(iva_curr_acc),  #Valor del monto a debitar
+                "credit_in_account_currency": round(iva_curr_acc, self.decimals_ope),  #Valor del monto a debitar
             }
             self.rows_journal_entry.append(row_three)
 
+
+            # -------------------------------------------------------------------------------------------------------------------------
             # FILA 4: RETENCION ISR
             # moneda de la cuenta
             curr_row_d = frappe.db.get_value("Account", {"name": self.isr_account_payable}, "account_currency")
@@ -485,7 +487,7 @@ class JournalEntrySpecialISR():
                 "debit_in_account_currency": 0,  #Valor del monto a acreditar
                 "exchange_rate": exch_rate_row_d,  # Tipo de cambio
                 "account_currency": curr_row_d,  # Moneda de la cuenta
-                "credit_in_account_currency": '{0:.2f}'.format(isr_curr_acc),  #Valor del monto a debitar
+                "credit_in_account_currency": round(isr_curr_acc, self.decimals_ope),  #Valor del monto a debitar
             }
             self.rows_journal_entry.append(row_four)
 
@@ -493,7 +495,7 @@ class JournalEntrySpecialISR():
                 f.write(json.dumps(self.rows_journal_entry, default=str, indent=2))
 
         except:
-            frappe.msgprint(str(frappe.get_traceback()))
+            # frappe.msgprint(str(frappe.get_traceback()))
             return False, str(frappe.get_traceback())
 
         else:
