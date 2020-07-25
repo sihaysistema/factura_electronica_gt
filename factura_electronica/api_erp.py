@@ -42,8 +42,8 @@ def journal_entry_isr(invoice_name, is_isr_ret, is_iva_ret, cost_center,
         sales_invoice_info = frappe.get_doc('Sales Invoice', {'name': invoice_name})
 
 
-        new_je = JournalEntrySaleInvoice(sales_invoice_info, is_isr_ret, is_iva_ret, cost_center,
-                                         debit_in_acc_currency, is_multicurrency, description).create()
+        new_je = JournalEntrySaleInvoice(sales_invoice_info, is_isr_ret, is_iva_ret,
+                                         debit_in_acc_currency, is_multicurrency, cost_center, description).create()
 
         if new_je[0] == False:
             frappe.msgprint(msg=_(f'More details in the following log \n {new_je[1]}'),
