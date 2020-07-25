@@ -831,10 +831,6 @@ frappe.ui.form.on("Sales Invoice", {
         if (frm.doc.docstatus === 1 && frm.doc.status !== 'Paid') {
 
             cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
-                frappe.msgprint("WORK IN PROGRESS");
-            });
-
-            cur_frm.page.add_action_item(__("ISR"), function () {
 
                 let d = new frappe.ui.Dialog({
                     title: 'New Journal Entry with Withholding Tax',
@@ -873,7 +869,7 @@ frappe.ui.form.on("Sales Invoice", {
                             fieldtype: 'Check'
                         },
                         {
-                            label: 'Applies for VAT withholding',
+                            label: 'Applies for VAT-ISR withholding',
                             fieldname: 'is_iva_withholding',
                             fieldtype: 'Check'
                         },
@@ -908,8 +904,8 @@ frappe.ui.form.on("Sales Invoice", {
                             method: 'factura_electronica.api_erp.journal_entry_isr',
                             args: {
                                 invoice_name: frm.doc.name,
+                                is_isr_ret: 0,
                                 is_iva_ret: 0,
-                                is_isr_ret: 1,
                                 cost_center: values.cost_center,
                                 debit_in_acc_currency: values.debit_in_acc_currency,
                                 is_multicurrency: values.is_multicurrency,
