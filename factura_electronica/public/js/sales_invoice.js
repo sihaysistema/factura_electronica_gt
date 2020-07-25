@@ -848,7 +848,8 @@ frappe.ui.form.on("Sales Invoice", {
                                 return {
                                     filters: { 'company': frm.doc.company }
                                 }
-                            }
+                            },
+                            default: ""
                         },
                         {
                             label: 'Target account',
@@ -886,7 +887,7 @@ frappe.ui.form.on("Sales Invoice", {
                             fieldname: 'note',
                             fieldtype: 'Data',
                             read_only: 1,
-                            default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el iva va incluido en la factura'
+                            default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el IVA va incluido en la factura'
                         },
                         {
                             label: 'Description',

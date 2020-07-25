@@ -243,16 +243,16 @@ class JournalEntryISR():
 # PARA FACTURA ESPECIAL - PURCHASE INVOICE
 
 class JournalEntrySpecialISR():
-    def __init__(self, data_invoice, cost_center, credit_in_acc_currency, is_multicurrency, descr):
+    def __init__(self, data_invoice, credit_in_acc_currency, is_multicurrency, descr='', cost_center=''):
         """
         Constructor de la clase
 
         Args:
             data_factura (Object Class Invoice): Instancia de la clase Purchase Invoice
-            no_ref (str): Numero de autorizacion
-            f_ref (str): Fecha de autorizacion
-            id_f (str): Referencia a factura
-            centro_costo (str): Centro de costo a utilizar en poliza
+            cost_center (str): Centro de costo a utilizar
+            credit_in_acc_currency (str): Nombre de la cuenta que saldara la factura de compra
+            is_multicurrency (int): 1 = multimoneda else not
+            descr (str): Descripcion opcion para agregar en user remarks
         """
         self.company = data_invoice.get("company")
         self.posting_date = data_invoice.get("posting_date")
@@ -265,7 +265,7 @@ class JournalEntrySpecialISR():
         self.supplier = data_invoice.get("supplier")
         self.name_inv = data_invoice.get("name")
         self.base_net_total = data_invoice.get("base_total_taxes_and_charges")  # IVA EN moneda de company
-        self.cost_center = cost_center
+        self.cost_center = cost_center or ''
         self.credit_in_acc_currency = credit_in_acc_currency
         self.is_multicurrency = is_multicurrency
         self.remarks = descr
@@ -326,6 +326,17 @@ class JournalEntrySpecialISR():
             return True, status_journal.name
 
     def validate_dependencies(self):
+        """
+        Validador dependencias necesarias para generar una poliza contable
+        1. Validacion retenciones configuradas para company
+        2. Validacion escenario a aplicar, ISR 5% o 7%
+        3. Obtencion tasa IVA
+        4. Obtencion cuenta isr por pagar (retencion)
+        5. Obtencion cuenta iva por pagar (retencion)
+
+        Returns:
+            tuple: Boolean, descripcion de mensaje
+        """
         try:
             # grand total en moneda de la compania, GTQ
             monto = self.grand_total_currency_company
@@ -384,6 +395,16 @@ class JournalEntrySpecialISR():
             return False, str(frappe.get_traceback())
 
     def apply_special_inv_scenario(self):
+        """a
+        Aplica los calculos necesarios para las filas que conformaran la poliza contable,
+        para una factura especial, con retencion IVA e ISR
+
+        NOTA IMPORTANTE: LOS CALCULOS APLICADOS AQUI APLICAN PARA GUATEMALA, Y TOMANDO
+        EN CUENTA QUE LAS CUENTAS QUE REGISTRAN LOS MONTOS ES EN QUETZALES :)
+
+        Returns:
+            tuple: Boolean, descripcion operacion
+        """
         try:
             # -------------------------------------------------------------------------------------------------------------------------
             # FILA 1: El monto acordado con supplier
@@ -411,13 +432,13 @@ class JournalEntrySpecialISR():
             self.rows_journal_entry.append(row_one)
 
 
+
             # -------------------------------------------------------------------------------------------------------------------------
             # FILA 2: MONTO QUE EN REALIDAD SE PAGARA, GRAND TOTAL MENOS ISR, MENOS IVA, que saldra de caja
-            # moneda de la cuenta, CUENTA QUE SALDARA LA DEUDA
             curr_row_b = frappe.db.get_value("Account", {"name": self.credit_in_acc_currency},
                                              "account_currency")
 
-            # Validacion que tipo de cambio usar
+            # Validacion que tipo de cambio usar, segun moneda de la cuenta
             exch_rate_row_b = 1 if (curr_row_b == "GTQ") else self.curr_exch
 
             # VALIDACION GRAND TOTAL DE FACTURA
@@ -432,7 +453,6 @@ class JournalEntrySpecialISR():
 
             # El monto en quetzales lo pasamos a la funcion que calcula automaticamente el ISR
             ISR_PAYABLE_GTQ = apply_formula_isr(GRAND_TOTAL_NO_IVA, self.company, self.retention_ranges, decimals=self.decimals_ope)
-
 
             # El monto a pagar, restando el IVA a retener, e ISR a retener
             amt_without_isr_iva = (grand_total_gtq - (IVA_OPE + ISR_PAYABLE_GTQ))
@@ -450,6 +470,7 @@ class JournalEntrySpecialISR():
                 "credit_in_account_currency": calc_row_two,
             }
             self.rows_journal_entry.append(row_two)
+
 
 
             # -------------------------------------------------------------------------------------------------------------------------
@@ -472,6 +493,7 @@ class JournalEntrySpecialISR():
             self.rows_journal_entry.append(row_three)
 
 
+
             # -------------------------------------------------------------------------------------------------------------------------
             # FILA 4: RETENCION ISR
             # moneda de la cuenta
@@ -482,7 +504,7 @@ class JournalEntrySpecialISR():
             isr_curr_acc = amount_converter(ISR_PAYABLE_GTQ, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
 
             row_four = {
-                "account": self.isr_account_payable,  #Cuenta a que se va a utilizar
+                "account": self.isr_account_payable,  # Cuenta a que se va a utilizar
                 "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
                 "debit_in_account_currency": 0,  #Valor del monto a acreditar
                 "exchange_rate": exch_rate_row_d,  # Tipo de cambio
@@ -491,11 +513,10 @@ class JournalEntrySpecialISR():
             }
             self.rows_journal_entry.append(row_four)
 
-            with open('special.json', 'w') as f:
-                f.write(json.dumps(self.rows_journal_entry, default=str, indent=2))
+            # with open('special.json', 'w') as f:
+            #     f.write(json.dumps(self.rows_journal_entry, default=str, indent=2))
 
         except:
-            # frappe.msgprint(str(frappe.get_traceback()))
             return False, str(frappe.get_traceback())
 
         else:

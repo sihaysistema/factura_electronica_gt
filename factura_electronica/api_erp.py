@@ -72,23 +72,20 @@ def journal_entry_isr_purchase_inv(invoice_name, is_isr_ret, is_iva_ret, cost_ce
         invoice_name (dict): Diccionario con las propiedades de la factura
     """
     try:
-        # NOTE: Escenarios posibles para polizas contables
-        # 1. Poliza normal
-        # 2. Poliza con retencion ISR
-        # 3. Poliza con retension ISR e IVA
+        # NOTE: APLICA SOLO PARA FACTURA ESPECIAL, APLICA RETENSION IVA E ISR, VER CLASE PARA FUTURAS MODIFICACIONES :D
         purchase_invoice_info = frappe.get_doc('Purchase Invoice', {'name': invoice_name})
 
         # Si es para una factura especial
-        new_je = JournalEntrySpecialISR(purchase_invoice_info, cost_center, credit_in_acc_currency,
-                                        is_multicurrency, description).create()
+        new_je = JournalEntrySpecialISR(purchase_invoice_info, credit_in_acc_currency,
+                                        is_multicurrency, description, cost_center).create()
 
         if new_je[0] == False:
             frappe.msgprint(msg=_(f'More details in the following log \n {new_je[1]}'),
-                        title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
+                            title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
             return
         if new_je[0] == True:
             frappe.msgprint(msg=_(f'Generated with the series \n {new_je[1]}'),
-                        title=_('Successfully generated'), indicator='green')
+                            title=_('Successfully generated'), indicator='green')
             return
 
     except:
