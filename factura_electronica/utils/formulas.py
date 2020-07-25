@@ -39,7 +39,7 @@ def amount_converter(monto, currency_exchange, from_currency="GTQ", to_currency=
 
 # Aplicara el calculo no importando la moneda
 # Nota aplicarle conversion si es necesario
-def apply_formula_isr(monto, company, decimals=2):
+def apply_formula_isr(monto, company, retention_ranges, decimals=2):
     """
     Formula para obtener ISR
 
@@ -52,17 +52,16 @@ def apply_formula_isr(monto, company, decimals=2):
     monto_sin_iva = monto
 
     # Obtenemos los rangos de renteciones IVA - ISR
-    retention_range = frappe.db.get_values('Tax Witholding Ranges', filters={'parent': company},
-                                           fieldname=['isr_account_payable', 'isr_account_receivable',
-                                                      'iva_account_payable', 'vat_account_receivable',
-                                                      'isr_percentage_rate', 'minimum_amount',
-                                                      'maximum_amount', 'iva_percentage_rate'], as_dict=1)
+    # retention_ranges = frappe.db.get_values('Tax Witholding Ranges', filters={'parent': company},
+    #                                         fieldname=['isr_account_payable', 'isr_account_receivable',
+    #                                                    'iva_account_payable', 'vat_account_receivable',
+    #                                                    'isr_percentage_rate', 'minimum_amount',
+    #                                                    'maximum_amount', 'iva_percentage_rate'], as_dict=1)
 
     # En funcion al monto, validamos que porcentaje de retencion usar
-    for retention in retention_range:
+    for retention in retention_ranges:
         # Aplicamos el 5%
         if (monto > retention.get('minimum_amount')) and (monto <= retention.get('maximum_amount')):
-
             isr_5 = monto_sin_iva * (retention.get('isr_percentage_rate')/100)
 
             return round(isr_5, int(decimals))
@@ -75,9 +74,6 @@ def apply_formula_isr(monto, company, decimals=2):
             total_isr_7_reten = isr_5 + isr_7
 
             return round(total_isr_7_reten, int(decimals))
-
-    else:
-        frappe.msgprint(_('Escenario ISR no completado, no se aplico ningun escenario'))
 
 
 def apply_formula_isr_iva(grand_total, invoice_name, supplier_type, item_tax_category,
