@@ -79,6 +79,16 @@ class JournalEntrySaleInvoice():
                 if status_rows[0] == False:
                     return False, status_rows[1]
 
+            # ESCENARIO 4 - RETENCION IVA
+            elif self.is_iva_retention == 1 and self.is_isr_retention == 0:
+                status_dep = self.validate_dependencies()
+                if status_dep[0] == False:
+                    return False, status_dep[1]
+
+                status_rows = self.apply_iva_retencion_scenario()
+                if status_rows[0] == False:
+                    return False, status_rows[1]
+
             else:
                 return False, 'No se recibio ninguna opcion para generar Poliza contable'
 
@@ -140,7 +150,7 @@ class JournalEntrySaleInvoice():
                                                                     'maximum_amount', 'iva_percentage_rate'], as_dict=1)
             # Si no hay configurados
             if len(self.retention_ranges) == 0:
-                return False, 'No se puede procede con la opercion, no se encontraron rango de retencion configurados'
+                return False, 'No se puede procede con la operacion, no se encontraron rango de retencion configurados'
 
             # TODO: REFACTORIZAR
             # APLIQUE O NO APLIQUEN LOS ESCENARIO OBTENEMOS LOS DATOS AUTOMATICAMENTE,
@@ -225,7 +235,7 @@ class JournalEntrySaleInvoice():
             exch_rate_row = 1 if (curr_row_a == "GTQ") else self.curr_exch
 
             row_one = {
-                "account": self.credit_to,  # Cuenta por cobrar
+                "account": self.debit_to,  # Cuenta por cobrar
                 "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
                 "credit_in_account_currency": round(amount_converter(self.grand_total, self.curr_exch,
                                                                      from_currency=self.currency,
@@ -236,7 +246,7 @@ class JournalEntrySaleInvoice():
                 "party_type": "Customer",  # Tipo de tercero: Proveedor, Cliente, Estudiante, Accionista, Etc. SE USARA CUSTOMER UA QUE VIENE DE SALES INVOICE
                 "party": self.customer,
                 "reference_name": self.name_inv,  # Referencia dada por sistema
-                "reference_type": "Sales Invoice Invoice"
+                "reference_type": "Sales Invoice"
             }
             self.rows_journal_entry.append(row_one)
 
@@ -284,7 +294,7 @@ class JournalEntrySaleInvoice():
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_d = 1 if (curr_row_d == "GTQ") else self.curr_exch
-            isr_curr_acc = amount_converter(ISR_PAYABLE_GTQ, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
+            isr_curr_acc = amount_converter(ISR_PAYABLE_GTQ, self.curr_exch, from_currency="GTQ", to_currency=curr_row_d)
 
             row_three = {
                 "account": self.isr_account_payable,  # Cuenta a que se va a utilizar
@@ -327,7 +337,7 @@ class JournalEntrySaleInvoice():
             exch_rate_row = 1 if (curr_row_a == "GTQ") else self.curr_exch
 
             row_one = {
-                "account": self.credit_to,  # Cuenta por pagar
+                "account": self.debit_to,  # Cuenta por pagar
                 "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
                 "credit_in_account_currency": round(amount_converter(self.grand_total, self.curr_exch,
                                                                      from_currency=self.currency,
@@ -338,7 +348,7 @@ class JournalEntrySaleInvoice():
                 "party_type": "Customer",  # Tipo de tercero: Proveedor, Cliente, Estudiante, Accionista, Etc. SE USARA CUSTOMER UA QUE VIENE DE SALES INVOICE
                 "party": self.customer,
                 "reference_name": self.name_inv,  # Referencia dada por sistema
-                "reference_type": "Customer"
+                "reference_type": "Sales Invoice"
             }
             self.rows_journal_entry.append(row_one)
 
@@ -373,7 +383,7 @@ class JournalEntrySaleInvoice():
                                                   from_currency='GTQ', to_currency=curr_row_b), self.decimals_ope)
 
             row_two = {
-                "account": self.credit_in_acc_currency,  #Cuenta a que se va a utilizar
+                "account": self.debit_in_acc_currency,  #Cuenta a que se va a utilizar
                 "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
                 "credit_in_account_currency": 0,  #Valor del monto a acreditar
                 "exchange_rate": exch_rate_row_b,  # Tipo de cambio
@@ -426,6 +436,108 @@ class JournalEntrySaleInvoice():
 
             # with open('special.json', 'w') as f:
             #     f.write(json.dumps(self.rows_journal_entry, default=str, indent=2))
+
+        except:
+            return False, str(frappe.get_traceback())
+
+        else:
+            return True, 'OK'
+
+    def apply_iva_retencion_scenario(self):
+        """
+        Aplica los calculos necesarios para las filas que conformaran la poliza contable,
+        para una factura con retencion IVA
+
+        NOTA IMPORTANTE: LOS CALCULOS APLICADOS AQUI APLICAN PARA GUATEMALA, Y TOMANDO
+        EN CUENTA QUE LAS CUENTAS QUE REGISTRAN LOS MONTOS ES EN QUETZALES :)
+
+        Returns:
+            tuple: Boolean, descripcion operacion
+        """
+        try:
+            # -------------------------------------------------------------------------------------------------------------------------
+            # FILA 1: El monto acordado con supplier
+            # obtenemos la moneda de la cuenta por pagar
+            curr_row_a = frappe.db.get_value("Account", {"name": self.debit_to}, "account_currency")
+
+            # CALCULOS APLICABLES PARA IMPUESTOS GUATEMALA
+            # Si la moneda de la cuenta es GTQ usamos 1, si es USD usamos el tipo cambio
+            exch_rate_row = 1 if (curr_row_a == "GTQ") else self.curr_exch
+
+            row_one = {
+                "account": self.debit_to,  # Cuenta por pagar
+                "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
+                "credit_in_account_currency": round(amount_converter(self.grand_total, self.curr_exch,
+                                                                     from_currency=self.currency,
+                                                                     to_currency=curr_row_a), self.decimals_ope),  # convierte el monto a la moneda de la cuenta
+                "debit_in_account_currency": 0,
+                "exchange_rate": exch_rate_row,  # Tipo de cambio
+                "account_currency": curr_row_a,  # Moneda de la cuenta
+                "party_type": "Customer",  # Tipo de tercero: Proveedor, Cliente, Estudiante, Accionista, Etc. SE USARA CUSTOMER UA QUE VIENE DE SALES INVOICE
+                "party": self.customer,
+                "reference_name": self.name_inv,  # Referencia dada por sistema
+                "reference_type": "Sales Invoice"
+            }
+            self.rows_journal_entry.append(row_one)
+
+
+
+            # -------------------------------------------------------------------------------------------------------------------------
+            # FILA 2: MONTO QUE EN REALIDAD SE cobrara, GRAND TOTAL MENOS IVA
+            curr_row_b = frappe.db.get_value("Account", {"name": self.debit_in_acc_currency},
+                                             "account_currency")
+
+            # Validacion que tipo de cambio usar, segun moneda de la cuenta
+            exch_rate_row_b = 1 if (curr_row_b == "GTQ") else self.curr_exch
+
+            # VALIDACION GRAND TOTAL DE FACTURA
+            # Para una correcta validacion usamos el grand total en la moneda de company "GTQ"
+            grand_total_gtq = self.grand_total_currency_company
+
+            # Obtenemos el monto sin IVA del grand total moneda de company "GTQ"
+            GRAND_TOTAL_NO_IVA = round(grand_total_gtq/(self.vat_rate + 1), self.decimals_ope)
+
+            # Obtenemos el iva a retener GTQ
+            IVA_OPE = round((GRAND_TOTAL_NO_IVA * self.vat_rate), self.decimals_ope)
+
+            # El monto a pagar, restando el IVA a retener, e ISR a retener
+            amt_without_isr_iva = (grand_total_gtq - (IVA_OPE))
+
+            # Se vuelve a validar la conversion a la moneda de la cuenta en caso aplique
+            calc_row_two = round(amount_converter(amt_without_isr_iva, self.curr_exch,
+                                                  from_currency='GTQ', to_currency=curr_row_b), self.decimals_ope)
+
+            row_two = {
+                "account": self.debit_in_acc_currency,  #Cuenta a que se va a utilizar
+                "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
+                "credit_in_account_currency": 0,  #Valor del monto a acreditar
+                "exchange_rate": exch_rate_row_b,  # Tipo de cambio
+                "account_currency": curr_row_b,  # Moneda de la cuenta
+                "debit_in_account_currency": calc_row_two,
+            }
+            self.rows_journal_entry.append(row_two)
+
+
+
+            # -------------------------------------------------------------------------------------------------------------------------
+            # FILA 3: IVA a retener
+            # moneda de la cuenta
+            curr_row_c = frappe.db.get_value("Account", {"name": self.iva_account_payable}, "account_currency")
+            # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
+            # resultado = valor_si if condicion else valor_no
+            exch_rate_row_c = 1 if (curr_row_c == "GTQ") else self.curr_exch
+            iva_curr_acc = amount_converter((GRAND_TOTAL_NO_IVA * self.vat_rate), self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
+
+            row_three = {
+                "account": self.iva_account_payable,  #Cuenta a que se va a utilizar
+                "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
+                "credit_in_account_currency": 0,  #Valor del monto a acreditar
+                "exchange_rate": exch_rate_row_c,  # Tipo de cambio
+                "account_currency": curr_row_c,  # Moneda de la cuenta
+                "debit_in_account_currency": round(iva_curr_acc, self.decimals_ope),  #Valor del monto a debitar
+            }
+            self.rows_journal_entry.append(row_three)
+
 
         except:
             return False, str(frappe.get_traceback())
