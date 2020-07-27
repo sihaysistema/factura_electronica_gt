@@ -869,7 +869,7 @@ frappe.ui.form.on("Sales Invoice", {
                             fieldtype: 'Check'
                         },
                         {
-                            label: 'Applies for VAT-ISR withholding',
+                            label: 'Applies for VAT withholding',
                             fieldname: 'is_iva_withholding',
                             fieldtype: 'Check'
                         },
@@ -904,11 +904,11 @@ frappe.ui.form.on("Sales Invoice", {
                             method: 'factura_electronica.api_erp.journal_entry_isr',
                             args: {
                                 invoice_name: frm.doc.name,
-                                is_isr_ret: 0,
-                                is_iva_ret: 0,
-                                cost_center: values.cost_center,
                                 debit_in_acc_currency: values.debit_in_acc_currency,
-                                is_multicurrency: values.is_multicurrency,
+                                cost_center: values.cost_center,
+                                is_isr_ret: parseInt(values.is_isr_withholding),
+                                is_iva_ret: parseInt(values.is_iva_withholding),
+                                is_multicurrency: parseInt(values.is_multicurrency),
                                 description: values.description
                             },
                             callback: function (r) {

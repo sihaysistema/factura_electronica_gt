@@ -109,20 +109,22 @@ class JournalEntrySaleInvoice():
 
         else:
 
-            if self.is_isr_retention == 1:
-                ret = 'ISR'
-            # Registrar retencion
-            register_withholding({
-                'retention_type': ret or 'ISR',
-                'party_type': 'Sales Invoice',
-                'company': self.company,
-                'tax_id': '',
-                'sales_invoice': self.name_inv,
-                'invoice_date': self.posting_date,
-                'grand_total': self.grand_total,
-                'currency': self.currency
+            if (self.is_isr_retention == 1) or (self.is_iva_retention == 1):
+                ret = 'ISR' if self.is_isr_retention == 1 else ''
+                ret = 'IVA' if self.is_iva_retention == 1 else ''
 
-            })
+                # Registrar retencion
+                register_withholding({
+                    'retention_type': ret,
+                    'party_type': 'Sales Invoice',
+                    'company': self.company,
+                    'tax_id': '',
+                    'sales_invoice': self.name_inv,
+                    'invoice_date': self.posting_date,
+                    'grand_total': self.grand_total,
+                    'currency': self.currency
+                    #'retention_amount': self.
+                })
 
             return True, status_journal.name
 

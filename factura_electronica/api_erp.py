@@ -25,8 +25,8 @@ def batch_generator_api(invoices):
 
 
 @frappe.whitelist()
-def journal_entry_isr(invoice_name, is_isr_ret, is_iva_ret, cost_center,
-                      debit_in_acc_currency, is_multicurrency=0, description=''):
+def journal_entry_isr(invoice_name, debit_in_acc_currency, cost_center='',
+                      is_isr_ret=0, is_iva_ret=0, is_multicurrency=0, description=''):
     """
     Funciona llamada desde boton Sales Invoice, encargada de crear Journal
     Entry, en funcion a los parametros pasados
@@ -42,7 +42,7 @@ def journal_entry_isr(invoice_name, is_isr_ret, is_iva_ret, cost_center,
         sales_invoice_info = frappe.get_doc('Sales Invoice', {'name': invoice_name})
 
 
-        new_je = JournalEntrySaleInvoice(sales_invoice_info, is_isr_ret, is_iva_ret,
+        new_je = JournalEntrySaleInvoice(sales_invoice_info, int(is_isr_ret), int(is_iva_ret),
                                          debit_in_acc_currency, is_multicurrency, cost_center, description).create()
 
         if new_je[0] == False:
