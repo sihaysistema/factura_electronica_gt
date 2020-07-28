@@ -317,7 +317,8 @@ frappe.ui.form.on("Purchase Invoice", {
                                 return {
                                     filters: { 'company': frm.doc.company }
                                 }
-                            }
+                            },
+                            default: ""
                         },
                         {
                             label: 'Source account',

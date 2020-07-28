@@ -831,10 +831,6 @@ frappe.ui.form.on("Sales Invoice", {
         if (frm.doc.docstatus === 1 && frm.doc.status !== 'Paid') {
 
             cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
-                frappe.msgprint("WORK IN PROGRESS");
-            });
-
-            cur_frm.page.add_action_item(__("ISR"), function () {
 
                 let d = new frappe.ui.Dialog({
                     title: 'New Journal Entry with Withholding Tax',
@@ -848,7 +844,8 @@ frappe.ui.form.on("Sales Invoice", {
                                 return {
                                     filters: { 'company': frm.doc.company }
                                 }
-                            }
+                            },
+                            default: ""
                         },
                         {
                             label: 'Target account',
@@ -886,7 +883,7 @@ frappe.ui.form.on("Sales Invoice", {
                             fieldname: 'note',
                             fieldtype: 'Data',
                             read_only: 1,
-                            default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el iva va incluido en la factura'
+                            default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el IVA va incluido en la factura'
                         },
                         {
                             label: 'Description',
@@ -907,11 +904,11 @@ frappe.ui.form.on("Sales Invoice", {
                             method: 'factura_electronica.api_erp.journal_entry_isr',
                             args: {
                                 invoice_name: frm.doc.name,
-                                is_iva_ret: 0,
-                                is_isr_ret: 1,
-                                cost_center: values.cost_center,
                                 debit_in_acc_currency: values.debit_in_acc_currency,
-                                is_multicurrency: values.is_multicurrency,
+                                cost_center: values.cost_center,
+                                is_isr_ret: parseInt(values.is_isr_withholding),
+                                is_iva_ret: parseInt(values.is_iva_withholding),
+                                is_multicurrency: parseInt(values.is_multicurrency),
                                 description: values.description
                             },
                             callback: function (r) {
