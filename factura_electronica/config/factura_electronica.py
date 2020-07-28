@@ -78,12 +78,12 @@ def get_data():
                     "description": _("VAT Exemption Record"),
                     "onboard": 1
                 },
-                # {
-                #     "type": "doctype",
-                #     "name": "FYDUCA",
-                #     "description": _("FYDUCA"),
-                #     "onboard": 1
-                # },
+                {
+                    "type": "doctype",
+                    "name": "VAT Declaration",
+                    "description": _("VAT Declaration"),
+                    "onboard": 1
+                },
                 {
                     "type": "doctype",
                     "name": "Public Writ",
