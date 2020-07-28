@@ -248,46 +248,88 @@ class ElectronicInvoice:
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['customer_address']},
                                                  fieldname=['address_line1', 'email_id', 'pincode',
                                                             'state', 'city', 'country'], as_dict=1)
-            if len(dat_direccion) == 0:
-                return False, f'''No se encontro ninguna direccion para el cliente {self.dat_fac[0]["customer_name"]}.\
-                                  Por favor asigna un direccion y vuelve a intentarlo'''
+            # NOTE: se quitara esta validacion para permitir usar valores default en caso no exista una direccion
+            # o campos especificacion de direccion
+            # if len(dat_direccion) == 0:
+            #     return False, f'''No se encontro ninguna direccion para el cliente {self.dat_fac[0]["customer_name"]}.\
+            #                       Por favor asigna un direccion y vuelve a intentarlo'''
 
-            # Validacion data direccion cliente
-            for dire in dat_direccion[0]:
-                if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
-                    return False, '''No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no\
-                                     tiene data, por favor asignarle un valor e intentar de nuevo \
-                                  '''.format(str(dire), self.dat_fac[0]["customer_name"])
+            # # Validacion data direccion cliente
+            # for dire in dat_direccion[0]:
+            #     if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
+            #         return False, '''No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no\
+            #                          tiene data, por favor asignarle un valor e intentar de nuevo \
+            #                       '''.format(str(dire), self.dat_fac[0]["customer_name"])
 
-
-            # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
-            # electronico, los demas campos se pueden dejar como defualt para ciudad
-            if str(self.dat_fac[0]['nit_face_customer']).upper() == 'C/F':
-                self.__d_receptor = {
-                    "@CorreoReceptor": dat_direccion[0]['email_id'],
-                    "@IDReceptor": (self.dat_fac[0]['nit_face_customer']).replace('/', ''),  # NIT => CF
-                    "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
-                    "dte:DireccionReceptor": {
-                        "dte:Direccion": dat_direccion[0]['address_line1'],
-                        "dte:CodigoPostal": dat_direccion[0]['pincode'],
-                        "dte:Municipio": dat_direccion[0]['state'],
-                        "dte:Departamento": dat_direccion[0]['city'],
-                        "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper()
-                    }
+            if len(dat_direccion) == 0:  # Si no hay direccion registrada
+                datos_default = {
+                    'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
+                    'customer_name': 'Consumidor Final',
+                    'address': 'Guatemala',
+                    'pincode': '01001',
+                    'municipio': 'Guatemala',
+                    'departamento': 'Guatemala',
+                    'pais': 'GT'
                 }
+
+                # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
+                # electronico, los demas campos se pueden dejar como defualt para ciudad
+                if str(self.dat_fac[0]['nit_face_customer']).upper() == 'C/F':
+                    self.__d_receptor = {
+                        "@CorreoReceptor": datos_default.get('email'),
+                        "@IDReceptor": (self.dat_fac[0]['nit_face_customer']).replace('/', ''),  # NIT => CF
+                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "dte:DireccionReceptor": {
+                            "dte:Direccion": datos_default.get('address'),
+                            "dte:CodigoPostal": datos_default.get('pincode'),
+                            "dte:Municipio": datos_default.get('municipio'),
+                            "dte:Departamento": datos_default.get('departamento'),
+                            "dte:Pais": datos_default.get('pais')
+                        }
+                    }
+                else:
+                    self.__d_receptor = {
+                        "@CorreoReceptor": datos_default.get('email'),
+                        "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),  # NIT
+                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "dte:DireccionReceptor": {
+                            "dte:Direccion": datos_default.get('address'),
+                            "dte:CodigoPostal": datos_default.get('pincode'),
+                            "dte:Municipio": datos_default.get('municipio'),
+                            "dte:Departamento": datos_default.get('departamento'),
+                            "dte:Pais": datos_default.get('pais')
+                        }
+                    }
+
             else:
-                self.__d_receptor = {
-                    "@CorreoReceptor": dat_direccion[0]['email_id'],
-                    "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),  # NIT
-                    "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
-                    "dte:DireccionReceptor": {
-                        "dte:Direccion": dat_direccion[0]['address_line1'],
-                        "dte:CodigoPostal": dat_direccion[0]['pincode'],
-                        "dte:Municipio": dat_direccion[0]['state'],
-                        "dte:Departamento": dat_direccion[0]['city'],
-                        "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper()
+                # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
+                # electronico, los demas campos se pueden dejar como defualt para ciudad
+                if str(self.dat_fac[0]['nit_face_customer']).upper() == 'C/F':
+                    self.__d_receptor = {
+                        "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
+                        "@IDReceptor": (self.dat_fac[0]['nit_face_customer']).replace('/', ''),  # NIT => CF
+                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "dte:DireccionReceptor": {
+                            "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
+                            "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
+                            "dte:Municipio": dat_direccion[0].get('state', datos_default.get('municipio')),
+                            "dte:Departamento": dat_direccion[0].get('city', datos_default.get('departamento')),
+                            "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
+                        }
                     }
-                }
+                else:
+                    self.__d_receptor = {
+                        "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
+                        "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),  # NIT
+                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "dte:DireccionReceptor": {
+                            "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
+                            "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
+                            "dte:Municipio": dat_direccion[0].get('state', datos_default.get('municipio')),
+                            "dte:Departamento": dat_direccion[0].get('city', datos_default.get('departamento')),
+                            "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
+                        }
+                    }
 
             return True, 'OK'
 
