@@ -547,7 +547,7 @@ def process_purchase_invoices(purchase_invoices, filters):
             data.append(purchase_invoice)
 
     else:
-        return [{}]
+        return []
 
     return data
 
@@ -704,6 +704,6 @@ def process_sales_invoices(sales_invoices, filters):
             data.append(sales_invoice)
 
     else:
-        return [{}]
+        return []
 
     return data

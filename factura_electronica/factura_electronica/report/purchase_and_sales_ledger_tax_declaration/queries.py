@@ -30,6 +30,19 @@ def get_purchases_invoice(filters):
 
     month = MONTHS_MAP.get(filters.month)
 
+    string_conditional = ''
+
+    # Validacion de registros como solo declarados
+    if filters.declared == 'Not Declared':
+        string_conditional += " AND facelec_p_vat_declaration = '' "  # si el es vacio
+
+    if filters.declared == 'Declared':
+        string_conditional += " AND facelec_p_vat_declaration != '' "  # si el  campo tiene algo
+
+    # sino aplica ninguno de los anteriores muestra todo
+
+    # Validacion de registros como no declarados
+
     purchase_invoices = frappe.db.sql(
         f"""SELECT DISTINCT name AS documento, 'C' AS compras_ventas, naming_series AS serie_doc, posting_date AS fecha_doc,
             facelec_nit_fproveedor AS nit_cliente_proveedor, supplier AS nombre_cliente_proveedor, company,
@@ -39,7 +52,7 @@ def get_purchases_invoice(filters):
             shipping_address AS company_address_invoice, docstatus, taxes_and_charges
             FROM `tabPurchase Invoice`
             WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND (docstatus=1 OR docstatus=2)
-            AND company='{filters.company}';
+            AND company='{filters.company}' {string_conditional}
         """, as_dict=True
     )
 
@@ -74,6 +87,17 @@ def get_sales_invoice(filters):
 
     month = MONTHS_MAP.get(filters.month)
 
+    string_conditional = ''
+
+    # Validacion de registros como solo declarados
+    if filters.declared == 'Not Declared':
+        string_conditional += " AND facelec_s_vat_declaration = '' "  # si el es vacio
+
+    if filters.declared == 'Declared':
+        string_conditional += " AND facelec_s_vat_declaration != '' "  # si el  campo tiene algo
+
+    # sino aplica ninguno de los anteriores muestra todo
+
     sales_invoices = frappe.db.sql(
         f"""SELECT DISTINCT name AS documento, 'V' AS compras_ventas, naming_series AS serie_doc, posting_date AS fecha_doc,
             nit_face_customer AS nit_cliente_proveedor, customer AS nombre_cliente_proveedor, company,
@@ -84,7 +108,7 @@ def get_sales_invoice(filters):
             facelec_export_doc AS tipo_doc_ope, facelec_export_record AS no_doc_operacion
             FROM `tabSales Invoice`
             WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND (docstatus=1 OR docstatus=2)
-            AND company='{filters.company}';
+            AND company='{filters.company}' {string_conditional}
         """, as_dict=True
     )
 
