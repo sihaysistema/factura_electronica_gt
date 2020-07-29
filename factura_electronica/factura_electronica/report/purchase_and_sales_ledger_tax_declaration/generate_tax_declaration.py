@@ -30,10 +30,11 @@ def generate_vat_declaration(company, year, month, declared, report_data):
         for record in records:
             # 3 - Si no existe la declaracion se agregara
             if not frappe.db.exists('VAT Declaration', {'link_name': record.get('invoice_name')}):
-                declaration_invoices.append({
-                    'link_doctype': 'Sales Invoice' if record.get('compras_ventas') == 'V' else 'Purchase Invoice',
-                    'link_name': record.get('invoice_name')
-                })
+                if record.get('docstatus') == 1:  # Solamente recibira docs validados
+                    declaration_invoices.append({
+                        'link_doctype': 'Sales Invoice' if record.get('compras_ventas') == 'V' else 'Purchase Invoice',
+                        'link_name': record.get('invoice_name')
+                    })
 
         # 4 - Validamos que por lo menos exista un elemento para crear la declaracion
         if len(declaration_invoices) > 0:
@@ -48,12 +49,15 @@ def generate_vat_declaration(company, year, month, declared, report_data):
                     "declaration_year": year,
                     "declaration_month": MONTHS_MAP.get(str(month)),
                     "declaration_items": declaration_invoices,
-                    "docstatus": 0
+                    "docstatus": 1
                 })
 
                 # for validated documents: status_journal = vat_dec.insert(ignore_permissions=True)
                 # status_declaration = vat_dec.save(ignore_permissions=True)
                 status_declaration = vat_dec.insert(ignore_permissions=True)
+
+                # 5 - Actualizamos las facturas con su nueva Referencia en campo de tipo data,
+
             else:
                 nme_reg = f'VAT Declaration {date.today()}'
                 frappe.msgprint(msg=_(f"We're sorry. A statement for the same month was found: <b>{nme_reg}</b>,\

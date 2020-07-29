@@ -96,7 +96,7 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
                         //window.open("/api/method/factura_electronica.api_erp.download_asl_files");
                         // window.open("sihaysistema.com", "_blank");
                         //console.log(report.filters);
-                        console.log(report.data);
+                        // console.log(report.data);
                         frappe.call({
                             method: "factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.generate_tax_declaration.generate_vat_declaration",
                             args: {
