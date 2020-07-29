@@ -12,7 +12,7 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
             // default: "SHS",
             reqd: 1,
             on_change: function (report) {
-                console.log(report.filters);
+                // console.log(report.filters);
                 // console.log(report.data);
                 frappe.db
                     .get_value("Company", frappe.query_report.get_filter_value("company"), "tax_id")
@@ -96,7 +96,7 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
                         //window.open("/api/method/factura_electronica.api_erp.download_asl_files");
                         // window.open("sihaysistema.com", "_blank");
                         //console.log(report.filters);
-                        //console.log(report.data);
+                        // console.log(report.data);
                         frappe.call({
                             method: "factura_electronica.factura_electronica.report.purchase_and_sales_ledger_tax_declaration.generate_tax_declaration.generate_vat_declaration",
                             args: {
@@ -104,8 +104,8 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
                                 company: frappe.query_report.get_filter_value('company'),
                                 year: frappe.query_report.get_filter_value('year'),
                                 month: frappe.query_report.get_filter_value('month'),
-                                declared: frappe.query_report.get_filter_value('declared')
-
+                                declared: frappe.query_report.get_filter_value('declared'),
+                                report_data: report.data
                             },
                             callback: function (r) {
                                 // We show an alert that the vat declaration was generated.
@@ -118,6 +118,7 @@ frappe.query_reports["Purchase and Sales Ledger Tax Declaration"] = {
                     }).addClass("btn-danger");
                 }
                 else {
+                    // Elimina el custom button
                     report.page.remove_inner_button(__("Generate Declaration"));
                 }
             },

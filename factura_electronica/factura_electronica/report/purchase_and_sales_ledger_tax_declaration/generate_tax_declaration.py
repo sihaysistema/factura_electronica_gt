@@ -5,51 +5,98 @@ from frappe import _
 import xmltodict
 from datetime import datetime, date, time
 import os
+import json
+
+
+MONTHS_MAP = {
+    "January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6,
+    "July": 7, "August": 8, "September": 9, "October": 10, "November": 11, "December": 12
+}
 
 @frappe.whitelist()
-def generate_vat_declaration(company, year, month, declared):
+def generate_vat_declaration(company, year, month, declared, report_data):
     try:
-           # Cargar report_data con json load.
+        # 1 - Cargar report_data con json load.
         # en_US: Loads the received data as if it was a json into a dictionary
-        # es: Carga como json-diccionario la data recibida
-        # documents = json.loads(report_data)
-        # TODO
-        # Crear Vat declaration
-        # Opcion 1:
-        # CON JS:  si se desea obtener la data desde el report, se obtiene como argumento report.data
-        # CON PY:  De lo contrario, obviamos lo de arriba y solo trabajamos lo de abajo:
-        # Necesitamos filters del report, pasados como argumentos desde el frappe.call: declared , company, month, year, [] 
-        #  validaciones:
-        # frappe.msgprint((str(company) + str(year) + str(month) + str(declared)))
-        if declared == 'Not Declared':
-            vat_dec = frappe.get_doc({
-                    "doctype": "VAT Declaration",
-                    "title": "Hello VAT Declaration",
-                    "company": company,
-                    "posting_date": "2020-07-17",
-                    "declaration_year": year,
-                    "declaration_month": 7,
-                    "declaration_items": [
-                        {
-                            "link_doctype": "Purchase Invoice",
-                            "link_name": "ACC-PINV-2020-00001"
-                        }
-                    ],
-                    "docstatus": 0
-                })
-                # for validated documents: status_journal = vat_dec.insert(ignore_permissions=True)
-            status_declaration = vat_dec.save(ignore_permissions=True)
+        records = json.loads(report_data)
 
-            # Se agrega al vat declararion el item de cada factura presente en esta declaracion
-            # Al guardar se agrega a cada una de las facturas el Doctype, Doctype ID o title en el campo de child table Dynamic Link
-            # A cada factura de las que tocamos, le agregamos al campo custom field, el titulo de ESTA VAT Declaration que creamos.
+        # DEBUG: SI quieres saber la estrucutra de datos descomenta
+        # with open('salida_report.json', 'w') as f:
+        #     f.write(json.dumps(records, indent=2, default=str))
+
+        declaration_invoices = []
+
+        # 2 - Por cada factura
+        for record in records:
+            # 3 - Si no existe la declaracion se agregara
+            if not frappe.db.exists('VAT Declaration', {'link_name': record.get('invoice_name')}):
+                if record.get('docstatus') == 1:  # Solamente recibira docs validados
+                    declaration_invoices.append({
+                        'link_doctype': 'Sales Invoice' if record.get('compras_ventas') == 'V' else 'Purchase Invoice',
+                        'link_name': record.get('invoice_name')
+                    })
+
+        # 4 - Validamos que por lo menos exista un elemento para crear la declaracion
+        if len(declaration_invoices) > 0:
+
+            # 4.1 - Verificamos que no existan un registro duplicado
+            if not frappe.db.exists('VAT Declaration', {'name': f"VAT Declaration {date.today()}"}):
+                # CREAMOS EL REGISTRO COMO VALIDADO
+                try:
+                    vat_dec = frappe.get_doc({
+                        "doctype": "VAT Declaration",
+                        "title": f"VAT Declaration {date.today()}",
+                        "company": company,
+                        "posting_date": date.today(),
+                        "declaration_year": year,
+                        "declaration_month": MONTHS_MAP.get(str(month)),
+                        "declaration_items": declaration_invoices,
+                        "docstatus": 1
+                    })
+
+                    # for validated documents: status_journal = vat_dec.insert(ignore_permissions=True)
+                    # status_declaration = vat_dec.save(ignore_permissions=True)
+                    status_declaration = vat_dec.insert(ignore_permissions=True)
+
+                # SI OCURRE ALGUN ERROR
+                except:
+                    frappe.msgprint(msg=_(f'More details in the following log \n {frappe.get_traceback()}'),
+                        title=_('Sorry, a problem occurred while trying to generate the VAT declaration'), indicator='red')
+                    return
+
+                # SI LA CREACION ES EXITOSA, ACTUALIZAMOS LAS FACTURAS CON LA REFERENCIA
+                else:
+                    # Por cada factura venta, compra
+                    for record in records:
+                        if record.get('compras_ventas') == 'V':  # si es venta
+                            frappe.db.sql('''UPDATE `tabSales Invoice`
+                                             SET facelec_s_vat_declaration=%(declaration)s
+                                             WHERE name=%(name_inv)s
+                                          ''', {'declaration': status_declaration.name, 'name_inv': str(record.get('invoice_name'))})
+
+                        else:  # si es compra
+                            frappe.db.sql('''UPDATE `tabPurchase Invoice`
+                                             SET facelec_p_vat_declaration=%(declaration)s
+                                             WHERE name=%(name_inv)s
+                                          ''', {'declaration': status_declaration.name, 'name_inv': str(record.get('invoice_name'))})
+
+            else:
+                nme_reg = f'VAT Declaration {date.today()}'
+                frappe.msgprint(msg=_(f"We're sorry. A statement for the same month was found: <b>{nme_reg}</b>,\
+                                        if you wish to create it again please delete it and try again"),
+                                title=_('Process not completed'), indicator='yellow')
+                return
+
         else:
-            # We somehow tried to send the declared or all non declared and declared documents.  This is not allowed for our purpose!
-           pass
+            frappe.msgprint(msg=_('No new statements were found to create'),
+                            title=_('Process completed'), indicator='yellow')
+            return
+
+        frappe.msgprint(msg=_(f'The Tax Declaration register has been created, with name {status_declaration.name}'),
+                        title=_('Process successfully completed'), indicator='green')
+        return
+
     except:
-        frappe.msgprint("algo salio mal" + str(frappe.get_traceback()))
-
-    else:
-        frappe.msgprint("no estas fregado")
-
-
+        frappe.msgprint(msg=_(f'More details in the following log \n {frappe.get_traceback()}'),
+                        title=_('Sorry, a problem occurred while trying to generate the VAT declaration'), indicator='red')
+        return
