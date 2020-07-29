@@ -41,22 +41,44 @@ def generate_vat_declaration(company, year, month, declared, report_data):
 
             # 4.1 - Verificamos que no existan un registro duplicado
             if not frappe.db.exists('VAT Declaration', {'name': f"VAT Declaration {date.today()}"}):
-                vat_dec = frappe.get_doc({
-                    "doctype": "VAT Declaration",
-                    "title": f"VAT Declaration {date.today()}",
-                    "company": company,
-                    "posting_date": date.today(),
-                    "declaration_year": year,
-                    "declaration_month": MONTHS_MAP.get(str(month)),
-                    "declaration_items": declaration_invoices,
-                    "docstatus": 1
-                })
+                # CREAMOS EL REGISTRO COMO VALIDADO
+                try:
+                    vat_dec = frappe.get_doc({
+                        "doctype": "VAT Declaration",
+                        "title": f"VAT Declaration {date.today()}",
+                        "company": company,
+                        "posting_date": date.today(),
+                        "declaration_year": year,
+                        "declaration_month": MONTHS_MAP.get(str(month)),
+                        "declaration_items": declaration_invoices,
+                        "docstatus": 1
+                    })
 
-                # for validated documents: status_journal = vat_dec.insert(ignore_permissions=True)
-                # status_declaration = vat_dec.save(ignore_permissions=True)
-                status_declaration = vat_dec.insert(ignore_permissions=True)
+                    # for validated documents: status_journal = vat_dec.insert(ignore_permissions=True)
+                    # status_declaration = vat_dec.save(ignore_permissions=True)
+                    status_declaration = vat_dec.insert(ignore_permissions=True)
 
-                # 5 - Actualizamos las facturas con su nueva Referencia en campo de tipo data,
+                # SI OCURRE ALGUN ERROR
+                except:
+                    frappe.msgprint(msg=_(f'More details in the following log \n {frappe.get_traceback()}'),
+                        title=_('Sorry, a problem occurred while trying to generate the VAT declaration'), indicator='red')
+                    return
+
+                # SI LA CREACION ES EXITOSA, ACTUALIZAMOS LAS FACTURAS CON LA REFERENCIA
+                else:
+                    # Por cada factura venta, compra
+                    for record in records:
+                        if record.get('compras_ventas') == 'V':  # si es venta
+                            frappe.db.sql('''UPDATE `tabSales Invoice`
+                                             SET facelec_s_vat_declaration=%(declaration)s
+                                             WHERE name=%(name_inv)s
+                                          ''', {'declaration': status_declaration.name, 'name_inv': str(record.get('invoice_name'))})
+
+                        else:  # si es compra
+                            frappe.db.sql('''UPDATE `tabPurchase Invoice`
+                                             SET facelec_p_vat_declaration=%(declaration)s
+                                             WHERE name=%(name_inv)s
+                                          ''', {'declaration': status_declaration.name, 'name_inv': str(record.get('invoice_name'))})
 
             else:
                 nme_reg = f'VAT Declaration {date.today()}'
