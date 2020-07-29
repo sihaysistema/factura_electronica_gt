@@ -623,13 +623,21 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
     }
     /* -------------------------------------------------------------------------------------- */
     // Funcionalidad evita copiar CAE cuando se duplica una factura
+    // LIMPIA/CLEAN, permite limpiar los campos cuando se duplica una factura
     if (frm.doc.status === 'Draft') {
         // console.log('No Guardada');
         cur_frm.set_value("cae_factura_electronica", '');
         cur_frm.set_value("serie_original_del_documento", '');
         cur_frm.set_value("numero_autorizacion_fel", '');
-        // frm.doc.cae_factura_electronica = '';
-        // frm.doc.serie_original_del_documento = '';
+        cur_frm.set_value("facelec_s_vat_declaration", '');
+        cur_frm.set_value("ag_invoice_id", '');
+        cur_frm.set_value("facelec_tax_retention_guatemala", '');
+        cur_frm.set_value("facelec_export_doc", '');
+        cur_frm.set_value("facelec_export_record", '');
+        cur_frm.set_value("facelec_record_type", '');
+        cur_frm.set_value("facelec_consumable_record_type", '');
+        cur_frm.set_value("facelec_record_number", '');
+        cur_frm.set_value("facelec_record_value", '');
     }
 }
 
