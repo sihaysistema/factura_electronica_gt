@@ -630,7 +630,7 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         cur_frm.set_value("serie_original_del_documento", '');
         cur_frm.set_value("numero_autorizacion_fel", '');
         cur_frm.set_value("facelec_s_vat_declaration", '');
-        cur_frm.set_value("ag_invoice_id", '');
+        // cur_frm.set_value("ag_invoice_id", '');
         cur_frm.set_value("facelec_tax_retention_guatemala", '');
         cur_frm.set_value("facelec_export_doc", '');
         cur_frm.set_value("facelec_export_record", '');
