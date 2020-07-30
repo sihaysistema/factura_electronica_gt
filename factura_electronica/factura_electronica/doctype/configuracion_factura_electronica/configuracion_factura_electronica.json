@@ -12,6 +12,8 @@
   "configuracion_pdf",
   "descargar_pdf_factura_electronica",
   "company",
+  "usar_datos_prueba",
+  "nombre_empresa_prueba",
   "datos_proveedor_factura_electronica",
   "clave",
   "usuario",
@@ -48,8 +50,11 @@
   "url_dte",
   "llave_ws",
   "afiliacion_iva",
+  "local_currency",
   "configuracion_series_fel_section",
   "series_fel",
+  "series_configuration_for_purchase_invoices_section",
+  "purchase_invoice_series",
   "configuracion_correo_electronico_section",
   "asunto",
   "mensaje",
@@ -302,21 +307,25 @@
    "collapsible": 1,
    "fieldname": "configuracion_correo_electronico_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Configuracion Correo Electronico"
   },
   {
    "fieldname": "asunto",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Asunto"
   },
   {
    "fieldname": "mensaje",
    "fieldtype": "Text Editor",
+   "hidden": 1,
    "label": "Mensaje"
   },
   {
    "fieldname": "enviado_por",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Enviado por",
    "options": "User"
   },
@@ -345,11 +354,43 @@
    "fieldtype": "Int",
    "label": "Codigo Escenario",
    "reqd": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "series_configuration_for_purchase_invoices_section",
+   "fieldtype": "Section Break",
+   "label": "Series Configuration For Purchase Invoices"
+  },
+  {
+   "fieldname": "purchase_invoice_series",
+   "fieldtype": "Table",
+   "label": "Purchase Invoice Series",
+   "options": "Serial Configuration For Purchase Invoice"
+  },
+  {
+   "default": "GTQ",
+   "fieldname": "local_currency",
+   "fieldtype": "Select",
+   "label": "Local Currency",
+   "options": "\nGTQ",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "usar_datos_prueba",
+   "fieldtype": "Check",
+   "label": "Usar datos prueba"
+  },
+  {
+   "depends_on": "eval:doc.usar_datos_prueba",
+   "fieldname": "nombre_empresa_prueba",
+   "fieldtype": "Data",
+   "label": "Nombre empresa prueba"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-06-01 16:47:30.954642",
+ "modified": "2020-07-14 12:15:13.354885",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

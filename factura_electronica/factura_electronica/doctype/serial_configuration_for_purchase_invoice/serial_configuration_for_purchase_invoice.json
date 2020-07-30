@@ -1,0 +1,52 @@
+{
+ "creation": "2020-07-04 19:54:32.010699",
+ "description": "Tabla para configurar series, que permite asignar tipo de documentos segun SAT ASL, Factura Electronica FEL. Aplica para Facturas de compra",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "serie",
+  "tipo_documento",
+  "column_break_3",
+  "serie_sat"
+ ],
+ "fields": [
+  {
+   "fieldname": "serie",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Serie"
+  },
+  {
+   "description": "Seleccione el tipo documento <b>FEL</b>",
+   "fieldname": "tipo_documento",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Tipo Documento",
+   "options": "\nFACT\nFCAM\nFPEQ\nFCAP\nFESP\nNABN\nRDON\nRECI\nNDEB\nNCRE\nFACA\nFCCA\nFAPE\nFCPE\nFAAE\nFCAE",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Tipo documento para AsisteLibro SAT, asegurese de que este relacionado con el campo Tipo Documento",
+   "fieldname": "serie_sat",
+   "fieldtype": "Select",
+   "label": "Serie SAT",
+   "options": "\nFC\nFE\nFCE\nNC\nND\nFPC\nFPE\nFAPE\nFACA\nFAAE\nDA\nFA\nFO\nEP\nFDU"
+  }
+ ],
+ "istable": 1,
+ "modified": "2020-07-21 00:05:15.313175",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Serial Configuration For Purchase Invoice",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

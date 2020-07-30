@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 from . import __version__ as app_version
 
+from factura_electronica.fixtures import fill_fixtures
+
 app_name = "factura_electronica"
 app_title = "Factura Electronica"
 app_publisher = "Frappe"
@@ -12,7 +14,9 @@ app_email = "m.monroyc22@gmail.com"
 app_license = "GNU General Public License (v3)"
 # es-GT: Indica la existencia de campos a la medida para agregar a la instalación estandar de ERPNext
 # en-US: Indicates the existense of custom fields to add to existing ERPNext installation
-fixtures = ["Custom Field", "Custom Script"]
+# fixtures = ["Custom Field", "Tax Category"]
+
+fixtures = fill_fixtures()
 
 # Includes in <head>
 # ------------------
@@ -123,4 +127,3 @@ app_include_js = "/assets/factura_electronica/js/facelec.min.js"
 # override_whitelisted_methods = {
 # 	"frappe.desk.doctype.event.event.get_events": "factura_electronica.event.get_events"
 # }
-

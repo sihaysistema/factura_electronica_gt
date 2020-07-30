@@ -1,0 +1,86 @@
+{
+ "autoname": "naming_series",
+ "creation": "2020-07-28 22:16:24.145336",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "naming_series",
+  "resolution_number",
+  "resolution_date",
+  "resolution_description"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select"
+  },
+  {
+   "fieldname": "resolution_number",
+   "fieldtype": "Data",
+   "label": "Number"
+  },
+  {
+   "fieldname": "resolution_date",
+   "fieldtype": "Data",
+   "label": "Date"
+  },
+  {
+   "fieldname": "resolution_description",
+   "fieldtype": "Data",
+   "label": "Description"
+  }
+ ],
+ "modified": "2020-07-28 22:20:29.862420",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Tax Authority Resolution",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

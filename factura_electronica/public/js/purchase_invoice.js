@@ -295,6 +295,98 @@ function generar_tabla_html_factura_compra(frm) {
 }
 
 frappe.ui.form.on("Purchase Invoice", {
+    refresh: function (frm, cdt, cdn) {
+        // Por ahora se mostrara solo si la factura de copra se encuentra validada, Factura Especial?
+        if (frm.doc.docstatus === 1) {
+
+            cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
+                frappe.msgprint("WORK IN PROGRESS");
+            });
+
+            cur_frm.page.add_action_item(__("SPECIAL INVOICE"), function () {
+
+                let d = new frappe.ui.Dialog({
+                    title: 'New Journal Entry with Withholding Tax',
+                    fields: [
+                        {
+                            label: 'Cost Center',
+                            fieldname: 'cost_center',
+                            fieldtype: 'Link',
+                            options: 'Cost Center',
+                            "get_query": function () {
+                                return {
+                                    filters: { 'company': frm.doc.company }
+                                }
+                            },
+                            default: ""
+                        },
+                        {
+                            label: 'Source account',
+                            fieldname: 'credit_in_acc_currency',
+                            fieldtype: 'Link',
+                            options: 'Account',
+                            "reqd": 1,
+                            "get_query": function () {
+                                return {
+                                    filters: { 'company': frm.doc.company }
+                                }
+                            }
+                        },
+                        {
+                            fieldname: 'col_br_asdffg',
+                            fieldtype: 'Column Break'
+                        },
+                        {
+                            label: 'Is Multicurrency',
+                            fieldname: 'is_multicurrency',
+                            fieldtype: 'Check'
+                        },
+                        {
+                            label: 'NOTE',
+                            fieldname: 'note',
+                            fieldtype: 'Data',
+                            read_only: 1,
+                            default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el iva va incluido en la factura'
+                        },
+                        {
+                            label: 'Description',
+                            fieldname: 'section_asdads',
+                            fieldtype: 'Section Break',
+                            "collapsible": 1
+                        },
+                        {
+                            label: 'Description',
+                            fieldname: 'description',
+                            fieldtype: 'Long Text'
+                        }
+                    ],
+                    primary_action_label: 'Create',
+                    primary_action(values) {
+                        frappe.call({
+                            method: 'factura_electronica.api_erp.journal_entry_isr_purchase_inv',
+                            args: {
+                                invoice_name: frm.doc.name,
+                                is_iva_ret: 0,
+                                is_isr_ret: 0,
+                                cost_center: values.cost_center,
+                                credit_in_acc_currency: values.credit_in_acc_currency,
+                                is_multicurrency: values.is_multicurrency,
+                                description: values.description,
+                                is_special_inv: 1
+                            },
+                            callback: function (r) {
+                                console.log(r.message);
+                                d.hide();
+                                frm.refresh()
+                            },
+                        });
+                    }
+                });
+
+                d.show();
+            });
+        }
+    },
     onload_post_render: function (frm, cdt, cdn) {
         // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
 
@@ -424,22 +516,23 @@ frappe.ui.form.on("Purchase Invoice", {
         // console.log(cuentas_registradas);
         // console.log(Object.keys(cuentas_registradas).length);
 
+        // TODO: EN QUE QUEDO ESTO?
         // Si existe por lo menos una cuenta, se ejecuta frappe.call
-        if (Object.keys(cuentas_registradas).length > 0) {
-            frappe.call({
-                method: "factura_electronica.resources_facelec.special_tax.add_gl_entry_other_special_tax",
-                args: {
-                    invoice_name: frm.doc.name,
-                    accounts: cuentas_registradas,
-                    invoice_type: "Purchase Invoice"
-                },
-                // El callback se ejecuta tras finalizar la ejecucion del script python del lado
-                // del servidor
-                callback: function () {
-                    // frm.reload_doc();
-                }
-            });
-        }
+        // if (Object.keys(cuentas_registradas).length > 0) {
+        //     frappe.call({
+        //         method: "factura_electronica.utils.special_tax.add_gl_entry_other_special_tax",
+        //         args: {
+        //             invoice_name: frm.doc.name,
+        //             accounts: cuentas_registradas,
+        //             invoice_type: "Purchase Invoice"
+        //         },
+        //         // El callback se ejecuta tras finalizar la ejecucion del script python del lado
+        //         // del servidor
+        //         callback: function () {
+        //             // frm.reload_doc();
+        //         }
+        //     });
+        // }
     },
     naming_series: function (frm, cdt, cdn) {
         // frappe call
@@ -452,7 +545,7 @@ frappe.ui.form.on("Purchase Invoice", {
         console.log(frm.doc.naming_series);
 
         frappe.call({
-            method: "factura_electronica.resources_facelec.special_invoice.verificar_existencia_series",
+            method: "factura_electronica.utils.special_invoice.verificar_existencia_series",
             args: {
                 serie: frm.doc.naming_series
             },

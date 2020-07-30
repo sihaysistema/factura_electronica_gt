@@ -623,13 +623,21 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
     }
     /* -------------------------------------------------------------------------------------- */
     // Funcionalidad evita copiar CAE cuando se duplica una factura
+    // LIMPIA/CLEAN, permite limpiar los campos cuando se duplica una factura
     if (frm.doc.status === 'Draft') {
         // console.log('No Guardada');
         cur_frm.set_value("cae_factura_electronica", '');
         cur_frm.set_value("serie_original_del_documento", '');
         cur_frm.set_value("numero_autorizacion_fel", '');
-        // frm.doc.cae_factura_electronica = '';
-        // frm.doc.serie_original_del_documento = '';
+        cur_frm.set_value("facelec_s_vat_declaration", '');
+        cur_frm.set_value("ag_invoice_id", '');
+        cur_frm.set_value("facelec_tax_retention_guatemala", '');
+        cur_frm.set_value("facelec_export_doc", '');
+        cur_frm.set_value("facelec_export_record", '');
+        cur_frm.set_value("facelec_record_type", '');
+        cur_frm.set_value("facelec_consumable_record_type", '');
+        cur_frm.set_value("facelec_record_number", '');
+        cur_frm.set_value("facelec_record_value", '');
     }
 }
 
@@ -828,6 +836,104 @@ frappe.ui.form.on("Sales Invoice", {
             cur_frm.set_df_property("naming_series", "read_only", 0);
         }
 
+        if (frm.doc.docstatus === 1 && frm.doc.status !== 'Paid') {
+
+            cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
+
+                let d = new frappe.ui.Dialog({
+                    title: 'New Journal Entry with Withholding Tax',
+                    fields: [
+                        {
+                            label: 'Cost Center',
+                            fieldname: 'cost_center',
+                            fieldtype: 'Link',
+                            options: 'Cost Center',
+                            "get_query": function () {
+                                return {
+                                    filters: { 'company': frm.doc.company }
+                                }
+                            },
+                            default: ""
+                        },
+                        {
+                            label: 'Target account',
+                            fieldname: 'debit_in_acc_currency',
+                            fieldtype: 'Link',
+                            options: 'Account',
+                            "reqd": 1,
+                            "get_query": function () {
+                                return {
+                                    filters: { 'company': frm.doc.company }
+                                }
+                            }
+                        },
+                        {
+                            fieldname: 'col_br_asdffg',
+                            fieldtype: 'Column Break'
+                        },
+                        {
+                            label: 'Is Multicurrency',
+                            fieldname: 'is_multicurrency',
+                            fieldtype: 'Check'
+                        },
+                        {
+                            label: 'Applies for VAT withholding',
+                            fieldname: 'is_iva_withholding',
+                            fieldtype: 'Check'
+                        },
+                        {
+                            label: 'Applies for ISR withholding',
+                            fieldname: 'is_isr_withholding',
+                            fieldtype: 'Check'
+                        },
+                        {
+                            label: 'NOTE',
+                            fieldname: 'note',
+                            fieldtype: 'Data',
+                            read_only: 1,
+                            default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el IVA va incluido en la factura'
+                        },
+                        {
+                            label: 'Description',
+                            fieldname: 'section_asdads',
+                            fieldtype: 'Section Break',
+                            "collapsible": 1
+                        },
+                        {
+                            label: 'Description',
+                            fieldname: 'description',
+                            fieldtype: 'Long Text'
+                        }
+                    ],
+                    primary_action_label: 'Create',
+                    primary_action(values) {
+
+                        frappe.call({
+                            method: 'factura_electronica.api_erp.journal_entry_isr',
+                            args: {
+                                invoice_name: frm.doc.name,
+                                debit_in_acc_currency: values.debit_in_acc_currency,
+                                cost_center: values.cost_center,
+                                is_isr_ret: parseInt(values.is_isr_withholding),
+                                is_iva_ret: parseInt(values.is_iva_withholding),
+                                is_multicurrency: parseInt(values.is_multicurrency),
+                                description: values.description
+                            },
+                            callback: function (r) {
+                                console.log(r.message);
+                                d.hide();
+                                frm.refresh()
+                            },
+                        });
+                    }
+                });
+
+                d.show();
+
+            });
+
+        }
+
     },
     validate: function (frm) {
         generar_tabla_html(frm);
@@ -1020,8 +1126,8 @@ frappe.ui.form.on("Sales Invoice", {
 });
 
 frappe.ui.form.on("Sales Invoice Item", {
-    items_add: function (frm, cdt, cdn) {},
-    items_move: function (frm, cdt, cdn) {},
+    items_add: function (frm, cdt, cdn) { },
+    items_move: function (frm, cdt, cdn) { },
     before_items_remove: function (frm, cdt, cdn) {
         frm.doc.items.forEach((item_row_1, index_1) => {
             if (item_row_1.name == cdn) {

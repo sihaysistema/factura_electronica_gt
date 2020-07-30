@@ -1,0 +1,112 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-10 15:37:33.501888",
+  "name": "SAT: Agente Retenedor de IVA",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: Agente Retenedor de IVA"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-01 00:03:45.558792",
+  "name": "SAT: Exportador",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: Exportador"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-01 00:04:07.663323",
+  "name": "SAT: Entidad Publica",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: Entidad Publica"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-01 00:04:37.239775",
+  "name": "SAT: Contribuyente Especial",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: Contribuyente Especial"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-01 00:04:54.787514",
+  "name": "SAT: Otros Calificados por SAT",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: Otros Calificados por SAT"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-01 00:05:09.069468",
+  "name": "SAT: Gasolinera",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: Gasolinera"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-03 16:39:27.346918",
+  "name": "SAT: Asociacion sin fines de lucro",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: Asociacion sin fines de lucro"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-23 22:14:28.735824",
+  "name": "SAT: General",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: General"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-23 22:18:16.170945",
+  "name": "SAT: Regimen Especial Contribuyente Agropecuario",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: Regimen Especial Contribuyente Agropecuario"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-23 22:19:06.037291",
+  "name": "SAT: Pequeno Contribuyente",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: Pequeno Contribuyente"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category",
+  "modified": "2020-07-23 22:20:24.852614",
+  "name": "SAT: Operador de Tarjeta de Credito o Debito",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SAT: Operador de Tarjeta de Credito o Debito"
+ }
+]
