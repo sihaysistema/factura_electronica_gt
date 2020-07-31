@@ -261,6 +261,16 @@ class ElectronicInvoice:
             #                          tiene data, por favor asignarle un valor e intentar de nuevo \
             #                       '''.format(str(dire), self.dat_fac[0]["customer_name"])
 
+            datos_default = {
+                'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
+                'customer_name': 'Consumidor Final',
+                'address': 'Guatemala',
+                'pincode': '01001',
+                'municipio': 'Guatemala',
+                'departamento': 'Guatemala',
+                'pais': 'GT'
+            }
+
             if len(dat_direccion) == 0:  # Si no hay direccion registrada
                 datos_default = {
                     'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
