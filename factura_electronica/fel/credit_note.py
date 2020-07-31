@@ -56,12 +56,12 @@ class ElectronicCreditInvoice:
                 # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
                 self.__base_peticion = {
                     "dte:GTDocumento": {
-                        "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
                         "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
                         "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
                         "@Version": "0.4",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0 ",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {
@@ -71,9 +71,9 @@ class ElectronicCreditInvoice:
                                     "dte:DatosGenerales": self.__d_general,
                                     "dte:Emisor": self.__d_emisor,
                                     "dte:Receptor": self.__d_receptor,
-                                    "dte:Frases": self.__d_frases,
                                     "dte:Items": self.__d_items,
-                                    "dte:Totales": self.__d_totales
+                                    "dte:Totales": self.__d_totales,
+                                    "dte:Complementos": self.__d_complements
                                 }
                             }
                         }
@@ -346,31 +346,6 @@ class ElectronicCreditInvoice:
         except:
             return False, 'Error no se puede completar la operacion por: '+str(frappe.get_traceback())
 
-    def phrases(self):
-        """
-        debe indicarse los regímenes y textos especiales que son requeridos en los DTE,
-        de acuerdo a la afiliación del contribuyente y tipo de operación.
-
-        Returns:
-            boolean: True/False
-        """
-
-        try:
-            # TODO: Consultar todas las posibles combinaciones disponibles
-            self.__d_frases = {
-                "dte:Frase": {
-                    "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
-                                                           {'name': self.__config_name}, 'codigo_escenario'), #"1",
-                    "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
-                                                     {'name': self.__config_name}, 'tipo_frase')[:1]  # "1"
-                }
-            }
-
-            return True, 'OK'
-
-        except:
-            return False, 'Error, no se puedo obtener valor de Codigo Escenario y Tipo Frase'
-
     def items(self):
         """
         Procesa todos los items de la factura aplicando calculos necesarios para la SAT
@@ -491,6 +466,30 @@ class ElectronicCreditInvoice:
 
         except:
             return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
+
+    def complements(self):
+        try:
+            self.__d_complements = {
+                "dte:Complemento": {
+                    "@IDComplemento": "ReferenciasNota",
+                    "@NombreComplemento": "Nota de Credito",
+                    "@URIComplemento": "text",
+                    "cno:ReferenciasNota": {
+                        "@xmlns:cno": "http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0",
+                        "@FechaEmisionDocumentoOrigen": "2019-04-02",
+                        "@MotivoAjuste": "Z09",
+                        "@NumeroAutorizacionDocumentoOrigen": "14DF94D6-E6CC-4EE4-A4F6-71332EEFED89",
+                        "@NumeroDocumentoOrigen": "3872149220",
+                        "@SerieDocumentoOrigen": "**PRUEBAS*",
+                        "@Version": "0.0"
+                    }
+                }
+            }
+
+            return True, 'OK'
+
+        except:
+            return False, 'No se pudo obtener datos para los complementos'
 
     def sign_invoice(self):
         """

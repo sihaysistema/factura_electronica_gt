@@ -1,3 +1,5 @@
 frappe
 xmltodict
 pyopenssl
+pandas
+numpy
