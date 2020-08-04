@@ -31,7 +31,7 @@ import datetime
 # 5.1 ACTUALIZAR REGISTROS
 
 class ElectronicCreditNote:
-    def __init__(self, invoice_code, conf_name):
+    def __init__(self, invoice_code, conf_name, naming_series):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
 
@@ -41,6 +41,7 @@ class ElectronicCreditNote:
         """
         self.__invoice_code = invoice_code
         self.__config_name = conf_name
+        self.__naming_serie = naming_series
         self.__log_error = []
 
     def build_credit_note(self):
@@ -83,8 +84,8 @@ class ElectronicCreditNote:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                # with open('mi_factura.json', 'w') as f:
-                #     f.write(json.dumps(self.__base_peticion))
+                with open('nota_credito.json', 'w') as f:
+                    f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:
@@ -118,11 +119,6 @@ class ElectronicCreditNote:
         if status_receiver[0] == False:
             return status_receiver
 
-        # Validacion y generacion seccion frases
-        status_phrases = self.phrases()
-        if status_phrases == False:
-            return status_phrases
-
         # Validacion y generacion seccion items
         status_items = self.items()
         if status_items == False:
@@ -132,6 +128,11 @@ class ElectronicCreditNote:
         status_totals = self.totals()
         if status_totals == False:
             return status_totals
+
+        # Validacion y generacion seccion complementos
+        status_complements = self.complements()
+        if status_complements == False:
+            return status_complements
 
         # Si todo va bien, retorna True
         return True, 'OK'
@@ -146,10 +147,14 @@ class ElectronicCreditNote:
         """
 
         try:
+            self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
+            self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
+
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'
+                "@FechaHoraEmision": f'{self.date_invoice}T{self.time_invoice}',  # "2018-11-01T16:33:47Z",
+                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                             'tipo_documento')  # 'FACT'
             }
 
             return True, 'OK'
@@ -478,7 +483,7 @@ class ElectronicCreditNote:
                     "@URIComplemento": "text",
                     "cno:ReferenciasNota": {
                         "@xmlns:cno": "http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0",
-                        "@FechaEmisionDocumentoOrigen": "2019-04-02",
+                        "@FechaEmisionDocumentoOrigen": self.date_invoice,
                         "@MotivoAjuste": "Z09",
                         "@NumeroAutorizacionDocumentoOrigen": "14DF94D6-E6CC-4EE4-A4F6-71332EEFED89",
                         "@NumeroDocumentoOrigen": "3872149220",

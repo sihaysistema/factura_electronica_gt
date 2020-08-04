@@ -211,7 +211,7 @@ def generate_credit_note(invoice_code, naming_series):
 
         # PASO 3: NOTA DE CREDITO ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
-        new_credit_note = ElectronicCreditNote(invoice_code, status_config[1])
+        new_credit_note = ElectronicCreditNote(invoice_code, status_config[1], naming_series)
 
         # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
         status = new_credit_note.build_credit_note()

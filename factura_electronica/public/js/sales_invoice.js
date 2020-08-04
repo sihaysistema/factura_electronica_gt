@@ -820,7 +820,7 @@ frappe.ui.form.on("Sales Invoice", {
 
         // Si la factura de venta se convierte a nota de credito,
         // para cumplir esta debe ser una factura electronica ya generada, segun esquema XML
-        if (frm.doc.is_return && frm.doc.numero_autorizacion_fel) {
+        if (frm.doc.is_return) {  //  && frm.doc.numero_autorizacion_fel
             console.log('Es retorno');
             /* ESTA PORCION DE CODIGO ERA PARA USAR UNA SERIE HARDCODE
             // cur_frm.set_df_property("naming_series", "read_only", 1);
@@ -837,16 +837,19 @@ frappe.ui.form.on("Sales Invoice", {
             // });
             */
 
-            frappe.call({
-                method: 'factura_electronica.fel_api.generate_credit_note',
-                args: {
-                    invoice_code: frm.doc.name,
-                    naming_series: frm.doc.naming_series
-                },
-                callback: function (r) {
-                    console.log(r.message);
-                },
-            });
+            frm.add_custom_button(__("CREDIT NOTE FEL"), function () {
+                frappe.call({
+                    method: 'factura_electronica.fel_api.generate_credit_note',
+                    args: {
+                        invoice_code: frm.doc.name,
+                        naming_series: frm.doc.naming_series
+                    },
+                    callback: function (r) {
+                        console.log(r.message);
+                    },
+                });
+            }).addClass("btn-warning");
+
 
         } else {
             cur_frm.set_df_property("naming_series", "read_only", 0);
