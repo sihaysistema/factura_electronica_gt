@@ -802,15 +802,15 @@ frappe.ui.form.on("Sales Invoice", {
         // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
         cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
 
-        // Works OK!
-        frm.add_custom_button("UOM Recalculation", function () {
-            frm.doc.items.forEach((item) => {
-                // for each button press each line is being processed.
-                //console.log("item contains: " + item);
-                //Importante
-                facelec_tax_calc_new(frm, "Sales Invoice Item", item.name);
-            });
-        });
+        // Works OK! No es necesario?
+        // frm.add_custom_button("UOM Recalculation", function () {
+        //     frm.doc.items.forEach((item) => {
+        //         // for each button press each line is being processed.
+        //         //console.log("item contains: " + item);
+        //         //Importante
+        //         facelec_tax_calc_new(frm, "Sales Invoice Item", item.name);
+        //     });
+        // });
 
         // Cuando el documento se actualiza, la funcion verificac de que exista un cae.
         // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
@@ -818,21 +818,36 @@ frappe.ui.form.on("Sales Invoice", {
         // correspondiente a su serie.
         verificacionCAE('manual', frm, cdt, cdn);
 
-        // Asignacion serie configurada para notas de credito
-        if (frm.doc.is_return) {
+        // Si la factura de venta se convierte a nota de credito,
+        // para cumplir esta debe ser una factura electronica ya generada, segun esquema XML
+        if (frm.doc.is_return && frm.doc.numero_autorizacion_fel) {
             console.log('Es retorno');
-            cur_frm.set_df_property("naming_series", "read_only", 1);
+            /* ESTA PORCION DE CODIGO ERA PARA USAR UNA SERIE HARDCODE
+            // cur_frm.set_df_property("naming_series", "read_only", 1);
+
+            // frappe.call({
+            //     method: 'factura_electronica.api.obtener_serie_doc',
+            //     args: {
+            //         opt: 'credit'
+            //     },
+            //     callback: function (r) {
+            //         console.log(r.message);
+            //         cur_frm.set_value('naming_series', r.message);
+            //     }
+            // });
+            */
 
             frappe.call({
-                method: 'factura_electronica.api.obtener_serie_doc',
+                method: 'factura_electronica.fel_api.generate_credit_note',
                 args: {
-                    opt: 'credit'
+                    invoice_code: frm.doc.name,
+                    naming_series: frm.doc.naming_series
                 },
                 callback: function (r) {
                     console.log(r.message);
-                    cur_frm.set_value('naming_series', r.message);
-                }
+                },
             });
+
         } else {
             cur_frm.set_df_property("naming_series", "read_only", 0);
         }

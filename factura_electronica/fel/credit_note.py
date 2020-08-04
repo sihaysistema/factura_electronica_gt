@@ -30,7 +30,7 @@ import datetime
 # 5 GUARDAR REGISTROS ENVIOS, LOG
 # 5.1 ACTUALIZAR REGISTROS
 
-class ElectronicCreditInvoice:
+class ElectronicCreditNote:
     def __init__(self, invoice_code, conf_name):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
@@ -43,7 +43,7 @@ class ElectronicCreditInvoice:
         self.__config_name = conf_name
         self.__log_error = []
 
-    def build_invoice(self):
+    def build_credit_note(self):
         """
         Valida las dependencias necesarias, para construir XML desde un JSON
         para ser firmado certificado por la SAT y finalmente generar factura electronica
