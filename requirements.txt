@@ -3,3 +3,4 @@ xmltodict
 pyopenssl
 pandas
 numpy
+numinwords
