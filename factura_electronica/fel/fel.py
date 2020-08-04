@@ -195,7 +195,7 @@ class ElectronicInvoice:
                                 city, country, y vuelve a generar la factura'
 
 
-            # TODO: USAR VALORES DEFAULT SI LA DIRECCION NO TIENE DATA
+            # LA ENTIDAD EMISORA SI O SI DEBE TENER ESTOS DATOS :D
             # Validacion de existencia en los campos de direccion, ya que son obligatorio por parte de la API FEL
             # Usaremos la primera que se encuentre
             for dire in dat_direccion[0]:

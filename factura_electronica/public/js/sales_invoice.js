@@ -415,6 +415,7 @@ function pdf_button(cae_documento, frm) {
         }).addClass("btn-primary");
 }
 
+
 function pdf_button_fel(cae_documento, frm) {
     // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
     frm.add_custom_button(__("VER PDF FACTURA ELECTRONICA"),
@@ -560,7 +561,7 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
-            guardar_pdf(frm);
+            // guardar_pdf(frm);
         } else if (frm.doc.numero_autorizacion_fel) {
             cur_frm.clear_custom_buttons();
             pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
@@ -585,7 +586,7 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
-            guardar_pdf(frm);
+            // guardar_pdf(frm);
         } else {
             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
             if (modalidad === 'manual') {
@@ -608,7 +609,7 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
             if (frm.doc.cae_factura_electronica) {
                 cur_frm.clear_custom_buttons();
                 pdf_button(frm.doc.cae_factura_electronica, frm);
-                guardar_pdf(frm);
+                // guardar_pdf(frm);
             } else {
                 // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
                 if (modalidad === 'manual') {
@@ -1058,22 +1059,24 @@ frappe.ui.form.on("Sales Invoice", {
         }
     },
     naming_series: function (frm, cdt, cdn) {
-        frappe.call({
-            method: "factura_electronica.api.obtener_numero_resolucion",
-            args: {
-                nombre_serie: frm.doc.naming_series
-            },
-            // El callback se ejecuta tras finalizar la ejecucion del script python del lado
-            // del servidor
-            callback: function (numero_resolucion) {
-                if (numero_resolucion.message === undefined) {
-                    // cur_frm.set_value('shs_numero_resolucion', '');
-                } else {
-                    cur_frm.set_value('shs_numero_resolucion', numero_resolucion
-                        .message);
+        if (frm.doc.naming_series) {
+            frappe.call({
+                method: "factura_electronica.api.obtener_numero_resolucion",
+                args: {
+                    nombre_serie: frm.doc.naming_series
+                },
+                // El callback se ejecuta tras finalizar la ejecucion del script python del lado
+                // del servidor
+                callback: function (numero_resolucion) {
+                    if (numero_resolucion.message === undefined) {
+                        // cur_frm.set_value('shs_numero_resolucion', '');
+                    } else {
+                        cur_frm.set_value('shs_numero_resolucion', numero_resolucion
+                            .message);
+                    }
                 }
-            }
-        });
+            });
+        }
     },
     es_nota_de_debito: function (frm) {
         if (frm.doc.es_nota_de_debito) {

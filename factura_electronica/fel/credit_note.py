@@ -10,6 +10,10 @@ import base64
 import requests
 import datetime
 
+# Una nota de crédito es un documento comercial emitido por
+# un vendedor a un comprador. Las notas de crédito actúan como un documento
+# fuente para el diario de devolución de ventas. En otras palabras, la nota
+# de crédito es evidencia de la reducción en las ventas. Wikipedia (Inglés)
 
 # NOTAS:
 # 1. INSTANCIA FACT
@@ -56,12 +60,10 @@ class ElectronicCreditInvoice:
                 # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
                 self.__base_peticion = {
                     "dte:GTDocumento": {
-                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
                         "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
-                        "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
+                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        "@Version": "0.4",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0 ",
+                        "@Version": "0.1",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {
@@ -147,13 +149,13 @@ class ElectronicCreditInvoice:
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
                 "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
+                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'
             }
 
             return True, 'OK'
 
         except:
-            return False, f'Error en obtener data para datos generales mas detalles en :\n {str(frappe.get_traceback())}'
+            return False, f'Ocurrio un problema al tratar de obtener data para datos generales mas detalles en :\n {str(frappe.get_traceback())}'
 
     def sender(self):
         """
@@ -195,7 +197,7 @@ class ElectronicCreditInvoice:
                                 city, country, y vuelve a generar la factura'
 
 
-            # TODO: USAR VALORES DEFAULT SI LA DIRECCION NO TIENE DATA
+            # LA ENTIDAD EMISORA SI O SI DEBE TENER ESTOS DATOS :D
             # Validacion de existencia en los campos de direccion, ya que son obligatorio por parte de la API FEL
             # Usaremos la primera que se encuentre
             for dire in dat_direccion[0]:
