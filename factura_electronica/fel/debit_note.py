@@ -11,6 +11,11 @@ import requests
 import datetime
 
 
+# Una nota de débito o memorando de débito es un documento comercial emitido por
+# un comprador a un vendedor para solicitar formalmente una nota de crédito.
+# La nota de débito actúa como el documento fuente del diario de devoluciones
+# de compras. Wikipedia (Inglés)
+
 # NOTAS:
 # 1. INSTANCIA FACT
 
@@ -26,8 +31,8 @@ import datetime
 # 5 GUARDAR REGISTROS ENVIOS, LOG
 # 5.1 ACTUALIZAR REGISTROS
 
-class ElectronicDebitInvoice:
-    def __init__(self, invoice_code, conf_name):
+class ElectronicDebitNote:
+    def __init__(self, invoice_code, conf_name, naming_series, reason):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
 
@@ -37,9 +42,11 @@ class ElectronicDebitInvoice:
         """
         self.__invoice_code = invoice_code
         self.__config_name = conf_name
+        self.__naming_serie = naming_series
+        self.__reason = reason
         self.__log_error = []
 
-    def build_invoice(self):
+    def build_debit_note(self):
         """
         Valida las dependencias necesarias, para construir XML desde un JSON
         para ser firmado certificado por la SAT y finalmente generar factura electronica
@@ -56,10 +63,10 @@ class ElectronicDebitInvoice:
                 # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
                 self.__base_peticion = {
                     "dte:GTDocumento": {
-                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
+                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        "@Version": "0.4",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        "@Version": "0.1",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {
@@ -79,8 +86,8 @@ class ElectronicDebitInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                # with open('mi_factura.json', 'w') as f:
-                #     f.write(json.dumps(self.__base_peticion))
+                with open('debit_note.json', 'w') as f:
+                    f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:
@@ -114,11 +121,6 @@ class ElectronicDebitInvoice:
         if status_receiver[0] == False:
             return status_receiver
 
-        # Validacion y generacion seccion frases
-        status_phrases = self.phrases()
-        if status_phrases == False:
-            return status_phrases
-
         # Validacion y generacion seccion items
         status_items = self.items()
         if status_items == False:
@@ -128,6 +130,11 @@ class ElectronicDebitInvoice:
         status_totals = self.totals()
         if status_totals == False:
             return status_totals
+
+        # Validacion y generacion seccion complementos
+        status_complements = self.complements()
+        if status_complements == False:
+            return status_complements
 
         # Si todo va bien, retorna True
         return True, 'OK'
@@ -142,16 +149,20 @@ class ElectronicDebitInvoice:
         """
 
         try:
+            self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
+            self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
+
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
+                "@FechaHoraEmision": f'{self.date_invoice}T{self.time_invoice}',  # "2018-11-01T16:33:47Z",
+                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                             'tipo_documento')  # 'FACT'
             }
 
             return True, 'OK'
 
         except:
-            return False, f'Error en obtener data para datos generales mas detalles en :\n {str(frappe.get_traceback())}'
+            return False, f'Ocurrio un problema al tratar de obtener data para datos generales mas detalles en :\n {str(frappe.get_traceback())}'
 
     def sender(self):
         """
@@ -193,7 +204,7 @@ class ElectronicDebitInvoice:
                                 city, country, y vuelve a generar la factura'
 
 
-            # TODO: USAR VALORES DEFAULT SI LA DIRECCION NO TIENE DATA
+            # LA ENTIDAD EMISORA SI O SI DEBE TENER ESTOS DATOS :D
             # Validacion de existencia en los campos de direccion, ya que son obligatorio por parte de la API FEL
             # Usaremos la primera que se encuentre
             for dire in dat_direccion[0]:
@@ -394,24 +405,24 @@ class ElectronicDebitInvoice:
 
                     # Calculo precio unitario
                     precio_uni = 0
-                    precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
+                    precio_uni = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['rate']) + float(abs(self.__dat_items[i]['price_list_rate']) - abs(self.__dat_items[i]['rate'])))))
 
                     # Calculo precio item
                     precio_item = 0
-                    precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
+                    precio_item = abs(float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate']))))
 
                     # Calculo descuento item
                     desc_item = 0
-                    desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+                    desc_item = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(float(self.__dat_items[i]['amount'])))))
 
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
-                    obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
+                    obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = self.__dat_items[i]['description']
-                    obj_item["dte:PrecioUnitario"] = precio_uni
-                    obj_item["dte:Precio"] = precio_item
-                    obj_item["dte:Descuento"] = desc_item
+                    obj_item["dte:PrecioUnitario"] = abs(precio_uni)
+                    obj_item["dte:Precio"] = abs(precio_item)
+                    obj_item["dte:Descuento"] = abs(desc_item)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -419,11 +430,11 @@ class ElectronicDebitInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
-                                                                                                      float(self.__taxes_fact[0]['rate']/100))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
+                                                                                                      float(self.__taxes_fact[0]['rate']/100))))
 
-                    obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['amount'])))
+                    obj_item["dte:Total"] = abs(float('{0:.2f}'.format((float(self.__dat_items[i]['amount'])))))
                     # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
@@ -435,7 +446,7 @@ class ElectronicDebitInvoice:
             return True, 'OK'
 
         except:
-            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
+            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.__invoice_code, str(frappe.get_traceback()))
 
     def totals(self):
         """
@@ -467,6 +478,10 @@ class ElectronicDebitInvoice:
 
     def complements(self):
         try:
+            datos_fel_invoice = frappe.db.get_values('Envio FEL', filters={'serie_para_factura': self.__invoice_code},
+                                                     fieldname=['serie_factura_original', 'uuid', 'numero', 'serie'],
+                                                     as_dict=1)
+
             self.__d_complements = {
                 "dte:Complemento": {
                     "@IDComplemento": "ReferenciasNota",
@@ -474,11 +489,11 @@ class ElectronicDebitInvoice:
                     "@URIComplemento": "text",
                     "cno:ReferenciasNota": {
                         "@xmlns:cno": "http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0",
-                        "@FechaEmisionDocumentoOrigen": "2019-04-02",
-                        "@MotivoAjuste": "Z09",
-                        "@NumeroAutorizacionDocumentoOrigen": "14DF94D6-E6CC-4EE4-A4F6-71332EEFED89",
-                        "@NumeroDocumentoOrigen": "3872149220",
-                        "@SerieDocumentoOrigen": "**PRUEBAS*",
+                        "@FechaEmisionDocumentoOrigen": self.date_invoice,
+                        "@MotivoAjuste": self.__reason,
+                        "@NumeroAutorizacionDocumentoOrigen": datos_fel_invoice[0]["uuid"],
+                        "@NumeroDocumentoOrigen": datos_fel_invoice[0]["numero"],
+                        "@SerieDocumentoOrigen": datos_fel_invoice[0]["serie"],
                         "@Version": "0.0"
                     }
                 }
