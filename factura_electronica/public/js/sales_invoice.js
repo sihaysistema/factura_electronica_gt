@@ -838,16 +838,42 @@ frappe.ui.form.on("Sales Invoice", {
             */
 
             frm.add_custom_button(__("CREDIT NOTE FEL"), function () {
-                frappe.call({
-                    method: 'factura_electronica.fel_api.generate_credit_note',
-                    args: {
-                        invoice_code: frm.doc.name,
-                        naming_series: frm.doc.naming_series
-                    },
-                    callback: function (r) {
-                        console.log(r.message);
-                    },
-                });
+                frappe.confirm(__('Are you sure you want to proceed to generate a credit note?'),
+                    () => {
+                        let d = new frappe.ui.Dialog({
+                            title: __('Generate Credit Note'),
+                            fields: [
+                                {
+                                    label: 'Reason Adjusment?',
+                                    fieldname: 'reason_adjust',
+                                    fieldtype: 'Data',
+                                    reqd: 1
+                                }
+                            ],
+                            primary_action_label: 'Submit',
+                            primary_action(values) {
+                                frappe.call({
+                                    method: 'factura_electronica.fel_api.generate_credit_note',
+                                    args: {
+                                        invoice_code: frm.doc.name,
+                                        naming_series: frm.doc.naming_series,
+                                        reason: values.reason_adjust
+                                    },
+                                    callback: function (r) {
+                                        console.log(r.message);
+                                    },
+                                });
+                                console.log(values);
+                                d.hide();
+                            }
+                        });
+
+                        d.show();
+                    }, () => {
+                        // action to perform if No is selected
+                        console.log('Selecciono NO')
+                    })
+
             }).addClass("btn-warning");
 
 

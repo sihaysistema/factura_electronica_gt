@@ -31,7 +31,7 @@ import datetime
 # 5.1 ACTUALIZAR REGISTROS
 
 class ElectronicCreditNote:
-    def __init__(self, invoice_code, conf_name, naming_series):
+    def __init__(self, invoice_code, conf_name, naming_series, reason):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
 
@@ -42,6 +42,7 @@ class ElectronicCreditNote:
         self.__invoice_code = invoice_code
         self.__config_name = conf_name
         self.__naming_serie = naming_series
+        self.__reason = reason
         self.__log_error = []
 
     def build_credit_note(self):
@@ -403,24 +404,24 @@ class ElectronicCreditNote:
 
                     # Calculo precio unitario
                     precio_uni = 0
-                    precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
+                    precio_uni = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['rate']) + float(abs(self.__dat_items[i]['price_list_rate']) - abs(self.__dat_items[i]['rate'])))))
 
                     # Calculo precio item
                     precio_item = 0
-                    precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
+                    precio_item = abs(float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate']))))
 
                     # Calculo descuento item
                     desc_item = 0
-                    desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+                    desc_item = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(float(self.__dat_items[i]['amount'])))))
 
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
-                    obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
+                    obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = self.__dat_items[i]['description']
-                    obj_item["dte:PrecioUnitario"] = precio_uni
-                    obj_item["dte:Precio"] = precio_item
-                    obj_item["dte:Descuento"] = desc_item
+                    obj_item["dte:PrecioUnitario"] = abs(precio_uni)
+                    obj_item["dte:Precio"] = abs(precio_item)
+                    obj_item["dte:Descuento"] = abs(desc_item)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -428,11 +429,11 @@ class ElectronicCreditNote:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
-                                                                                                      float(self.__taxes_fact[0]['rate']/100))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
+                                                                                                      float(self.__taxes_fact[0]['rate']/100))))
 
-                    obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['amount'])))
+                    obj_item["dte:Total"] = abs(float('{0:.2f}'.format((float(self.__dat_items[i]['amount'])))))
                     # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
@@ -444,7 +445,7 @@ class ElectronicCreditNote:
             return True, 'OK'
 
         except:
-            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
+            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.__invoice_code, str(frappe.get_traceback()))
 
     def totals(self):
         """
@@ -476,6 +477,10 @@ class ElectronicCreditNote:
 
     def complements(self):
         try:
+            datos_fel_invoice = frappe.db.get_values('Envio FEL', filters={'serie_para_factura': self.__invoice_code},
+                                                     fieldname=['serie_factura_original', 'uuid', 'numero', 'serie'],
+                                                     as_dict=1)
+
             self.__d_complements = {
                 "dte:Complemento": {
                     "@IDComplemento": "ReferenciasNota",
@@ -484,10 +489,10 @@ class ElectronicCreditNote:
                     "cno:ReferenciasNota": {
                         "@xmlns:cno": "http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0",
                         "@FechaEmisionDocumentoOrigen": self.date_invoice,
-                        "@MotivoAjuste": "Z09",
-                        "@NumeroAutorizacionDocumentoOrigen": "14DF94D6-E6CC-4EE4-A4F6-71332EEFED89",
-                        "@NumeroDocumentoOrigen": "3872149220",
-                        "@SerieDocumentoOrigen": "**PRUEBAS*",
+                        "@MotivoAjuste": self.__reason,
+                        "@NumeroAutorizacionDocumentoOrigen": datos_fel_invoice[0]["uuid"],
+                        "@NumeroDocumentoOrigen": datos_fel_invoice[0]["numero"],
+                        "@SerieDocumentoOrigen": datos_fel_invoice[0]["serie"],
                         "@Version": "0.0"
                     }
                 }
