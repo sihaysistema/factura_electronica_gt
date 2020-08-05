@@ -8,7 +8,8 @@ from datetime import date
 
 import frappe
 from factura_electronica.utils.formulas import amount_converter, apply_formula_isr, number_of_decimals
-from frappe import _
+from frappe import _, _dict
+from frappe.utils import flt
 
 
 # PARA FACTURA ESPECIAL - PURCHASE INVOICE
@@ -225,7 +226,7 @@ class JournalEntrySpecialISR():
             grand_total_gtq = self.grand_total_currency_company
 
             # Obtenemos el monto sin IVA del grand total moneda de company "GTQ"
-            GRAND_TOTAL_NO_IVA = round(self.grand_total_sin_iva)
+            GRAND_TOTAL_NO_IVA = round(self.grand_total_sin_iva, self.decimals_ope)
 
             # Obtenemos el iva a retener GTQ
             IVA_OPE = round((GRAND_TOTAL_NO_IVA * self.vat_rate), self.decimals_ope)
@@ -296,6 +297,71 @@ class JournalEntrySpecialISR():
 
             # with open('special.json', 'w') as f:
             #     f.write(json.dumps(self.rows_journal_entry, default=str, indent=2))
+
+
+
+            # -------------------------------------------------------------------------------------------------------------------------S
+            # FILA 5: SI POR ALGUNA RAZON SE EJECUTA EL ESCENARIO DE DESCUADRE POR CENTAVOS, APLICAMOS GOALSEEK
+            # VALIDACION SI ES NECESARIO AGREGAR UNA FILA PARA CUADRE DE CENTAVOS
+            # convierte de GTQ -> USD, y luego de USD -> GTQ, para obtener correctamente todos
+            # los decimales, para hacer aproximacion
+
+            # NOTA: SE HACE LA COMPARACION EVALUANDO PRIMERO EL MONTO SIN IVA E ISR
+
+            INT_GTQ = flt(amount_converter(flt(amount_converter(amt_without_isr_iva, self.curr_exch,
+                          from_currency='GTQ', to_currency=self.currency), 2), self.curr_exch,
+                          from_currency=self.currency, to_currency='GTQ'), 2)
+
+            r = lambda f: f - f % 0.01
+            # s = lambda f: f - f % 0.001
+
+            total_debit = flt(float(INT_GTQ + flt(ISR_PAYABLE_GTQ, 2) + flt(IVA_OPE, 2)))  # LO QUE HAY QUE PAGAR
+            total_credit = flt(self.grand_total_currency_company)  # El monto original a pagar, excluyendo impuestos ...
+
+            with open('balance.txt', 'w') as f:
+                f.write(f'{total_debit} -- {total_credit}')
+
+            # El monto que meta, que quiero obtener
+            goal = total_debit
+            x0 = 3  # estimacion
+
+            def fun(x):  # con la evaluacion encontramos la incognita x que son los centavos para cuadrar
+                amt_ok = total_credit - x
+                return amt_ok
+
+            if total_debit != total_credit:
+
+                centavos = GoalSeek(fun ,goal, x0, MaxIter=1000000)
+
+                # otra forma FACIL es hacer resta y el resultado son los centavos
+                # centavos = r(total_debit) - r(total_credit)
+
+                row_five = {
+                    "account": frappe.db.get_value('Company', {'name': self.company}, 'round_off_account'),  #'Round Off - B',
+                    "cost_center": self.cost_center,
+                    "credit_in_account_currency": 0,
+                    "exchange_rate": 1,
+                    "account_currency": 'GTQ',  # Moneda de la cuenta
+                }
+
+                # Validamos si el cuadre va en debit o credit
+                if centavos>0:
+                    row_five.update({
+                        "credit_in_account_currency": flt(centavos),
+                        "credit": flt(centavos),
+                    })
+                    self.rows_journal_entry.append(row_five)
+
+                elif centavos<0:
+                    row_five.update({
+                        "debit_in_account_currency": flt(abs(centavos)),
+                        "debit": flt(abs(centavos)),
+                    })
+                    self.rows_journal_entry.append(row_five)
+
+
+                with open('centavos.txt', 'w') as f:
+                    f.write(str(abs(centavos)))
 
         except:
             return False, str(frappe.get_traceback())
