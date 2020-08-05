@@ -58,10 +58,10 @@ def journal_entry_isr(invoice_name, debit_in_acc_currency, cost_center='',
         frappe.msgprint(msg=_(f'More details in the following log \n {frappe.get_traceback()}'),
                         title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
 
+
 @frappe.whitelist()
 def journal_entry_isr_purchase_inv(invoice_name, is_isr_ret, is_iva_ret, cost_center,
-                                   credit_in_acc_currency, is_multicurrency=0, description='',
-                                   is_special_inv=0):
+                                   credit_in_acc_currency, is_multicurrency=0, description=''):
     """
     Funciona llamada desde boton Sales Invoice, encargada de crear Journal
     Entry, en funcion a los parametros pasados
@@ -90,10 +90,11 @@ def journal_entry_isr_purchase_inv(invoice_name, is_isr_ret, is_iva_ret, cost_ce
         frappe.msgprint(msg=_(f'More details in the following log \n {frappe.get_traceback()}'),
                         title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
 
+
 @frappe.whitelist()
 def download_asl_files():
     """
-    Permite descargar
+    Permite descargar archivo ASL
     """
     frappe.local.response.filename = "ASISTE.ASL"
     with open("ASISTE.ASL", "rb") as fileobj:

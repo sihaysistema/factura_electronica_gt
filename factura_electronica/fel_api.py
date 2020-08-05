@@ -11,6 +11,7 @@ import json
 from factura_electronica.fel.fel import ElectronicInvoice
 from factura_electronica.fel.credit_note import ElectronicCreditNote
 from factura_electronica.fel.special_invoice import ElectronicSpecialInvoice
+from factura_electronica.controllers.journal_entry import JournalEntrySpecialISR
 
 
 # API para uso interno con apps hechas con Frappe Framework, Para
@@ -267,15 +268,20 @@ def generate_debit_note(invoice_code, naming_series):
 @frappe.whitelist()
 def generate_special_invoice(invoice_code, naming_series):
     try:
-        frappe.msgprint(str(invoice_code) + str(naming_series))
-        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
+        # PASO 1: Creamos la poliza contable
+        data_purchase_invoice = frappe.get_doc(doctype, str(invoice_code))
+        new_journal_entry = JournalEntrySpecialISR(data_purchase_invoice, )
+
+        # PASO 2: registramos las retenciones
+
+        # PASO 3: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
         status_config = validate_configuration()
 
         if status_config[0] == False:
             return status_config
 
 
-        # PASO 1.1: VALIDAMOS LA SERIE A UTILIZAR PARA DEFINIR EL TIPO DE FACTURA ELECTRONIC A GENERAR
+        # PASO 3.1: VALIDAMOS LA SERIE A UTILIZAR PARA DEFINIR EL TIPO DE FACTURA ELECTRONIC A GENERAR
         if not frappe.db.exists('Serial Configuration For Purchase Invoice', {'parent': str(status_config[1]), 'serie': str(naming_series)}):
             frappe.msgprint(msg=_('La serie utilizada en la factura no se encuentra configurada para Factura electronica \
                                    Por favor agreguela en Purchase Invoice Series de Configuracion Factura Electronica, y vuelva a intentar'),
@@ -283,7 +289,7 @@ def generate_special_invoice(invoice_code, naming_series):
             return False, 'No completed'
 
 
-        # PASO 2: VALIDA EXISTENCIA DE REGISTROS EN ENVIOS FEL, PARA GENERAR EL DOCUMENTO
+        # PASO 4: VALIDA EXISTENCIA DE REGISTROS EN ENVIOS FEL, PARA GENERAR EL DOCUMENTO
         # ES NECESARIO CREARLA SOBRE UN DOCUMENTO ELECTRONICA YA GENERADO
         status_invoice = check_invoice_records(str(invoice_code))
         if status_invoice[0] == True:  # Si ya existe en DB
@@ -294,11 +300,11 @@ def generate_special_invoice(invoice_code, naming_series):
             return False, 'No completed'
 
 
-        # PASO 3: FACTURA ESPECIAL ELECTRONICA
-        # paso 3.1 - NUEVA INSTANCIA
+        # PASO 5: FACTURA ESPECIAL ELECTRONICA
+        # paso 5.1 - NUEVA INSTANCIA
         new_special_invoice = ElectronicSpecialInvoice(invoice_code, status_config[1], naming_series)
 
-        # PASO 3.2 - VALIDA LOS DATOS NECESARIOS Y CONSTRUYE EL ESQUEMA JSON PARA LUEGO CONVERTIRLO A XML
+        # PASO 5.2 - VALIDA LOS DATOS NECESARIOS Y CONSTRUYE EL ESQUEMA JSON PARA LUEGO CONVERTIRLO A XML
         status = new_special_invoice.build_special_invoice()
         if status[0] == False:  # Si la construccion de la peticion es False
             frappe.msgprint(msg=_(f'Ocurrio un problema en el proceso de crear Factura Especial Electronica, mas detalle en: {status[1]}'),
@@ -316,7 +322,8 @@ def generate_special_invoice(invoice_code, naming_series):
             frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de registrar las retenciones, se recomienda hacer manualmente el registro, mas detalle en: {status_retention[1]}'),
                             title=_('Proceso no completado'), indicator='red')
 
-            return False, 'No completed'
+            # No retornamos nada, para no interrumpir el flujo de la geeracion del doc electronico
+            # return False, 'No completed'
 
 
         # PASO 5: CREAMOS JOURNAL ENTRY CON LOS IMPUESTOS TOMADOS EN CUENTA

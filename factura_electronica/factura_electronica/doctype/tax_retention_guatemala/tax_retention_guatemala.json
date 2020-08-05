@@ -88,8 +88,7 @@
    "fieldname": "purchase_invoice",
    "fieldtype": "Link",
    "label": "Purchase Invoice",
-   "options": "Purchase Invoice",
-   "read_only": 1
+   "options": "Purchase Invoice"
   },
   {
    "fieldname": "sales_invoice",
@@ -148,7 +147,7 @@
    "fieldtype": "Column Break"
   }
  ],
- "modified": "2020-08-05 13:46:01.279651",
+ "modified": "2020-08-05 15:18:09.347436",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Tax Retention Guatemala",

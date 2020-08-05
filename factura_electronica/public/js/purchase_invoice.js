@@ -302,6 +302,8 @@ frappe.ui.form.on("Purchase Invoice", {
             cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
                 frappe.msgprint("WORK IN PROGRESS");
             });
+
+            // boton para generar factura especial electronica
             frm.add_custom_button(__("Generate Special Invoice FEL"), function () {
                 frappe.confirm(__('Are you sure you want to proceed to generate a Special Invoice?'),
                     () => {
@@ -321,10 +323,12 @@ frappe.ui.form.on("Purchase Invoice", {
                     });
             }).addClass("btn-warning");
 
-            cur_frm.page.add_action_item(__("SPECIAL INVOICE"), function () {
+
+            // boton para generar poliza contable con calculos y registro de retenciones
+            cur_frm.page.add_action_item(__("Journal Entry for Special Invoice"), function () {
 
                 let d = new frappe.ui.Dialog({
-                    title: 'New Journal Entry with Withholding Tax',
+                    title: 'New Journal Entry with Withholding Tax for special invoice',
                     fields: [
                         {
                             label: 'Cost Center',
@@ -384,13 +388,10 @@ frappe.ui.form.on("Purchase Invoice", {
                             method: 'factura_electronica.api_erp.journal_entry_isr_purchase_inv',
                             args: {
                                 invoice_name: frm.doc.name,
-                                is_iva_ret: 0,
-                                is_isr_ret: 0,
                                 cost_center: values.cost_center,
                                 credit_in_acc_currency: values.credit_in_acc_currency,
                                 is_multicurrency: values.is_multicurrency,
-                                description: values.description,
-                                is_special_inv: 1
+                                description: values.description
                             },
                             callback: function (r) {
                                 console.log(r.message);
