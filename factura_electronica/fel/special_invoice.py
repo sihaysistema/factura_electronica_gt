@@ -410,19 +410,22 @@ class ElectronicSpecialInvoice:
                                              fieldname=['item_name', 'qty', 'item_code', 'description',
                                                         'net_amount', 'base_net_amount', 'discount_percentage',
                                                         'discount_amount', 'price_list_rate', 'net_rate',
-                                                        'stock_uom', 'serial_no', 'item_group', 'rate',
-                                                        'amount', 'facelec_sales_tax_for_this_row',
-                                                        'facelec_amount_minus_excise_tax',
-                                                        'facelec_other_tax_amount', 'facelec_three_digit_uom_code',
-                                                        'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
-                                                        'facelec_gt_tax_net_services_amt'], as_dict=True)
+                                                        'stock_uom', 'item_group', 'rate', 'amount',
+                                                        'facelec_p_sales_tax_for_this_row',
+                                                        'facelec_p_amount_minus_excise_tax',
+                                                        'facelec_p_other_tax_amount', 'facelec_p_purchase_three_digit',
+                                                        'facelec_p_gt_tax_net_fuel_amt', 'facelec_p_gt_tax_net_goods_amt',
+                                                        'facelec_p_gt_tax_net_services_amt'], as_dict=True)
+
+            with open('item_compra.json', 'w') as f:
+                f.write(json.dumps(self.__dat_items, indent=2))
 
             # segun los esquemas XML, solo mostramos el impuesto de IVA, algunos de los impuestos que pueden ir son
             # (depende del emisor y el tipo de documento electronico a generar):
             # Petroleo, Turismo Hospedaje, Timbre de prensa, Bomberos, Tasa Municipal
             # Obtenemos los impuesto cofigurados para x compañia en la factura
             self.__taxes_fact = frappe.db.get_values('Purchase Taxes and Charges', filters={'parent': self.__invoice_code},
-                                                     fieldname=['tax_name', 'facelec_taxable_unit_code', 'rate'], as_dict=True)
+                                                     fieldname=['facelec_tax_name', 'facelec_taxable_unit_code', 'rate'], as_dict=True)
             self.iva_rate = self.__taxes_fact[0]['rate']
 
             # Verificamos la cantidad de items
@@ -458,7 +461,7 @@ class ElectronicSpecialInvoice:
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
-                    obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
+                    obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_p_purchase_three_digit']
                     obj_item["dte:Descripcion"] = self.__dat_items[i]['description']
                     obj_item["dte:PrecioUnitario"] = precio_uni
                     obj_item["dte:Precio"] = precio_item
@@ -497,9 +500,9 @@ class ElectronicSpecialInvoice:
         """
 
         try:
-            gran_tot = 0
-            for i in self.__dat_items:
-                gran_tot += i['facelec_amount_minus_excise_tax']
+            # gran_tot = 0
+            # for i in self.__dat_items:
+            #     gran_tot += i['facelec_p_amount_minus_excise_tax']
 
             self.__d_totales = {
                 "dte:TotalImpuestos": {

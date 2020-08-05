@@ -267,6 +267,7 @@ def generate_debit_note(invoice_code, naming_series):
 @frappe.whitelist()
 def generate_special_invoice(invoice_code, naming_series):
     try:
+        frappe.msgprint(str(invoice_code) + str(naming_series))
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
         status_config = validate_configuration()
 
@@ -296,10 +297,10 @@ def generate_special_invoice(invoice_code, naming_series):
 
         # PASO 3: NOTA DE CREDITO ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
-        new_credit_note = ElectronicSpecialInvoice(invoice_code, status_config[1], naming_series)
+        new_special_invoice = ElectronicSpecialInvoice(invoice_code, status_config[1], naming_series)
 
         # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
-        status = new_credit_note.build_special_invoice()
+        status = new_special_invoice.build_special_invoice()
         if status[0] == False:  # Si la construccion de la peticion es False
             frappe.msgprint(msg=_(f'Ocurrio un problema en el proceso de crear Factura Especial Electronica, mas detalle en: {status[1]}'),
                             title=_('Proceso no completado'), indicator='red')
