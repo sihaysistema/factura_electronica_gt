@@ -4,11 +4,14 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _, _dict
+from frappe.utils import flt
 
 import json, xmltodict
 import base64
 import requests
 import datetime
+
+from factura_electronica.utils.formulas import apply_formula_isr
 
 
 # La contenida en el artículo 52 se refiere al documento que utiliza y emite
@@ -35,7 +38,7 @@ import datetime
 # 5.1 ACTUALIZAR REGISTROS
 
 class ElectronicSpecialInvoice:
-    def __init__(self, invoice_code, conf_name, naming_series, reason):
+    def __init__(self, invoice_code, conf_name, naming_series):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
 
@@ -46,7 +49,6 @@ class ElectronicSpecialInvoice:
         self.__invoice_code = invoice_code
         self.__config_name = conf_name
         self.__naming_serie = naming_series
-        self.__reason = reason
         self.__log_error = []
 
     def build_special_invoice(self):
@@ -90,7 +92,7 @@ class ElectronicSpecialInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                with open('debit_note.json', 'w') as f:
+                with open('special_invoice.json', 'w') as f:
                     f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
@@ -163,7 +165,7 @@ class ElectronicSpecialInvoice:
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                "@FechaHoraEmision": f'{self.date_invoice}T{self.time_invoice}',  # "2018-11-01T16:33:47Z",
+                "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",  Se usa lafecha y hora en que se realiza la emision de la factura electronicas
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')  # 'FACT'
             }
@@ -187,7 +189,8 @@ class ElectronicSpecialInvoice:
             self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__invoice_code},
                                                 fieldname=['company', 'company_address', 'nit_face_customer',
                                                            'customer_address', 'customer_name', 'total_taxes_and_charges',
-                                                           'grand_total'], as_dict=1)
+                                                           'grand_total', 'net_total', 'currency', 'credit_to',
+                                                           'conversion_rate'], as_dict=1)
             if len(self.dat_fac) == 0:
                 return False, f'''No se encontro ninguna factura con serie: {self.__invoice_code}.\
                                   Por favor valida los datos de la factura que deseas procesar'''
@@ -222,6 +225,7 @@ class ElectronicSpecialInvoice:
                                      tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire))
 
             # Si en configuracion de factura electronica esta seleccionada la opcion de usar datos de prueba
+            # APLICA PARA SANDBOX
             if frappe.db.get_value('Configuracion Factura Electronica',
                                   {'name': self.__config_name}, 'usar_datos_prueba') == 1:
                 nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
@@ -283,7 +287,7 @@ class ElectronicSpecialInvoice:
                 'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
                 'customer_name': 'Consumidor Final',
                 'address': 'Guatemala',
-                'pincode': '01001',
+                'pincode': '0',  # Segun esquema XML, si no hay codigo postal se puede usar 0
                 'municipio': 'Guatemala',
                 'departamento': 'Guatemala',
                 'pais': 'GT'
@@ -374,7 +378,7 @@ class ElectronicSpecialInvoice:
         """
 
         try:
-            # TODO: Consultar todas las posibles combinaciones disponibles
+            # ESTA SECCION DE INFO, DEBE SER CONFIRMADA CON INFILE, PARA QUE GENERE LA COMBINACION RECOMENDADA A USAR
             self.__d_frases = {
                 "dte:Frase": {
                     "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
@@ -413,11 +417,13 @@ class ElectronicSpecialInvoice:
                                                         'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
                                                         'facelec_gt_tax_net_services_amt'], as_dict=True)
 
-            # TODO VER ESCENARIO CUANDO HAY MAS DE UN IMPUESTO?????
-            # TODO VER ESCENARIO CUANDO NO HAY IMPUESTOS, ES POSIBLE???
+            # segun los esquemas XML, solo mostramos el impuesto de IVA, algunos de los impuestos que pueden ir son
+            # (depende del emisor y el tipo de documento electronico a generar):
+            # Petroleo, Turismo Hospedaje, Timbre de prensa, Bomberos, Tasa Municipal
             # Obtenemos los impuesto cofigurados para x compañia en la factura
             self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__invoice_code},
                                                      fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
+            self.iva_rate = self.__taxes_fact[0]['rate']
 
             # Verificamos la cantidad de items
             longitems = len(self.__dat_items)
@@ -439,24 +445,24 @@ class ElectronicSpecialInvoice:
 
                     # Calculo precio unitario
                     precio_uni = 0
-                    precio_uni = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['rate']) + float(abs(self.__dat_items[i]['price_list_rate']) - abs(self.__dat_items[i]['rate'])))))
+                    precio_uni = float('{0:.2f}'.format(self.__dat_items[i]['rate'] + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
 
                     # Calculo precio item
                     precio_item = 0
-                    precio_item = abs(float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate']))))
+                    precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
 
-                    # Calculo descuento item
+                    # Calculo descuento item: Segun esquema XML se obtiene los montos descuento
                     desc_item = 0
-                    desc_item = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(float(self.__dat_items[i]['amount'])))))
+                    desc_item = float('{0:.2f}'.format(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty'] - float(self.__dat_items[i]['amount'])))
 
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
-                    obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
+                    obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = self.__dat_items[i]['description']
-                    obj_item["dte:PrecioUnitario"] = abs(precio_uni)
-                    obj_item["dte:Precio"] = abs(precio_item)
-                    obj_item["dte:Descuento"] = abs(desc_item)
+                    obj_item["dte:PrecioUnitario"] = precio_uni
+                    obj_item["dte:Precio"] = precio_item
+                    obj_item["dte:Descuento"] = desc_item
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -464,11 +470,11 @@ class ElectronicSpecialInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))))
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
-                                                                                                      float(self.__taxes_fact[0]['rate']/100))))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount'])))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
+                                                                                                            float(self.__taxes_fact[0]['rate']/100)))
 
-                    obj_item["dte:Total"] = abs(float('{0:.2f}'.format((float(self.__dat_items[i]['amount'])))))
+                    obj_item["dte:Total"] = float('{0:.2f}'.format((float(self.__dat_items[i]['amount']))))
                     # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
@@ -516,6 +522,14 @@ class ElectronicSpecialInvoice:
                                                      fieldname=['serie_factura_original', 'uuid', 'numero', 'serie'],
                                                      as_dict=1)
 
+            self.net_total = self.dat_fac[0]['net_total']
+            self.company = self.dat_fac[0]['company']
+            self.grand_totol_invoice = self.dat_fac[0]['grand_total']
+
+            ISR = flt(apply_formula_isr(self.net_total, self.company), 2)  # automaticamente verfica si es 5% o 7%
+            IVA = flt((self.net_total/((self.iva_rate/100) + 1)) * self.iva_rate/100, 2)  # (monto/1.12) * 0.12
+            MONTO_TOTAL_COMPLEMENTO = flt(self.grand_totol_invoice - (ISR + IVA), 2)
+
             self.__d_complements = {
                 "dte:Complemento": {
                     "@IDComplemento": "TEXT",
@@ -525,9 +539,9 @@ class ElectronicSpecialInvoice:
                         "@xmlns:cfe": "http://www.sat.gob.gt/face2/ComplementoFacturaEspecial/0.1.0",
                         "@Version": "1",
                         "@xsi:schemaLocation": "http://www.sat.gob.gt/face2/ComplementoFacturaEspecial/0.1.0 C:\\Users\\User\\Desktop\\FEL\\Esquemas\\GT_Complemento_Fac_Especial-0.1.0.xsd",
-                        "cfe:RetencionISR": "6.7",
-                        "cfe:RetencionIVA": "16.07",
-                        "cfe:TotalMenosRetenciones": "127.23"
+                        "cfe:RetencionISR": ISR,
+                        "cfe:RetencionIVA": IVA,
+                        "cfe:TotalMenosRetenciones": MONTO_TOTAL_COMPLEMENTO
                     }
                 }
             }
@@ -549,7 +563,7 @@ class ElectronicSpecialInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            with open('mi_factura.xml', 'w') as f:
+            with open('special_invoice.xml', 'w') as f:
                 f.write(self.__xml_string)
 
         except:

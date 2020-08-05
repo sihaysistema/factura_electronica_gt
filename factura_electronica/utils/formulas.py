@@ -40,12 +40,12 @@ def amount_converter(monto, currency_exchange, from_currency="GTQ", to_currency=
 
 # Aplicara el calculo no importando la moneda
 # Nota aplicarle conversion si es necesario
-def apply_formula_isr(monto, company, retention_ranges, decimals=2):
+def apply_formula_isr(monto, company, decimals=2):
     """
     Formula para obtener ISR
 
     Args:
-        monto (float): Monto con IVA
+        monto (float): Monto sin IVA
 
     Returns:
         float: ISR
@@ -53,11 +53,11 @@ def apply_formula_isr(monto, company, retention_ranges, decimals=2):
     monto_sin_iva = monto
 
     # Obtenemos los rangos de renteciones IVA - ISR
-    # retention_ranges = frappe.db.get_values('Tax Witholding Ranges', filters={'parent': company},
-    #                                         fieldname=['isr_account_payable', 'isr_account_receivable',
-    #                                                    'iva_account_payable', 'vat_account_receivable',
-    #                                                    'isr_percentage_rate', 'minimum_amount',
-    #                                                    'maximum_amount', 'iva_percentage_rate'], as_dict=1)
+    retention_ranges = frappe.db.get_values('Tax Witholding Ranges', filters={'parent': company},
+                                            fieldname=['isr_account_payable', 'isr_account_receivable',
+                                                       'iva_account_payable', 'vat_account_receivable',
+                                                       'isr_percentage_rate', 'minimum_amount',
+                                                       'maximum_amount', 'iva_percentage_rate'], as_dict=1)
 
     # En funcion al monto, validamos que porcentaje de retencion usar
     for retention in retention_ranges:
@@ -70,7 +70,7 @@ def apply_formula_isr(monto, company, retention_ranges, decimals=2):
 
         # Aplicamos el 7%
         if (monto >= retention.get('minimum_amount')) and (retention.get('maximum_amount') == 0):
-            isr_5 = retention.get('minimum_amount') * 0.05
+            isr_5 = retention.get('minimum_amount') * retention.get('isr_percentage_rate')
             isr_7 = (monto_sin_iva - retention.get('minimum_amount')) * (retention.get('isr_percentage_rate')/100)
 
             total_isr_7_reten = isr_5 + isr_7
