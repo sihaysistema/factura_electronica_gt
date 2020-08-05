@@ -296,7 +296,9 @@ def fill_fixtures():
                     "Purchase Invoice Item-facelec_pr_is_exempt",
                     "Sales Invoice Item-facelec_si_is_exempt",
                     "Purchase Invoice-facelec_tax_retention_guatemala",
-                    "Sales Invoice-facelec_tax_retention_guatemala"
+                    "Sales Invoice-facelec_tax_retention_guatemala",
+                    "Purchase Taxes and Charges-facelec_tax_name",
+                    "Purchase Taxes and Charges-facelec_taxable_unit_code"
                 ]
             ]
         ]

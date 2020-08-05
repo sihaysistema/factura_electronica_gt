@@ -302,6 +302,24 @@ frappe.ui.form.on("Purchase Invoice", {
             cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
                 frappe.msgprint("WORK IN PROGRESS");
             });
+            frm.add_custom_button(__("Generate Special Invoice FEL"), function () {
+                frappe.confirm(__('Are you sure you want to proceed to generate a Special Invoice?'),
+                    () => {
+                        frappe.call({
+                            method: 'factura_electronica.fel_api.generate_special_invoice',
+                            args: {
+                                invoice_code: frm.doc.name,
+                                naming_series: frm.doc.naming_series
+                            },
+                            callback: function (r) {
+                                console.log(r.message);
+                            },
+                        });
+                    }, () => {
+                        // action to perform if No is selected
+                        console.log('Selecciono NO')
+                    });
+            }).addClass("btn-warning");
 
             cur_frm.page.add_action_item(__("SPECIAL INVOICE"), function () {
 
