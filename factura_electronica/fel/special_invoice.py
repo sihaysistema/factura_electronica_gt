@@ -166,7 +166,7 @@ class ElectronicSpecialInvoice:
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'currency'),
                 "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",  Se usa lafecha y hora en que se realiza la emision de la factura electronicas
-                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                "@Tipo": frappe.db.get_value('Serial Configuration For Purchase Invoice', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')  # 'FACT'
             }
 
@@ -416,9 +416,6 @@ class ElectronicSpecialInvoice:
                                                         'facelec_p_other_tax_amount', 'facelec_p_purchase_three_digit',
                                                         'facelec_p_gt_tax_net_fuel_amt', 'facelec_p_gt_tax_net_goods_amt',
                                                         'facelec_p_gt_tax_net_services_amt'], as_dict=True)
-
-            with open('item_compra.json', 'w') as f:
-                f.write(json.dumps(self.__dat_items, indent=2))
 
             # segun los esquemas XML, solo mostramos el impuesto de IVA, algunos de los impuestos que pueden ir son
             # (depende del emisor y el tipo de documento electronico a generar):
