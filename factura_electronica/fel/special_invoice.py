@@ -307,6 +307,7 @@ class ElectronicSpecialInvoice:
                 # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
                 # electronico, los demas campos se pueden dejar como defualt para ciudad
                 if str(self.dat_fac[0]['facelec_nit_fproveedor']).upper() == 'C/F':
+                    self.nit_proveedor_limpio = (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', '')
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
                         "@IDReceptor": (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
@@ -320,6 +321,7 @@ class ElectronicSpecialInvoice:
                         }
                     }
                 else:
+                    self.nit_proveedor_limpio = str(self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
                         "@IDReceptor": str(self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', ''),  # NIT
@@ -336,6 +338,7 @@ class ElectronicSpecialInvoice:
             else:
                 # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
                 # electronico, los demas campos se pueden dejar como defualt para ciudad
+                self.nit_proveedor_limpio = (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', '')
                 if str(self.dat_fac[0]['facelec_nit_fproveedor']).upper() == 'C/F':
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
@@ -350,6 +353,7 @@ class ElectronicSpecialInvoice:
                         }
                     }
                 else:
+                    self.nit_proveedor_limpio = str(self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
                         "@IDReceptor": str(self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', ''),  # NIT
@@ -521,11 +525,11 @@ class ElectronicSpecialInvoice:
 
             self.net_total = self.dat_fac[0]['net_total']
             self.company = self.dat_fac[0]['company']
-            self.grand_totol_invoice = self.dat_fac[0]['grand_total']
+            self.grand_total_invoice = self.dat_fac[0]['grand_total']
 
-            ISR = flt(apply_formula_isr(self.net_total, self.company), 2)  # automaticamente verfica si es 5% o 7%
-            IVA = flt((self.net_total/((self.iva_rate/100) + 1)) * self.iva_rate/100, 2)  # (monto/1.12) * 0.12
-            MONTO_TOTAL_COMPLEMENTO = flt(self.grand_totol_invoice - (ISR + IVA), 2)
+            ISR = round(apply_formula_isr(self.net_total, self.company), 2)  # automaticamente verfica si es 5% o 7%
+            IVA = round((self.net_total/((self.iva_rate/100) + 1)) * self.iva_rate/100, 2)  # (monto/1.12) * 0.12
+            MONTO_TOTAL_COMPLEMENTO = round(self.grand_total_invoice - (ISR + IVA), 2)
 
             self.__d_complements = {
                 "dte:Complemento": {
@@ -542,6 +546,14 @@ class ElectronicSpecialInvoice:
                     }
                 }
             }
+
+            # Establecemos el numero de retenciones a registrar, guardandola en variable de la clase
+            self.list_retentions = [
+                {
+                    'tax': 'ISR',
+                    'retention_amount': ISR
+                }
+            ]
 
             return True, 'OK'
 
@@ -902,3 +914,27 @@ class ElectronicSpecialInvoice:
 
                 # Se utilizara el UUID como clave para orquestar el resto de las apps que lo necesiten
                 return True, factura_guardada[0]['uuid']
+
+    def record_retention(self):
+        try:
+
+            for retention in self.list_retentions:  # Por cada retencion capturada
+                new_retention = frappe.get_doc({
+                    'doctype': 'Tax Retention Guatemala',
+                    'date': self.date_invoice,
+                    'retention_type': retention.get('tax'),
+                    'party_type': 'Purchase Invoice',
+                    'company': self.company,
+                    'tax_id': self.nit_proveedor_limpio,
+                    'grand_total': self.grand_total_invoice,
+                    'currency': frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'currency'),
+                    'retention_amount': retention.get('retention_amount'),
+                    'retention_status': '',
+                    'docstatus': 0
+                })
+                new_retention.save()
+
+            return True, 'OK'
+
+        except:
+            return False, str(frappe.get_traceback())

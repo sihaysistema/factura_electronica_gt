@@ -294,12 +294,11 @@ def generate_special_invoice(invoice_code, naming_series):
             return False, 'No completed'
 
 
-
-        # PASO 3: NOTA DE CREDITO ELECTRONICA
+        # PASO 3: FACTURA ESPECIAL ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
         new_special_invoice = ElectronicSpecialInvoice(invoice_code, status_config[1], naming_series)
 
-        # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
+        # PASO 3.2 - VALIDA LOS DATOS NECESARIOS Y CONSTRUYE EL ESQUEMA JSON PARA LUEGO CONVERTIRLO A XML
         status = new_special_invoice.build_special_invoice()
         if status[0] == False:  # Si la construccion de la peticion es False
             frappe.msgprint(msg=_(f'Ocurrio un problema en el proceso de crear Factura Especial Electronica, mas detalle en: {status[1]}'),
@@ -311,25 +310,36 @@ def generate_special_invoice(invoice_code, naming_series):
                         title=_('Proceso completado'), indicator='green')
 
 
-        # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
+        # PASO 4: GUARDAMOS LA RETENCION CON IMPUESTOS, Y ACTUALIZAMOS LA FACTURA REFERENCIA
+        status_retention = new_special_invoice.record_retention()
+        if status_retention[0] == False:  # Si hay problema al tratar de registrar la retencion
+            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de registrar las retenciones, se recomienda hacer manualmente el registro, mas detalle en: {status_retention[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
+
+            return False, 'No completed'
+
+
+        # PASO 5: CREAMOS JOURNAL ENTRY CON LOS IMPUESTOS TOMADOS EN CUENTA
+
+        # PASO 6: FIRMA CERTIFICADA Y ENCRIPTADA
         # En este paso se convierte de JSON a XML y se codifica en base64
         # status_firma = new_credit_note.sign_invoice()
         # if status_firma[0] == False:  # Si no se firma correctamente
         #     return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
-        # # PASO 5: SOLICITAMOS FACTURA ELECTRONICA
+        # # PASO 7: SOLICITAMOS DOCUMENTO ELECTRONICO
         # status_facelec = new_credit_note.request_electronic_invoice()
         # if status_facelec[0] == False:
         #     return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
 
-        # # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
+        # # PASO 8: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
         # # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
         # # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
         # status_res = new_credit_note.response_validator()
         # if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
         #     return status_res  # return tuple
 
-        # # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
+        # # PASO 9: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
         # status_upgrade = new_credit_note.upgrade_records()
         # if status_upgrade[0] == False:
         #     return status_upgrade
