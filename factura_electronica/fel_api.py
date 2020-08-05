@@ -2,16 +2,18 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-import frappe
-from frappe import _
-import time
+
 # import datetime
 import json
+import time
+
+import frappe
+from factura_electronica.controllers.journal_entry_special import JournalEntrySpecialISR
+from factura_electronica.fel.credit_note import ElectronicCreditNote
 # from timeit import default_timer as timer usar para medir tiempo ejecucion
 from factura_electronica.fel.fel import ElectronicInvoice
-from factura_electronica.fel.credit_note import ElectronicCreditNote
 from factura_electronica.fel.special_invoice import ElectronicSpecialInvoice
-from factura_electronica.controllers.journal_entry import JournalEntrySpecialISR
+from frappe import _
 
 
 # API para uso interno con apps hechas con Frappe Framework, Para
@@ -109,6 +111,7 @@ def api_facelec(invoice_name, naming_serie):
             'id_factura': invoice_name,
             'msj': f'Ocurrio un problema al tratar de generar factura electronica, mas info en: {frappe.get_traceback()}'
         }
+
 
 
 def generate_electronic_invoice(invoice_code, naming_series):

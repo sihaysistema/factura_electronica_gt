@@ -3,14 +3,13 @@
 
 from __future__ import unicode_literals
 
-import frappe
-from factura_electronica.factura_electronica.doctype.batch_electronic_invoice.batch_electronic_invoice import \
-    batch_generator
-from factura_electronica.controllers.journal_entry import JournalEntrySaleInvoice, JournalEntrySpecialISR
-from frappe import _
-
 import json
 
+import frappe
+from factura_electronica.controllers.journal_entry import JournalEntrySaleInvoice
+from factura_electronica.controllers.journal_entry_special import JournalEntrySpecialISR
+from factura_electronica.factura_electronica.doctype.batch_electronic_invoice.batch_electronic_invoice import batch_generator
+from frappe import _
 
 # USAR ESTE SCRIPT COMO API PARA COMUNICAR APPS DEL ECOSISTEMA FRAPPE/ERPNEXT :)
 
@@ -60,15 +59,16 @@ def journal_entry_isr(invoice_name, debit_in_acc_currency, cost_center='',
 
 
 @frappe.whitelist()
-def journal_entry_isr_purchase_inv(invoice_name, is_isr_ret, is_iva_ret, cost_center,
-                                   credit_in_acc_currency, is_multicurrency=0, description=''):
+def journal_entry_isr_purchase_inv(invoice_name, cost_center, credit_in_acc_currency,
+                                   is_multicurrency=0, description=''):
     """
-    Funciona llamada desde boton Sales Invoice, encargada de crear Journal
+    Funciona llamada desde boton Purchase Invoice, encargada de crear Journal
     Entry, en funcion a los parametros pasados
 
     Args:
         invoice_name (dict): Diccionario con las propiedades de la factura
     """
+
     try:
         # NOTE: APLICA SOLO PARA FACTURA ESPECIAL, APLICA RETENSION IVA E ISR, VER CLASE PARA FUTURAS MODIFICACIONES :D
         purchase_invoice_info = frappe.get_doc('Purchase Invoice', {'name': invoice_name})

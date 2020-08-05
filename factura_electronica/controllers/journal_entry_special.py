@@ -36,7 +36,7 @@ class JournalEntrySpecialISR():
         self.name_inv = data_invoice.get("name")
         self.base_net_total = data_invoice.get("base_total_taxes_and_charges")  # IVA EN moneda de company
         self.cost_center = cost_center or ''
-        self.credit_in_acc_currency = credit_in_acc_currency
+        self.credit_in_acc_currency = credit_in_acc_currency  # CAJA
         self.is_multicurrency = is_multicurrency
         self.remarks = descr
         self.docstatus = 0
@@ -183,10 +183,11 @@ class JournalEntrySpecialISR():
         Returns:
             tuple: Boolean, descripcion operacion
         """
+
         try:
             # -------------------------------------------------------------------------------------------------------------------------
             # FILA 1: El monto acordado con supplier
-            # obtenemos la moneda de la cuenta por pagar
+            # obtenemos la moneda de la cuenta por pagar, este dato se obtiene de la factura de compra
             curr_row_a = frappe.db.get_value("Account", {"name": self.credit_to}, "account_currency")
 
             # CALCULOS APLICABLES PARA IMPUESTOS GUATEMALA
@@ -224,15 +225,17 @@ class JournalEntrySpecialISR():
             grand_total_gtq = self.grand_total_currency_company
 
             # Obtenemos el monto sin IVA del grand total moneda de company "GTQ"
-            GRAND_TOTAL_NO_IVA = round(grand_total_gtq/(self.vat_rate + 1), self.decimals_ope)
+            GRAND_TOTAL_NO_IVA = round(self.grand_total_sin_iva)
 
             # Obtenemos el iva a retener GTQ
             IVA_OPE = round((GRAND_TOTAL_NO_IVA * self.vat_rate), self.decimals_ope)
 
             # El monto en quetzales lo pasamos a la funcion que calcula automaticamente el ISR
-            ISR_PAYABLE_GTQ = apply_formula_isr(GRAND_TOTAL_NO_IVA, self.company, self.retention_ranges, decimals=self.decimals_ope)
+            # NOTA: a pesar de que se esta pasando el numero de decimales, no lo estamos aplicando, puede servir
+            # para facilitar futuras modifcaiones, EL CALCULO SE HARA CON TODOS LOS DECIMALES
+            ISR_PAYABLE_GTQ = apply_formula_isr(GRAND_TOTAL_NO_IVA, self.company, decimals=self.decimals_ope)
 
-            # El monto a pagar, restando el IVA a retener, e ISR a retener
+            # El monto a pagar, restando el IVA a retener, y el ISR a retener
             amt_without_isr_iva = (grand_total_gtq - (IVA_OPE + ISR_PAYABLE_GTQ))
 
             # Se vuelve a validar la conversion a la moneda de la cuenta en caso aplique
@@ -258,7 +261,7 @@ class JournalEntrySpecialISR():
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_c = 1 if (curr_row_c == "GTQ") else self.curr_exch
-            iva_curr_acc = amount_converter((GRAND_TOTAL_NO_IVA * self.vat_rate), self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
+            iva_curr_acc = amount_converter(IVA_OPE, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
 
             row_three = {
                 "account": self.iva_account_payable,  #Cuenta a que se va a utilizar

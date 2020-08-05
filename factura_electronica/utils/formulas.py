@@ -35,6 +35,9 @@ def amount_converter(monto, currency_exchange, from_currency="GTQ", to_currency=
     if from_currency == "USD" and to_currency == "GTQ":
         return (monto * currency_exchange)
 
+    # Si no aplica ningun escenario anterior se retornal el mismo monto,
+    # tomar en cuenta que si se quieren agregar mas monedas debemos hacer una nueva
+    # funcion que use todos los tipo de cambio disponibles en el erp
     return monto
 
 
