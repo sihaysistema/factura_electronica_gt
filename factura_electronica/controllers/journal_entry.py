@@ -10,12 +10,6 @@ import frappe
 from factura_electronica.utils.formulas import amount_converter, apply_formula_isr, number_of_decimals
 from frappe import _
 
-# NOTE: TODO: REFACTORIZAR, APLICAR HERENCIA, POLIMORFISMO? FUNCIONES?
-
-# Constante con montos fijos para escenarios ISR
-TASAS_ISR = (0.05, 0.07,)
-RANGO_ISR = (0, 30000,)
-
 
 class JournalEntrySaleInvoice():
     def __init__(self, data_invoice, is_isr_ret, is_iva_ret, debit_in_acc_currency,
@@ -39,7 +33,7 @@ class JournalEntrySaleInvoice():
         self.remarks = descr
         self.docstatus = 0
         self.rows_journal_entry = []
-        self.decimals_ope = number_of_decimals(float(data_invoice.get("grand_total")))
+        self.decimals_ope = 2
 
     def create(self):
         '''Funcion encargada de crear journal entry haciendo referencia a x factura'''
@@ -110,8 +104,8 @@ class JournalEntrySaleInvoice():
         else:
 
             if (self.is_isr_retention == 1) or (self.is_iva_retention == 1):
-                ret = 'ISR' if self.is_isr_retention == 1 else ''
                 ret = 'IVA' if self.is_iva_retention == 1 else ''
+                ret = 'ISR' if self.is_isr_retention == 1 else ''
 
                 # Registrar retencion
                 register_withholding({
@@ -270,10 +264,10 @@ class JournalEntrySaleInvoice():
             GRAND_TOTAL_NO_IVA = round(grand_total_gtq/(self.vat_rate + 1), self.decimals_ope)
 
             # El monto en quetzales lo pasamos a la funcion que calcula automaticamente el ISR
-            ISR_PAYABLE_GTQ = apply_formula_isr(GRAND_TOTAL_NO_IVA, self.company, self.retention_ranges, decimals=self.decimals_ope)
+            self.ISR_PAYABLE_GTQ = apply_formula_isr(GRAND_TOTAL_NO_IVA, self.company, decimals=self.decimals_ope)
 
             # El monto a pagar, restando el ISR a retener
-            amt_without_isr = (grand_total_gtq - (ISR_PAYABLE_GTQ))
+            amt_without_isr = (grand_total_gtq - (self.ISR_PAYABLE_GTQ))
 
             # Se vuelve a validar la conversion a la moneda de la cuenta en caso aplique
             calc_row_two = round(amount_converter(amt_without_isr, self.curr_exch,
@@ -296,7 +290,7 @@ class JournalEntrySaleInvoice():
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_d = 1 if (curr_row_d == "GTQ") else self.curr_exch
-            isr_curr_acc = amount_converter(ISR_PAYABLE_GTQ, self.curr_exch, from_currency="GTQ", to_currency=curr_row_d)
+            isr_curr_acc = amount_converter(self.ISR_PAYABLE_GTQ, self.curr_exch, from_currency="GTQ", to_currency=curr_row_d)
 
             row_three = {
                 "account": self.isr_account_payable,  # Cuenta a que se va a utilizar
@@ -372,13 +366,13 @@ class JournalEntrySaleInvoice():
             GRAND_TOTAL_NO_IVA = round(grand_total_gtq/(self.vat_rate + 1), self.decimals_ope)
 
             # Obtenemos el iva a retener GTQ
-            IVA_OPE = round((GRAND_TOTAL_NO_IVA * self.vat_rate), self.decimals_ope)
+            self.IVA_OPE = round((GRAND_TOTAL_NO_IVA * self.vat_rate), self.decimals_ope)
 
             # El monto en quetzales lo pasamos a la funcion que calcula automaticamente el ISR
-            ISR_PAYABLE_GTQ = apply_formula_isr(GRAND_TOTAL_NO_IVA, self.company, self.retention_ranges, decimals=self.decimals_ope)
+            self.ISR_PAYABLE_GTQ = apply_formula_isr(GRAND_TOTAL_NO_IVA, self.company, decimals=self.decimals_ope)
 
             # El monto a pagar, restando el IVA a retener, e ISR a retener
-            amt_without_isr_iva = (grand_total_gtq - (IVA_OPE + ISR_PAYABLE_GTQ))
+            amt_without_isr_iva = (grand_total_gtq - (self.IVA_OPE + self.ISR_PAYABLE_GTQ))
 
             # Se vuelve a validar la conversion a la moneda de la cuenta en caso aplique
             calc_row_two = round(amount_converter(amt_without_isr_iva, self.curr_exch,
@@ -403,7 +397,7 @@ class JournalEntrySaleInvoice():
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_c = 1 if (curr_row_c == "GTQ") else self.curr_exch
-            iva_curr_acc = amount_converter((GRAND_TOTAL_NO_IVA * self.vat_rate), self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
+            iva_curr_acc = amount_converter(self.IVA_OPE, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
 
             row_three = {
                 "account": self.iva_account_payable,  #Cuenta a que se va a utilizar
@@ -424,7 +418,7 @@ class JournalEntrySaleInvoice():
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_d = 1 if (curr_row_d == "GTQ") else self.curr_exch
-            isr_curr_acc = amount_converter(ISR_PAYABLE_GTQ, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
+            isr_curr_acc = amount_converter(self.ISR_PAYABLE_GTQ, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
 
             row_four = {
                 "account": self.isr_account_payable,  # Cuenta a que se va a utilizar
@@ -500,10 +494,10 @@ class JournalEntrySaleInvoice():
             GRAND_TOTAL_NO_IVA = round(grand_total_gtq/(self.vat_rate + 1), self.decimals_ope)
 
             # Obtenemos el iva a retener GTQ
-            IVA_OPE = round((GRAND_TOTAL_NO_IVA * self.vat_rate), self.decimals_ope)
+            self.IVA_OPE = round((GRAND_TOTAL_NO_IVA * self.vat_rate), self.decimals_ope)
 
             # El monto a pagar, restando el IVA a retener, e ISR a retener
-            amt_without_isr_iva = (grand_total_gtq - (IVA_OPE))
+            amt_without_isr_iva = (grand_total_gtq - (self.IVA_OPE))
 
             # Se vuelve a validar la conversion a la moneda de la cuenta en caso aplique
             calc_row_two = round(amount_converter(amt_without_isr_iva, self.curr_exch,
@@ -528,7 +522,7 @@ class JournalEntrySaleInvoice():
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_c = 1 if (curr_row_c == "GTQ") else self.curr_exch
-            iva_curr_acc = amount_converter((GRAND_TOTAL_NO_IVA * self.vat_rate), self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
+            iva_curr_acc = amount_converter(self.IVA_OPE, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
 
             row_three = {
                 "account": self.iva_account_payable,  #Cuenta a que se va a utilizar

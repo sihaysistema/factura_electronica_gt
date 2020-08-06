@@ -820,7 +820,7 @@ frappe.ui.form.on("Sales Invoice", {
 
         // Si la factura de venta se convierte a nota de credito,
         // para cumplir esta debe ser una factura electronica ya generada, segun esquema XML
-        if (frm.doc.is_return) {  //  && frm.doc.numero_autorizacion_fel
+        if (frm.doc.is_return && frm.doc.docstatus == 1) {  //  && frm.doc.numero_autorizacion_fel
             console.log('Es retorno');
             /* ESTA PORCION DE CODIGO ERA PARA USAR UNA SERIE HARDCODE
             // cur_frm.set_df_property("naming_series", "read_only", 1);
