@@ -79,24 +79,42 @@ class JournalEntrySpecialISR():
             return False, 'Error datos para crear journal entry '+str(frappe.get_traceback())
 
         else:
-            for retention in self.list_retentions:  # Por cada retencion capturada
-                new_retention = frappe.get_doc({
-                    'doctype': 'Tax Retention Guatemala',
-                    'date': frappe.db.get_value('Purchase Invoice', {'name': self.name_inv}, 'posting_date'),
-                    'retention_type': retention.get('tax'),
-                    'party_type': 'Purchase Invoice',
-                    'purchase_invoice': self.name_inv,
-                    'company': self.company,
-                    'tax_id': frappe.db.get_value('Purchase Invoice', {'name': self.name_inv}, 'facelec_nit_fproveedor'),
-                    'grand_total': self.grand_total,
-                    'currency': frappe.db.get_value('Purchase Invoice', {'name': self.name_inv}, 'currency'),
-                    'retention_amount': retention.get('retention_amount'),
-                    'retention_status': '',
-                    'docstatus': 0
-                })
-                new_retention.save()
+            try:
+                for retention in self.list_retentions:  # Por cada retencion capturada
+                    if not frappe.db.exists('Tax Retention Guatemala', {'purchase_invoice': self.name_inv}):
+                        new_retention = frappe.get_doc({
+                            'doctype': 'Tax Retention Guatemala',
+                            'date': frappe.db.get_value('Purchase Invoice', {'name': self.name_inv}, 'posting_date'),
+                            'retention_type': retention.get('tax'),
+                            'party_type': 'Purchase Invoice',
+                            'purchase_invoice': self.name_inv,
+                            'company': self.company,
+                            'tax_id': frappe.db.get_value('Purchase Invoice', {'name': self.name_inv}, 'facelec_nit_fproveedor'),
+                            'grand_total': self.grand_total,
+                            'currency': frappe.db.get_value('Purchase Invoice', {'name': self.name_inv}, 'currency'),
+                            'retention_amount': retention.get('retention_amount'),
+                            'retention_status': '',
+                            'docstatus': 0
+                        })
+                        new_retention.save()
 
-            return True, status_journal.name
+                        # actualizamos la factura original y agregamos como enlace el nombre de la retencion registrada
+                        # tomar en cuenta que por ahora solo se puede hacer un registro per invoice
+                        # facelec_tax_retention_guatemala
+
+                        frappe.db.sql('''UPDATE `tabPurchase Invoice`
+                                        SET facelec_tax_retention_guatemala=%(no_correcto)s
+                                        WHERE name=%(serieFa)s
+                                    ''', {'no_correcto': new_retention.name, 'serieFa':self.name_inv})
+
+            except:
+                # Si ocurre un error de todos modos retornamos que se generos exitosamente la poliza, y se indica
+                # que se puede generar un registro de retencion manual, FEAUTRE agregar boton para generar retencion
+                frappe.msgprint(_('Ocurrio un problema al tratar de registrar las retenciones, se recomienda generar automaticamente la retencion'))
+                return True, status_journal.name
+
+            else:
+                return True, status_journal.name
 
     def validate_dependencies(self):
         """
@@ -329,8 +347,9 @@ class JournalEntrySpecialISR():
             total_debit = flt(float(INT_GTQ + flt(self.ISR_PAYABLE_GTQ, 2) + flt(self.IVA_OPE, 2)))  # LO QUE HAY QUE PAGAR
             total_credit = flt(self.grand_total_currency_company)  # El monto original a pagar, excluyendo impuestos ...
 
-            with open('balance.txt', 'w') as f:
-                f.write(f'{total_debit} -- {total_credit}')
+            # DEBUG: SI QUIERES COMPARAR MONTOS Y VER LA DIFERENCIA
+            # with open('balance.txt', 'w') as f:
+            #     f.write(f'{total_debit} -- {total_credit}')
 
             # El monto que meta, que quiero obtener
             goal = total_debit
@@ -370,9 +389,9 @@ class JournalEntrySpecialISR():
                     })
                     self.rows_journal_entry.append(row_five)
 
-
-                with open('centavos.txt', 'w') as f:
-                    f.write(str(abs(centavos)))
+                # DEBUG: PARA VER EL CENTAVO
+                # with open('centavos.txt', 'w') as f:
+                #     f.write(str(abs(centavos)))
 
         except:
             return False, str(frappe.get_traceback())
