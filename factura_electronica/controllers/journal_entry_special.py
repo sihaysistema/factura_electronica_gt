@@ -120,7 +120,9 @@ class JournalEntrySpecialISR():
                                                          fieldname=['isr_account_payable', 'isr_account_receivable',
                                                                     'iva_account_payable', 'vat_account_receivable',
                                                                     'isr_percentage_rate', 'minimum_amount',
-                                                                    'maximum_amount', 'iva_percentage_rate'], as_dict=1)
+                                                                    'maximum_amount', 'iva_percentage_rate',
+                                                                    'vat_retention_to_compensate', 'vat_retention_payable',
+                                                                    'income_tax_retention_payable_account'], as_dict=1)
 
             # El IVA tendra un valor constante en cada fila
             self.grand_total_sin_iva = monto/((self.retention_ranges[0]['iva_percentage_rate']/100)+1)  # monto / 1.12
@@ -142,14 +144,14 @@ class JournalEntrySpecialISR():
                     self.vat_rate = (retention.get('iva_percentage_rate')/100)  # 0.12
 
                     # Cuenta ISR por pagar
-                    if not retention.get('isr_account_payable'):
+                    if not retention.get('income_tax_retention_payable_account'):
                         return False, 'No se puede proceder con la generacion de poliza contable, no se encontro ninguna cuenta para ISR retencion configurada'
-                    self.isr_account_payable = retention.get('isr_account_payable')
+                    self.isr_account_payable = retention.get('income_tax_retention_payable_account')
 
                     # Cuenta IVA por pagar
-                    if not retention.get('iva_account_payable'):
+                    if not retention.get('vat_retention_to_compensate'):
                         return False, 'No se puede proceder con la generacion de poliza contable, no se encontro ninguna cuenta para IVA retencion configurada'
-                    self.iva_account_payable = retention.get('iva_account_payable')
+                    self.iva_account_payable = retention.get('vat_retention_to_compensate')
 
 
                 # Si aplica el escenario. Aplicamos el 7%
@@ -160,14 +162,14 @@ class JournalEntrySpecialISR():
                     self.vat_rate = (retention.get('iva_percentage_rate')/100)  # 0.12
 
                     # Cuenta ISR por pagar
-                    if not retention.get('isr_account_payable'):
+                    if not retention.get('income_tax_retention_payable_account'):
                         return False, 'No se puede proceder con la generacion de poliza contable, no se encontro ninguna cuenta para ISR retencion configurada'
-                    self.isr_account_payable = retention.get('isr_account_payable')
+                    self.isr_account_payable = retention.get('income_tax_retention_payable_account')
 
                     # Cuenta IVA por pagar
-                    if not retention.get('iva_account_payable'):
+                    if not retention.get('vat_retention_to_compensate'):
                         return False, 'No se puede proceder con la generacion de poliza contable, no se encontro ninguna cuenta para IVA retencion configurada'
-                    self.iva_account_payable = retention.get('iva_account_payable')
+                    self.iva_account_payable = retention.get('vat_retention_to_compensate')
 
             return True, 'OK'
 

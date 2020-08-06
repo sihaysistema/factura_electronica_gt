@@ -271,11 +271,6 @@ def generate_debit_note(invoice_code, naming_series):
 @frappe.whitelist()
 def generate_special_invoice(invoice_code, naming_series):
     try:
-        # PASO 1: Creamos la poliza contable
-        # data_purchase_invoice = frappe.get_doc('', str(invoice_code))
-        # new_journal_entry = JournalEntrySpecialISR(data_purchase_invoice, )
-
-        # PASO 2: registramos las retenciones
 
         # PASO 3: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
         status_config = validate_configuration()
