@@ -557,15 +557,15 @@ class ElectronicCreditNote:
                 "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
             }
 
-            headers = {"content-type": "application/json"}
+            headers = {'Content-Type': 'text/xml; charset=utf-8'}
             response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
 
             # Guardamos en una variable privada la respuesta
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('reciibo_firmado.json', 'w') as f:
-            #     f.write(json.dumps(self.__doc_firmado, indent=2))
+            with open('reciibo_firmado.json', 'w') as f:
+                f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:

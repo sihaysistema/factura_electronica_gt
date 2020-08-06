@@ -48,6 +48,7 @@
   "alias",
   "url_firma",
   "url_dte",
+  "url_de_anulacion",
   "llave_ws",
   "afiliacion_iva",
   "local_currency",
@@ -386,11 +387,17 @@
    "fieldname": "nombre_empresa_prueba",
    "fieldtype": "Data",
    "label": "Nombre empresa prueba"
+  },
+  {
+   "description": "FEL: URL para anular documentos",
+   "fieldname": "url_de_anulacion",
+   "fieldtype": "Data",
+   "label": "URL de Anulacion"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-07-14 12:15:13.354885",
+ "modified": "2020-08-06 15:11:11.350794",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

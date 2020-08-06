@@ -146,7 +146,7 @@ def generate_electronic_invoice(invoice_code, naming_series):
 
         # PASO 3: FACTURA ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
-        new_invoice = ElectronicInvoice(invoice_code, status_config[1])
+        new_invoice = ElectronicInvoice(invoice_code, status_config[1], naming_series)
 
         # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
         status = new_invoice.build_invoice()
@@ -226,15 +226,15 @@ def generate_credit_note(invoice_code, naming_series, reason):
 
             return False, 'No completed'
 
-        frappe.msgprint(msg=_('OK esquema XML generado'),
-                        title=_('Proceso completado'), indicator='green')
-
 
         # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
         # En este paso se convierte de JSON a XML y se codifica en base64
-        # status_firma = new_credit_note.sign_invoice()
-        # if status_firma[0] == False:  # Si no se firma correctamente
-        #     return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
+        status_firma = new_credit_note.sign_invoice()
+        if status_firma[0] == False:  # Si no se firma correctamente
+            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
+
+        frappe.msgprint(msg=_('OK esquema XML generado y firmado'),
+                        title=_('Proceso completado'), indicator='green')
 
         # # PASO 5: SOLICITAMOS FACTURA ELECTRONICA
         # status_facelec = new_credit_note.request_electronic_invoice()

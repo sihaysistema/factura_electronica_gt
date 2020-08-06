@@ -27,7 +27,7 @@ import datetime
 # 5.1 ACTUALIZAR REGISTROS
 
 class ElectronicInvoice:
-    def __init__(self, invoice_code, conf_name):
+    def __init__(self, invoice_code, conf_name, naming_series):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
 
@@ -37,6 +37,7 @@ class ElectronicInvoice:
         """
         self.__invoice_code = invoice_code
         self.__config_name = conf_name
+        self.__naming_serie = naming_series
         self.__log_error = []
 
     def build_invoice(self):
@@ -56,12 +57,16 @@ class ElectronicInvoice:
                 # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
                 self.__base_peticion = {
                     "dte:GTDocumento": {
+                        # "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
+                        # "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        # "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
+                        # "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                        # "@Version": "0.4",
+                        # "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
                         "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
-                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
-                        "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
+                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        "@Version": "0.4",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        "@Version": "0.1",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {
@@ -147,7 +152,9 @@ class ElectronicInvoice:
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
                 "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
+                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                             'tipo_documento')
+                # frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
             }
 
             return True, 'OK'

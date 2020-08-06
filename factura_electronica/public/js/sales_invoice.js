@@ -577,51 +577,53 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         }
     }
 
+    // NO APLICA PARA FEL
     // Codigo para Notas de Credito NCE
     // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
-    if (frm.doc.status === "Return") {
-        //var nombre = 'Nota Credito';
-        // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
-        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
-        if (frm.doc.cae_factura_electronica) {
-            cur_frm.clear_custom_buttons();
-            pdf_button(frm.doc.cae_factura_electronica, frm);
-            // guardar_pdf(frm);
-        } else {
-            // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
-            if (modalidad === 'manual') {
-                generar_boton_factura('Nota Credito Electronica', frm);
-            }
-            // Si la modalidad recibida es automatica se realiza la factura electronica directamente
-            if (modalidad === 'automatico') {
-                generar_factura_sin_btn(frm);
-            }
-        }
-    }
+    // if (frm.doc.status === "Return") {
+    //     //var nombre = 'Nota Credito';
+    //     // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
+    //     // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+    //     if (frm.doc.cae_factura_electronica) {
+    //         cur_frm.clear_custom_buttons();
+    //         pdf_button(frm.doc.cae_factura_electronica, frm);
+    //         // guardar_pdf(frm);
+    //     } else {
+    //         // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
+    //         if (modalidad === 'manual') {
+    //             generar_boton_factura('Nota Credito Electronica', frm);
+    //         }
+    //         // Si la modalidad recibida es automatica se realiza la factura electronica directamente
+    //         if (modalidad === 'automatico') {
+    //             generar_factura_sin_btn(frm);
+    //         }
+    //     }
+    // }
 
+    // NO APLICA PARA FEL
     // Codigo para notas de debito
     // Codigo para Notas de Credito NDE
-    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc
-        .status === "Overdue") {
-        //var nombre = 'Nota Debito';
-        if (frm.doc.es_nota_de_debito) {
-            cur_frm.clear_custom_buttons('Factura Electronica');
-            if (frm.doc.cae_factura_electronica) {
-                cur_frm.clear_custom_buttons();
-                pdf_button(frm.doc.cae_factura_electronica, frm);
-                // guardar_pdf(frm);
-            } else {
-                // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
-                if (modalidad === 'manual') {
-                    generar_boton_factura('Nota Debito Electronica', frm);
-                }
-                // Si la modalidad recibida es automatica se realiza la factura electronica directamente
-                if (modalidad === 'automatico') {
-                    generar_factura_sin_btn(frm);
-                }
-            }
-        }
-    }
+    // if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc
+    //     .status === "Overdue") {
+    //     //var nombre = 'Nota Debito';
+    //     if (frm.doc.es_nota_de_debito) {
+    //         cur_frm.clear_custom_buttons('Factura Electronica');
+    //         if (frm.doc.cae_factura_electronica) {
+    //             cur_frm.clear_custom_buttons();
+    //             pdf_button(frm.doc.cae_factura_electronica, frm);
+    //             // guardar_pdf(frm);
+    //         } else {
+    //             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
+    //             if (modalidad === 'manual') {
+    //                 generar_boton_factura('Nota Debito Electronica', frm);
+    //             }
+    //             // Si la modalidad recibida es automatica se realiza la factura electronica directamente
+    //             if (modalidad === 'automatico') {
+    //                 generar_factura_sin_btn(frm);
+    //             }
+    //         }
+    //     }
+    // }
     /* -------------------------------------------------------------------------------------- */
     // Funcionalidad evita copiar CAE cuando se duplica una factura
     // LIMPIA/CLEAN, permite limpiar los campos cuando se duplica una factura
@@ -821,7 +823,9 @@ frappe.ui.form.on("Sales Invoice", {
         // INICIO BOTON PARA GENERAR NOTA DE CREDITO ELECTRONICA
         // Si la factura de venta se convierte a nota de credito,
         // para cumplir esta debe ser una factura electronica ya generada, segun esquema XML
-        if (frm.doc.is_return && frm.doc.docstatus == 1) {  //  && frm.doc.numero_autorizacion_fel
+        if (frm.doc.is_return && frm.doc.docstatus == 1 && (frm.doc.status === "Paid" ||
+            frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue"
+            || frm.doc.status === "Return")) {  //  && frm.doc.numero_autorizacion_fel
             console.log('Es retorno');
             /* ESTA PORCION DE CODIGO ERA PARA USAR UNA SERIE HARDCODE
             // cur_frm.set_df_property("naming_series", "read_only", 1);
@@ -865,7 +869,7 @@ frappe.ui.form.on("Sales Invoice", {
                                         console.log(r.message);
                                     },
                                 });
-                                console.log(values);
+                                // console.log(values);
                                 d.hide();
                             }
                         });
