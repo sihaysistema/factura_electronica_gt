@@ -116,8 +116,8 @@ class JournalEntrySaleInvoice():
                     'sales_invoice': self.name_inv,
                     'invoice_date': self.posting_date,
                     'grand_total': self.grand_total,
-                    'currency': self.currency
-                    #'retention_amount': self.
+                    'currency': self.currency,
+                    'retention_amount': self.ISR_PAYABLE_GTQ
                 })
 
             return True, status_journal.name

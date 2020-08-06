@@ -204,7 +204,7 @@ def generate_credit_note(invoice_code, naming_series, reason):
 
 
         # PASO 2: VALIDA EXISTENCIA DE REGISTROS EN ENVIOS FEL, PARA GENERAR EL DOCUMENTO
-        # ES NECESARIO CREARLA SOBRE UN DOCUMENTO ELECTRONICA YA GENERADO
+        # ES NECESARIO CREARLA SOBRE UN DOCUMENTO ELECTRONICA YA GENERADO, ESTO SEGUN ESQUEMA XML
         status_invoice = check_invoice_records(str(invoice_code))
         if status_invoice[0] == False:  # Si ya existe en DB
             frappe.msgprint(msg=_(f'La factura no se encuentra registrada como ya generada, para proceder es necesario tener la factura generada \
@@ -212,7 +212,6 @@ def generate_credit_note(invoice_code, naming_series, reason):
                             title=_('Proceso no completado'), indicator='yellow')
 
             return False, 'No completed'
-
 
 
         # PASO 3: NOTA DE CREDITO ELECTRONICA

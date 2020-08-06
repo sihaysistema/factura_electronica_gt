@@ -818,6 +818,7 @@ frappe.ui.form.on("Sales Invoice", {
         // correspondiente a su serie.
         verificacionCAE('manual', frm, cdt, cdn);
 
+        // INICIO BOTON PARA GENERAR NOTA DE CREDITO ELECTRONICA
         // Si la factura de venta se convierte a nota de credito,
         // para cumplir esta debe ser una factura electronica ya generada, segun esquema XML
         if (frm.doc.is_return && frm.doc.docstatus == 1) {  //  && frm.doc.numero_autorizacion_fel
@@ -880,7 +881,10 @@ frappe.ui.form.on("Sales Invoice", {
         } else {
             cur_frm.set_df_property("naming_series", "read_only", 0);
         }
+        // FIN BOTON PARA GENERAR NOTA DE CREDITO ELECTRONICA
 
+
+        // INICIO GENERACION POLIZA CON RETENCIONES
         if (frm.doc.docstatus === 1 && frm.doc.status !== 'Paid') {
 
             cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
@@ -978,6 +982,7 @@ frappe.ui.form.on("Sales Invoice", {
             });
 
         }
+        // FIN GENERACION POLIZA CON RETENCIONES
 
     },
     validate: function (frm) {
