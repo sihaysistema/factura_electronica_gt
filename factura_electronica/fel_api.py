@@ -272,8 +272,8 @@ def generate_debit_note(invoice_code, naming_series):
 def generate_special_invoice(invoice_code, naming_series):
     try:
         # PASO 1: Creamos la poliza contable
-        data_purchase_invoice = frappe.get_doc(doctype, str(invoice_code))
-        new_journal_entry = JournalEntrySpecialISR(data_purchase_invoice, )
+        # data_purchase_invoice = frappe.get_doc('', str(invoice_code))
+        # new_journal_entry = JournalEntrySpecialISR(data_purchase_invoice, )
 
         # PASO 2: registramos las retenciones
 
@@ -320,10 +320,10 @@ def generate_special_invoice(invoice_code, naming_series):
 
 
         # PASO 4: GUARDAMOS LA RETENCION CON IMPUESTOS, Y ACTUALIZAMOS LA FACTURA REFERENCIA
-        status_retention = new_special_invoice.record_retention()
-        if status_retention[0] == False:  # Si hay problema al tratar de registrar la retencion
-            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de registrar las retenciones, se recomienda hacer manualmente el registro, mas detalle en: {status_retention[1]}'),
-                            title=_('Proceso no completado'), indicator='red')
+        # status_retention = new_special_invoice.record_retention()
+        # if status_retention[0] == False:  # Si hay problema al tratar de registrar la retencion
+        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de registrar las retenciones, se recomienda hacer manualmente el registro, mas detalle en: {status_retention[1]}'),
+        #                     title=_('Proceso no completado'), indicator='red')
 
             # No retornamos nada, para no interrumpir el flujo de la geeracion del doc electronico
             # return False, 'No completed'
