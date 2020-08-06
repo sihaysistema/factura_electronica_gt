@@ -264,7 +264,7 @@ def generate_credit_note(invoice_code, naming_series, reason):
 
 @frappe.whitelist()
 def generate_debit_note(invoice_code, naming_series):
-    pass
+    frappe.msgprint(_('Hola'))
 
 
 @frappe.whitelist()

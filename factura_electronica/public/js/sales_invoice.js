@@ -839,6 +839,7 @@ frappe.ui.form.on("Sales Invoice", {
             */
 
             frm.add_custom_button(__("CREDIT NOTE FEL"), function () {
+                // Permite hacer confirmaciones
                 frappe.confirm(__('Are you sure you want to proceed to generate a credit note?'),
                     () => {
                         let d = new frappe.ui.Dialog({
