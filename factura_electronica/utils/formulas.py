@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _, _dict
 from frappe.utils import flt
+import numpy as np
 
 
 def amount_converter(monto, currency_exchange, from_currency="GTQ", to_currency="GTQ"):

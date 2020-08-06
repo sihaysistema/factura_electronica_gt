@@ -71,7 +71,7 @@ class JournalEntrySpecialISR():
                 "user_remark": self.remarks,
                 "accounts": self.rows_journal_entry,
                 "multi_currency": self.is_multicurrency,
-                "docstatus": 0
+                "docstatus": 0  # la deja en draft :D
             })
             status_journal = JOURNALENTRY.insert(ignore_permissions=True)
 
@@ -79,21 +79,22 @@ class JournalEntrySpecialISR():
             return False, 'Error datos para crear journal entry '+str(frappe.get_traceback())
 
         else:
-
-            # if self.is_isr_retention == 1:
-            #     ret = 'ISR'
-            # # Registrar retencion
-            # register_withholding({
-            #     'retention_type': ret or 'ISR',
-            #     'party_type': 'Purchase Invoice',
-            #     'company': self.company,
-            #     'tax_id': '',
-            #     'sales_invoice': self.name_inv,
-            #     'invoice_date': self.posting_date,
-            #     'grand_total': self.grand_total,
-            #     'currency': self.currency
-
-            # })
+            for retention in self.list_retentions:  # Por cada retencion capturada
+                new_retention = frappe.get_doc({
+                    'doctype': 'Tax Retention Guatemala',
+                    'date': frappe.db.get_value('Purchase Invoice', {'name': self.name_inv}, 'posting_date'),
+                    'retention_type': retention.get('tax'),
+                    'party_type': 'Purchase Invoice',
+                    'purchase_invoice': self.name_inv,
+                    'company': self.company,
+                    'tax_id': frappe.db.get_value('Purchase Invoice', {'name': self.name_inv}, 'facelec_nit_fproveedor'),
+                    'grand_total': self.grand_total,
+                    'currency': frappe.db.get_value('Purchase Invoice', {'name': self.name_inv}, 'currency'),
+                    'retention_amount': retention.get('retention_amount'),
+                    'retention_status': '',
+                    'docstatus': 0
+                })
+                new_retention.save()
 
             return True, status_journal.name
 
@@ -229,18 +230,18 @@ class JournalEntrySpecialISR():
             GRAND_TOTAL_NO_IVA = round(self.grand_total_sin_iva, self.decimals_ope)
 
             # Obtenemos el iva a retener GTQ
-            IVA_OPE = round((GRAND_TOTAL_NO_IVA * self.vat_rate), self.decimals_ope)
+            self.IVA_OPE = round((GRAND_TOTAL_NO_IVA * self.vat_rate), self.decimals_ope)
 
             # El monto en quetzales lo pasamos a la funcion que calcula automaticamente el ISR
             # NOTA: a pesar de que se esta pasando el numero de decimales, no lo estamos aplicando, puede servir
             # para facilitar futuras modifcaiones, EL CALCULO SE HARA CON TODOS LOS DECIMALES
-            ISR_PAYABLE_GTQ = apply_formula_isr(GRAND_TOTAL_NO_IVA, self.company, decimals=self.decimals_ope)
+            self.ISR_PAYABLE_GTQ = apply_formula_isr(GRAND_TOTAL_NO_IVA, self.company, decimals=self.decimals_ope)
 
             # El monto a pagar, restando el IVA a retener, y el ISR a retener
-            amt_without_isr_iva = (grand_total_gtq - (IVA_OPE + ISR_PAYABLE_GTQ))
+            self.amt_without_isr_iva = (grand_total_gtq - (self.IVA_OPE + self.ISR_PAYABLE_GTQ))
 
             # Se vuelve a validar la conversion a la moneda de la cuenta en caso aplique
-            calc_row_two = round(amount_converter(amt_without_isr_iva, self.curr_exch,
+            calc_row_two = round(amount_converter(self.amt_without_isr_iva, self.curr_exch,
                                                   from_currency='GTQ', to_currency=curr_row_b), self.decimals_ope)
 
             row_two = {
@@ -262,7 +263,7 @@ class JournalEntrySpecialISR():
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_c = 1 if (curr_row_c == "GTQ") else self.curr_exch
-            iva_curr_acc = amount_converter(IVA_OPE, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
+            iva_curr_acc = amount_converter(self.IVA_OPE, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
 
             row_three = {
                 "account": self.iva_account_payable,  #Cuenta a que se va a utilizar
@@ -283,7 +284,7 @@ class JournalEntrySpecialISR():
             # Si la moneda de la cuenta es usd usara el tipo cambio de la factura
             # resultado = valor_si if condicion else valor_no
             exch_rate_row_d = 1 if (curr_row_d == "GTQ") else self.curr_exch
-            isr_curr_acc = amount_converter(ISR_PAYABLE_GTQ, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
+            isr_curr_acc = amount_converter(self.ISR_PAYABLE_GTQ, self.curr_exch, from_currency="GTQ", to_currency=curr_row_c)
 
             row_four = {
                 "account": self.isr_account_payable,  # Cuenta a que se va a utilizar
@@ -294,6 +295,14 @@ class JournalEntrySpecialISR():
                 "credit_in_account_currency": round(isr_curr_acc, self.decimals_ope),  #Valor del monto a debitar
             }
             self.rows_journal_entry.append(row_four)
+
+            # Establecemos el numero de retenciones a registrar, guardandola en variable de la clase
+            self.list_retentions = [
+                {
+                    'tax': 'ISR',
+                    'retention_amount': self.ISR_PAYABLE_GTQ
+                }
+            ]
 
             # with open('special.json', 'w') as f:
             #     f.write(json.dumps(self.rows_journal_entry, default=str, indent=2))
@@ -308,14 +317,14 @@ class JournalEntrySpecialISR():
 
             # NOTA: SE HACE LA COMPARACION EVALUANDO PRIMERO EL MONTO SIN IVA E ISR
 
-            INT_GTQ = flt(amount_converter(flt(amount_converter(amt_without_isr_iva, self.curr_exch,
+            INT_GTQ = flt(amount_converter(flt(amount_converter(self.amt_without_isr_iva, self.curr_exch,
                           from_currency='GTQ', to_currency=self.currency), 2), self.curr_exch,
                           from_currency=self.currency, to_currency='GTQ'), 2)
 
             r = lambda f: f - f % 0.01
             # s = lambda f: f - f % 0.001
 
-            total_debit = flt(float(INT_GTQ + flt(ISR_PAYABLE_GTQ, 2) + flt(IVA_OPE, 2)))  # LO QUE HAY QUE PAGAR
+            total_debit = flt(float(INT_GTQ + flt(self.ISR_PAYABLE_GTQ, 2) + flt(self.IVA_OPE, 2)))  # LO QUE HAY QUE PAGAR
             total_credit = flt(self.grand_total_currency_company)  # El monto original a pagar, excluyendo impuestos ...
 
             with open('balance.txt', 'w') as f:

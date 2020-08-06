@@ -59,7 +59,7 @@ def journal_entry_isr(invoice_name, debit_in_acc_currency, cost_center='',
 
 
 @frappe.whitelist()
-def journal_entry_isr_purchase_inv(invoice_name, cost_center, credit_in_acc_currency,
+def journal_entry_isr_purchase_inv(invoice_name, credit_in_acc_currency, cost_center='',
                                    is_multicurrency=0, description=''):
     """
     Funciona llamada desde boton Purchase Invoice, encargada de crear Journal

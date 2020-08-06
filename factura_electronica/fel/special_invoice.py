@@ -916,25 +916,26 @@ class ElectronicSpecialInvoice:
                 return True, factura_guardada[0]['uuid']
 
     def record_retention(self):
-        try:
+        pass
+        # try:
 
-            for retention in self.list_retentions:  # Por cada retencion capturada
-                new_retention = frappe.get_doc({
-                    'doctype': 'Tax Retention Guatemala',
-                    'date': self.date_invoice,
-                    'retention_type': retention.get('tax'),
-                    'party_type': 'Purchase Invoice',
-                    'company': self.company,
-                    'tax_id': self.nit_proveedor_limpio,
-                    'grand_total': self.grand_total_invoice,
-                    'currency': frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'currency'),
-                    'retention_amount': retention.get('retention_amount'),
-                    'retention_status': '',
-                    'docstatus': 0
-                })
-                new_retention.save()
+        #     for retention in self.list_retentions:  # Por cada retencion capturada
+        #         new_retention = frappe.get_doc({
+        #             'doctype': 'Tax Retention Guatemala',
+        #             'date': self.date_invoice,
+        #             'retention_type': retention.get('tax'),
+        #             'party_type': 'Purchase Invoice',
+        #             'company': self.company,
+        #             'tax_id': self.nit_proveedor_limpio,
+        #             'grand_total': self.grand_total_invoice,
+        #             'currency': frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'currency'),
+        #             'retention_amount': retention.get('retention_amount'),
+        #             'retention_status': '',
+        #             'docstatus': 0
+        #         })
+        #         new_retention.save()
 
-            return True, 'OK'
+        #     return True, 'OK'
 
-        except:
-            return False, str(frappe.get_traceback())
+        # except:
+        #     return False, str(frappe.get_traceback())
