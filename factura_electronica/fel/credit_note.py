@@ -557,14 +557,14 @@ class ElectronicCreditNote:
                 "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
             }
 
-            headers = {'Content-Type': 'text/xml; charset=utf-8'}
+            headers = {"content-type": "application/json"} # {'Content-Type': 'text/xml; charset=utf-8'}
             response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
 
             # Guardamos en una variable privada la respuesta
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            with open('respuesta_credit_note.json', 'w') as f:
+            with open('respuesta_credit_note_firma.json', 'w') as f:
                 f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
@@ -615,8 +615,8 @@ class ElectronicCreditNote:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            # with open('RESPONSE_factura.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('resp_electronic_credit_note.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
