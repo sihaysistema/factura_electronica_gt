@@ -339,23 +339,11 @@ def generate_special_invoice(invoice_code, naming_series):
                         title=_('Proceso completado'), indicator='green')
 
 
-        # PASO 4: GUARDAMOS LA RETENCION CON IMPUESTOS, Y ACTUALIZAMOS LA FACTURA REFERENCIA
-        # status_retention = new_special_invoice.record_retention()
-        # if status_retention[0] == False:  # Si hay problema al tratar de registrar la retencion
-        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de registrar las retenciones, se recomienda hacer manualmente el registro, mas detalle en: {status_retention[1]}'),
-        #                     title=_('Proceso no completado'), indicator='red')
-
-            # No retornamos nada, para no interrumpir el flujo de la geeracion del doc electronico
-            # return False, 'No completed'
-
-
-        # PASO 5: CREAMOS JOURNAL ENTRY CON LOS IMPUESTOS TOMADOS EN CUENTA
-
         # PASO 6: FIRMA CERTIFICADA Y ENCRIPTADA
         # En este paso se convierte de JSON a XML y se codifica en base64
-        # status_firma = new_credit_note.sign_invoice()
-        # if status_firma[0] == False:  # Si no se firma correctamente
-        #     return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
+        status_firma = new_credit_note.sign_invoice()
+        if status_firma[0] == False:  # Si no se firma correctamente
+            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
         # # PASO 7: SOLICITAMOS DOCUMENTO ELECTRONICO
         # status_facelec = new_credit_note.request_electronic_invoice()
