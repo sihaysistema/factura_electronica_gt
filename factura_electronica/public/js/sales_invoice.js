@@ -863,13 +863,16 @@ frappe.ui.form.on("Sales Invoice", {
                                     args: {
                                         invoice_code: frm.doc.name,
                                         naming_series: frm.doc.naming_series,
+                                        reference_inv: frm.doc.return_against,
                                         reason: values.reason_adjust
                                     },
                                     callback: function (r) {
+                                        console.log(frm.doc.return_against)
+                                        console.log(values);
                                         console.log(r.message);
                                     },
                                 });
-                                // console.log(values);
+
                                 d.hide();
                             }
                         });

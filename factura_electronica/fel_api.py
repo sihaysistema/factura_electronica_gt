@@ -186,7 +186,7 @@ def generate_electronic_invoice(invoice_code, naming_series):
 
 
 @frappe.whitelist()
-def generate_credit_note(invoice_code, naming_series, reason):
+def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
     try:
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
         status_config = validate_configuration()
@@ -205,7 +205,7 @@ def generate_credit_note(invoice_code, naming_series, reason):
 
         # PASO 2: VALIDA EXISTENCIA DE REGISTROS EN ENVIOS FEL, PARA GENERAR EL DOCUMENTO
         # ES NECESARIO CREARLA SOBRE UN DOCUMENTO ELECTRONICA YA GENERADO, ESTO SEGUN ESQUEMA XML
-        status_invoice = check_invoice_records(str(invoice_code))
+        status_invoice = check_invoice_records(str(reference_inv))
         if status_invoice[0] == False:  # Si ya existe en DB
             frappe.msgprint(msg=_(f'La factura no se encuentra registrada como ya generada, para proceder es necesario tener la factura generada \
                                     como electronica FEL'),
@@ -216,7 +216,8 @@ def generate_credit_note(invoice_code, naming_series, reason):
 
         # PASO 3: NOTA DE CREDITO ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
-        new_credit_note = ElectronicCreditNote(invoice_code, status_config[1], naming_series, reason)
+        # new_credit_note = ElectronicCreditNote(invoice_code, status_config[1], naming_series, reason)
+        new_credit_note = ElectronicCreditNote(reference_inv, status_config[1], naming_series, reason)
 
         # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
         status = new_credit_note.build_credit_note()
