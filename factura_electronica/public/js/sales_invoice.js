@@ -554,8 +554,8 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
     // FACTURAS FACE, CFACE
     // Este codigo entra en funcionamiento cuando la generacion automatica de la factura no es exitosa.
     // esto permite volver intentarlo hasta obtener el cae de la factura en que se estre trabajando.
-    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc
-        .status === "Overdue") {
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted"
+        || frm.doc.status === "Overdue" || frm.doc.status === "Credit Note Issued") {
         // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
         // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
         if (frm.doc.cae_factura_electronica) {
@@ -842,58 +842,77 @@ frappe.ui.form.on("Sales Invoice", {
             // });
             */
 
-            frm.add_custom_button(__("CREDIT NOTE FEL"), function () {
-                // Permite hacer confirmaciones
-                frappe.confirm(__('Are you sure you want to proceed to generate a credit note?'),
-                    () => {
-                        let d = new frappe.ui.Dialog({
-                            title: __('Generate Credit Note'),
-                            fields: [
-                                {
-                                    label: 'Reason Adjusment?',
-                                    fieldname: 'reason_adjust',
-                                    fieldtype: 'Data',
-                                    reqd: 1
-                                }
-                            ],
-                            primary_action_label: 'Submit',
-                            primary_action(values) {
-                                let serie_de_factura = frm.doc.name;
-                                // Guarda la url actual
-                                let mi_url = window.location.href;
+            // APLICA SOLO PARA NOTAS DE CREDITO, PARA VER PDF
+            if (frm.doc.status === "Return") {
+                // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
+                // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+                if (frm.doc.numero_autorizacion_fel) {
+                    cur_frm.clear_custom_buttons();
 
-                                frappe.call({
-                                    method: 'factura_electronica.fel_api.generate_credit_note',
-                                    args: {
-                                        invoice_code: frm.doc.name,
-                                        naming_series: frm.doc.naming_series,
-                                        reference_inv: frm.doc.return_against,
-                                        reason: values.reason_adjust
-                                    },
-                                    callback: function (data) {
-                                        console.log(data.message);
-                                        if (data.message[0] === true) {
-                                            // Crea una nueva url con el nombre del documento actualizado
-                                            let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
-                                            // Asigna la nueva url a la ventana actual
-                                            window.location.assign(url_nueva);
-                                            // Recarga la pagina
-                                            frm.reload_doc();
+                    frm.add_custom_button(__("VER PDF NOTA CREDITO ELECTRONICA"),
+                        function () {
+                            window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
+                                frm.doc.numero_autorizacion_fel);
+                        }).addClass("btn-primary");
+
+                } else {
+
+                    frm.add_custom_button(__("CREDIT NOTE FEL"), function () {
+                        // Permite hacer confirmaciones
+                        frappe.confirm(__('Are you sure you want to proceed to generate a credit note?'),
+                            () => {
+                                let d = new frappe.ui.Dialog({
+                                    title: __('Generate Credit Note'),
+                                    fields: [
+                                        {
+                                            label: 'Reason Adjusment?',
+                                            fieldname: 'reason_adjust',
+                                            fieldtype: 'Data',
+                                            reqd: 1
                                         }
-                                    },
+                                    ],
+                                    primary_action_label: 'Submit',
+                                    primary_action(values) {
+                                        let serie_de_factura = frm.doc.name;
+                                        // Guarda la url actual
+                                        let mi_url = window.location.href;
+
+                                        frappe.call({
+                                            method: 'factura_electronica.fel_api.generate_credit_note',
+                                            args: {
+                                                invoice_code: frm.doc.name,
+                                                naming_series: frm.doc.naming_series,
+                                                reference_inv: frm.doc.return_against,
+                                                reason: values.reason_adjust
+                                            },
+                                            callback: function (data) {
+                                                console.log(data.message);
+                                                if (data.message[0] === true) {
+                                                    // Crea una nueva url con el nombre del documento actualizado
+                                                    let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
+                                                    // Asigna la nueva url a la ventana actual
+                                                    window.location.assign(url_nueva);
+                                                    // Recarga la pagina
+                                                    frm.reload_doc();
+                                                }
+                                            },
+                                        });
+
+                                        d.hide();
+                                    }
                                 });
 
-                                d.hide();
-                            }
-                        });
+                                d.show();
+                            }, () => {
+                                // action to perform if No is selected
+                                console.log('Selecciono NO')
+                            })
 
-                        d.show();
-                    }, () => {
-                        // action to perform if No is selected
-                        console.log('Selecciono NO')
-                    })
+                    }).addClass("btn-warning");
+                }
+            }
 
-            }).addClass("btn-warning");
+
 
 
         } else {
