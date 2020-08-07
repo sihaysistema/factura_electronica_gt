@@ -188,6 +188,7 @@ def generate_electronic_invoice(invoice_code, naming_series):
 @frappe.whitelist()
 def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
     try:
+        actual_inv_name = invoice_code
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
         status_config = validate_configuration()
 
@@ -207,8 +208,17 @@ def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
         # ES NECESARIO CREARLA SOBRE UN DOCUMENTO ELECTRONICA YA GENERADO, ESTO SEGUN ESQUEMA XML
         status_invoice = check_invoice_records(str(reference_inv))
         if status_invoice[0] == False:  # Si ya existe en DB
-            frappe.msgprint(msg=_(f'La factura no se encuentra registrada como ya generada, para proceder es necesario tener la factura generada \
+            frappe.msgprint(msg=_(f'La factura no se encuentra registrada como ya generada, para proceder es necesario tener la factura generada original\
                                     como electronica FEL'),
+                            title=_('Proceso no completado'), indicator='yellow')
+
+            return False, 'No completed'
+
+        # 2.1 - VALIDAMOS QUE NO SE HAYA GENERANDO ANTEIORMENTE OTRA NOTA DE CREDITO CON LA MISMA DATA
+        status_credit_note = check_invoice_records(str(invoice_code))
+        if status_credit_note[0] == True:  # Si ya existe en DB
+            new_serie_cre = frappe.db.get_value('Envio FEL', {'serie_para_factura': invoice_code}, 'name')
+            frappe.msgprint(msg=_(f'La nota de credito que solicitas generar, ya se encuentra registrada como generada en ENVIOS FEL, con UUID {new_serie_cre}'),
                             title=_('Proceso no completado'), indicator='yellow')
 
             return False, 'No completed'
@@ -217,7 +227,7 @@ def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
         # PASO 3: NOTA DE CREDITO ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
         # new_credit_note = ElectronicCreditNote(invoice_code, status_config[1], naming_series, reason)
-        new_credit_note = ElectronicCreditNote(reference_inv, status_config[1], naming_series, reason)
+        new_credit_note = ElectronicCreditNote(actual_inv_name, reference_inv, status_config[1], naming_series, reason)
 
         # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
         status = new_credit_note.build_credit_note()
@@ -232,12 +242,16 @@ def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
         # En este paso se convierte de JSON a XML y se codifica en base64
         status_firma = new_credit_note.sign_invoice()
         if status_firma[0] == False:  # Si no se firma correctamente
+            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de firmar Nota de Credito electronica, mas detalles en: {status_firma[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
             return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
 
         # # PASO 5: SOLICITAMOS FACTURA ELECTRONICA
         status_facelec = new_credit_note.request_electronic_invoice()
         if status_facelec[0] == False:
+            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
             return False, f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'
 
 
@@ -246,19 +260,29 @@ def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
         # # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
         status_res = new_credit_note.response_validator()
         if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
+            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar nota de credito electronica con INFILE, mas detalle en {status_res[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
             return status_res  # return tuple
 
 
         # # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
         status_upgrade = new_credit_note.upgrade_records()
         if status_upgrade[0] == False:
+            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de actualizar registros relacionados al documento, mas detalle en {status_upgrade[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
             return status_upgrade
 
 
         # # SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
         # # el UUID y la nueva serie para la factura
-        return True, status_upgrade[2]
-        frappe.msgprint(_(str(status_upgrade)))
+        # return True,
+        # frappe.msgprint(_(str(status_upgrade)))
+
+        new_serie = frappe.db.get_value('Envio FEL', {'name': status_upgrade[1]}, 'serie_para_factura')
+        frappe.msgprint(msg=_(f'Electronic Credit Note generated with universal unique identifier <b>{status_upgrade[1]}</b>'),
+                        title=_('Process successfully completed'), indicator='green')
+
+        return True, str(new_serie)
 
     except:
         return False, str(frappe.get_traceback())

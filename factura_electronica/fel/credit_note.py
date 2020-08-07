@@ -31,7 +31,7 @@ import datetime
 # 5.1 ACTUALIZAR REGISTROS
 
 class ElectronicCreditNote:
-    def __init__(self, invoice_code, conf_name, naming_series, reason):
+    def __init__(self, actual_inv_name, invoice_code, conf_name, naming_series, reason):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
 
@@ -39,10 +39,11 @@ class ElectronicCreditNote:
             invoice_code (str): Serie origianl de la factura
             conf_name (str): Nombre configuracion para factura electronica
         """
-        self.__invoice_code = invoice_code
+        self.__invoice_code = invoice_code  # HACE REFERENCIA A LA FACT FEL
         self.__config_name = conf_name
         self.__naming_serie = naming_series
         self.__reason = reason
+        self.__inv_credit_note = actual_inv_name  # HACE REFERENCIA A LA NUEVA NOTA DE CREDITO
         self.__log_error = []
 
     def build_credit_note(self):
@@ -148,12 +149,14 @@ class ElectronicCreditNote:
         """
 
         try:
+            # NOTA: LA FECHA Y HORA DE EMISION A USAR ES DE LA FACTURA ELECTRONICA FEL ORIGINAL, SOBRE LA CUAL
+            # SE ESTA HACIENDO LA NOTA DE CREDITO
             self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
             self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
 
             self.__d_general = {
-                "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                "@FechaHoraEmision": f'{self.date_invoice}T{self.time_invoice}',  # "2018-11-01T16:33:47Z",
+                "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'currency'),
+                "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  #f'{self.date_invoice}T{self.time_invoice}',  # "2018-11-01T16:33:47Z",   #
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')  # 'FACT'
             }
@@ -174,12 +177,12 @@ class ElectronicCreditNote:
 
         try:
             # De la factura obtenemos la compañia y direccion compañia emisora
-            self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__invoice_code},
+            self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__inv_credit_note},
                                                 fieldname=['company', 'company_address', 'nit_face_customer',
                                                            'customer_address', 'customer_name', 'total_taxes_and_charges',
                                                            'grand_total'], as_dict=1)
             if len(self.dat_fac) == 0:
-                return False, f'''No se encontro ninguna factura con serie: {self.__invoice_code}.\
+                return False, f'''No se encontro ninguna factura con serie: {self.__inv_credit_note}.\
                                   Por favor valida los datos de la factura que deseas procesar'''
 
 
@@ -367,7 +370,7 @@ class ElectronicCreditNote:
             items_ok = []  # Guardara todos los items OK
 
             # Obtenemos los items de la factura
-            self.__dat_items = frappe.db.get_values('Sales Invoice Item', filters={'parent': str(self.__invoice_code)},
+            self.__dat_items = frappe.db.get_values('Sales Invoice Item', filters={'parent': str(self.__inv_credit_note)},
                                              fieldname=['item_name', 'qty', 'item_code', 'description',
                                                         'net_amount', 'base_net_amount', 'discount_percentage',
                                                         'discount_amount', 'price_list_rate', 'net_rate',
@@ -381,7 +384,7 @@ class ElectronicCreditNote:
             # TODO VER ESCENARIO CUANDO HAY MAS DE UN IMPUESTO?????
             # TODO VER ESCENARIO CUANDO NO HAY IMPUESTOS, ES POSIBLE???
             # Obtenemos los impuesto cofigurados para x compañia en la factura
-            self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__invoice_code},
+            self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__inv_credit_note},
                                                      fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
 
             # Verificamos la cantidad de items
@@ -445,7 +448,7 @@ class ElectronicCreditNote:
             return True, 'OK'
 
         except:
-            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.__invoice_code, str(frappe.get_traceback()))
+            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.__inv_credit_note, str(frappe.get_traceback()))
 
     def totals(self):
         """
@@ -464,22 +467,23 @@ class ElectronicCreditNote:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
+                        "@TotalMontoImpuesto": abs(float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges']))))
                     }
                 },
-                "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
+                "dte:GranTotal": abs(float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total']))))
             }
 
             return True, 'OK'
 
         except:
-            return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
+            return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.__inv_credit_note, str(frappe.get_traceback()))
 
     def complements(self):
         try:
             datos_fel_invoice = frappe.db.get_values('Envio FEL', filters={'serie_para_factura': self.__invoice_code},
-                                                     fieldname=['uuid', 'numero', 'serie'],
+                                                     fieldname=['uuid', 'numero', 'serie', 'fecha'],
                                                      as_dict=1)
+            fecha_procesada = datos_fel_invoice[0]["fecha"].split('T')[0]
 
             self.__d_complements = {
                 "dte:Complemento": {
@@ -488,7 +492,7 @@ class ElectronicCreditNote:
                     "@URIComplemento": "text",
                     "cno:ReferenciasNota": {
                         "@xmlns:cno": "http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0",
-                        "@FechaEmisionDocumentoOrigen": self.date_invoice,
+                        "@FechaEmisionDocumentoOrigen": fecha_procesada, # self.date_invoice,
                         "@MotivoAjuste": self.__reason,
                         "@NumeroAutorizacionDocumentoOrigen": datos_fel_invoice[0]["uuid"],
                         "@NumeroDocumentoOrigen": datos_fel_invoice[0]["numero"],
@@ -590,14 +594,14 @@ class ElectronicCreditNote:
         """
 
         try:
-            data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
+            data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'company')
             nit_company = frappe.db.get_value('Company', {'name': self.dat_fac[0]['nit_face_customer']}, 'nit_face_company')
 
             url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
             user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
             llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'llave_ws')
             correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'correo_copia')
-            ident = self.__invoice_code  # identificador
+            ident = self.__inv_credit_note  # identificador
 
             req_dte = {
                 "nit_emisor": nit_company,
@@ -668,7 +672,7 @@ class ElectronicCreditNote:
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
-                resp_fel.serie_factura_original = self.__invoice_code
+                resp_fel.serie_factura_original = self.__inv_credit_note
                 # resp_fel.serie_para_factura = 'FACELEC-'+str(self.__response_ok['numero'])
                 resp_fel.serie_para_factura = str(self.__response_ok['serie']).replace('*', '')+str(self.__response_ok['numero'])
 
@@ -699,7 +703,7 @@ class ElectronicCreditNote:
             return True, 'OK'
 
         except:
-            return False, f'Error al tratar de guardar la rspuesta, para la factura {self.__invoice_code}, \
+            return False, f'Error al tratar de guardar la rspuesta, para la factura {self.__inv_credit_note}, \
                             Mas detalles en {str(frappe.get_traceback())}'
 
     def upgrade_records(self):
@@ -713,9 +717,9 @@ class ElectronicCreditNote:
 
         # Verifica que exista un documento en la tabla Envio FEL con el nombre de la serie original
         # Solo si existe registro guardado como respalda procede a actualizar todos los docs
-        if frappe.db.exists('Envio FEL', {'serie_factura_original': self.__invoice_code}):
+        if frappe.db.exists('Envio FEL', {'serie_factura_original': self.__inv_credit_note}):
             factura_guardada = frappe.db.get_values('Envio FEL',
-                                                    filters={'serie_factura_original': self.__invoice_code},
+                                                    filters={'serie_factura_original': self.__inv_credit_note},
                                                     fieldname=['numero', 'serie', 'uuid'], as_dict=1)
             # Esta seccion se encarga de actualizar la serie, con una nueva que es serie y numero
             # buscara en las tablas donde exista una coincidencia actualizando con la nueva serie
@@ -727,7 +731,7 @@ class ElectronicCreditNote:
                 # factura que lo generó.
                 # serieFEL = str(factura_guardada[0]['serie'] + '-' + factura_guardada[0]['numero'])
                 # serie_fac_original: Guarda la serie original de la factura.
-                serie_fac_original = self.__invoice_code
+                serie_fac_original = self.__inv_credit_note
 
                 # Actualizacion de tablas que son modificadas directamente.
                 # 01 - tabSales Invoice: actualizacion con datos correctos
@@ -858,4 +862,4 @@ class ElectronicCreditNote:
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
 
                 # Se utilizara el UUID como clave para orquestar el resto de las apps que lo necesiten
-                return True, factura_guardada[0]['uuid'], serieFEL
+                return True, factura_guardada[0]['uuid']
