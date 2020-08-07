@@ -303,27 +303,49 @@ frappe.ui.form.on("Purchase Invoice", {
                 frappe.msgprint("WORK IN PROGRESS");
             });
 
-            // boton para generar factura especial electronica
-            frm.add_custom_button(__("Generate Special Invoice FEL"), function () {
-                frappe.confirm(__('Are you sure you want to proceed to generate a Special Invoice?'),
-                    () => {
-                        frappe.call({
-                            method: 'factura_electronica.fel_api.generate_special_invoice',
-                            args: {
-                                invoice_code: frm.doc.name,
-                                naming_series: frm.doc.naming_series
-                            },
-                            callback: function (r) {
-                                console.log(r.message);
-                            },
+
+            if (frm.doc.numero_autorizacion_fel) {
+                cur_frm.clear_custom_buttons();
+
+                frm.add_custom_button(__("VER PDF FACTURA ESPECIAL ELECTRONICA"),
+                    function () {
+                        window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
+                            frm.doc.numero_autorizacion_fel);
+                    }).addClass("btn-primary");
+
+            } else {
+                // boton para generar factura especial electronica
+                frm.add_custom_button(__("Generate Special Invoice FEL"), function () {
+                    frappe.confirm(__('Are you sure you want to proceed to generate a Special Invoice?'),
+                        () => {
+                            let serie_de_factura = frm.doc.name;
+                            // Guarda la url actual
+                            let mi_url = window.location.href;
+                            frappe.call({
+                                method: 'factura_electronica.fel_api.generate_special_invoice',
+                                args: {
+                                    invoice_code: frm.doc.name,
+                                    naming_series: frm.doc.naming_series
+                                },
+                                callback: function (r) {
+                                    console.log(r.message);
+                                    if (r.message[0] === true) {
+                                        // Crea una nueva url con el nombre del documento actualizado
+                                        let url_nueva = mi_url.replace(serie_de_factura, r.message[1]);
+                                        // Asigna la nueva url a la ventana actual
+                                        window.location.assign(url_nueva);
+                                        // Recarga la pagina
+                                        frm.reload_doc();
+                                    }
+                                },
+                            });
+                        }, () => {
+                            // action to perform if No is selected
+                            console.log('Selecciono NO')
                         });
-                    }, () => {
-                        // action to perform if No is selected
-                        console.log('Selecciono NO')
-                    });
-            }).addClass("btn-warning");
+                }).addClass("btn-warning");
 
-
+            }
             // boton para generar poliza contable con calculos y registro de retenciones
             cur_frm.page.add_action_item(__("Journal Entry for Special Invoice"), function () {
 
