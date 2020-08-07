@@ -810,8 +810,8 @@ class ElectronicSpecialInvoice:
                 # Verificara tabla por tabla en busca de un valor existe, en caso sea verdadero actualizara,
                 # en caso no encuentra nada y no hara nada
                 # 04 - tabSales Taxes and Charges, actualizacion tablas de impuestos si existe
-                if frappe.db.exists('Sales Taxes and Charges', {'parent': serie_fac_original}):
-                    frappe.db.sql('''UPDATE `tabSales Taxes and Charges` SET parent=%(name)s
+                if frappe.db.exists('Purchase Taxes and Charges', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabPurchase Taxes and Charges` SET parent=%(name)s
                                     WHERE parent=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
                 if frappe.db.exists('Otros Impuestos Factura Electronica', {'parent': serie_fac_original}):

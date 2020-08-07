@@ -299,7 +299,8 @@ def fill_fixtures():
                     "Sales Invoice-facelec_tax_retention_guatemala",
                     "Purchase Taxes and Charges-facelec_tax_name",
                     "Purchase Taxes and Charges-facelec_taxable_unit_code",
-                    "Purchase Invoice-numero_autorizacion_fel"
+                    "Purchase Invoice-numero_autorizacion_fel",
+                    "Purchase Invoice-serie_original_del_documento"
                 ]
             ]
         ]
