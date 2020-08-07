@@ -342,13 +342,14 @@ def generate_special_invoice(invoice_code, naming_series):
         if status_firma[0] == False:  # Si no se firma correctamente
             return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
-        frappe.msgprint(msg=_('OK esquema XML generado'),
-                        title=_('Proceso completado'), indicator='green')
 
         # # PASO 6: SOLICITAMOS DOCUMENTO ELECTRONICO
-        # status_facelec = new_credit_note.request_electronic_invoice()
-        # if status_facelec[0] == False:
-        #     return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
+        status_facelec = new_special_invoice.request_electronic_invoice()
+        if status_facelec[0] == False:
+            return False, f'Ocurrio un problema al tratar de generar factura especial electronica, mas detalles en: {status_facelec[1]}'
+
+        frappe.msgprint(msg=_('OK esquema XML generado'),
+                        title=_('Proceso completado'), indicator='green')
 
         # # PASO 7: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
         # # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas

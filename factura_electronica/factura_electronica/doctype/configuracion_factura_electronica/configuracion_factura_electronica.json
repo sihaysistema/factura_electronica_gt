@@ -44,6 +44,8 @@
   "es_anulacion",
   "tipo_frase",
   "codigo_escenario",
+  "tipo_frase_factura_especial",
+  "codigo_escenario_factura_especial",
   "column_break_32",
   "alias",
   "url_firma",
@@ -393,11 +395,22 @@
    "fieldname": "url_de_anulacion",
    "fieldtype": "Data",
    "label": "URL de Anulacion"
+  },
+  {
+   "fieldname": "tipo_frase_factura_especial",
+   "fieldtype": "Select",
+   "label": "Tipo Frase Factura Especial",
+   "options": "\n5: Frase de facturas especiales"
+  },
+  {
+   "fieldname": "codigo_escenario_factura_especial",
+   "fieldtype": "Data",
+   "label": "Codigo Escenario Factura Especial"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-08-06 15:11:11.350794",
+ "modified": "2020-08-07 10:40:51.225530",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

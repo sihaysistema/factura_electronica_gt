@@ -386,9 +386,9 @@ class ElectronicSpecialInvoice:
             self.__d_frases = {
                 "dte:Frase": {
                     "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
-                                                           {'name': self.__config_name}, 'codigo_escenario'), #"1",
+                                                           {'name': self.__config_name}, 'codigo_escenario_factura_especial'), #"1",
                     "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
-                                                     {'name': self.__config_name}, 'tipo_frase')[:1]  # "1"
+                                                     {'name': self.__config_name}, 'tipo_frase_factura_especial')[:1]  # "1"
                 }
             }
 
@@ -528,7 +528,7 @@ class ElectronicSpecialInvoice:
             self.grand_total_invoice = self.dat_fac[0]['grand_total']
 
             ISR = round(apply_formula_isr(self.net_total, self.company), 2)  # automaticamente verfica si es 5% o 7%
-            IVA = round((self.net_total/((self.iva_rate/100) + 1)) * self.iva_rate/100, 2)  # (monto/1.12) * 0.12
+            IVA = round((self.grand_total_invoice/((self.iva_rate/100) + 1)) * self.iva_rate/100, 2)  # (monto/1.12) * 0.12
             MONTO_TOTAL_COMPLEMENTO = round(self.grand_total_invoice - (ISR + IVA), 2)
 
             self.__d_complements = {
@@ -621,7 +621,7 @@ class ElectronicSpecialInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            with open('resp_special_invoice.json', 'w') as f:
+            with open('firma_resp_special_invoice.json', 'w') as f:
                 f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
@@ -672,8 +672,8 @@ class ElectronicSpecialInvoice:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            # with open('RESPONSE_factura.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('resp_special_invoice.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
