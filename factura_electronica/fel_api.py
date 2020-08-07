@@ -273,7 +273,7 @@ def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
             return status_upgrade
 
 
-        # # SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
+        # PASO 8: SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
         # # el UUID y la nueva serie para la factura
         # return True,
         # frappe.msgprint(_(str(status_upgrade)))
@@ -341,7 +341,7 @@ def generate_special_invoice(invoice_code, naming_series):
 
         # PASO 6: FIRMA CERTIFICADA Y ENCRIPTADA
         # En este paso se convierte de JSON a XML y se codifica en base64
-        status_firma = new_credit_note.sign_invoice()
+        status_firma = new_special_invoice.sign_invoice()
         if status_firma[0] == False:  # Si no se firma correctamente
             return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
