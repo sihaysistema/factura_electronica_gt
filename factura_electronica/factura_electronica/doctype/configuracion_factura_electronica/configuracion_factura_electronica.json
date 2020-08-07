@@ -400,7 +400,7 @@
    "fieldname": "tipo_frase_factura_especial",
    "fieldtype": "Select",
    "label": "Tipo Frase Factura Especial",
-   "options": "\n5: Frase de facturas especiales"
+   "options": "\n5: Frase de facturas especiales\n6: Frases de Regimen Especial de contribuyente agropecuario"
   },
   {
    "fieldname": "codigo_escenario_factura_especial",
@@ -410,7 +410,7 @@
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-08-07 10:40:51.225530",
+ "modified": "2020-08-07 11:02:40.848564",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
