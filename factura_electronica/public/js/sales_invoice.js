@@ -858,6 +858,10 @@ frappe.ui.form.on("Sales Invoice", {
                             ],
                             primary_action_label: 'Submit',
                             primary_action(values) {
+                                let serie_de_factura = frm.doc.name;
+                                // Guarda la url actual
+                                let mi_url = window.location.href;
+
                                 frappe.call({
                                     method: 'factura_electronica.fel_api.generate_credit_note',
                                     args: {
@@ -866,10 +870,16 @@ frappe.ui.form.on("Sales Invoice", {
                                         reference_inv: frm.doc.return_against,
                                         reason: values.reason_adjust
                                     },
-                                    callback: function (r) {
-                                        console.log(frm.doc.return_against)
-                                        console.log(values);
-                                        console.log(r.message);
+                                    callback: function (data) {
+                                        console.log(data.message);
+                                        if (data.message[0] === true) {
+                                            // Crea una nueva url con el nombre del documento actualizado
+                                            let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
+                                            // Asigna la nueva url a la ventana actual
+                                            window.location.assign(url_nueva);
+                                            // Recarga la pagina
+                                            frm.reload_doc();
+                                        }
                                     },
                                 });
 

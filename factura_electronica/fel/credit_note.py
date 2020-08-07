@@ -664,6 +664,7 @@ class ElectronicCreditNote:
             if not frappe.db.exists('Envio FEL', {'name': self.__response_ok['uuid']}):
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
+                resp_fel.tipo_documento = 'Nota de Credito'
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
@@ -711,6 +712,7 @@ class ElectronicCreditNote:
         """
 
         # Verifica que exista un documento en la tabla Envio FEL con el nombre de la serie original
+        # Solo si existe registro guardado como respalda procede a actualizar todos los docs
         if frappe.db.exists('Envio FEL', {'serie_factura_original': self.__invoice_code}):
             factura_guardada = frappe.db.get_values('Envio FEL',
                                                     filters={'serie_factura_original': self.__invoice_code},
@@ -856,4 +858,4 @@ class ElectronicCreditNote:
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
 
                 # Se utilizara el UUID como clave para orquestar el resto de las apps que lo necesiten
-                return True, factura_guardada[0]['uuid']
+                return True, factura_guardada[0]['uuid'], serieFEL

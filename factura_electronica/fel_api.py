@@ -240,25 +240,25 @@ def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
         if status_facelec[0] == False:
             return False, f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'
 
-        frappe.msgprint(msg=_('OK esquema XML generado y firmado'),
-                        title=_('Proceso completado'), indicator='green')
 
         # # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
         # # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
         # # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
-        # status_res = new_credit_note.response_validator()
-        # if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
-        #     return status_res  # return tuple
+        status_res = new_credit_note.response_validator()
+        if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
+            return status_res  # return tuple
+
 
         # # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
-        # status_upgrade = new_credit_note.upgrade_records()
-        # if status_upgrade[0] == False:
-        #     return status_upgrade
+        status_upgrade = new_credit_note.upgrade_records()
+        if status_upgrade[0] == False:
+            return status_upgrade
+
 
         # # SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
         # # el UUID y la nueva serie para la factura
-        # return True, status_upgrade[1]
-        # frappe.msgprint(_(str(status_upgrade)))
+        return True, status_upgrade[2]
+        frappe.msgprint(_(str(status_upgrade)))
 
     except:
         return False, str(frappe.get_traceback())
