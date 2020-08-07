@@ -621,8 +621,8 @@ class ElectronicSpecialInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('reciibo_firmado.json', 'w') as f:
-            #     f.write(json.dumps(self.__doc_firmado, indent=2))
+            with open('resp_special_invoice.json', 'w') as f:
+                f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
