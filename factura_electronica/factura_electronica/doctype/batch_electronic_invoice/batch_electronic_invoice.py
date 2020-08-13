@@ -115,6 +115,8 @@ def electronic_invoices_batch(invoice_list, doc_name, doct):
                         'details': status_elec_invoice[1]  # contiene el UUID de facelec
                     })
 
+                # Al campo details del doctype, se le asignara el log, para luego js leer esa data y
+                # renderizar el log
                 frappe.db.set_value('Batch Electronic Invoice', doc_name, 'details', json.dumps(log_invoices))
 
         # return doc_name

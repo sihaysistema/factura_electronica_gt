@@ -54,7 +54,9 @@
   {
    "fieldname": "details",
    "fieldtype": "Code",
-   "label": "Details"
+   "hidden": 1,
+   "label": "Details",
+   "read_only": 1
   },
   {
    "fieldname": "log_table",
@@ -62,7 +64,7 @@
    "label": "Log Table"
   }
  ],
- "modified": "2020-08-13 15:09:55.476500",
+ "modified": "2020-08-13 16:19:56.200114",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Batch Electronic Invoice",
