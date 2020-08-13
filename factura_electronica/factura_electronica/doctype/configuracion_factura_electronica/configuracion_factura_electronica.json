@@ -144,12 +144,14 @@
    "description": "FEL/GFACE",
    "fieldname": "codigo_establecimiento",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Codigo Establecimiento",
    "length": 4
   },
   {
    "fieldname": "descripcion_otro_impuesto",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Descripcion Otro Impuesto",
    "length": 100
   },
@@ -189,11 +191,13 @@
    "description": "Indique si esta afecto al r\u00e9gimen decreto 29-89, si la caja est\u00e1 seleccionada, la respuesta es afirmativa.",
    "fieldname": "regimen_2989",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "\u00bfAfecto al regimen 2989?"
   },
   {
    "fieldname": "regimen_isr",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Regimen ISR",
    "length": 20,
    "options": "RET_DEFINITIVA\nNO_RET_DEFINITIVA"
@@ -251,6 +255,7 @@
    "description": "FEL",
    "fieldname": "codigo",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Codigo"
   },
   {
@@ -374,6 +379,7 @@
    "default": "GTQ",
    "fieldname": "local_currency",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Local Currency",
    "options": "\nGTQ",
    "read_only": 1
@@ -410,7 +416,7 @@
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-08-07 11:02:40.848564",
+ "modified": "2020-08-13 13:32:20.572788",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
