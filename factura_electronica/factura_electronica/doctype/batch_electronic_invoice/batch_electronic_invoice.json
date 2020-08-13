@@ -9,7 +9,10 @@
   "validate_invoices",
   "invoices_section",
   "batch_invoices",
-  "amended_from"
+  "amended_from",
+  "log_status_section",
+  "details",
+  "log_table"
  ],
  "fields": [
   {
@@ -42,9 +45,24 @@
    "fieldtype": "Table",
    "label": "Batch Invoices",
    "options": "Batch Invoices"
+  },
+  {
+   "fieldname": "log_status_section",
+   "fieldtype": "Section Break",
+   "label": "Log Status"
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "Code",
+   "label": "Details"
+  },
+  {
+   "fieldname": "log_table",
+   "fieldtype": "HTML",
+   "label": "Log Table"
   }
  ],
- "modified": "2020-06-04 14:39:50.415399",
+ "modified": "2020-08-13 15:09:55.476500",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Batch Electronic Invoice",
