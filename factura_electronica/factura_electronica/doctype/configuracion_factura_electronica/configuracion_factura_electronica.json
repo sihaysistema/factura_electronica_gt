@@ -136,6 +136,7 @@
    "options": "Configuracion Series"
   },
   {
+   "depends_on": "eval:doc.regimen == \"GFACE\"",
    "fieldname": "datos_establecimiento",
    "fieldtype": "Section Break",
    "label": "DATOS ESTABLECIMIENTO GFACE"
@@ -416,7 +417,7 @@
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-08-13 13:32:20.572788",
+ "modified": "2020-08-13 13:38:10.781226",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
