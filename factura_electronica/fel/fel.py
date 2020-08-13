@@ -536,8 +536,8 @@ class ElectronicInvoice:
             url = frappe.db.get_value('Configuracion Factura Electronica',
                                      {'name': self.__config_name}, 'url_firma')
 
-            codigo = frappe.db.get_value('Configuracion Factura Electronica',
-                                        {'name': self.__config_name}, 'codigo')
+            # codigo = frappe.db.get_value('Configuracion Factura Electronica',
+            #                             {'name': self.__config_name}, 'codigo')
 
             alias = frappe.db.get_value('Configuracion Factura Electronica',
                                        {'name': self.__config_name}, 'alias')
