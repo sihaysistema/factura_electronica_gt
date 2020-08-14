@@ -374,7 +374,7 @@ def fill_fixtures():
 
     # NEW FUNCTIONALITY FOR EXPORTING
     fixtures_fillup.append(custom_field)
-    # fixtures_fillup.append(translation)
+    fixtures_fillup.append(translation)
     fixtures_fillup.append(tax_category)
     fixtures_fillup.append(id_doctype)
 
