@@ -333,7 +333,20 @@ def fill_fixtures():
                     "Es Factura Especial",
                     "Is Special Invoice",
                     "Declaration Date",
-                    "Documents In Declaration"
+                    "Documents In Declaration",
+                    "TAX WITHOLDING RANGES SECTION",
+                    "RENTENTIONS",
+                    "ISR Account payable",
+                    "ISR Account Receivable",
+                    "VAT Account Payable",
+                    "VAT Account Receivable",
+                    "VAT Retention to compensate",
+                    "VAT Retention Payable",
+                    "Income Tax Retention Payable Account",
+                    "ISR percentage rate",
+                    "Minimum Amount To Apply ISR",
+                    "Maximum Amount To Apply ISR",
+                    "IVA percentage rate"
                 ]
             ]
         ]
