@@ -335,6 +335,7 @@ def fill_fixtures():
                     "Declaration Date",
                     "Documents In Declaration",
                     "TAX WITHOLDING RANGES SECTION",
+                    "Tax Witholding Ranges Section",
                     "RENTENTIONS",
                     "ISR Account payable",
                     "ISR Account Receivable",
@@ -346,7 +347,11 @@ def fill_fixtures():
                     "ISR percentage rate",
                     "Minimum Amount To Apply ISR",
                     "Maximum Amount To Apply ISR",
-                    "IVA percentage rate"
+                    "IVA percentage rate",
+                    "LOG DETAILS INFLATION",
+                    "Log Details Inflation",
+                    "Import Budgets",
+                    "Tax Witholding Ranges"
                 ]
             ]
         ]
