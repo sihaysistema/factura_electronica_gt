@@ -368,7 +368,10 @@ def fill_fixtures():
                     "Is Fuel",
                     "Is Good",
                     "Is Service",
-                    "Is Exempt?"
+                    "Is Exempt?",
+                    "Default when excise taxes present",
+                    "Tax Name",
+                    "Taxable Unit Code"
                 ]
             ]
         ]

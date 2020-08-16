@@ -754,5 +754,47 @@
   "source_name": "Is Exempt?",
   "status": "Saved",
   "target_name": "Es Excento"
+ },
+ {
+  "contributed_translation_doctype_name": null,
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2020-08-15 19:38:58.368122",
+  "name": "284c738a8d",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "Default when excise taxes present",
+  "status": "Saved",
+  "target_name": "Por defecto, cuando se presentan los impuestos sobre el consumo"
+ },
+ {
+  "contributed_translation_doctype_name": null,
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2020-08-15 19:43:13.645060",
+  "name": "17f4df3df4",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "Tax Name",
+  "status": "Saved",
+  "target_name": "Nombre del Impuesto"
+ },
+ {
+  "contributed_translation_doctype_name": null,
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2020-08-15 19:44:16.015634",
+  "name": "0b126f476b",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "Taxable Unit Code",
+  "status": "Saved",
+  "target_name": "C\u00f3digo de la unidad tributaria"
  }
 ]
