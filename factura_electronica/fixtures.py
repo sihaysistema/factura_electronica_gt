@@ -351,7 +351,24 @@ def fill_fixtures():
                     "LOG DETAILS INFLATION",
                     "Log Details Inflation",
                     "Import Budgets",
-                    "Tax Witholding Ranges"
+                    "Tax Witholding Ranges",
+                    "Default Company Bank Account",
+                    "Taxes",
+                    "TAXES",
+                    "País emisor",
+                    "Identifications",
+                    "Three Digit UOM Code",
+                    "Excise Taxes",
+                    "Tax Rate Per UOM",
+                    "Tax amount per stock Unit of Measure",
+                    "Tax Rate Per UOM Purchase Account",
+                    "Tax Rate Per UOM Selling Account",
+                    "UOM Tax Included in Price",
+                    "If checked, the tax is deducted from item price. If unchecked, tax will be added to price.",
+                    "Is Fuel",
+                    "Is Good",
+                    "Is Service",
+                    "Is Exempt?"
                 ]
             ]
         ]
