@@ -39,5 +39,25 @@ class VATDeclaration(Document):
                     ''')  # actualiza a un valor ""
 
     def on_submit(self):
-        # TODO: Crear referencias desde aqui
-        pass
+        """
+        Se ejecuta cuando un documento se valida manualmente, actualizando las referencias en
+        otros doctypes
+        """
+        # Por cada declaracion
+        for declaration in self.declaration_items:
+            # Validacion extra, si no existe
+            if frappe.db.exists(declaration.get('link_doctype'), {'name': declaration.get('link_name')}):
+
+                if declaration.get('link_doctype') == 'Sales Invoice':
+                    frappe.db.sql(
+                        f'''
+                            UPDATE `tabSales Invoice` SET facelec_s_vat_declaration="{self.name}"
+                            WHERE name="{declaration.get('link_name')}"
+                        ''')  # actualiza a un valor ""
+
+                if declaration.get('link_doctype') == 'Purchase Invoice':
+                    frappe.db.sql(
+                    f'''
+                        UPDATE `tabPurchase Invoice` SET facelec_p_vat_declaration="{self.name}"
+                        WHERE name="{declaration.get('link_name')}"
+                    ''')  # actualiza a un valor ""
