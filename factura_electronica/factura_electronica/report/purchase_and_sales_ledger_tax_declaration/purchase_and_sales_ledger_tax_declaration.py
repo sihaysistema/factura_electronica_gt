@@ -18,6 +18,7 @@ from frappe import _, _dict, scrub
 from frappe.utils import cstr, flt, get_site_name, nowdate
 
 
+# ASISTELIBROS
 def execute(filters=None):
     """
     Funcion principal de reporte, se ejecuta en cada evento del reporte
@@ -32,7 +33,7 @@ def execute(filters=None):
     columns = get_columns()
     data = get_data(filters)
 
-    if len(data) > 0:
+    if len(data) > 0:  # Si hay datos que mostrar
         status_file = generate_asl_file(json.dumps(data, default=str))
         if status_file[0] == True:
             # Para debug
@@ -306,6 +307,7 @@ def get_data(filters):
     processed_purchase_invoices = process_purchase_invoices(purchase_invoices, filters)
     data.extend(processed_purchase_invoices)
 
+    # Procesamos las facturas de venta, segun los escenario encontrados
     processed_sales_invoices = process_sales_invoices(sales_invoices, filters)
     data.extend(processed_sales_invoices)
 
