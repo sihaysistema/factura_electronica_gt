@@ -2,14 +2,16 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
+
+import base64
+import datetime
+import json
+
+import requests
+import xmltodict
+
 import frappe
 from frappe import _, _dict
-
-import json, xmltodict
-import base64
-import requests
-import datetime
-
 
 # Una nota de débito o memorando de débito es un documento comercial emitido por
 # un comprador a un vendedor para solicitar formalmente una nota de crédito.

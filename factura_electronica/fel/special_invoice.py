@@ -2,17 +2,18 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
+
+import base64
+import datetime
+import json
+
+import requests
+import xmltodict
+
 import frappe
+from factura_electronica.utils.formulas import apply_formula_isr
 from frappe import _, _dict
 from frappe.utils import flt
-
-import json, xmltodict
-import base64
-import requests
-import datetime
-
-from factura_electronica.utils.formulas import apply_formula_isr
-
 
 # La contenida en el artículo 52 se refiere al documento que utiliza y emite
 # el comprador cuando adquiere bienes o servicios de personas individuales que
@@ -901,6 +902,16 @@ class ElectronicSpecialInvoice:
                 if frappe.db.exists('Batch Invoices', {'invoice': serie_fac_original}):
                     frappe.db.sql('''UPDATE `tabBatch Invoices` SET invoice=%(name)s, electronic_invoice_status="Generated"
                                     WHERE invoice=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
+
+                # UPDATE RETENTIONS
+                if frappe.db.exists('Tax Retention Guatemala', {'sales_invoice': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabTax Retention Guatemala` SET sales_invoice=%(name)s
+                                     WHERE sales_invoice=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+
+                # UPDATE DECLARATIONS
+                if frappe.db.exists('Invoice Declaration', {'link_name': serie_fac_original, 'link_doctype': 'Purchase Invoice'}):
+                    frappe.db.sql('''UPDATE `tabInvoice Declaration` SET link_name=%(name)s
+                                     WHERE link_name=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
 
                 frappe.db.commit()
 
