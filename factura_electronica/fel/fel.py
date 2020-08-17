@@ -844,6 +844,16 @@ class ElectronicInvoice:
                     frappe.db.sql('''UPDATE `tabBatch Invoices` SET invoice=%(name)s, electronic_invoice_status="Generated"
                                     WHERE invoice=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
+                # UPDATE RETENTIONS
+                if frappe.db.exists('Tax Retention Guatemala', {'sales_invoice': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabTax Retention Guatemala` SET sales_invoice=%(name)s
+                                     WHERE sales_invoice=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+
+                # UPDATE DECLARATIONS
+                if frappe.db.exists('Invoice Declaration', {'link_name': serie_fac_original, 'link_doctype': 'Sales Invoice'}):
+                    frappe.db.sql('''UPDATE `tabInvoice Declaration` SET link_name=%(name)s
+                                     WHERE link_name=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+
                 frappe.db.commit()
 
             except:
