@@ -27,13 +27,17 @@ class VATDeclaration(Document):
                 if declaration.get('link_doctype') == 'Sales Invoice':
                     frappe.db.sql(
                         f'''
-                            UPDATE tabSales Invoice SET facelec_s_vat_declaration=""
+                            UPDATE `tabSales Invoice` SET facelec_s_vat_declaration=""
                             WHERE name="{declaration.get('link_name')}"
                         ''')  # actualiza a un valor ""
 
                 if declaration.get('link_doctype') == 'Purchase Invoice':
                     frappe.db.sql(
                     f'''
-                        UPDATE tabPurchase Invoice SET facelec_p_vat_declaration=""
+                        UPDATE `tabPurchase Invoice` SET facelec_p_vat_declaration=""
                         WHERE name="{declaration.get('link_name')}"
                     ''')  # actualiza a un valor ""
+
+    def on_submit(self):
+        # TODO: Crear referencias desde aqui
+        pass
