@@ -17,7 +17,8 @@ class BatchElectronicInvoice(Document):
 
 def batch_generator(invoice_list):
     """
-    Creador de lotes, todos seran guardados solo hasta el nivel save
+    Creador de lotes, todos seran guardados solo hasta el nivel save, para
+    que el usuario tenga la posibilidad de hacer la validacion automaticamente
 
     Args:
         invoice_list (list): Lista de facturas a agregar
@@ -48,6 +49,12 @@ def batch_generator(invoice_list):
 
 @frappe.whitelist()
 def submit_invoice(invoices):
+    """
+    Valida serialmente todas las facturas que se encuentren en la tabla hija de Batch Invoices
+
+    Args:
+        invoices (list): Lista de facturas a validar
+    """
     invoices = json.loads(invoices)
 
     for invoice in invoices:
@@ -65,7 +72,7 @@ def submit_invoice(invoices):
 @frappe.whitelist()
 def electronic_invoices_batch(invoice_list, doc_name, doct):
     """
-    Conector a Doctype Batch Electronic Invoice, para generar serialmente Facturas electronicas
+    Conector a Doctype Batch Electronic Invoice, para generar serialmente Facturas electronicas FEL
 
     Args:
         invoice_list (list): Lista de facturas a generar
@@ -95,6 +102,22 @@ def electronic_invoices_batch(invoice_list, doc_name, doct):
                 status_elec_invoice = generate_electronic_invoice(invoice_code, naming_serie)
 
                 # time.sleep(0.5)
+                if status_elec_invoice[0] == False:
+                    log_invoices.append({
+                        'status': False,
+                        'invoice': invoice_code,
+                        'details': status_elec_invoice[1]
+                    })
+                else:
+                    log_invoices.append({
+                        'status': True,
+                        'invoice': invoice_code,
+                        'details': status_elec_invoice[1]  # contiene el UUID de facelec
+                    })
+
+                # Al campo details del doctype, se le asignara el log, para luego js leer esa data y
+                # renderizar el log
+                frappe.db.set_value('Batch Electronic Invoice', doc_name, 'details', json.dumps(log_invoices))
 
         # return doc_name
         frappe.msgprint(msg=_('Electronic Invoices generated'), title=_('Success'), indicator='green')

@@ -13,6 +13,11 @@ import xmltodict
 import frappe
 from frappe import _, _dict
 
+# Una nota de crédito es un documento comercial emitido por
+# un vendedor a un comprador. Las notas de crédito actúan como un documento
+# fuente para el diario de devolución de ventas. En otras palabras, la nota
+# de crédito es evidencia de la reducción en las ventas. Wikipedia (Inglés)
+
 # NOTAS:
 # 1. INSTANCIA FACT
 
@@ -28,8 +33,8 @@ from frappe import _, _dict
 # 5 GUARDAR REGISTROS ENVIOS, LOG
 # 5.1 ACTUALIZAR REGISTROS
 
-class ElectronicInvoice:
-    def __init__(self, invoice_code, conf_name, naming_series):
+class ElectronicCreditNote:
+    def __init__(self, actual_inv_name, invoice_code, conf_name, naming_series, reason):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
 
@@ -37,12 +42,14 @@ class ElectronicInvoice:
             invoice_code (str): Serie origianl de la factura
             conf_name (str): Nombre configuracion para factura electronica
         """
-        self.__invoice_code = invoice_code
+        self.__invoice_code = invoice_code  # HACE REFERENCIA A LA FACT FEL
         self.__config_name = conf_name
         self.__naming_serie = naming_series
+        self.__reason = reason
+        self.__inv_credit_note = actual_inv_name  # HACE REFERENCIA A LA NUEVA NOTA DE CREDITO
         self.__log_error = []
 
-    def build_invoice(self):
+    def build_credit_note(self):
         """
         Valida las dependencias necesarias, para construir XML desde un JSON
         para ser firmado certificado por la SAT y finalmente generar factura electronica
@@ -59,12 +66,6 @@ class ElectronicInvoice:
                 # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
                 self.__base_peticion = {
                     "dte:GTDocumento": {
-                        # "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
-                        # "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
-                        # "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
-                        # "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        # "@Version": "0.4",
-                        # "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
                         "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
                         "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -78,9 +79,9 @@ class ElectronicInvoice:
                                     "dte:DatosGenerales": self.__d_general,
                                     "dte:Emisor": self.__d_emisor,
                                     "dte:Receptor": self.__d_receptor,
-                                    "dte:Frases": self.__d_frases,
                                     "dte:Items": self.__d_items,
-                                    "dte:Totales": self.__d_totales
+                                    "dte:Totales": self.__d_totales,
+                                    "dte:Complementos": self.__d_complements
                                 }
                             }
                         }
@@ -88,7 +89,7 @@ class ElectronicInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                # with open('mi_factura.json', 'w') as f:
+                # with open('nota_credito.json', 'w') as f:
                 #     f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
@@ -123,11 +124,6 @@ class ElectronicInvoice:
         if status_receiver[0] == False:
             return status_receiver
 
-        # Validacion y generacion seccion frases
-        status_phrases = self.phrases()
-        if status_phrases == False:
-            return status_phrases
-
         # Validacion y generacion seccion items
         status_items = self.items()
         if status_items == False:
@@ -137,6 +133,11 @@ class ElectronicInvoice:
         status_totals = self.totals()
         if status_totals == False:
             return status_totals
+
+        # Validacion y generacion seccion complementos
+        status_complements = self.complements()
+        if status_complements == False:
+            return status_complements
 
         # Si todo va bien, retorna True
         return True, 'OK'
@@ -151,21 +152,22 @@ class ElectronicInvoice:
         """
 
         try:
-            self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
-            self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
+            # NOTA: LA FECHA Y HORA DE EMISION A USAR ES DE LA FACTURA ELECTRONICA FEL ORIGINAL, SOBRE LA CUAL
+            # SE ESTA HACIENDO LA NOTA DE CREDITO
+            self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_date'))
+            self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_time'))
 
             self.__d_general = {
-                "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                "@FechaHoraEmision": f'{self.date_invoice}T{self.time_invoice}',  #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
+                "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'currency'),
+                "@FechaHoraEmision": f'{self.date_invoice}T{self.time_invoice}',  # "2018-11-01T16:33:47Z",   #
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
-                                             'tipo_documento')
-                # frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
+                                             'tipo_documento')  # 'FACT'
             }
 
             return True, 'OK'
 
         except:
-            return False, f'Error en obtener data para datos generales mas detalles en :\n {str(frappe.get_traceback())}'
+            return False, f'Ocurrio un problema al tratar de obtener data para datos generales mas detalles en :\n {str(frappe.get_traceback())}'
 
     def sender(self):
         """
@@ -178,12 +180,12 @@ class ElectronicInvoice:
 
         try:
             # De la factura obtenemos la compañia y direccion compañia emisora
-            self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__invoice_code},
+            self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__inv_credit_note},
                                                 fieldname=['company', 'company_address', 'nit_face_customer',
                                                            'customer_address', 'customer_name', 'total_taxes_and_charges',
                                                            'grand_total'], as_dict=1)
             if len(self.dat_fac) == 0:
-                return False, f'''No se encontro ninguna factura con serie: {self.__invoice_code}.\
+                return False, f'''No se encontro ninguna factura con serie: {self.__inv_credit_note}.\
                                   Por favor valida los datos de la factura que deseas procesar'''
 
 
@@ -358,31 +360,6 @@ class ElectronicInvoice:
         except:
             return False, 'Error no se puede completar la operacion por: '+str(frappe.get_traceback())
 
-    def phrases(self):
-        """
-        debe indicarse los regímenes y textos especiales que son requeridos en los DTE,
-        de acuerdo a la afiliación del contribuyente y tipo de operación.
-
-        Returns:
-            boolean: True/False
-        """
-
-        try:
-            # TODO: Consultar todas las posibles combinaciones disponibles
-            self.__d_frases = {
-                "dte:Frase": {
-                    "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
-                                                           {'name': self.__config_name}, 'codigo_escenario'), #"1",
-                    "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
-                                                     {'name': self.__config_name}, 'tipo_frase')[:1]  # "1"
-                }
-            }
-
-            return True, 'OK'
-
-        except:
-            return False, 'Error, no se puedo obtener valor de Codigo Escenario y Tipo Frase'
-
     def items(self):
         """
         Procesa todos los items de la factura aplicando calculos necesarios para la SAT
@@ -396,7 +373,7 @@ class ElectronicInvoice:
             items_ok = []  # Guardara todos los items OK
 
             # Obtenemos los items de la factura
-            self.__dat_items = frappe.db.get_values('Sales Invoice Item', filters={'parent': str(self.__invoice_code)},
+            self.__dat_items = frappe.db.get_values('Sales Invoice Item', filters={'parent': str(self.__inv_credit_note)},
                                              fieldname=['item_name', 'qty', 'item_code', 'description',
                                                         'net_amount', 'base_net_amount', 'discount_percentage',
                                                         'discount_amount', 'price_list_rate', 'net_rate',
@@ -410,7 +387,7 @@ class ElectronicInvoice:
             # TODO VER ESCENARIO CUANDO HAY MAS DE UN IMPUESTO?????
             # TODO VER ESCENARIO CUANDO NO HAY IMPUESTOS, ES POSIBLE???
             # Obtenemos los impuesto cofigurados para x compañia en la factura
-            self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__invoice_code},
+            self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__inv_credit_note},
                                                      fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
 
             # Verificamos la cantidad de items
@@ -433,24 +410,24 @@ class ElectronicInvoice:
 
                     # Calculo precio unitario
                     precio_uni = 0
-                    precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
+                    precio_uni = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['rate']) + float(abs(self.__dat_items[i]['price_list_rate']) - abs(self.__dat_items[i]['rate'])))))
 
                     # Calculo precio item
                     precio_item = 0
-                    precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
+                    precio_item = abs(float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate']))))
 
                     # Calculo descuento item
                     desc_item = 0
-                    desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+                    desc_item = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(float(self.__dat_items[i]['amount'])))))
 
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
-                    obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
+                    obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = self.__dat_items[i]['description']
-                    obj_item["dte:PrecioUnitario"] = precio_uni
-                    obj_item["dte:Precio"] = precio_item
-                    obj_item["dte:Descuento"] = desc_item
+                    obj_item["dte:PrecioUnitario"] = abs(precio_uni)
+                    obj_item["dte:Precio"] = abs(precio_item)
+                    obj_item["dte:Descuento"] = abs(desc_item)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -458,11 +435,11 @@ class ElectronicInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
-                                                                                                      float(self.__taxes_fact[0]['rate']/100))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
+                                                                                                      float(self.__taxes_fact[0]['rate']/100))))
 
-                    obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['amount'])))
+                    obj_item["dte:Total"] = abs(float('{0:.2f}'.format((float(self.__dat_items[i]['amount'])))))
                     # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
@@ -474,7 +451,7 @@ class ElectronicInvoice:
             return True, 'OK'
 
         except:
-            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
+            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.__inv_credit_note, str(frappe.get_traceback()))
 
     def totals(self):
         """
@@ -493,16 +470,45 @@ class ElectronicInvoice:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
+                        "@TotalMontoImpuesto": abs(float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges']))))
                     }
                 },
-                "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
+                "dte:GranTotal": abs(float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total']))))
             }
 
             return True, 'OK'
 
         except:
-            return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
+            return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.__inv_credit_note, str(frappe.get_traceback()))
+
+    def complements(self):
+        try:
+            datos_fel_invoice = frappe.db.get_values('Envio FEL', filters={'serie_para_factura': self.__invoice_code},
+                                                     fieldname=['uuid', 'numero', 'serie', 'fecha'],
+                                                     as_dict=1)
+            fecha_procesada = datos_fel_invoice[0]["fecha"].split('T')[0]
+
+            self.__d_complements = {
+                "dte:Complemento": {
+                    "@IDComplemento": "ReferenciasNota",
+                    "@NombreComplemento": "Nota de Credito",
+                    "@URIComplemento": "text",
+                    "cno:ReferenciasNota": {
+                        "@xmlns:cno": "http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0",
+                        "@FechaEmisionDocumentoOrigen": fecha_procesada, # self.date_invoice,
+                        "@MotivoAjuste": self.__reason,
+                        "@NumeroAutorizacionDocumentoOrigen": datos_fel_invoice[0]["uuid"],
+                        "@NumeroDocumentoOrigen": datos_fel_invoice[0]["numero"],
+                        "@SerieDocumentoOrigen": datos_fel_invoice[0]["serie"],
+                        "@Version": "0.0"
+                    }
+                }
+            }
+
+            return True, 'OK'
+
+        except:
+            return False, 'No se pudo obtener datos para los complementos'
 
     def sign_invoice(self):
         """
@@ -516,7 +522,7 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('mi_factura.xml', 'w') as f:
+            # with open('mi_nota_credito.xml', 'w') as f:
             #     f.write(self.__xml_string)
 
         except:
@@ -558,14 +564,14 @@ class ElectronicInvoice:
                 "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
             }
 
-            headers = {"content-type": "application/json"}
+            headers = {"content-type": "application/json"} # {'Content-Type': 'text/xml; charset=utf-8'}
             response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
 
             # Guardamos en una variable privada la respuesta
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('reciibo_firmado.json', 'w') as f:
+            # with open('respuesta_credit_note_firma.json', 'w') as f:
             #     f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
@@ -591,14 +597,14 @@ class ElectronicInvoice:
         """
 
         try:
-            data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
+            data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'company')
             nit_company = frappe.db.get_value('Company', {'name': self.dat_fac[0]['nit_face_customer']}, 'nit_face_company')
 
             url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
             user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
             llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'llave_ws')
             correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'correo_copia')
-            ident = self.__invoice_code  # identificador
+            ident = self.__inv_credit_note  # identificador
 
             req_dte = {
                 "nit_emisor": nit_company,
@@ -616,7 +622,7 @@ class ElectronicInvoice:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            # with open('RESPONSE_factura.json', 'w') as f:
+            # with open('resp_electronic_credit_note.json', 'w') as f:
             #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
@@ -665,11 +671,11 @@ class ElectronicInvoice:
             if not frappe.db.exists('Envio FEL', {'name': self.__response_ok['uuid']}):
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
-                resp_fel.tipo_documento = 'Factura Electronica'
+                resp_fel.tipo_documento = 'Nota de Credito'
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
-                resp_fel.serie_factura_original = self.__invoice_code
+                resp_fel.serie_factura_original = self.__inv_credit_note
                 # resp_fel.serie_para_factura = 'FACELEC-'+str(self.__response_ok['numero'])
                 resp_fel.serie_para_factura = str(self.__response_ok['serie']).replace('*', '')+str(self.__response_ok['numero'])
 
@@ -700,7 +706,7 @@ class ElectronicInvoice:
             return True, 'OK'
 
         except:
-            return False, f'Error al tratar de guardar la rspuesta, para la factura {self.__invoice_code}, \
+            return False, f'Error al tratar de guardar la rspuesta, para la factura {self.__inv_credit_note}, \
                             Mas detalles en {str(frappe.get_traceback())}'
 
     def upgrade_records(self):
@@ -713,9 +719,10 @@ class ElectronicInvoice:
         """
 
         # Verifica que exista un documento en la tabla Envio FEL con el nombre de la serie original
-        if frappe.db.exists('Envio FEL', {'serie_factura_original': self.__invoice_code}):
+        # Solo si existe registro guardado como respalda procede a actualizar todos los docs
+        if frappe.db.exists('Envio FEL', {'serie_factura_original': self.__inv_credit_note}):
             factura_guardada = frappe.db.get_values('Envio FEL',
-                                                    filters={'serie_factura_original': self.__invoice_code},
+                                                    filters={'serie_factura_original': self.__inv_credit_note},
                                                     fieldname=['numero', 'serie', 'uuid'], as_dict=1)
             # Esta seccion se encarga de actualizar la serie, con una nueva que es serie y numero
             # buscara en las tablas donde exista una coincidencia actualizando con la nueva serie
@@ -727,7 +734,7 @@ class ElectronicInvoice:
                 # factura que lo generó.
                 # serieFEL = str(factura_guardada[0]['serie'] + '-' + factura_guardada[0]['numero'])
                 # serie_fac_original: Guarda la serie original de la factura.
-                serie_fac_original = self.__invoice_code
+                serie_fac_original = self.__inv_credit_note
 
                 # Actualizacion de tablas que son modificadas directamente.
                 # 01 - tabSales Invoice: actualizacion con datos correctos

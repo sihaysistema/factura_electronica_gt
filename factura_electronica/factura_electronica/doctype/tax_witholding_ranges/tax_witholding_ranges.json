@@ -14,7 +14,11 @@
   "isr_percentage_rate",
   "minimum_amount",
   "maximum_amount",
-  "iva_percentage_rate"
+  "iva_percentage_rate",
+  "section_break_11",
+  "vat_retention_to_compensate",
+  "vat_retention_payable",
+  "income_tax_retention_payable_account"
  ],
  "fields": [
   {
@@ -85,10 +89,32 @@
    "fieldname": "maximum_amount",
    "fieldtype": "Currency",
    "label": "Maximum Amount To Apply ISR"
+  },
+  {
+   "fieldname": "section_break_11",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "vat_retention_to_compensate",
+   "fieldtype": "Link",
+   "label": "VAT Retention to compensate",
+   "options": "Account"
+  },
+  {
+   "fieldname": "vat_retention_payable",
+   "fieldtype": "Link",
+   "label": "VAT Retention Payable",
+   "options": "Account"
+  },
+  {
+   "fieldname": "income_tax_retention_payable_account",
+   "fieldtype": "Link",
+   "label": "Income Tax Retention Payable Account",
+   "options": "Account"
   }
  ],
  "istable": 1,
- "modified": "2020-07-23 21:29:47.135752",
+ "modified": "2020-08-05 21:25:22.633742",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Tax Witholding Ranges",

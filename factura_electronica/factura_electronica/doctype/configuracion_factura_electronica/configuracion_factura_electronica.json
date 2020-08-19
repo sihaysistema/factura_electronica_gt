@@ -44,10 +44,13 @@
   "es_anulacion",
   "tipo_frase",
   "codigo_escenario",
+  "tipo_frase_factura_especial",
+  "codigo_escenario_factura_especial",
   "column_break_32",
   "alias",
   "url_firma",
   "url_dte",
+  "url_de_anulacion",
   "llave_ws",
   "afiliacion_iva",
   "local_currency",
@@ -133,6 +136,7 @@
    "options": "Configuracion Series"
   },
   {
+   "depends_on": "eval:doc.regimen == \"GFACE\"",
    "fieldname": "datos_establecimiento",
    "fieldtype": "Section Break",
    "label": "DATOS ESTABLECIMIENTO GFACE"
@@ -141,12 +145,14 @@
    "description": "FEL/GFACE",
    "fieldname": "codigo_establecimiento",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Codigo Establecimiento",
    "length": 4
   },
   {
    "fieldname": "descripcion_otro_impuesto",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Descripcion Otro Impuesto",
    "length": 100
   },
@@ -186,11 +192,13 @@
    "description": "Indique si esta afecto al r\u00e9gimen decreto 29-89, si la caja est\u00e1 seleccionada, la respuesta es afirmativa.",
    "fieldname": "regimen_2989",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "\u00bfAfecto al regimen 2989?"
   },
   {
    "fieldname": "regimen_isr",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Regimen ISR",
    "length": 20,
    "options": "RET_DEFINITIVA\nNO_RET_DEFINITIVA"
@@ -248,6 +256,7 @@
    "description": "FEL",
    "fieldname": "codigo",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Codigo"
   },
   {
@@ -371,6 +380,7 @@
    "default": "GTQ",
    "fieldname": "local_currency",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Local Currency",
    "options": "\nGTQ",
    "read_only": 1
@@ -386,11 +396,28 @@
    "fieldname": "nombre_empresa_prueba",
    "fieldtype": "Data",
    "label": "Nombre empresa prueba"
+  },
+  {
+   "description": "FEL: URL para anular documentos",
+   "fieldname": "url_de_anulacion",
+   "fieldtype": "Data",
+   "label": "URL de Anulacion"
+  },
+  {
+   "fieldname": "tipo_frase_factura_especial",
+   "fieldtype": "Select",
+   "label": "Tipo Frase Factura Especial",
+   "options": "\n5: Frase de facturas especiales\n6: Frases de Regimen Especial de contribuyente agropecuario"
+  },
+  {
+   "fieldname": "codigo_escenario_factura_especial",
+   "fieldtype": "Data",
+   "label": "Codigo Escenario Factura Especial"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-07-14 12:15:13.354885",
+ "modified": "2020-08-13 13:38:10.781226",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

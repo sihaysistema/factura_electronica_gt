@@ -31,8 +31,8 @@ def peticion_factura_electronica(datos_xml, url_servicio):
     '''
     # Realizara la comunicacion al webservice
     try:
-        headers = {"content-type": "text/xml"}
-        response = requests.post(url_servicio, data=datos_xml, headers=headers, timeout=15)
+        headers = {'Content-Type': 'text/xml; charset=utf-8'}
+        response = requests.post(url_servicio, data=datos_xml.encode('utf-8'), headers=headers, timeout=15)
     except:
         frappe.msgprint(_('''Tiempo de espera agotado para webservice, verificar conexion a internet
                           e intentar de nuevo: \n {}'''.format(frappe.get_traceback())))
