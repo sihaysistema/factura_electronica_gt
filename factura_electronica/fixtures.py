@@ -371,7 +371,13 @@ def fill_fixtures():
                     "Is Exempt?",
                     "Default when excise taxes present",
                     "Tax Name",
-                    "Taxable Unit Code"
+                    "Taxable Unit Code",
+                    "AUTOMATED RETENTION",
+                    "Target account",
+                    "Is Multicurrency",
+                    "Applies for VAT withholding",
+                    "Applies for ISR withholding",
+                    "NOTE"
                 ]
             ]
         ]
