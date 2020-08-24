@@ -380,7 +380,9 @@ def fill_fixtures():
                     "NOTE",
                     "New Journal Entry with Withholding Tax",
                     "If you wish to generate a new Journal Entry for this invoice, please cancel the existing policies that reference this invoice",
-                    "Sorry, there is already a Journal Entry referenced to this invoice"
+                    "Sorry, there is already a Journal Entry referenced to this invoice",
+                    "More details in the following log",
+                    "Sorry, a problem occurred while trying to generate the Journal Entry"
                 ]
             ]
         ]

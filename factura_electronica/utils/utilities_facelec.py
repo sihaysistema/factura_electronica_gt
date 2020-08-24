@@ -145,3 +145,13 @@ def string_cleaner(str_to_clean, opt=False):
         return False
     else:
         return result
+
+
+def clean_traceback_py(mensaje):
+    '''Funcion encargada de recorrer el string de traceback python y obtener el error especifico'''
+    import re
+
+    x = re.split("\n", str(mensaje))
+    msj_e = len(x) - 2
+
+    return str(x[msj_e]) + str(x[msj_e+1])

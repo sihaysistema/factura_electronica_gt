@@ -59,16 +59,16 @@ class ElectronicInvoice:
                 # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
                 self.__base_peticion = {
                     "dte:GTDocumento": {
-                        # "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
-                        # "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
-                        # "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
-                        # "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        # "@Version": "0.4",
-                        # "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
-                        "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
-                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
+                        "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 1 vieja
+                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        "@Version": "0.1",
+                        "@Version": "0.4",
+                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        # "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 02
+                        # "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
+                        # "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                        # "@Version": "0.1",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {
@@ -520,8 +520,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('mi_factura.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('mi_factura.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -620,8 +620,8 @@ class ElectronicInvoice:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            # with open('RESPONSE_factura.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('RESPONSE_factura.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
