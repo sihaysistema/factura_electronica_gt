@@ -377,7 +377,10 @@ def fill_fixtures():
                     "Is Multicurrency",
                     "Applies for VAT withholding",
                     "Applies for ISR withholding",
-                    "NOTE"
+                    "NOTE",
+                    "New Journal Entry with Withholding Tax",
+                    "If you wish to generate a new Journal Entry for this invoice, please cancel the existing policies that reference this invoice",
+                    "Sorry, there is already a Journal Entry referenced to this invoice"
                 ]
             ]
         ]
