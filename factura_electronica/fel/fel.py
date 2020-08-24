@@ -88,8 +88,8 @@ class ElectronicInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                # with open('mi_factura.json', 'w') as f:
-                #     f.write(json.dumps(self.__base_peticion))
+                with open('mi_factura.json', 'w') as f:
+                    f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:
@@ -435,17 +435,36 @@ class ElectronicInvoice:
                     if (int(detalle_stock) == 1):
                         obj_item["@BienOServicio"] = 'B'
 
-                    # Calculo precio unitario
-                    precio_uni = 0
-                    precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
 
-                    # Calculo precio item
-                    precio_item = 0
-                    precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
+                    # precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
 
-                    # Calculo descuento item
-                    desc_item = 0
-                    desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+                    # Aplica si se esta usando lista de precios
+                    if self.__dat_items[i]['price_list_rate'] != 0:
+                        precio_uni = 0
+                        precio_item = 0
+                        desc_item = 0
+
+                        precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
+
+                        # Calculo precio item
+                        precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
+
+                        # Calculo descuento item
+                        desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+
+                    else:
+                        precio_uni = 0
+                        precio_item = 0
+                        desc_item = 0
+
+                        # Precio unitario
+                        precio_uni = float(self.__dat_items[i]['rate'])
+
+                        # Calculo precio item
+                        precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['rate'])))
+
+                        # Calculo descuento monto item
+                        desc_item = float('{0:.2f}'.format((self.__dat_items[i]['rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
 
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
