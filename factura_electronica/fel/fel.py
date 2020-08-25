@@ -90,8 +90,8 @@ class ElectronicInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                with open('mi_factura.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion))
+                # with open('mi_factura.json', 'w') as f:
+                #     f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:
@@ -546,8 +546,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            with open('mi_factura.xml', 'w') as f:
-                f.write(self.__xml_string)
+            # with open('mi_factura.xml', 'w') as f:
+            #     f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -646,8 +646,8 @@ class ElectronicInvoice:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            with open('RESPONSE_factura.json', 'w') as f:
-                f.write(json.dumps(self.__response_ok, indent=2))
+            # with open('RESPONSE_factura.json', 'w') as f:
+            #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
