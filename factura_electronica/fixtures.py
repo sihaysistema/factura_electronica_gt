@@ -382,7 +382,12 @@ def fill_fixtures():
                     "If you wish to generate a new Journal Entry for this invoice, please cancel the existing policies that reference this invoice",
                     "Sorry, there is already a Journal Entry referenced to this invoice",
                     "More details in the following log",
-                    "Sorry, a problem occurred while trying to generate the Journal Entry"
+                    "Sorry, a problem occurred while trying to generate the Journal Entry",
+                    "Exporter or Supplier", "Importer or Receiver", "Declarant", "Carrier", "Total values",
+                    "Goods", "Support Documents", "Observations and Signatures", "DUCA Number", "Acceptance Date",
+                    "Reference or Serial Number", "Exit Customs Office", "Entry Customs Office", "Initial Transit Customs Office",
+                    "Purpose", "Exporter Identification Type and Number", "Exporter ID number", "Exporter ID type",
+                    "Exporter ID issuing country"
                 ]
             ]
         ]
