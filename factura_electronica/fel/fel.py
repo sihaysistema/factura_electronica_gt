@@ -436,35 +436,38 @@ class ElectronicInvoice:
                         obj_item["@BienOServicio"] = 'B'
 
 
+                    # NOTA: ESTOS CALCULOS COMENTADOS APLICAN PARA LA VERSION1 GFACE, OJO NO FEL
                     # precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
-
                     # Aplica si se esta usando lista de precios
-                    if self.__dat_items[i]['price_list_rate'] != 0:
-                        precio_uni = 0
-                        precio_item = 0
-                        desc_item = 0
+                    # if self.__dat_items[i]['price_list_rate'] != 0:
+                    #     precio_uni = 0
+                    #     precio_item = 0
+                    #     desc_item = 0
 
-                        precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
+                    #     precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
 
-                        # Calculo precio item
-                        precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
+                    #     # Calculo precio item
+                    #     precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
 
-                        # Calculo descuento item
-                        desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+                    #     # FIXME: Calculo descuento item
+                    #     # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
 
-                    else:
-                        precio_uni = 0
-                        precio_item = 0
-                        desc_item = 0
 
-                        # Precio unitario
-                        precio_uni = float(self.__dat_items[i]['rate'])
+                    precio_uni = 0
+                    precio_item = 0
+                    desc_item = 0
 
-                        # Calculo precio item
-                        precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['rate'])))
+                    # Precio unitario, (sin aplicarle descuento)
+                    precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
 
-                        # Calculo descuento monto item
-                        desc_item = float('{0:.2f}'.format((self.__dat_items[i]['rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+                    # Calculo precio item (precio sin aplicarle descuento * cantidad)
+                    # precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['rate'])))
+                    precio_item = precio_uni * float(self.__dat_items[i]['qty'])  # float('{0:.2f}'.format((self.__dat_items[i]['amount'])))
+
+                    # Calculo descuento monto item
+                    # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['discount_amount'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+                    # monto - ((descuento + precio_con_descuento) * cantidad)
+                    desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate']) * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
 
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
@@ -481,7 +484,7 @@ class ElectronicInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))  # net_amount
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
                                                                                                       float(self.__taxes_fact[0]['rate']/100))
 
