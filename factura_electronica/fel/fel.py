@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 
 import base64
 import datetime
+
+from frappe.utils import get_datetime, nowdate, nowtime
 import json
 
 import requests
@@ -59,16 +61,16 @@ class ElectronicInvoice:
                 # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
                 self.__base_peticion = {
                     "dte:GTDocumento": {
-                        # "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
-                        # "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
-                        # "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
-                        # "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        # "@Version": "0.4",
-                        # "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
-                        "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
-                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
+                        "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 1 vieja
+                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        "@Version": "0.1",
+                        "@Version": "0.4",
+                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        # "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 02
+                        # "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
+                        # "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                        # "@Version": "0.1",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {
@@ -152,11 +154,17 @@ class ElectronicInvoice:
 
         try:
             self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
-            self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
+            # self.time_invoice = (datetime.min + frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).time().strftime("%H:%M:%S")
+
+            # if '.' in self.time_invoice:
+            #     # la ultima porcion elimina los milisegundos manualmente, las nuevas validaciones de INFILE no soportan miliseconds .rpartition('.')[0]
+
+            #     self.time_invoice = (datetime.min + frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).time().strftime("%H:%M:%S")
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                "@FechaHoraEmision": f'{self.date_invoice}T{self.time_invoice}',  #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
+                # "@FechaHoraEmision": str(self.date_invoice)+'T'+str(self.time_invoice),  #f'{self.date_invoice}T{str(self.time_invoice)}',  #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
+                "@FechaHoraEmision": str(nowdate())+'T'+str(nowtime().rpartition('.')[0]),  # Se usa la data al momento de crear a infile
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
                 # frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
@@ -431,26 +439,48 @@ class ElectronicInvoice:
                     if (int(detalle_stock) == 1):
                         obj_item["@BienOServicio"] = 'B'
 
-                    # Calculo precio unitario
+
+                    # NOTA: ESTOS CALCULOS COMENTADOS APLICAN PARA LA VERSION1 GFACE, OJO NO FEL
+                    # precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
+                    # Aplica si se esta usando lista de precios
+                    # if self.__dat_items[i]['price_list_rate'] != 0:
+                    #     precio_uni = 0
+                    #     precio_item = 0
+                    #     desc_item = 0
+
+                    #     precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
+
+                    #     # Calculo precio item
+                    #     precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
+
+                    #     # FIXME: Calculo descuento item
+                    #     # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+
+
                     precio_uni = 0
-                    precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
-
-                    # Calculo precio item
                     precio_item = 0
-                    precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
-
-                    # Calculo descuento item
                     desc_item = 0
-                    desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+
+                    # Precio unitario, (sin aplicarle descuento)
+                    precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
+
+                    # Calculo precio item (precio sin aplicarle descuento * cantidad)
+                    # precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['rate'])))
+                    precio_item = precio_uni * float(self.__dat_items[i]['qty'])  # float('{0:.2f}'.format((self.__dat_items[i]['amount'])))
+
+                    # Calculo descuento monto item
+                    # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['discount_amount'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+                    # monto - ((descuento + precio_con_descuento) * cantidad)
+                    desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate']) * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
 
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = self.__dat_items[i]['description']
-                    obj_item["dte:PrecioUnitario"] = precio_uni
-                    obj_item["dte:Precio"] = precio_item
-                    obj_item["dte:Descuento"] = desc_item
+                    obj_item["dte:PrecioUnitario"] = round(precio_uni, 2)
+                    obj_item["dte:Precio"] = round(precio_item, 2)
+                    obj_item["dte:Descuento"] = round(desc_item, 2)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -458,7 +488,7 @@ class ElectronicInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))  # net_amount
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
                                                                                                       float(self.__taxes_fact[0]['rate']/100))
 

@@ -922,12 +922,13 @@ frappe.ui.form.on("Sales Invoice", {
 
 
         // INICIO GENERACION POLIZA CON RETENCIONES
+        // Se mostrara mientras la factura se enceuntre validada y su estatus sea diferente de Paid
         if (frm.doc.docstatus === 1 && frm.doc.status !== 'Paid') {
 
             cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
 
                 let d = new frappe.ui.Dialog({
-                    title: 'New Journal Entry with Withholding Tax',
+                    title: __('New Journal Entry with Withholding Tax'),
                     fields: [
                         {
                             label: 'Cost Center',
@@ -1006,7 +1007,7 @@ frappe.ui.form.on("Sales Invoice", {
                                 description: values.description
                             },
                             callback: function (r) {
-                                console.log(r.message);
+                                // console.log(r.message);
                                 d.hide();
                                 frm.refresh()
                             },

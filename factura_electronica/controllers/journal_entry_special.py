@@ -7,7 +7,7 @@ import json
 from datetime import date
 
 import frappe
-from factura_electronica.utils.formulas import amount_converter, apply_formula_isr, number_of_decimals
+from factura_electronica.utils.formulas import amount_converter, apply_formula_isr, number_of_decimals, GoalSeek
 from frappe import _, _dict
 from frappe.utils import flt
 
