@@ -39,13 +39,13 @@ def get_columns():
             "label": _("Document Type"),
             "fieldname": "doc_type",
             "fieldtype": "Data",
-            "width": 200
+            "width": 120
         },
         {
             "label": _("Voucher or Document ID"),
             "fieldname": "doc_id",
             "fieldtype": "Data",
-            "width": 200
+            "width": 300
         },
         {
             "label": _("Transaction Date"),
@@ -58,21 +58,21 @@ def get_columns():
             "fieldname": "vat_debit",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 200
+            "width": 150
         },
         {
             "label": _("VAT Credit"),
             "fieldname": "vat_credit",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 200
+            "width": 150
         },
         {
             "label": _("Transaction Total"),
             "fieldname": "trans_total",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 200
+            "width": 150
         },
         {
             "label": _("Currency"),
@@ -84,6 +84,7 @@ def get_columns():
     ]
 
     return columns
+
 
 def get_data(filters):
     empty_row = {}

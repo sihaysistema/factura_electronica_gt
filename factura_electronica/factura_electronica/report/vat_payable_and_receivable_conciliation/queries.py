@@ -110,6 +110,7 @@ def get_vat_receivable_data(filters):
     except:
         frappe.msgprint(frappe.get_traceback())
 
+
 def apply_on_site_links(payable_data_lines):
     try:
         """Applies links for offsite reports such as excel
@@ -142,6 +143,7 @@ def apply_on_site_links(payable_data_lines):
 
     except:
         frappe.msgprint(frappe.get_traceback())
+
 
 def apply_off_site_links(payable_data_lines):
     try:
