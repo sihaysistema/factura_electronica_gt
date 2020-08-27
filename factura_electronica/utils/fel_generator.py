@@ -14,7 +14,7 @@ class FacturaElectronicaFEL:
     def __init__(self, serie, cliente, conf_name, series_conf):
         """
         Constructor de la clase
-        
+
         Args:
             serie (str): serie original de la factura
             cliente (str): nombre de cliente o serie
@@ -42,7 +42,7 @@ class FacturaElectronicaFEL:
         Funcion principal para generar facturas electronicas, valida la data
         disponible, si todo esta bien procede a generar xml para ser firmado
         y finalmente generar la factura electronica registrandola en la base de datos
-        
+
         Returns:
             dict: mensaje de status de lo procesado
         """
@@ -83,7 +83,7 @@ class FacturaElectronicaFEL:
                             "dte:Receptor": self.d_receptor,
                             "dte:Frases": self.d_frases,
                             "dte:Items": self.d_items,
-                            "dte:Totales": self.d_totales 
+                            "dte:Totales": self.d_totales
                         }
                     }
                 }
@@ -93,8 +93,8 @@ class FacturaElectronicaFEL:
         # To XML: Convierte json a xml indentado
         xmlString = xmltodict.unparse(base_peticion, pretty=True)
         # Usar solo para debug ---
-        with open('mario.xml', 'w') as f:
-            f.write(xmlString)
+        # with open('mario.xml', 'w') as f:
+        #     f.write(xmlString)
         # ------------------------
 
         # To base64: Convierte a base64
@@ -112,8 +112,8 @@ class FacturaElectronicaFEL:
         # Si la firma se hace exitosamente
         if estado_firma[0] == True:
             # Usar solo para debug ---
-            with open('firmado.json', 'w') as f:
-                f.write(estado_firma[1])
+            # with open('firmado.json', 'w') as f:
+            #     f.write(estado_firma[1])
             # ------------------------
 
             # 4 - Solicitud Factura Electronica FEL
@@ -129,8 +129,8 @@ class FacturaElectronicaFEL:
                     self.numero_auth_fel = uuid_fel['numero_autorizacion']
 
                     # Utilizar solo para debug: guarda el json recibido
-                    with open('ok_fel.json', 'w') as f:
-                        f.write(estado_fel[1])
+                    # with open('ok_fel.json', 'w') as f:
+                    #     f.write(estado_fel[1])
 
                     # Funcion encargada de actualizar todos los registros enlazados a la factura original
                     estado_actualizacion = self.actualizar_registros()
@@ -231,10 +231,10 @@ class FacturaElectronicaFEL:
     def emisor(self):
         """
         Funcion encargada de obtener y asignar data del Emisor/Company
-        
+
         Returns:
             str: Descripcion con el status de la trasaccion
-        """ 
+        """
 
         try:
             # Obtencion data de EMISOR
@@ -290,7 +290,7 @@ class FacturaElectronicaFEL:
     def receptor(self):
         """
         Funcion encargada de obtener y asignar data del Receptor/Cliente
-        
+
         Returns:
             str: mensaje status de la transaccion
         """
@@ -354,7 +354,7 @@ class FacturaElectronicaFEL:
         """
         debe indicarse los regímenes y textos especiales que son requeridos en los DTE,
         de acuerdo a la afiliación del contribuyente y tipo de operación.
-        
+
         Returns:
             boolean: True/False
         """
@@ -431,7 +431,7 @@ class FacturaElectronicaFEL:
 
                     obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[i]['amount']))) #- float(dat_items[i]['discount_amount'])) # Se suman otr impuestos+ float(dat_items[i]['facelec_sales_tax_for_this_row'])
                     # obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[i]['price_list_rate']) - float((dat_items[i]['price_list_rate'] - dat_items[i]['rate']) * dat_items[i]['qty'])))
-                
+
                     items_ok.append(obj_item)
             else:
                 obj_item = {}
@@ -461,7 +461,7 @@ class FacturaElectronicaFEL:
 
                 obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[0]['amount']))) # - float(dat_items[0]['discount_amount'])) # Se suma otros impuestos + float(dat_items[0]['facelec_sales_tax_for_this_row'])
                 # obj_item["dte:Total"] = '{0:.2f}'.format((float(dat_items[0]['price_list_rate']) - float((dat_items[0]['price_list_rate'] - dat_items[0]['rate']) * dat_items[0]['qty'])))
-            
+
                 items_ok.append(obj_item)
 
             i_fel = {"dte:Item": items_ok}
@@ -514,7 +514,7 @@ class FacturaElectronicaFEL:
                                             'es_anulacion')
             llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
                                         'llave_pfx')
-            reqfel = { 
+            reqfel = {
                 "llave": llave, # LLAVE
                 "archivo": str(encodata),  # En base64
                 # "codigo": codigo, # Número interno de cada transacción

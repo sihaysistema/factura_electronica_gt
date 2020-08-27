@@ -66,8 +66,8 @@ def get_vat_payable_data(filters):
             AND MONTH(posting_date) = '{MONTHS_MAP.get(filters.month)}' AND YEAR(posting_date) = '{filters.year}'
             """, as_dict=1)
 
-        with open ('datos_iva_pagar.json', 'w') as f:
-            f.write(json.dumps(vat_payable_data, default=str, indent=2))
+        # with open ('datos_iva_pagar.json', 'w') as f:
+        #     f.write(json.dumps(vat_payable_data, default=str, indent=2))
 
         # result = apply_off_site_links(vat_payable_data)
 
@@ -100,8 +100,8 @@ def get_vat_receivable_data(filters):
             AND MONTH(posting_date) = '{MONTHS_MAP.get(filters.month)}' AND YEAR(posting_date) = '{filters.year}'
             """, as_dict=1)
 
-        with open ('datos_iva_cobrar.json', 'w') as f:
-            f.write(json.dumps(vat_receivable_data, default=str, indent=2))
+        # with open ('datos_iva_cobrar.json', 'w') as f:
+        #     f.write(json.dumps(vat_receivable_data, default=str, indent=2))
 
         # result = apply_off_site_links(vat_payable_data)
 
