@@ -296,17 +296,105 @@ function generar_tabla_html_factura_compra(frm) {
 
 frappe.ui.form.on("Purchase Invoice", {
     refresh: function (frm, cdt, cdn) {
-        // Por ahora se mostrara solo si la factura de copra se encuentra validada, Factura Especial?
+        // Por ahora se mostrara solo si la factura de compra se encuentra validada
         if (frm.doc.docstatus === 1) {
 
-            cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
-                frappe.msgprint("WORK IN PROGRESS");
-            });
+            // Se usara un bootn especifico para generar factura especial
+            // cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
+            //     frappe.msgprint("WORK IN PROGRESS");
+            // });
 
-            cur_frm.page.add_action_item(__("SPECIAL INVOICE"), function () {
+            // INICIO BOTON NOTA DE DEBITO
+            frm.add_custom_button(__("DEBIT NOTE FEL"), function () {
+                // Permite hacer confirmaciones
+                frappe.confirm(
+                    __("Are you sure you want to proceed to generate a debit note?"),
+                    () => {
+                        let d = new frappe.ui.Dialog({
+                            title: __("Generate Credit Note"),
+                            fields: [
+                                {
+                                    label: "Reason Adjusment?",
+                                    fieldname: "reason_adjust",
+                                    fieldtype: "Data",
+                                    reqd: 1,
+                                },
+                            ],
+                            primary_action_label: "Submit",
+                            primary_action(values) {
+                                frappe.call({
+                                    method: "factura_electronica.fel_api.generate_debit_note",
+                                    args: {
+                                        invoice_code: frm.doc.name,
+                                        naming_series: frm.doc.naming_series,
+                                        reason: values.reason_adjust,
+                                    },
+                                    callback: function (r) {
+                                        console.log(r.message);
+                                    },
+                                });
+                                console.log(values);
+                                d.hide();
+                            },
+                        });
+
+                        d.show();
+                    },
+                    () => {
+                        // action to perform if No is selected
+                        console.log("Selecciono NO");
+                    }
+                );
+            }).addClass("btn-warning");
+            // FIN BOTON NOTA DE DEBITO
+
+            if (frm.doc.numero_autorizacion_fel) {
+                cur_frm.clear_custom_buttons();
+
+                frm.add_custom_button(__("VER PDF FACTURA ESPECIAL ELECTRONICA"),
+                    function () {
+                        window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
+                            frm.doc.numero_autorizacion_fel);
+                    }).addClass("btn-primary");
+
+            } else {
+                // boton para generar factura especial electronica
+                frm.add_custom_button(__("Generate Special Invoice FEL"), function () {
+                    frappe.confirm(__('Are you sure you want to proceed to generate a Special Invoice?'),
+                        () => {
+                            let serie_de_factura = frm.doc.name;
+                            // Guarda la url actual
+                            let mi_url = window.location.href;
+                            frappe.call({
+                                method: 'factura_electronica.fel_api.generate_special_invoice',
+                                args: {
+                                    invoice_code: frm.doc.name,
+                                    naming_series: frm.doc.naming_series
+                                },
+                                callback: function (r) {
+                                    console.log(r.message);
+                                    if (r.message[0] === true) {
+                                        // Crea una nueva url con el nombre del documento actualizado
+                                        let url_nueva = mi_url.replace(serie_de_factura, r.message[1]);
+                                        // Asigna la nueva url a la ventana actual
+                                        window.location.assign(url_nueva);
+                                        // Recarga la pagina
+                                        frm.reload_doc();
+                                    }
+                                },
+                            });
+                        }, () => {
+                            // action to perform if No is selected
+                            console.log('Selecciono NO')
+                        });
+                }).addClass("btn-warning");
+
+            }
+            // INICIO boton para generar poliza contable con calculos y registro de retenciones
+            cur_frm.page.add_action_item(__("Journal Entry for Special Invoice"), function () {
 
                 let d = new frappe.ui.Dialog({
-                    title: 'New Journal Entry with Withholding Tax',
+                    title: 'New Journal Entry with Withholding Tax for special invoice',
                     fields: [
                         {
                             label: 'Cost Center',
@@ -366,13 +454,10 @@ frappe.ui.form.on("Purchase Invoice", {
                             method: 'factura_electronica.api_erp.journal_entry_isr_purchase_inv',
                             args: {
                                 invoice_name: frm.doc.name,
-                                is_iva_ret: 0,
-                                is_isr_ret: 0,
                                 cost_center: values.cost_center,
                                 credit_in_acc_currency: values.credit_in_acc_currency,
                                 is_multicurrency: values.is_multicurrency,
-                                description: values.description,
-                                is_special_inv: 1
+                                description: values.description
                             },
                             callback: function (r) {
                                 console.log(r.message);
@@ -385,6 +470,7 @@ frappe.ui.form.on("Purchase Invoice", {
 
                 d.show();
             });
+            // FIN boton para generar poliza contable con calculos y registro de retenciones
         }
     },
     onload_post_render: function (frm, cdt, cdn) {

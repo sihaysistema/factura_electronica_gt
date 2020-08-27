@@ -9,6 +9,7 @@
   "retention_type",
   "party_type",
   "party",
+  "column_break_5",
   "company",
   "tax_id",
   "import_invoices",
@@ -19,6 +20,7 @@
   "invoice_date",
   "grand_total",
   "currency",
+  "column_break_16",
   "retention_amount",
   "retention_confirmation",
   "retention_status",
@@ -86,8 +88,7 @@
    "fieldname": "purchase_invoice",
    "fieldtype": "Link",
    "label": "Purchase Invoice",
-   "options": "Purchase Invoice",
-   "read_only": 1
+   "options": "Purchase Invoice"
   },
   {
    "fieldname": "sales_invoice",
@@ -136,9 +137,17 @@
    "fieldname": "attach_retention_image",
    "fieldtype": "Attach Image",
    "label": "Attach Retention Image"
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_16",
+   "fieldtype": "Column Break"
   }
  ],
- "modified": "2020-07-21 00:04:47.447527",
+ "modified": "2020-08-05 15:18:09.347436",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Tax Retention Guatemala",

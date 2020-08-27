@@ -56,12 +56,6 @@ def get_data():
             "items": [
                 {
                     "type": "doctype",
-                    "name": "Purchase and Sales Ledger Tax Declaration",
-                    "description": _("Purchase and Sales Ledger Tax Declaration"),
-                    "onboard": 1
-                },
-                {
-                    "type": "doctype",
                     "name": "Tax Retention Guatemala",
                     "description": _("Tax Retention Guatemala"),
                     "onboard": 1

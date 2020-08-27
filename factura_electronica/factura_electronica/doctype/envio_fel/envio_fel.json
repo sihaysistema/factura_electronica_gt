@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "detalles_fel_column",
+  "tipo_documento",
   "resultado",
   "serie_factura_original",
   "fecha",
@@ -185,9 +186,15 @@
    "fieldname": "serie_para_factura",
    "fieldtype": "Data",
    "label": "Serie para Factura"
+  },
+  {
+   "fieldname": "tipo_documento",
+   "fieldtype": "Select",
+   "label": "Tipo Documento",
+   "options": "\nFactura Electronica\nFactura Especial\nNota de Credito\nNota de Debito\nAnulacion"
   }
  ],
- "modified": "2019-11-10 18:53:30.115295",
+ "modified": "2020-08-06 22:32:03.780885",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Envio FEL",

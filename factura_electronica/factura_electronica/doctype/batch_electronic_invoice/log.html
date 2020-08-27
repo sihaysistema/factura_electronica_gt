@@ -3,6 +3,7 @@
         <table class="table table-bordered table-hover log-details-table">
             <tr>
                 <th style="width:4%"> {{ __("Line") }} </th>
+                <th style="width:auto"> {{ __("status") }} </th>
                 <th style="width:auto"> {{ __("Invoice") }} </th>
                 <th style="width:auto"> {{ __("Details") }} </th>
             </tr>
@@ -14,12 +15,18 @@
                 </td>
 
                 <td>
-                    <span style="text-align: center;"> {{ row.column }}
+                    <span style="text-align: left;"> {{ row.status }}
                     </span>
                 </td>
 
                 <td>
-                    <div>{{ row.detail }}</div>
+                    <span style="text-align: left;"> {{ row.invoice }}
+                    </span>
+                </td>
+
+                <td>
+                    <span style="text-align: left;"> {{ row.details }}
+                    </span>
                 </td>
             </tr>
 

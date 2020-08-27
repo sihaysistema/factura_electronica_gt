@@ -415,6 +415,7 @@ function pdf_button(cae_documento, frm) {
         }).addClass("btn-primary");
 }
 
+
 function pdf_button_fel(cae_documento, frm) {
     // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
     frm.add_custom_button(__("VER PDF FACTURA ELECTRONICA"),
@@ -553,14 +554,14 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
     // FACTURAS FACE, CFACE
     // Este codigo entra en funcionamiento cuando la generacion automatica de la factura no es exitosa.
     // esto permite volver intentarlo hasta obtener el cae de la factura en que se estre trabajando.
-    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc
-        .status === "Overdue") {
+    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted"
+        || frm.doc.status === "Overdue" || frm.doc.status === "Credit Note Issued") {
         // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
         // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
-            guardar_pdf(frm);
+            // guardar_pdf(frm);
         } else if (frm.doc.numero_autorizacion_fel) {
             cur_frm.clear_custom_buttons();
             pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
@@ -576,51 +577,53 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
         }
     }
 
+    // NO APLICA PARA FEL
     // Codigo para Notas de Credito NCE
     // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
-    if (frm.doc.status === "Return") {
-        //var nombre = 'Nota Credito';
-        // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
-        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
-        if (frm.doc.cae_factura_electronica) {
-            cur_frm.clear_custom_buttons();
-            pdf_button(frm.doc.cae_factura_electronica, frm);
-            guardar_pdf(frm);
-        } else {
-            // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
-            if (modalidad === 'manual') {
-                generar_boton_factura('Nota Credito Electronica', frm);
-            }
-            // Si la modalidad recibida es automatica se realiza la factura electronica directamente
-            if (modalidad === 'automatico') {
-                generar_factura_sin_btn(frm);
-            }
-        }
-    }
+    // if (frm.doc.status === "Return") {
+    //     //var nombre = 'Nota Credito';
+    //     // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
+    //     // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+    //     if (frm.doc.cae_factura_electronica) {
+    //         cur_frm.clear_custom_buttons();
+    //         pdf_button(frm.doc.cae_factura_electronica, frm);
+    //         // guardar_pdf(frm);
+    //     } else {
+    //         // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
+    //         if (modalidad === 'manual') {
+    //             generar_boton_factura('Nota Credito Electronica', frm);
+    //         }
+    //         // Si la modalidad recibida es automatica se realiza la factura electronica directamente
+    //         if (modalidad === 'automatico') {
+    //             generar_factura_sin_btn(frm);
+    //         }
+    //     }
+    // }
 
+    // NO APLICA PARA FEL
     // Codigo para notas de debito
     // Codigo para Notas de Credito NDE
-    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc
-        .status === "Overdue") {
-        //var nombre = 'Nota Debito';
-        if (frm.doc.es_nota_de_debito) {
-            cur_frm.clear_custom_buttons('Factura Electronica');
-            if (frm.doc.cae_factura_electronica) {
-                cur_frm.clear_custom_buttons();
-                pdf_button(frm.doc.cae_factura_electronica, frm);
-                guardar_pdf(frm);
-            } else {
-                // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
-                if (modalidad === 'manual') {
-                    generar_boton_factura('Nota Debito Electronica', frm);
-                }
-                // Si la modalidad recibida es automatica se realiza la factura electronica directamente
-                if (modalidad === 'automatico') {
-                    generar_factura_sin_btn(frm);
-                }
-            }
-        }
-    }
+    // if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc
+    //     .status === "Overdue") {
+    //     //var nombre = 'Nota Debito';
+    //     if (frm.doc.es_nota_de_debito) {
+    //         cur_frm.clear_custom_buttons('Factura Electronica');
+    //         if (frm.doc.cae_factura_electronica) {
+    //             cur_frm.clear_custom_buttons();
+    //             pdf_button(frm.doc.cae_factura_electronica, frm);
+    //             // guardar_pdf(frm);
+    //         } else {
+    //             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
+    //             if (modalidad === 'manual') {
+    //                 generar_boton_factura('Nota Debito Electronica', frm);
+    //             }
+    //             // Si la modalidad recibida es automatica se realiza la factura electronica directamente
+    //             if (modalidad === 'automatico') {
+    //                 generar_factura_sin_btn(frm);
+    //             }
+    //         }
+    //     }
+    // }
     /* -------------------------------------------------------------------------------------- */
     // Funcionalidad evita copiar CAE cuando se duplica una factura
     // LIMPIA/CLEAN, permite limpiar los campos cuando se duplica una factura
@@ -801,15 +804,15 @@ frappe.ui.form.on("Sales Invoice", {
         // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
         cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
 
-        // Works OK!
-        frm.add_custom_button("UOM Recalculation", function () {
-            frm.doc.items.forEach((item) => {
-                // for each button press each line is being processed.
-                //console.log("item contains: " + item);
-                //Importante
-                facelec_tax_calc_new(frm, "Sales Invoice Item", item.name);
-            });
-        });
+        // Works OK! No es necesario?
+        // frm.add_custom_button("UOM Recalculation", function () {
+        //     frm.doc.items.forEach((item) => {
+        //         // for each button press each line is being processed.
+        //         //console.log("item contains: " + item);
+        //         //Importante
+        //         facelec_tax_calc_new(frm, "Sales Invoice Item", item.name);
+        //     });
+        // });
 
         // Cuando el documento se actualiza, la funcion verificac de que exista un cae.
         // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
@@ -817,31 +820,115 @@ frappe.ui.form.on("Sales Invoice", {
         // correspondiente a su serie.
         verificacionCAE('manual', frm, cdt, cdn);
 
-        // Asignacion serie configurada para notas de credito
-        if (frm.doc.is_return) {
+        // INICIO BOTON PARA GENERAR NOTA DE CREDITO ELECTRONICA
+        // Si la factura de venta se convierte a nota de credito,
+        // para cumplir esta debe ser una factura electronica ya generada, segun esquema XML
+        if (frm.doc.is_return && frm.doc.docstatus == 1 && (frm.doc.status === "Paid" ||
+            frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue"
+            || frm.doc.status === "Return")) {  //  && frm.doc.numero_autorizacion_fel
             console.log('Es retorno');
-            cur_frm.set_df_property("naming_series", "read_only", 1);
+            /* ESTA PORCION DE CODIGO ERA PARA USAR UNA SERIE HARDCODE
+            // cur_frm.set_df_property("naming_series", "read_only", 1);
 
-            frappe.call({
-                method: 'factura_electronica.api.obtener_serie_doc',
-                args: {
-                    opt: 'credit'
-                },
-                callback: function (r) {
-                    console.log(r.message);
-                    cur_frm.set_value('naming_series', r.message);
+            // frappe.call({
+            //     method: 'factura_electronica.api.obtener_serie_doc',
+            //     args: {
+            //         opt: 'credit'
+            //     },
+            //     callback: function (r) {
+            //         console.log(r.message);
+            //         cur_frm.set_value('naming_series', r.message);
+            //     }
+            // });
+            */
+
+            // APLICA SOLO PARA NOTAS DE CREDITO, PARA VER PDF
+            if (frm.doc.status === "Return") {
+                // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
+                // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+                if (frm.doc.numero_autorizacion_fel) {
+                    cur_frm.clear_custom_buttons();
+
+                    frm.add_custom_button(__("VER PDF NOTA CREDITO ELECTRONICA"),
+                        function () {
+                            window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
+                                frm.doc.numero_autorizacion_fel);
+                        }).addClass("btn-primary");
+
+                } else {
+
+                    frm.add_custom_button(__("CREDIT NOTE FEL"), function () {
+                        // Permite hacer confirmaciones
+                        frappe.confirm(__('Are you sure you want to proceed to generate a credit note?'),
+                            () => {
+                                let d = new frappe.ui.Dialog({
+                                    title: __('Generate Credit Note'),
+                                    fields: [
+                                        {
+                                            label: 'Reason Adjusment?',
+                                            fieldname: 'reason_adjust',
+                                            fieldtype: 'Data',
+                                            reqd: 1
+                                        }
+                                    ],
+                                    primary_action_label: 'Submit',
+                                    primary_action(values) {
+                                        let serie_de_factura = frm.doc.name;
+                                        // Guarda la url actual
+                                        let mi_url = window.location.href;
+
+                                        frappe.call({
+                                            method: 'factura_electronica.fel_api.generate_credit_note',
+                                            args: {
+                                                invoice_code: frm.doc.name,
+                                                naming_series: frm.doc.naming_series,
+                                                reference_inv: frm.doc.return_against,
+                                                reason: values.reason_adjust
+                                            },
+                                            callback: function (data) {
+                                                console.log(data.message);
+                                                if (data.message[0] === true) {
+                                                    // Crea una nueva url con el nombre del documento actualizado
+                                                    let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
+                                                    // Asigna la nueva url a la ventana actual
+                                                    window.location.assign(url_nueva);
+                                                    // Recarga la pagina
+                                                    frm.reload_doc();
+                                                }
+                                            },
+                                        });
+
+                                        d.hide();
+                                    }
+                                });
+
+                                d.show();
+                            }, () => {
+                                // action to perform if No is selected
+                                console.log('Selecciono NO')
+                            })
+
+                    }).addClass("btn-warning");
                 }
-            });
+            }
+
+
+
+
         } else {
             cur_frm.set_df_property("naming_series", "read_only", 0);
         }
+        // FIN BOTON PARA GENERAR NOTA DE CREDITO ELECTRONICA
 
+
+        // INICIO GENERACION POLIZA CON RETENCIONES
+        // Se mostrara mientras la factura se enceuntre validada y su estatus sea diferente de Paid
         if (frm.doc.docstatus === 1 && frm.doc.status !== 'Paid') {
 
             cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
 
                 let d = new frappe.ui.Dialog({
-                    title: 'New Journal Entry with Withholding Tax',
+                    title: __('New Journal Entry with Withholding Tax'),
                     fields: [
                         {
                             label: 'Cost Center',
@@ -920,7 +1007,7 @@ frappe.ui.form.on("Sales Invoice", {
                                 description: values.description
                             },
                             callback: function (r) {
-                                console.log(r.message);
+                                // console.log(r.message);
                                 d.hide();
                                 frm.refresh()
                             },
@@ -933,6 +1020,7 @@ frappe.ui.form.on("Sales Invoice", {
             });
 
         }
+        // FIN GENERACION POLIZA CON RETENCIONES
 
     },
     validate: function (frm) {
@@ -1058,22 +1146,24 @@ frappe.ui.form.on("Sales Invoice", {
         }
     },
     naming_series: function (frm, cdt, cdn) {
-        frappe.call({
-            method: "factura_electronica.api.obtener_numero_resolucion",
-            args: {
-                nombre_serie: frm.doc.naming_series
-            },
-            // El callback se ejecuta tras finalizar la ejecucion del script python del lado
-            // del servidor
-            callback: function (numero_resolucion) {
-                if (numero_resolucion.message === undefined) {
-                    // cur_frm.set_value('shs_numero_resolucion', '');
-                } else {
-                    cur_frm.set_value('shs_numero_resolucion', numero_resolucion
-                        .message);
+        if (frm.doc.naming_series) {
+            frappe.call({
+                method: "factura_electronica.api.obtener_numero_resolucion",
+                args: {
+                    nombre_serie: frm.doc.naming_series
+                },
+                // El callback se ejecuta tras finalizar la ejecucion del script python del lado
+                // del servidor
+                callback: function (numero_resolucion) {
+                    if (numero_resolucion.message === undefined) {
+                        // cur_frm.set_value('shs_numero_resolucion', '');
+                    } else {
+                        cur_frm.set_value('shs_numero_resolucion', numero_resolucion
+                            .message);
+                    }
                 }
-            }
-        });
+            });
+        }
     },
     es_nota_de_debito: function (frm) {
         if (frm.doc.es_nota_de_debito) {

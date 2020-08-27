@@ -296,7 +296,11 @@ def fill_fixtures():
                     "Purchase Invoice Item-facelec_pr_is_exempt",
                     "Sales Invoice Item-facelec_si_is_exempt",
                     "Purchase Invoice-facelec_tax_retention_guatemala",
-                    "Sales Invoice-facelec_tax_retention_guatemala"
+                    "Sales Invoice-facelec_tax_retention_guatemala",
+                    "Purchase Taxes and Charges-facelec_tax_name",
+                    "Purchase Taxes and Charges-facelec_taxable_unit_code",
+                    "Purchase Invoice-numero_autorizacion_fel",
+                    "Purchase Invoice-serie_original_del_documento"
                 ]
             ]
         ]
@@ -329,7 +333,61 @@ def fill_fixtures():
                     "Es Factura Especial",
                     "Is Special Invoice",
                     "Declaration Date",
-                    "Documents In Declaration"
+                    "Documents In Declaration",
+                    "TAX WITHOLDING RANGES SECTION",
+                    "Tax Witholding Ranges Section",
+                    "RENTENTIONS",
+                    "ISR Account payable",
+                    "ISR Account Receivable",
+                    "VAT Account Payable",
+                    "VAT Account Receivable",
+                    "VAT Retention to compensate",
+                    "VAT Retention Payable",
+                    "Income Tax Retention Payable Account",
+                    "ISR percentage rate",
+                    "Minimum Amount To Apply ISR",
+                    "Maximum Amount To Apply ISR",
+                    "IVA percentage rate",
+                    "LOG DETAILS INFLATION",
+                    "Log Details Inflation",
+                    "Import Budgets",
+                    "Tax Witholding Ranges",
+                    "Default Company Bank Account",
+                    "Taxes",
+                    "TAXES",
+                    "País emisor",
+                    "Identifications",
+                    "Three Digit UOM Code",
+                    "Excise Taxes",
+                    "Tax Rate Per UOM",
+                    "Tax amount per stock Unit of Measure",
+                    "Tax Rate Per UOM Purchase Account",
+                    "Tax Rate Per UOM Selling Account",
+                    "UOM Tax Included in Price",
+                    "If checked, the tax is deducted from item price. If unchecked, tax will be added to price.",
+                    "Is Fuel",
+                    "Is Good",
+                    "Is Service",
+                    "Is Exempt?",
+                    "Default when excise taxes present",
+                    "Tax Name",
+                    "Taxable Unit Code",
+                    "AUTOMATED RETENTION",
+                    "Target account",
+                    "Is Multicurrency",
+                    "Applies for VAT withholding",
+                    "Applies for ISR withholding",
+                    "NOTE",
+                    "New Journal Entry with Withholding Tax",
+                    "If you wish to generate a new Journal Entry for this invoice, please cancel the existing policies that reference this invoice",
+                    "Sorry, there is already a Journal Entry referenced to this invoice",
+                    "More details in the following log",
+                    "Sorry, a problem occurred while trying to generate the Journal Entry",
+                    "Exporter or Supplier", "Importer or Receiver", "Declarant", "Carrier", "Total values",
+                    "Goods", "Support Documents", "Observations and Signatures", "DUCA Number", "Acceptance Date",
+                    "Reference or Serial Number", "Exit Customs Office", "Entry Customs Office", "Initial Transit Customs Office",
+                    "Purpose", "Exporter Identification Type and Number", "Exporter ID number", "Exporter ID type",
+                    "Exporter ID issuing country"
                 ]
             ]
         ]
@@ -370,7 +428,7 @@ def fill_fixtures():
 
     # NEW FUNCTIONALITY FOR EXPORTING
     fixtures_fillup.append(custom_field)
-    # fixtures_fillup.append(translation)
+    fixtures_fillup.append(translation)
     fixtures_fillup.append(tax_category)
     fixtures_fillup.append(id_doctype)
 
