@@ -35,11 +35,7 @@ app_include_js = "/assets/factura_electronica/js/facelec.min.js"
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
-jenv = {
-    "methods": [
-        'currency_in_words:factura_electronica.currency_in_words'
-    ]
-}
+jenv = {"methods": ['currency_in_words:factura_electronica.currency_in_words']}
 
 # Home Pages
 # ----------
