@@ -12,6 +12,11 @@ locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
 __version__ = '5.0.0'
 
 @frappe.whitelist()
+def test1(num):
+    hello = "hello world" + str(num)
+    return hello
+
+@frappe.whitelist()
 def currency_in_words(amount, currency, cent_in_numb=0):
     '''
     Function that calls the numinwords pip package by Si Hay Sistema
