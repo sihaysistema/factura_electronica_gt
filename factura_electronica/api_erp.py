@@ -27,34 +27,55 @@ def batch_generator_api(invoices):
 def journal_entry_isr(invoice_name, debit_in_acc_currency, cost_center='',
                       is_isr_ret=0, is_iva_ret=0, is_multicurrency=0, description=''):
     """
-    Funciona llamada desde boton Sales Invoice, encargada de crear Journal
-    Entry, en funcion a los parametros pasados
+    Funcion llamada desde boton Actions en Sales Invoice, encargada de crear Journal
+    Entry con retencion de impuestos, en funcion a los parametros
 
     Args:
-        invoice_name (dict): Diccionario con las propiedades de la factura
+        invoice_name (str): name factura
+        debit_in_acc_currency (str): Nombre de la cuenta en moneda de la compania para debito
+        cost_center (str, optional): Nombre centro de costo. Defaults to ''.
+        is_isr_ret (int, optional): 1 Si aplica retencion ISR. Defaults to 0.
+        is_iva_ret (int, optional): 1 Si aplica retencion IVA. Defaults to 0.
+        is_multicurrency (int, optional): 1 Si es multimoneda. Defaults to 0.
+        description (str, optional): Descripcion opcional. Defaults to ''.
     """
+
     try:
-        # NOTE: Escenarios posibles para polizas contables
+        # NOTE: Escenarios posibles que se pueden aplicar para polizas contables
         # 1. Poliza normal
         # 2. Poliza con retencion ISR
         # 3. Poliza con retension ISR e IVA
+
+        # Obtiene los datos de la factura de la clase Sales Invoice, (diccionario)
         sales_invoice_info = frappe.get_doc('Sales Invoice', {'name': invoice_name})
 
 
+        # Para evitar problemas primero verificamos que no exista una poliza contable
+        # haciendo referencia a la factura que estamo trabajando
+        if frappe.db.exists('Journal Entry Account', {'reference_type': 'Sales Invoice', 'reference_name': invoice_name}):
+            frappe.msgprint(msg=_('If you wish to generate a new Journal Entry for this invoice, please cancel the existing policies that reference this invoice'),
+                        title=_('Sorry, there is already a Journal Entry referenced to this invoice'), indicator='red')
+            return
+
+
+        # Nueva instancia de la clase y aplicamos el metodo de crear
         new_je = JournalEntrySaleInvoice(sales_invoice_info, int(is_isr_ret), int(is_iva_ret),
                                          debit_in_acc_currency, is_multicurrency, cost_center, description).create()
 
+        # si hay problema al crear la poliza
         if new_je[0] == False:
-            frappe.msgprint(msg=_(f'More details in the following log \n {new_je[1]}'),
+            frappe.msgprint(msg=_(f'More details in the following log \n <code>{new_je[1]}</code>'),
                         title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
             return
+
+        # si se crea correctamente la poliza
         if new_je[0] == True:
-            frappe.msgprint(msg=_(f'Generated with the series \n {new_je[1]}'),
+            frappe.msgprint(msg=_(f'Generated with the series \n <code>{new_je[1]}</code>'),
                         title=_('Successfully generated'), indicator='green')
             return
 
     except:
-        frappe.msgprint(msg=_(f'More details in the following log \n {frappe.get_traceback()}'),
+        frappe.msgprint(msg=_(f'More details in the following log \n <code>{frappe.get_traceback()}</code>'),
                         title=_('Sorry, a problem occurred while trying to generate the Journal Entry'), indicator='red')
 
 

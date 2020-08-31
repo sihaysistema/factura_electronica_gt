@@ -7,8 +7,10 @@ import json
 from datetime import date
 
 import frappe
-from factura_electronica.utils.formulas import amount_converter, apply_formula_isr, number_of_decimals
+from factura_electronica.utils.formulas import GoalSeek, amount_converter, apply_formula_isr, number_of_decimals
+from factura_electronica.utils.utilities_facelec import clean_traceback_py
 from frappe import _
+from frappe.utils import cint, cstr, flt
 
 
 class JournalEntrySaleInvoice():
@@ -99,7 +101,7 @@ class JournalEntrySaleInvoice():
             status_journal = JOURNALENTRY.insert(ignore_permissions=True)
 
         except:
-            return False, 'Error datos para crear journal entry '+str(frappe.get_traceback())
+            return False, 'Ocurrio un problema al tratar de crear la Poliza Contable, si esta trabajando con multimonedas por favor especifiquelo en la opcion <b>Es Multimoneda?</b> \n\n Y tambien verifique que la cuenta destino sea de la misma moneda que esta trabajando en la factura \n\n'+str(clean_traceback_py(frappe.get_traceback()))
 
         else:
 
@@ -107,18 +109,22 @@ class JournalEntrySaleInvoice():
                 ret = 'IVA' if self.is_iva_retention == 1 else ''
                 ret = 'ISR' if self.is_isr_retention == 1 else ''
 
-                # Registrar retencion
-                register_withholding({
-                    'retention_type': ret,
-                    'party_type': 'Sales Invoice',
-                    'company': self.company,
-                    'tax_id': '',
-                    'sales_invoice': self.name_inv,
-                    'invoice_date': self.posting_date,
-                    'grand_total': self.grand_total,
-                    'currency': self.currency,
-                    'retention_amount': self.ISR_PAYABLE_GTQ
-                })
+                isr_amt_ok = 0
+                if self.ISR_PAYABLE_GTQ != 0:
+                    isr_amt_ok = self.ISR_PAYABLE_GTQ
+
+                    # Registrar retencion
+                    register_withholding({
+                        'retention_type': ret,
+                        'party_type': 'Sales Invoice',
+                        'company': self.company,
+                        'tax_id': '',
+                        'sales_invoice': self.name_inv,
+                        'invoice_date': self.posting_date,
+                        'grand_total': self.grand_total,
+                        'currency': self.currency,
+                        'retention_amount': isr_amt_ok
+                    })
 
             return True, status_journal.name
 
@@ -305,6 +311,75 @@ class JournalEntrySaleInvoice():
             # with open('special.json', 'w') as f:
             #     f.write(json.dumps(self.rows_journal_entry, default=str, indent=2))
 
+
+
+            # VALIDACION SI ES NECESARIO AGREGAR UNA FILA PARA CUADRE DE CENTAVOS
+            # convierte de GTQ -> USD, y luego de USD -> GTQ, para obtener correctamente todos
+            # los decimales, para hacer aproximacion
+            INT_GTQ = flt(amount_converter(flt(amount_converter(amt_without_isr, self.curr_exch,
+                                       from_currency='GTQ', to_currency=self.currency), 2), self.curr_exch,
+                                       from_currency=self.currency, to_currency='GTQ'), 2)
+
+            r = lambda f: f - f % 0.01
+
+            total_debit = flt(float(INT_GTQ + flt(self.ISR_PAYABLE_GTQ, 2)))  # LO QUE ME PAGAN
+            total_credit = float(grand_total_gtq)  # LO QUE ME DEBEN
+
+            # ONLY DEBUG
+            # with open('ISR.txt', 'w') as f:
+            #     f.write(str(ISR_PAYABLE_GTQ))
+
+            # with open('no_isr.txt', 'w') as f:
+            #     f.write(str(INT_GTQ))
+
+            # El monto que meta que quiero obtener
+            goal = total_credit
+            x0 = 3  # estimacion
+
+            def fun(x):  # con la evaluacion encontramos la incognita x que son los centavos para cuadrar
+                amt_ok = total_debit - x
+                return amt_ok
+
+            # with open('balance.txt', 'w') as f:
+            #     f.write(f'{total_debit} -- {total_credit}')
+
+
+            if total_debit != total_credit:
+
+                centavos = GoalSeek(fun, goal, x0)
+                # centavos = total_credit - total_debit  # otra forma es hacer resta y el resultado son los centavos
+
+                acc_round_company = frappe.db.get_value('Company', {'name': self.company}, 'write_off_account')
+                acc_round_company_currency = frappe.db.get_value('Account', {'name': acc_round_company}, 'account_currency')
+                row_four = {
+                    "account": acc_round_company,  # Cuenta a que se va a utilizar
+                    "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
+                    "credit_in_account_currency": 0,  #Valor del monto a acreditar
+                    "exchange_rate": 1,  # Tipo de cambio
+                    "account_currency": acc_round_company_currency,  # Moneda de la cuenta
+                    # "credit_in_account_currency": abs(round(centavos, 2)),  # se usa absoluto si a en credit
+                }
+
+                # Validamos si el cuadre va en debit o credit
+                if centavos>0:
+                    row_four.update({
+                        "credit_in_account_currency": flt(centavos),
+                        "credit": flt(centavos),
+                    })
+                    self.rows_journal_entry.append(row_four)
+
+                elif centavos<0:
+                    row_four.update({
+                        "debit_in_account_currency": flt(abs(centavos)),
+                        "debit": flt(abs(centavos)),
+                    })
+                    self.rows_journal_entry.append(row_four)
+
+
+                # DEBUG: aqui puedo ver cuantos centavos faltan para cuadrar
+                # with open('centavos.txt', 'w') as f:
+                #     f.write(str(centavos))
+
         except:
             return False, str(frappe.get_traceback())
 
@@ -433,6 +508,72 @@ class JournalEntrySaleInvoice():
             # with open('special.json', 'w') as f:
             #     f.write(json.dumps(self.rows_journal_entry, default=str, indent=2))
 
+
+            # -------------------------------------------------------------------------------------------------------------------------
+            # FILA 5: VALIDACION SI ES NECESARIO AGREGAR UNA FILA PARA CUADRE DE CENTAVOS
+            #
+            # convierte de GTQ -> USD, y luego de USD -> GTQ, para obtener correctamente todos
+            # los decimales, para hacer aproximacion
+            INT_GTQ = flt(amount_converter(flt(amount_converter(amt_without_isr_iva, self.curr_exch,
+                            from_currency='GTQ', to_currency=self.currency), 2), self.curr_exch,
+                            from_currency=self.currency, to_currency='GTQ'), 2)
+
+            r = lambda f: f - f % 0.01
+            # s = lambda f: f - f % 0.001
+
+            total_debit = flt(float(INT_GTQ + flt(self.ISR_PAYABLE_GTQ, 2) + flt(self.IVA_OPE, 2)))  # LO QUE ME PAGAN
+            total_credit = flt(grand_total_gtq)  # LO QUE ME DEBEN
+
+            # with open('test', 'w') as f:
+            #     f.write(str(flt(total_credit, 2)))
+
+            # with open('balance.txt', 'w') as f:
+            #     f.write(f'{total_debit} -- {total_credit}')
+
+            # El monto que meta que quiero obtener
+            goal = total_credit
+            x0 = 3  # estimacion
+
+            def fun(x):  # con la evaluacion encontramos la incognita x que son los centavos para cuadrar
+                amt_ok = total_debit - x
+                return amt_ok
+
+            if total_debit != total_credit:
+
+                centavos = GoalSeek(fun ,goal, x0, MaxIter=1000000)
+
+                # centavos = r(total_debit) - r(total_credit)  # otra forma es hacer resta y el resultado son los centavos
+
+                acc_round_company = frappe.db.get_value('Company', {'name': self.company}, 'write_off_account')
+                acc_round_company_currency = frappe.db.get_value('Account', {'name': acc_round_company}, 'account_currency')
+                row_five = {
+                    "account": acc_round_company,  # Cuenta a que se va a utilizar
+                    "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
+                    "credit_in_account_currency": 0,  #Valor del monto a acreditar
+                    "exchange_rate": 1,  # Tipo de cambio
+                    "account_currency": acc_round_company_currency,  # Moneda de la cuenta
+                    # "credit_in_account_currency": abs(round(centavos, 2)),  # se usa absoluto si a en credit
+                }
+
+                # Validamos si el cuadre va en debit o credit
+                if centavos>0:
+                    row_five.update({
+                        "credit_in_account_currency": flt(centavos),
+                        "credit": flt(centavos),
+                    })
+                    self.rows_journal_entry.append(row_five)
+
+                elif centavos<0:
+                    row_five.update({
+                        "debit_in_account_currency": flt(abs(centavos)),
+                        "debit": flt(abs(centavos)),
+                    })
+                    self.rows_journal_entry.append(row_five)
+
+
+                # with open('centavos.txt', 'w') as f:
+                #     f.write(str(abs(centavos)))
+
         except:
             return False, str(frappe.get_traceback())
 
@@ -497,10 +638,10 @@ class JournalEntrySaleInvoice():
             self.IVA_OPE = round((GRAND_TOTAL_NO_IVA * self.vat_rate), self.decimals_ope)
 
             # El monto a pagar, restando el IVA a retener, e ISR a retener
-            amt_without_isr_iva = (grand_total_gtq - (self.IVA_OPE))
+            amt_without_iva = (grand_total_gtq - (self.IVA_OPE))
 
             # Se vuelve a validar la conversion a la moneda de la cuenta en caso aplique
-            calc_row_two = round(amount_converter(amt_without_isr_iva, self.curr_exch,
+            calc_row_two = round(amount_converter(amt_without_iva, self.curr_exch,
                                                   from_currency='GTQ', to_currency=curr_row_b), self.decimals_ope)
 
             row_two = {
@@ -533,6 +674,65 @@ class JournalEntrySaleInvoice():
                 "debit_in_account_currency": round(iva_curr_acc, self.decimals_ope),  #Valor del monto a debitar
             }
             self.rows_journal_entry.append(row_three)
+
+
+            # -------------------------------------------------------------------------------------------------------------------------
+            # OJO NOTA: ESTO APLICA SOLO SI LA CUENTA REDONDEO ES EN GTQ
+            # FILA 4: VALIDACION SI ES NECESARIO AGREGAR UNA FILA PARA CUADRE DE CENTAVOS
+            # convierte de GTQ -> USD, y luego de USD -> GTQ, para obtener correctamente todos
+            # los decimales, para hacer aproximacion
+            INT_GTQ = flt(amount_converter(flt(amount_converter(amt_without_iva, self.curr_exch,
+                            from_currency='GTQ', to_currency=self.currency), self.decimals_ope), self.curr_exch,
+                            from_currency=self.currency, to_currency='GTQ'), self.decimals_ope)
+
+            total_debit = float(INT_GTQ + flt(self.IVA_OPE, self.decimals_ope))  # LO QUE ME PAGAN
+            total_credit = float(grand_total_gtq)  # LO QUE ME DEBEN
+
+
+            # El monto que meta que quiero obtener
+            goal = total_credit
+            x0 = 3  # estimacion
+
+            def fun(x):  # con la evaluacion encontramos la incognita x que son los centavos para cuadrar
+                amt_ok = total_debit - x
+                return amt_ok
+
+            if total_debit != total_credit:
+
+                centavos = GoalSeek(fun ,goal, x0)
+
+                # centavos = round(total_debit - total_credit, 2)  # otra forma es hacer resta y el resultado son los centavos
+                acc_round_company = frappe.db.get_value('Company', {'name': self.company}, 'write_off_account')
+                acc_round_company_currency = frappe.db.get_value('Account', {'name': acc_round_company}, 'account_currency')
+                row_four = {
+                    "account": acc_round_company,  # Cuenta a que se va a utilizar
+                    "cost_center": self.cost_center,  # Otra cuenta que revisa si esta dentro del presupuesto
+                    "credit_in_account_currency": 0,  #Valor del monto a acreditar
+                    "exchange_rate": 1,  # Tipo de cambio
+                    "account_currency": acc_round_company_currency,  # Moneda de la cuenta
+                    # "credit_in_account_currency": abs(round(centavos, 2)),  # se usa absoluto si a en credit
+                }
+
+                # Validamos si el cuadre va en debit o credit
+                if centavos>0:
+                    row_four.update({
+                        "credit_in_account_currency": flt(centavos),
+                        "credit": flt(centavos),
+                    })
+                    self.rows_journal_entry.append(row_four)
+
+                elif centavos<0:
+                    row_four.update({
+                        "debit_in_account_currency": flt(abs(centavos)),
+                        "debit": flt(abs(centavos)),
+                    })
+                    self.rows_journal_entry.append(row_four)
+
+                # with open('centavos.txt', 'w') as f:
+                #     f.write(str(centavos))
+
+            # Para evitar problemas con las rentenciones asignamos 0 a ISR
+            self.ISR_PAYABLE_GTQ = 0
 
 
         except:

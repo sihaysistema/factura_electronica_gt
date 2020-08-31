@@ -21,11 +21,14 @@ from frappe import _
 @frappe.whitelist()
 def api_interface(invoice_code, naming_series):
     """
-    Para uso interno con otras apps hechas con frappe framework,
+    Usar Para uso interno con otras apps hechas con frappe framework,
+    destinada a ser consumida con frappe.call
     llamara a las funciones necesarias para generar factura electronica
+    manejando los estados para mostrarlos amigablemente en Front-End
 
     Args:
-        invoice_code (str): Serie original de la factura
+        invoice_code (str): Name original de la factura
+        naming_series (str): Serie de factura
 
     Returns:
         tuple, msgprint: (True/False, mensaje ok/descripcion error) usado para javascript,
@@ -34,10 +37,9 @@ def api_interface(invoice_code, naming_series):
 
     # start = timer() usar para medir tyiempo de ejecucion
     try:
+        # Guarda el estado de la funcion encargada de aplicar la generacion de factura electronica
         state_of = generate_electronic_invoice(invoice_code, naming_series)
         if state_of[0] == False:
-            # end = timer()  \n\n\n {end - start}
-
             # Si ocurre algun error en la fase final de facelec
             if type(state_of[1]) is dict:  # Aplica para los mensjaes base de datos actualizados
                 frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
@@ -49,6 +51,7 @@ def api_interface(invoice_code, naming_series):
                 return False, state_of[1]
 
 
+        # Si el proceso es OK
         if type(state_of[1]) is dict:
             # end = timer()  \n\n\n {end - start}
             new_serie = frappe.db.get_value('Envio FEL', {'name': state_of[1]["msj"]}, 'serie_para_factura')
@@ -117,10 +120,23 @@ def api_facelec(invoice_name, naming_serie):
 def generate_electronic_invoice(invoice_code, naming_series):
     """
     Llama a la clase y sus metodos encargados de generar factura electronica,
-    validando primer los requisitos para que se posible la generacion
+    validando primero los requisitos para que se posible la generacion
+
+    1. Valida si hay configuracion valida para generar factura electronica
+    2. valida la serie a utilizar
+    3. valida que no exista una anterior ya generada
+    4. Crea una instancia para construir facelec
+    4.1 Construye la estructura general para la peticion en JSON
+    4.2 La estrucutra JSON se convierte a XML para firmarla con la SAT
+    4.3 Si la firma es exitosa se solicita la generacion de facelec
+    4.4 Se validan las respuestas
+    4.5 Actualiza todas las tablas de la base de datos donde existe referencia a la
+    factura que se solicito como electronica, con la nueva serie brindada por la SAT
+
 
     Args:
-        invoice_code (str): Serie original de la factura
+        invoice_code (str): Name original de la factura
+        naming_series (str): Serie usada en factura
 
     Returns:
         tuple: True/False, msj, msj
@@ -290,7 +306,7 @@ def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
 
 @frappe.whitelist()
 def generate_debit_note(invoice_code, naming_series):
-    frappe.msgprint(_('Hola'))
+    frappe.msgprint(_('Work In Progress'))
 
 
 @frappe.whitelist()

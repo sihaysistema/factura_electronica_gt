@@ -72,6 +72,7 @@ frappe.ui.form.on("Customer", {
         frm.set_value('nit_face_customer', frm.doc.tax_id);
     }
 });
+
 // Validador NIT para Supplier
 frappe.ui.form.on("Supplier", {
     facelec_nit_proveedor: function (frm) {
@@ -97,7 +98,8 @@ frappe.ui.form.on("Company", {
         frm.set_query('isr_account_payable', 'tax_witholding_ranges', () => {
             return {
                 filters: {
-                    company: frm.doc.name
+                    company: frm.doc.name,
+                    is_group: 0
                 }
             }
         });
@@ -105,7 +107,8 @@ frappe.ui.form.on("Company", {
         frm.set_query('isr_account_receivable', 'tax_witholding_ranges', () => {
             return {
                 filters: {
-                    company: frm.doc.name
+                    company: frm.doc.name,
+                    is_group: 0
                 }
             }
         });
@@ -113,7 +116,8 @@ frappe.ui.form.on("Company", {
         frm.set_query('iva_account_payable', 'tax_witholding_ranges', () => {
             return {
                 filters: {
-                    company: frm.doc.name
+                    company: frm.doc.name,
+                    is_group: 0
                 }
             }
         });
@@ -121,7 +125,8 @@ frappe.ui.form.on("Company", {
         frm.set_query('vat_account_receivable', 'tax_witholding_ranges', () => {
             return {
                 filters: {
-                    company: frm.doc.name
+                    company: frm.doc.name,
+                    is_group: 0
                 }
             }
         });
@@ -129,7 +134,8 @@ frappe.ui.form.on("Company", {
         frm.set_query('vat_retention_to_compensate', 'tax_witholding_ranges', () => {
             return {
                 filters: {
-                    company: frm.doc.name
+                    company: frm.doc.name,
+                    is_group: 0
                 }
             }
         });
@@ -137,7 +143,8 @@ frappe.ui.form.on("Company", {
         frm.set_query('vat_retention_payable', 'tax_witholding_ranges', () => {
             return {
                 filters: {
-                    company: frm.doc.name
+                    company: frm.doc.name,
+                    is_group: 0
                 }
             }
         });
@@ -145,7 +152,8 @@ frappe.ui.form.on("Company", {
         frm.set_query('income_tax_retention_payable_account', 'tax_witholding_ranges', () => {
             return {
                 filters: {
-                    company: frm.doc.name
+                    company: frm.doc.name,
+                    is_group: 0
                 }
             }
         });
