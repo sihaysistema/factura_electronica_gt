@@ -93,8 +93,8 @@ class ElectronicSpecialInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                with open('special_invoice.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion))
+                # with open('special_invoice.json', 'w') as f:
+                #     f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:
@@ -163,6 +163,10 @@ class ElectronicSpecialInvoice:
         try:
             self.date_invoice = str(frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_date'))
             self.time_invoice = str(frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_time'))
+
+            if '.' in self.time_invoice:
+                # la ultima porcion elimina los milisegundos manualmente, las nuevas validaciones de INFILE no soportan miliseconds
+                self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).rpartition('.')[0]
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'currency'),
@@ -573,8 +577,8 @@ class ElectronicSpecialInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            with open('special_invoice.xml', 'w') as f:
-                f.write(self.__xml_string)
+            # with open('special_invoice.xml', 'w') as f:
+            #     f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -622,8 +626,8 @@ class ElectronicSpecialInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            with open('firma_resp_special_invoice.json', 'w') as f:
-                f.write(json.dumps(self.__doc_firmado, indent=2))
+            # with open('firma_resp_special_invoice.json', 'w') as f:
+            #     f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -673,8 +677,8 @@ class ElectronicSpecialInvoice:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            with open('resp_special_invoice.json', 'w') as f:
-                f.write(json.dumps(self.__response_ok, indent=2))
+            # with open('resp_special_invoice.json', 'w') as f:
+            #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 

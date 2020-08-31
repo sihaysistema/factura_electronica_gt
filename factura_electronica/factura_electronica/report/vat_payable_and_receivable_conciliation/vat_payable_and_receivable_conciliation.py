@@ -39,13 +39,13 @@ def get_columns():
             "label": _("Document Type"),
             "fieldname": "doc_type",
             "fieldtype": "Data",
-            "width": 200
+            "width": 120
         },
         {
             "label": _("Voucher or Document ID"),
             "fieldname": "doc_id",
             "fieldtype": "Data",
-            "width": 200
+            "width": 300
         },
         {
             "label": _("Transaction Date"),
@@ -58,21 +58,21 @@ def get_columns():
             "fieldname": "vat_debit",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 200
+            "width": 150
         },
         {
             "label": _("VAT Credit"),
             "fieldname": "vat_credit",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 200
+            "width": 150
         },
         {
             "label": _("Transaction Total"),
             "fieldname": "trans_total",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 200
+            "width": 150
         },
         {
             "label": _("Currency"),
@@ -84,6 +84,7 @@ def get_columns():
     ]
 
     return columns
+
 
 def get_data(filters):
     empty_row = {}
@@ -157,26 +158,31 @@ def get_data(filters):
     # en_US: Getting the transactions for vat payable accounts to insert the rows, for this month.
     # es: Obtenemos las transacciones de IVA por pagar de este mes para insertar las filas.
 
-    por_pagar = apply_on_site_links(get_vat_payable_data(filters))
-    data.extend(por_pagar)
+    payable_data = get_vat_payable_data(filters)
+    if len(payable_data) > 0:
+        por_pagar = apply_on_site_links(payable_data)
+        data.extend(por_pagar)
 
-    data.append(por_pagar_footer)
-    data.append(empty_row)
-    data.append(empty_row)
-    data.append(por_cobrar_header)
+        data.append(por_pagar_footer)
+        data.append(empty_row)
+        data.append(empty_row)
+        data.append(por_cobrar_header)
 
 
     # en_US: Getting the transactions for vat receivable accounts to insert the rows, for this month.
     # es: Obtenemos las transacciones de IVA por cobrar de este mes para insertar las filas.
-    por_cobrar = apply_on_site_links(get_vat_receivable_data(filters))
-    data.extend(por_cobrar)
+    receivable_data = get_vat_receivable_data(filters)
+    if len(receivable_data) > 0:
+        por_cobrar = apply_on_site_links(receivable_data)
+        data.extend(por_cobrar)
 
-    data.append(por_cobrar_footer)
-    data.append(empty_row)
-    data.append(empty_row)
-    data.append(payable_vat_this_month)
-    data.append(empty_row)
-    data.append(total_vat_payable_now)
+        data.append(por_cobrar_footer)
+        data.append(empty_row)
+        data.append(empty_row)
+        data.append(payable_vat_this_month)
+        data.append(empty_row)
+        data.append(total_vat_payable_now)
+
     return data
 
 # Generate links to documents found.
