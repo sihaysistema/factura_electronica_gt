@@ -297,7 +297,7 @@ function generar_tabla_html_factura_compra(frm) {
 frappe.ui.form.on("Purchase Invoice", {
     refresh: function (frm, cdt, cdn) {
         // Por ahora se mostrara solo si la factura de compra se encuentra validada
-        if (frm.doc.docstatus === 1) {
+        if (frm.doc.docstatus === 1 && frm.doc.is_return === 1) {
 
             // Se usara un bootn especifico para generar factura especial
             // cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
