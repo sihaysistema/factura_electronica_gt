@@ -402,6 +402,11 @@ def generate_special_invoice(invoice_code, naming_series):
         return False, str(frappe.get_traceback())
 
 
+@frappe.whitelist()
+def generate_export_invoice(invoice_code, naming_series):
+    frappe.msgprint(_('Hola esto para Factura de Exportacion'))
+
+
 def validate_configuration():
     """
     Verifica que exista una configuracion valida para generar Factura electronica

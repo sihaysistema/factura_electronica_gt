@@ -820,6 +820,28 @@ frappe.ui.form.on("Sales Invoice", {
         // correspondiente a su serie.
         verificacionCAE('manual', frm, cdt, cdn);
 
+        if (frm.doc.docstatus == 1) {
+            console.log('Hola')
+            // inicio factura exportacion
+            frm.add_custom_button(__("FACTURA DE EXPORTACION"),
+                function () {
+
+                    frappe.call({
+                        method: 'factura_electronica.fel_api.generate_export_invoice',
+                        args: {
+                            invoice_code: frm.doc.name,
+                            naming_series: frm.doc.naming_series,
+                        },
+                        callback: function (data) {
+                            console.log(data.message);
+                        },
+                    });
+
+                }).addClass("btn-primary");
+            // final factura especial
+
+        }
+
         // INICIO BOTON PARA GENERAR NOTA DE CREDITO ELECTRONICA
         // Si la factura de venta se convierte a nota de credito,
         // para cumplir esta debe ser una factura electronica ya generada, segun esquema XML
@@ -841,6 +863,7 @@ frappe.ui.form.on("Sales Invoice", {
             //     }
             // });
             */
+
 
             // APLICA SOLO PARA NOTAS DE CREDITO, PARA VER PDF
             if (frm.doc.status === "Return") {
