@@ -820,9 +820,9 @@ frappe.ui.form.on("Sales Invoice", {
         // correspondiente a su serie.
         verificacionCAE('manual', frm, cdt, cdn);
 
+        // inicio factura exportacion
         if (frm.doc.docstatus == 1) {
-            console.log('Hola')
-            // inicio factura exportacion
+            // console.log('Hola')
             frm.add_custom_button(__("FACTURA DE EXPORTACION"),
                 function () {
 
@@ -838,9 +838,8 @@ frappe.ui.form.on("Sales Invoice", {
                     });
 
                 }).addClass("btn-primary");
-            // final factura especial
-
         }
+        // final factura especial
 
         // INICIO BOTON PARA GENERAR NOTA DE CREDITO ELECTRONICA
         // Si la factura de venta se convierte a nota de credito,

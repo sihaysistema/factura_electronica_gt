@@ -91,8 +91,8 @@ class ExportInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                # with open('mi_factura.json', 'w') as f:
-                #     f.write(json.dumps(self.__base_peticion))
+                with open('exportacion.json', 'w') as f:
+                    f.write(json.dumps(self.__base_peticion))
 
                 return True, 'OK'
             else:
@@ -561,8 +561,8 @@ class ExportInvoice:
             self.__xml_string = xmltodict.unparse(
                 self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('mi_factura.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('factura_exportacion.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
