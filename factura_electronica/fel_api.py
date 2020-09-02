@@ -414,6 +414,7 @@ def generate_export_invoice(invoice_code, naming_series):
     """
 
     try:
+
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
         status_config = validate_configuration()
 
@@ -440,13 +441,14 @@ def generate_export_invoice(invoice_code, naming_series):
         # paso 3.1 - NUEVA INSTANCIA
         new_invoice = ExportInvoice(invoice_code, status_config[1], naming_series)
 
-        # frappe.msgprint(_('Hola: ', invoice_code))
-
-        # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
+        # # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
         status = new_invoice.build_invoice()
         if status[0] == False:  # Si la construccion de la peticion es False
             frappe.msgprint(_(status))
             return False, f'Ocurrio un problema en el proceso, mas detalle en: {status[1]}'
+
+        frappe.msgprint('Ok build')
+        return ':)'
 
         # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
         # En este paso se convierte de JSON a XML y se codifica en base64
