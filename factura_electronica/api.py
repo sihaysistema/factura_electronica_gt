@@ -826,3 +826,18 @@ def enviar_correo(nombre):
         frappe.msgprint(msg)
     except:
         frappe.msgprint("could not send")
+
+
+@frappe.whitelist()
+def validate_address(address_name):
+    # Validacion extra, para ver si en verdad existe la direccion
+
+    # Si no existe ninguna direccion con el nombre y el pais a Guatemala, es decir si aplica
+    # exportacion
+    if not frappe.db.exists('Address', {'name': str(address_name), 'country': 'Guatemala'}):
+        # SI APLICA FACTURA INTERNACIONAL
+        return True
+
+    else:
+        # NO APLICA FACTURA INTERNACIONAL
+        return False

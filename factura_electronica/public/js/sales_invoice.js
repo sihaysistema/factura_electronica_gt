@@ -551,29 +551,61 @@ function generar_factura_sin_btn(frm) {
 /* 7 Funciones Verificadoras ------------------------------------------------------------------------------------------------- */
 function verificacionCAE(modalidad, frm, cdt, cdn) {
     /* ------------------------------ COMPROBACIONES DE CAE ------------------------------ */
-    // FACTURAS FACE, CFACE
+    // FACTURAS FACE, CFACE, FACTURA EXPORTACION
     // Este codigo entra en funcionamiento cuando la generacion automatica de la factura no es exitosa.
     // esto permite volver intentarlo hasta obtener el cae de la factura en que se estre trabajando.
     if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted"
-        || frm.doc.status === "Overdue" || frm.doc.status === "Credit Note Issued") {
+        || frm.doc.status === "Overdue" || frm.doc.status != "Credit Note Issued") {
         // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
         // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+
+        // Si hay ya un identificador para facelec, muestra boton para ver pdf en linea
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
             // guardar_pdf(frm);
+
         } else if (frm.doc.numero_autorizacion_fel) {
             cur_frm.clear_custom_buttons();
             pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
+
+            // Si no aplica ninguno de los anteiores, se muestra los respectivos botones para generar
         } else {
             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
             if (modalidad === 'manual') {
                 generar_boton_factura('Factura Electronica', frm);
+
+                // inicio factura exportacion
+                // Aparece solo si la factura esta validada y si hay direccion para el cliente
+                if (frm.doc.docstatus == 1 && cur_frm.doc.customer_address) {
+
+                    console.log('testeando ...')
+                    // Si el pais en la direccion de cliente es diferente a Guatemala se mostrara
+                    frappe.call({
+                        method: 'factura_electronica.api.validate_address',
+                        args: {
+                            address_name: frm.doc.customer_address,
+                        },
+                        callback: function (r) {
+                            if (r.message == true) {
+                                console.log('Si aplica a exportacion')
+                                btn_export_invoice(frm)
+                                // frm.reload_doc();
+                            }
+
+                            if (r.message == false) {
+                                console.log('No aplica a exportacion, pero si a fel normal')
+                            }
+                        },
+                    });
+
+                }
+                // final factura exportacion
             }
             // Si la modalidad recibida es automatica se realiza la factura electronica directamente
-            if (modalidad === 'automatico') {
-                generar_factura_sin_btn(frm);
-            }
+            // if (modalidad === 'automatico') {
+            //     generar_factura_sin_btn(frm);
+            // }
         }
     }
 
@@ -820,26 +852,7 @@ frappe.ui.form.on("Sales Invoice", {
         // correspondiente a su serie.
         verificacionCAE('manual', frm, cdt, cdn);
 
-        // inicio factura exportacion
-        if (frm.doc.docstatus == 1) {
-            // console.log('Hola')
-            frm.add_custom_button(__("FACTURA DE EXPORTACION"),
-                function () {
 
-                    frappe.call({
-                        method: 'factura_electronica.fel_api.generate_export_invoice',
-                        args: {
-                            invoice_code: frm.doc.name,
-                            naming_series: frm.doc.naming_series,
-                        },
-                        callback: function (data) {
-                            console.log(data.message);
-                        },
-                    });
-
-                }).addClass("btn-primary");
-        }
-        // final factura especial
 
         // INICIO BOTON PARA GENERAR NOTA DE CREDITO ELECTRONICA
         // Si la factura de venta se convierte a nota de credito,
@@ -1332,4 +1345,31 @@ function calculo_redondeo_pi(a, b) {
 
 function redondear(value, decimals) {
     return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+}
+
+/**
+ * Generador de boton para factura de exportacion, cuando se pulsa
+ * hace una peticion a la funcion generate_export_invoice y esta a la
+ * vez genera la peticion a INFILE con los datos de la factura
+ *
+ * @param {*} frm
+ */
+function btn_export_invoice(frm) {
+    // cur_frm.clear_custom_buttons('Factura Electronica');
+    cur_frm.clear_custom_buttons();
+    frm.add_custom_button(__("FACTURA DE EXPORTACION"),
+        function () {
+
+            frappe.call({
+                method: 'factura_electronica.fel_api.generate_export_invoice',
+                args: {
+                    invoice_code: frm.doc.name,
+                    naming_series: frm.doc.naming_series,
+                },
+                callback: function (data) {
+                    console.log(data.message);
+                },
+            });
+
+        }).addClass("btn-primary");
 }
