@@ -1725,7 +1725,7 @@
   "in_list_view": 0,
   "in_standard_filter": 0,
   "insert_after": "is_exchange_invoice",
-  "label": "Is it an international invoiceIs it an international invoice?",
+  "label": "Is it an international invoice?",
   "length": 0,
   "modified": "2020-09-08 23:16:06.789746",
   "name": "Sales Invoice-is_it_an_international_invoice",
