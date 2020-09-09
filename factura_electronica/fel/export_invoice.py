@@ -67,7 +67,7 @@ class ExportInvoice:
                         "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
                         "@Version": "0.4",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0 C:\\Users\\Nadir\\Desktop\\SAT_FEL_FINAL_V1\\Esquemas\\GT_Documento-0.1.0.xsd",
                         # "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 02
                         # "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         # "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -83,7 +83,8 @@ class ExportInvoice:
                                     "dte:Receptor": self.__d_receptor,
                                     "dte:Frases": self.__d_frases,
                                     "dte:Items": self.__d_items,
-                                    "dte:Totales": self.__d_totales
+                                    "dte:Totales": self.__d_totales,
+                                    "dte:Complementos": self.__complemento
                                 }
                             }
                         }
@@ -92,9 +93,10 @@ class ExportInvoice:
 
                 # USAR SOLO PARA DEBUG:
                 with open('exportacion.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion))
+                    f.write(json.dumps(self.__base_peticion, indent=2))
 
                 return True, 'OK'
+
             else:
                 return False, status_validate[1]
         except:
@@ -128,18 +130,23 @@ class ExportInvoice:
 
         # Validacion y generacion seccion frases
         status_phrases = self.phrases()
-        if status_phrases == False:
+        if status_phrases[0] == False:
             return status_phrases
 
         # Validacion y generacion seccion items
         status_items = self.items()
-        if status_items == False:
+        if status_items[0] == False:
             return status_items
 
         # Validacion y generacion seccion totales
         status_totals = self.totals()
-        if status_totals == False:
+        if status_totals[0] == False:
             return status_totals
+
+        # Validacion y generacion seccion complemento para exportacion
+        status_complement = self.export_complement()
+        if status_complement[0] == False:
+            return status_complement
 
         # Si todo va bien, retorna True
         return True, 'OK'
@@ -167,6 +174,7 @@ class ExportInvoice:
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
                 # "@FechaHoraEmision": str(self.date_invoice)+'T'+str(self.time_invoice),  #f'{self.date_invoice}T{str(self.time_invoice)}',  #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
                 # Se usa la data al momento de crear a infile
+                "@Exp": "SI",
                 "@FechaHoraEmision": str(nowdate())+'T'+str(nowtime().rpartition('.')[0]),
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
@@ -192,15 +200,14 @@ class ExportInvoice:
             self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__invoice_code},
                                                 fieldname=['company', 'company_address', 'nit_face_customer',
                                                            'customer_address', 'customer_name', 'total_taxes_and_charges',
-                                                           'grand_total'], as_dict=1)
+                                                           'grand_total', 'customer'], as_dict=1)
             if len(self.dat_fac) == 0:
                 return False, f'''No se encontro ninguna factura con serie: {self.__invoice_code}.\
                                   Por favor valida los datos de la factura que deseas procesar'''
 
             # Obtenemos datos necesario de company: Nombre de compañia, nit
             dat_compania = frappe.db.get_values('Company', filters={'name': self.dat_fac[0]['company']},
-                                                fieldname=[
-                                                    'company_name', 'nit_face_company', 'tax_id'],
+                                                fieldname=['company_name', 'nit_face_company', 'tax_id', 'codigo_exportador'],
                                                 as_dict=1)
             if len(dat_compania) == 0:
                 return False, f'''No se encontraron datos para la compañia {self.dat_fac[0]["company_name"]}.
@@ -379,6 +386,9 @@ class ExportInvoice:
         debe indicarse los regímenes y textos especiales que son requeridos en los DTE,
         de acuerdo a la afiliación del contribuyente y tipo de operación.
 
+        La primer combinacion hace referencia a lo que se usaria en una generacion normal
+        La segunda combinacion hace refenrecia que esta exento de impuesto
+
         Returns:
             boolean: True/False
         """
@@ -386,12 +396,20 @@ class ExportInvoice:
         try:
             # TODO: Consultar todas las posibles combinaciones disponibles
             self.__d_frases = {
-                "dte:Frase": {
-                    "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
-                                                            {'name': self.__config_name}, 'codigo_escenario'),  # "1",
-                    "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
-                                                      {'name': self.__config_name}, 'tipo_frase')[:1]  # "1"
-                }
+                "dte:Frase": [
+                    {
+                        "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
+                                                                {'name': self.__config_name}, 'codigo_escenario'),  # "1",
+                        "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
+                                                         {'name': self.__config_name}, 'tipo_frase')[:1]  # "1"
+                    },
+                    {
+                        "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
+                                                                {'name': self.__config_name}, 'codigo_escenario_factura_exportacion'),  # "1",
+                        "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
+                                                         {'name': self.__config_name}, 'tipo_frase_factura_exportacion')[:1]  # "1"
+                    }
+                ]
             }
 
             return True, 'OK'
@@ -500,13 +518,10 @@ class ExportInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(
-                        float(self.__dat_items[i]['net_amount']))  # net_amount
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
-                                                                                                      float(self.__taxes_fact[0]['rate']/100))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))  # net_amount
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = 0  # Como es exportacion, no aplica
 
-                    obj_item["dte:Total"] = '{0:.2f}'.format(
-                        (float(self.__dat_items[i]['amount'])))
+                    obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['amount'])))
                     # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
@@ -537,7 +552,7 @@ class ExportInvoice:
                     "dte:TotalImpuesto": {
                         # "IVA",
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],
-                        "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
+                        "@TotalMontoImpuesto": 0  # exportacion
                     }
                 },
                 "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
@@ -547,6 +562,71 @@ class ExportInvoice:
 
         except:
             return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
+
+    def export_complement(self):
+        """
+        Metodo para construccion la seccion exportacion complemento
+
+        Returns:
+            tuple: True/False, msj, msj
+        """
+        try:
+            # direccion receptor
+            dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['customer_address']},
+                                                 fieldname=['address_line1', 'email_id', 'pincode',
+                                                            'state', 'city', 'country'], as_dict=1)
+
+            dat_compania = frappe.db.get_values('Company', filters={'name': self.dat_fac[0]['company']},
+                                                fieldname=['company_name', 'nit_face_company', 'tax_id', 'codigo_exportador'],
+                                                as_dict=1)
+
+            codigo_comprador = frappe.db.get_value('Customer', {'name': str(self.dat_fac[0]["customer"])}, 'codigo_comprador')
+            codigo_incoterm = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                                  'codigo_incoterm')
+
+            codigo_exportador = dat_compania[0]['codigo_exportador']
+
+            # Validaciones Direcciones
+            if len(dat_direccion) == 0:
+                return False, 'Complemento exportacion no generado, por favor agregar direccion de receptor, datos requeridos por INFILE'
+
+            # Validaciones Codigo exportacion
+            if not codigo_comprador:
+                return False, 'Complemento exportacion no generado, por favor agregar codigo de comprador en Cliente'
+
+            if not codigo_incoterm:
+                return False, 'Complemento exportacion no generado, por favor agregar codigo INCOTERM en configuracion series Factura Electronica'
+
+            if not codigo_exportador:
+                return False, 'Complemento exportacion no generado, por favor agregar codigo de exportador en Compania'
+
+
+            self.__complemento = {
+                    "dte:Complemento": {
+                    "@IDComplemento": "text",
+                    "@NombreComplemento": "Complemento_Exportacion",
+                    "@URIComplemento": "uri_complemento",
+                    "cex:Exportacion": {
+                        "@xmlns:cex": "http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0",
+                        "@Version": "1",
+                        "@xsi:schemaLocation": "http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0 C:\\Users\\Nadir\\Desktop\\SAT_FEL_FINAL_V1\\Esquemas\\GT_Complemento_Exportaciones-0.1.0.xsd",
+                        "cex:NombreConsignatarioODestinatario": str(self.dat_fac[0]["customer_name"]),
+                        "cex:DireccionConsignatarioODestinatario": str(dat_direccion[0].get('address_line1'))[:70],  # solo acepta 70 digitos
+                        "cex:CodigoConsignatarioODestinatario": codigo_comprador,
+                        "cex:NombreComprador": str(self.dat_fac[0]["customer_name"]),
+                        "cex:CodigoComprador": codigo_comprador,
+                        "cex:OtraReferencia": "EXPORTACION",
+                        "cex:INCOTERM": codigo_incoterm,
+                        "cex:NombreExportador": dat_compania[0]['company_name'],
+                        "cex:CodigoExportador": codigo_exportador
+                    }
+                }
+            }
+
+            return True, 'OK'
+
+        except:
+            return False, 'No se pudo generar el complemento para factura exportacion {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
     def sign_invoice(self):
         """
@@ -611,8 +691,8 @@ class ExportInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('reciibo_firmado.json', 'w') as f:
-            #     f.write(json.dumps(self.__doc_firmado, indent=2))
+            with open('firmado_exportacion.json', 'w') as f:
+                f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -670,8 +750,8 @@ class ExportInvoice:
             self.__response_ok = json.loads(
                 (self.__response.content).decode('utf-8'))
 
-            # with open('RESPONSE_factura.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('response_fact_export.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 

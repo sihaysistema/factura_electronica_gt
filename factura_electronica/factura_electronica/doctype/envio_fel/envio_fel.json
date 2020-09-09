@@ -191,10 +191,10 @@
    "fieldname": "tipo_documento",
    "fieldtype": "Select",
    "label": "Tipo Documento",
-   "options": "\nFactura Electronica\nFactura Especial\nNota de Credito\nNota de Debito\nAnulacion"
+   "options": "\nFactura Electronica\nFactura Especial\nFactura Exportacion\nFactura Exenta\nNota de Credito\nNota de Debito\nAnulacion"
   }
  ],
- "modified": "2020-08-06 22:32:03.780885",
+ "modified": "2020-09-09 09:01:32.509432",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Envio FEL",

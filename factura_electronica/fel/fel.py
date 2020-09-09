@@ -127,17 +127,17 @@ class ElectronicInvoice:
 
         # Validacion y generacion seccion frases
         status_phrases = self.phrases()
-        if status_phrases == False:
+        if status_phrases[0] == False:
             return status_phrases
 
         # Validacion y generacion seccion items
         status_items = self.items()
-        if status_items == False:
+        if status_items[0] == False:
             return status_items
 
         # Validacion y generacion seccion totales
         status_totals = self.totals()
-        if status_totals == False:
+        if status_totals[0] == False:
             return status_totals
 
         # Si todo va bien, retorna True

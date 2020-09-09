@@ -46,6 +46,8 @@
   "codigo_escenario",
   "tipo_frase_factura_especial",
   "codigo_escenario_factura_especial",
+  "tipo_frase_factura_exportacion",
+  "codigo_escenario_factura_exportacion",
   "column_break_32",
   "alias",
   "url_firma",
@@ -413,11 +415,22 @@
    "fieldname": "codigo_escenario_factura_especial",
    "fieldtype": "Data",
    "label": "Codigo Escenario Factura Especial"
+  },
+  {
+   "fieldname": "tipo_frase_factura_exportacion",
+   "fieldtype": "Select",
+   "label": "Tipo Frase Factura Exportacion",
+   "options": "\n1: Frase de retencio\u0301n del ISR\n2: Frase de retencio\u0301n del IVA\n3: Frase de no genera derecho a cre\u0301dito fiscal del IVA\n4: Frase de exento o no afecto al IVA"
+  },
+  {
+   "fieldname": "codigo_escenario_factura_exportacion",
+   "fieldtype": "Data",
+   "label": "Codigo Escenario Factura Exportacion"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-08-13 13:38:10.781226",
+ "modified": "2020-09-09 16:42:51.743939",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

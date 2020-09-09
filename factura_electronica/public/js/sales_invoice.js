@@ -1359,7 +1359,7 @@ function btn_export_invoice(frm) {
         function () {
 
             frappe.call({
-                method: 'factura_electronica.fel_api.generate_export_invoice',
+                method: 'factura_electronica.fel_api.api_interface_export',
                 args: {
                     invoice_code: frm.doc.name,
                     naming_series: frm.doc.naming_series,

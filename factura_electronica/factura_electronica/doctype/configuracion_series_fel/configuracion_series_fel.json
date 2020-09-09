@@ -8,7 +8,9 @@
   "serie",
   "tipo_documento",
   "column_break_3",
-  "serie_sat"
+  "serie_sat",
+  "detalles_exportacion_section",
+  "codigo_incoterm"
  ],
  "fields": [
   {
@@ -36,10 +38,22 @@
    "fieldtype": "Select",
    "label": "Serie SAT",
    "options": "\nFC\nFE\nFCE\nNC\nND\nFPC\nFPE\nFAPE\nFACA\nFAAE\nDA\nFA\nFO\nEP\nFDU"
+  },
+  {
+   "fieldname": "detalles_exportacion_section",
+   "fieldtype": "Section Break",
+   "label": "Detalles Exportacion"
+  },
+  {
+   "description": "<b>Seleccione un c\u00f3digo si la serie ser\u00e1 utilizada para facturas exportaci\u00f3n</b>",
+   "fieldname": "codigo_incoterm",
+   "fieldtype": "Select",
+   "label": "Codigo INCOTERM",
+   "options": "\nEXW\nFCA\nFAS\nFOB\nCFR\nCIF\nCPT\nCIP\nDDP\nDAP\nDAT\nZZZ"
   }
  ],
  "istable": 1,
- "modified": "2020-07-04 19:52:40.728303",
+ "modified": "2020-09-09 11:47:28.828007",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Series FEL",
