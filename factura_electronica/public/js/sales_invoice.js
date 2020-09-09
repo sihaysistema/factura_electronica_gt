@@ -576,28 +576,29 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
                 generar_boton_factura('Factura Electronica', frm);
 
                 // inicio factura exportacion
-                // Aparece solo si la factura esta validada y si hay direccion para el cliente
-                if (frm.doc.docstatus == 1 && cur_frm.doc.customer_address) {
-
-                    console.log('testeando ...')
+                // aplica solo si la factura esta validada y si la opcion international is active
+                if (frm.doc.docstatus == 1 && cur_frm.doc.is_it_an_international_invoice == 1) {
+                    btn_export_invoice(frm)
+                    // console.log('testeando ...')
+                    // USAR EN CASO SE BASE EN DIRECCION
                     // Si el pais en la direccion de cliente es diferente a Guatemala se mostrara
-                    frappe.call({
-                        method: 'factura_electronica.api.validate_address',
-                        args: {
-                            address_name: frm.doc.customer_address,
-                        },
-                        callback: function (r) {
-                            if (r.message == true) {
-                                console.log('Si aplica a exportacion')
-                                btn_export_invoice(frm)
-                                // frm.reload_doc();
-                            }
+                    // frappe.call({
+                    //     method: 'factura_electronica.api.validate_address',
+                    //     args: {
+                    //         address_name: frm.doc.customer_address,
+                    //     },
+                    //     callback: function (r) {
+                    //         if (r.message == true) {
+                    //             console.log('Si aplica a exportacion')
+                    //             btn_export_invoice(frm)
+                    //             // frm.reload_doc();
+                    //         }
 
-                            if (r.message == false) {
-                                console.log('No aplica a exportacion, pero si a fel normal')
-                            }
-                        },
-                    });
+                    //         if (r.message == false) {
+                    //             console.log('No aplica a exportacion, pero si a fel normal')
+                    //         }
+                    //     },
+                    // });
 
                 }
                 // final factura exportacion
@@ -850,9 +851,10 @@ frappe.ui.form.on("Sales Invoice", {
         // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
         // En caso no exista un cae mostrara el boton para generar la factura electronica
         // correspondiente a su serie.
-        verificacionCAE('manual', frm, cdt, cdn);
-
-
+        // Se mostrara solo si esta validado el doc
+        if (frm.doc.docstatus === 1) {
+            verificacionCAE('manual', frm, cdt, cdn);
+        }
 
         // INICIO BOTON PARA GENERAR NOTA DE CREDITO ELECTRONICA
         // Si la factura de venta se convierte a nota de credito,
@@ -883,7 +885,6 @@ frappe.ui.form.on("Sales Invoice", {
                 // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
                 if (frm.doc.numero_autorizacion_fel) {
                     cur_frm.clear_custom_buttons();
-
                     frm.add_custom_button(__("VER PDF NOTA CREDITO ELECTRONICA"),
                         function () {
                             window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
@@ -891,7 +892,7 @@ frappe.ui.form.on("Sales Invoice", {
                         }).addClass("btn-primary");
 
                 } else {
-
+                    cur_frm.clear_custom_buttons();
                     frm.add_custom_button(__("CREDIT NOTE FEL"), function () {
                         // Permite hacer confirmaciones
                         frappe.confirm(__('Are you sure you want to proceed to generate a credit note?'),
@@ -946,9 +947,6 @@ frappe.ui.form.on("Sales Invoice", {
                     }).addClass("btn-warning");
                 }
             }
-
-
-
 
         } else {
             cur_frm.set_df_property("naming_series", "read_only", 0);
@@ -1356,7 +1354,7 @@ function redondear(value, decimals) {
  */
 function btn_export_invoice(frm) {
     // cur_frm.clear_custom_buttons('Factura Electronica');
-    cur_frm.clear_custom_buttons();
+    cur_frm.clear_custom_buttons();  // Limpia otros customs buttons para generar uno nuevo
     frm.add_custom_button(__("FACTURA DE EXPORTACION"),
         function () {
 

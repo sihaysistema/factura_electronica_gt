@@ -300,7 +300,8 @@ def fill_fixtures():
                     "Purchase Taxes and Charges-facelec_tax_name",
                     "Purchase Taxes and Charges-facelec_taxable_unit_code",
                     "Purchase Invoice-numero_autorizacion_fel",
-                    "Purchase Invoice-serie_original_del_documento"
+                    "Purchase Invoice-serie_original_del_documento",
+                    "Sales Invoice-is_it_an_international_invoice"
                 ]
             ]
         ]
