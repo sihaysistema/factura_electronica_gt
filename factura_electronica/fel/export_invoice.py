@@ -438,8 +438,7 @@ class ExportInvoice:
                 for i in range(0, longitems):
                     obj_item = {}  # por fila
 
-                    detalle_stock = frappe.db.get_value(
-                        'Item', {'name': self.__dat_items[i]['item_code']}, 'is_stock_item')
+                    detalle_stock = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'is_stock_item')
                     # Validacion de Bien o Servicio, en base a detalle de stock
                     if (int(detalle_stock) == 0):
                         obj_item["@BienOServicio"] = 'S'
@@ -452,25 +451,22 @@ class ExportInvoice:
                     desc_item = 0
 
                     # Precio unitario, (sin aplicarle descuento)
-                    precio_uni = float(
-                        self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
+                    precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
 
                     # Calculo precio item (precio sin aplicarle descuento * cantidad)
                     # precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['rate'])))
                     # float('{0:.2f}'.format((self.__dat_items[i]['amount'])))
-                    precio_item = precio_uni * \
-                        float(self.__dat_items[i]['qty'])
+                    precio_item = precio_uni * float(self.__dat_items[i]['qty'])
 
                     # Calculo descuento monto item
                     # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['discount_amount'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
                     # monto - ((descuento + precio_con_descuento) * cantidad)
-                    desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate']) * float(
-                        self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
+                    desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate'])
+                                                         * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
 
                     contador += 1
                     obj_item["@NumeroLinea"] = contador
-                    obj_item["dte:Cantidad"] = float(
-                        self.__dat_items[i]['qty'])
+                    obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = self.__dat_items[i]['description']
                     obj_item["dte:PrecioUnitario"] = round(precio_uni, 2)
@@ -648,8 +644,7 @@ class ExportInvoice:
             }
 
             headers = {"content-type": "application/json"}
-            response = requests.post(url, data=json.dumps(
-                self.__data_a_firmar), headers=headers)
+            response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
 
             # Guardamos en una variable privada la respuesta
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
@@ -681,19 +676,13 @@ class ExportInvoice:
         """
 
         try:
-            data_fac = frappe.db.get_value(
-                'Sales Invoice', {'name': self.__invoice_code}, 'company')
-            nit_company = frappe.db.get_value(
-                'Company', {'name': self.dat_fac[0]['nit_face_customer']}, 'nit_face_company')
+            data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
+            nit_company = frappe.db.get_value('Company', {'name': self.dat_fac[0]['nit_face_customer']}, 'nit_face_company')
 
-            url = frappe.db.get_value('Configuracion Factura Electronica', {
-                                      'name': self.__config_name}, 'url_dte')
-            user = frappe.db.get_value('Configuracion Factura Electronica', {
-                                       'name': self.__config_name}, 'alias')
-            llave = frappe.db.get_value('Configuracion Factura Electronica', {
-                                        'name': self.__config_name}, 'llave_ws')
-            correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {
-                                               'name': self.__config_name}, 'correo_copia')
+            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
+            user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
+            llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'llave_ws')
+            correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'correo_copia')
             ident = self.__invoice_code  # identificador
 
             req_dte = {
@@ -709,10 +698,8 @@ class ExportInvoice:
                 "identificador": ident
             }
 
-            self.__response = requests.post(
-                url, data=json.dumps(req_dte), headers=headers)
-            self.__response_ok = json.loads(
-                (self.__response.content).decode('utf-8'))
+            self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
+            self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             with open('response_fact_export.json', 'w') as f:
                 f.write(json.dumps(self.__response_ok, indent=2))
@@ -763,28 +750,24 @@ class ExportInvoice:
             if not frappe.db.exists('Envio FEL', {'name': self.__response_ok['uuid']}):
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
-                resp_fel.tipo_documento = 'Factura Electronica'
+                resp_fel.tipo_documento = 'Factura Exportacion'
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
                 resp_fel.serie_factura_original = self.__invoice_code
                 # resp_fel.serie_para_factura = 'FACELEC-'+str(self.__response_ok['numero'])
-                resp_fel.serie_para_factura = str(self.__response_ok['serie']).replace(
-                    '*', '')+str(self.__response_ok['numero'])
+                resp_fel.serie_para_factura = str(self.__response_ok['serie']).replace('*', '')+str(self.__response_ok['numero'])
 
                 if "control_emision" in self.__response_ok:
                     resp_fel.saldo = self.__response_ok['control_emision']['Saldo']
                     resp_fel.creditos = self.__response_ok['control_emision']['Creditos']
 
                 resp_fel.alertas = self.__response_ok['alertas_infile']
-                resp_fel.descripcion_alertas_infile = str(
-                    self.__response_ok['descripcion_alertas_infile'])
+                resp_fel.descripcion_alertas_infile = str(self.__response_ok['descripcion_alertas_infile'])
                 resp_fel.alertas_sat = self.__response_ok['alertas_sat']
-                resp_fel.descripcion_alertas_sat = str(
-                    self.__response_ok['descripcion_alertas_sat'])
+                resp_fel.descripcion_alertas_sat = str(self.__response_ok['descripcion_alertas_sat'])
                 resp_fel.cantidad_errores = self.__response_ok['cantidad_errores']
-                resp_fel.descripcion_errores = str(
-                    self.__response_ok['descripcion_errores'])
+                resp_fel.descripcion_errores = str(self.__response_ok['descripcion_errores'])
 
                 if "informacion_adicional" in self.__response_ok:
                     resp_fel.informacion_adicional = self.__response_ok['informacion_adicional']
@@ -793,8 +776,7 @@ class ExportInvoice:
                 resp_fel.serie = self.__response_ok['serie']
                 resp_fel.numero = self.__response_ok['numero']
 
-                decodedBytes = base64.b64decode(
-                    self.__response_ok['xml_certificado'])
+                decodedBytes = base64.b64decode(self.__response_ok['xml_certificado'])
                 decodedStr = str(decodedBytes, "utf-8")
                 resp_fel.xml_certificado = decodedStr
 
@@ -809,7 +791,7 @@ class ExportInvoice:
     def upgrade_records(self):
         """
         Funcion encargada de actualizar todos los doctypes enlazados a la factura original, con
-        la serie generada para factura electronica
+        la serie generada para factura electronica exportacion
 
         Returns:
             tuple: True/False, msj, msj
@@ -817,9 +799,7 @@ class ExportInvoice:
 
         # Verifica que exista un documento en la tabla Envio FEL con el nombre de la serie original
         if frappe.db.exists('Envio FEL', {'serie_factura_original': self.__invoice_code}):
-            factura_guardada = frappe.db.get_values('Envio FEL',
-                                                    filters={
-                                                        'serie_factura_original': self.__invoice_code},
+            factura_guardada = frappe.db.get_values('Envio FEL',filters={'serie_factura_original': self.__invoice_code},
                                                     fieldname=['numero', 'serie', 'uuid'], as_dict=1)
             # Esta seccion se encarga de actualizar la serie, con una nueva que es serie y numero
             # buscara en las tablas donde exista una coincidencia actualizando con la nueva serie

@@ -603,7 +603,6 @@ def api_interface_export(invoice_code, naming_series):
         el msgprint es para mostrar un mensaje a usuario
     """
 
-    # start = timer() usar para medir tyiempo de ejecucion
     try:
         # Guarda el estado de la funcion encargada de aplicar la generacion de factura electronica
         state_of = generate_electronic_export_invoice(invoice_code, naming_series)
@@ -611,11 +610,11 @@ def api_interface_export(invoice_code, naming_series):
             # Si ocurre algun error en la fase final de facelec
             # Aplica para los mensjaes base de datos actualizados
             if type(state_of[1]) is dict:
-                frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
+                frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log <br>: <code>{state_of[1]}</code>'),
                                 title=_('Process not completed'), indicator='red')
                 return False, state_of[1]
             else:
-                frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
+                frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log <br>: <code>{state_of[1]}</code>'),
                                 title=_('Process not completed'), indicator='red')
                 return False, state_of[1]
 
@@ -637,9 +636,8 @@ def api_interface_export(invoice_code, naming_series):
         #     return True, str(new_serie)
 
     except:
-        frappe.msgprint(
-            _(f'A problem occurred while processing the request, more info at: {frappe.get_traceback()}'))
-        return False, 'An error occurred in the process of generating an electronic invoice'
+        frappe.msgprint(_(f'Ocurrio un problema mientras procesabamos la peticion, mas info en')+f': <code>{frappe.get_traceback()}</code>')
+        return False, 'Ocurrio un problema mientras procesabamos la solicitud para generar Factura Electronica Exportacion'
 
 
 def generate_electronic_export_invoice(invoice_code, naming_series):
@@ -686,6 +684,11 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
             return False, f'La factura se encuentra registrada como ya generada, puedes validar los detalles en \
                             Envios FEL, con codigo UUID {status_invoice[1]}'
 
+        # Validamos que el rate en la tabla de impuestos sea 0, se hace para tener lo mismo en facelec y facelec normal
+        if not frappe.db.exists('Sales Taxes and Charges', {'parent': invoice_code, 'parentype': 'Sales Invoice', 'rate': 0}):
+            return False, f'No se puede proceder con la generacion de la factura electronica exportacion, se encontro un valor diferente de 0 \
+                            en el impuesto, si desea generarla intente nuevamente manualmente estableciendo 0 al impuesto'
+
         # PASO 3: FACTURA ELECTRONICA EXPORTACION
         # paso 3.1 - NUEVA INSTANCIA
         new_invoice = ExportInvoice(invoice_code, status_config[1], naming_series)
@@ -693,20 +696,20 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
         # # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
         status = new_invoice.build_invoice()
         if status[0] == False:  # Si la construccion de la peticion es False
-            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status}'
+            return False, f'Ocurrio un problema en el proceso de generacion XML para peticion, mas detalle en: <code>{status}</code>'
 
 
         # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
         # En este paso se convierte de JSON a XML y se codifica en base64
-        status_firma = new_invoice.sign_invoice()
-        if status_firma[0] == False:  # Si no se firma correctamente
-            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
+        # status_firma = new_invoice.sign_invoice()
+        # if status_firma[0] == False:  # Si no se firma correctamente
+        #     return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
 
-        # PASO 5: SOLICITAMOS FACTURA ELECTRONICA EXPORTACION
-        status_facelec = new_invoice.request_electronic_invoice()
-        if status_facelec[0] == False:
-            return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
+        # # PASO 5: SOLICITAMOS FACTURA ELECTRONICA EXPORTACION
+        # status_facelec = new_invoice.request_electronic_invoice()
+        # if status_facelec[0] == False:
+        #     return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
 
         # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
         # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
@@ -726,7 +729,7 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
         # frappe.msgprint(_(str(status_upgrade)))
 
 
-        frappe.msgprint('OK', status_facelec)
+        frappe.msgprint('OK')
         return True, 'test'
 
     except:

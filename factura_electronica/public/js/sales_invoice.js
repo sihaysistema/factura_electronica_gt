@@ -75,17 +75,17 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                     .facelec_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
                 // Sumatoria de todos los que tengan el check combustibles
                 /*
-				var total_fuel = 0;
-				$.each(frm.doc.items || [], function (i, d) {
-					// total_qty += flt(d.qty);
-					if (d.factelecis_fuel) {
-						total_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
-					};
-				});
-				//console.log("El total neto de fuel es:" + total_fuel); // WORKS OK!
-				// cur_frm.doc.facelec_gt_tax_fuel = total_fuel;
-				cur_frm.set_value('facelec_gt_tax_fuel', total_fuel);
-				frm.refresh_field("factelecis_fuel");
+                var total_fuel = 0;
+                $.each(frm.doc.items || [], function (i, d) {
+                    // total_qty += flt(d.qty);
+                    if (d.factelecis_fuel) {
+                        total_fuel += flt(d.facelec_gt_tax_net_fuel_amt);
+                    };
+                });
+                //console.log("El total neto de fuel es:" + total_fuel); // WORKS OK!
+                // cur_frm.doc.facelec_gt_tax_fuel = total_fuel;
+                cur_frm.set_value('facelec_gt_tax_fuel', total_fuel);
+                frm.refresh_field("factelecis_fuel");
                 */
             };
             if (item_row.facelec_is_good) {
@@ -97,10 +97,10 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                 /*
                 var total_goods = 0;
                 $.each(frm.doc.items || [], function (i, d) {
-                	// total_qty += flt(d.qty);
-                	if (d.facelec_is_good) {
-                		total_goods += flt(d.facelec_gt_tax_net_goods_amt);
-                	};
+                    // total_qty += flt(d.qty);
+                    if (d.facelec_is_good) {
+                        total_goods += flt(d.facelec_gt_tax_net_goods_amt);
+                    };
                 });
                 console.log("El total neto de bienes es:" + total_goods); // WORKS OK!
                 // cur_frm.doc.facelec_gt_tax_goods = total_goods;
@@ -120,10 +120,10 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
                 /*
                 var total_servi = 0;
                 $.each(frm.doc.items || [], function (i, d) {
-                	if (d.facelec_is_service) {
-                		total_servi += flt(d.facelec_gt_tax_net_services_amt);
-                		console.log("se detecto cheque de servicio"); // WORKS!
-                	};
+                    if (d.facelec_is_service) {
+                        total_servi += flt(d.facelec_gt_tax_net_services_amt);
+                        console.log("se detecto cheque de servicio"); // WORKS!
+                    };
                 });
                 console.log("El total neto de servicios es:" + total_servi); // WORKS OK!
                 // cur_frm.doc.facelec_gt_tax_services = total_servi;
@@ -132,13 +132,13 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
             };
             // Para el calculo total de IVA, basado en la sumatoria de facelec_sales_tax_for_this_row de cada item
             /*
-			var full_tax_iva = 0;
-			$.each(frm.doc.items || [], function (i, d) {
-				full_tax_iva += flt(d.facelec_sales_tax_for_this_row);
-			});
-			// Seccion Guatemala Tax: Se asigna al campo de IVA de la seccion
-			// frm.doc.facelec_total_iva = full_tax_iva;
-			cur_frm.set_value('facelec_total_iva', full_tax_iva);
+            var full_tax_iva = 0;
+            $.each(frm.doc.items || [], function (i, d) {
+                full_tax_iva += flt(d.facelec_sales_tax_for_this_row);
+            });
+            // Seccion Guatemala Tax: Se asigna al campo de IVA de la seccion
+            // frm.doc.facelec_total_iva = full_tax_iva;
+            cur_frm.set_value('facelec_total_iva', full_tax_iva);
             */
 
             var total_iva_factura = 0;
@@ -505,7 +505,7 @@ function generar_boton_factura(tipo_factura, frm) {
             },
             // El callback recibe como parametro el dato retornado por el script python del lado del servidor
             callback: function (data) {
-                console.log(data.message);
+                // console.log(data.message);
                 if (data.message[0] === true) {
                     // Crea una nueva url con el nombre del documento actualizado
                     let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
@@ -606,7 +606,7 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
                 // INICIO FACTURA EXENTA DE IMPUESTOS
                 // Para llevar un mejor registro, cargar una tabla de impuestos
                 // Aplica si el rate es 0
-                if (frm.doc.docstatus == 1 && frm.doc.taxes.length > 0) {
+                if (cur_frm.doc.is_it_an_international_invoice == 0 && frm.doc.docstatus == 1 && frm.doc.taxes.length > 0) {
                     if (frm.doc.taxes[0].rate == 0) {
                         btn_exempt_invoice(frm);
                     }
@@ -736,9 +736,9 @@ frappe.ui.form.on("Sales Invoice", {
 
         // FIXME NO FUNCIONA CON TAB, SOLO HACIENDO CLICK Y ENTER.  Si se presiona TAB, SE BORRA!
         /*frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]', function(e) {
-        	console.log("Blurred away from the Item Code Field");
-        	each_item(frm, cdt, cdn);
-        	//facelec_tax_calc_new(frm, cdt, cdn);
+            console.log("Blurred away from the Item Code Field");
+            each_item(frm, cdt, cdn);
+            //facelec_tax_calc_new(frm, cdt, cdn);
         });*/
         frm.fields_dict.items.grid.wrapper.on('click',
             'input[data-fieldname="uom"][data-doctype="Sales Invoice Item"]',
@@ -872,22 +872,6 @@ frappe.ui.form.on("Sales Invoice", {
         if (frm.doc.is_return && frm.doc.docstatus == 1 && (frm.doc.status === "Paid" ||
             frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue"
             || frm.doc.status === "Return")) {  //  && frm.doc.numero_autorizacion_fel
-            console.log('Es retorno');
-            /* ESTA PORCION DE CODIGO ERA PARA USAR UNA SERIE HARDCODE
-            // cur_frm.set_df_property("naming_series", "read_only", 1);
-
-            // frappe.call({
-            //     method: 'factura_electronica.api.obtener_serie_doc',
-            //     args: {
-            //         opt: 'credit'
-            //     },
-            //     callback: function (r) {
-            //         console.log(r.message);
-            //         cur_frm.set_value('naming_series', r.message);
-            //     }
-            // });
-            */
-
 
             // APLICA SOLO PARA NOTAS DE CREDITO, PARA VER PDF
             if (frm.doc.status === "Return") {
@@ -1341,7 +1325,7 @@ frappe.ui.form.on("Sales Invoice Item", {
         });
     }
     /*onload_post_render: function(frm, cdt, cdn){
-    	console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
+        console.log('Funcionando Onload Post Render Trigger'); //SI FUNCIONA EL TRIGGER
     }*/
 });
 
@@ -1376,6 +1360,15 @@ function btn_export_invoice(frm) {
                 },
                 callback: function (data) {
                     console.log(data.message);
+
+                    if (data.message[0] === true) {
+                        // Crea una nueva url con el nombre del documento actualizado
+                        let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
+                        // Asigna la nueva url a la ventana actual
+                        window.location.assign(url_nueva);
+                        // Recarga la pagina
+                        frm.reload_doc();
+                    }
                 },
             });
 
@@ -1400,6 +1393,16 @@ function btn_exempt_invoice(frm) {
                 },
                 callback: function (data) {
                     console.log(data.message);
+
+                    if (data.message[0] === true) {
+                        // Crea una nueva url con el nombre del documento actualizado
+                        let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
+                        // Asigna la nueva url a la ventana actual
+                        window.location.assign(url_nueva);
+                        // Recarga la pagina
+                        frm.reload_doc();
+                    }
+
                 },
             });
 
