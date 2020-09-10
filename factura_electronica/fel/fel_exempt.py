@@ -84,8 +84,8 @@ class ExemptElectronicInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                # with open('mi_factura.json', 'w') as f:
-                #     f.write(json.dumps(self.__base_peticion))
+                with open('mi_factura_exenta.json', 'w') as f:
+                    f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:

@@ -156,19 +156,14 @@ class ExportInvoice:
         Construye la seccion datos generales que incluye, codigo de moneda, Fecha y Hora de emision
         Tipo de factura
 
+        NOTA: LA FECHA Y HORA EMISION, SE GENERA CUANNDO PRESIONA EL BOTON
+
         Returns:
             tuple: Primera posicion True/False, Segunda posicion descripcion msj
         """
 
         try:
-            self.date_invoice = str(frappe.db.get_value(
-                'Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
-            # self.time_invoice = (datetime.min + frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).time().strftime("%H:%M:%S")
-
-            # if '.' in self.time_invoice:
-            #     # la ultima porcion elimina los milisegundos manualmente, las nuevas validaciones de INFILE no soportan miliseconds .rpartition('.')[0]
-
-            #     self.time_invoice = (datetime.min + frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).time().strftime("%H:%M:%S")
+            self.date_invoice = str(frappe.db.get_value( 'Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
@@ -178,7 +173,6 @@ class ExportInvoice:
                 "@FechaHoraEmision": str(nowdate())+'T'+str(nowtime().rpartition('.')[0]),
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
-                # frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
             }
 
             return True, 'OK'
@@ -279,18 +273,6 @@ class ExportInvoice:
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['customer_address']},
                                                  fieldname=['address_line1', 'email_id', 'pincode',
                                                             'state', 'city', 'country'], as_dict=1)
-            # NOTE: se quitara esta validacion para permitir usar valores default en caso no exista una direccion
-            # o campos especificacion de direccion
-            # if len(dat_direccion) == 0:
-            #     return False, f'''No se encontro ninguna direccion para el cliente {self.dat_fac[0]["customer_name"]}.\
-            #                       Por favor asigna un direccion y vuelve a intentarlo'''
-
-            # # Validacion data direccion cliente
-            # for dire in dat_direccion[0]:
-            #     if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
-            #         return False, '''No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no\
-            #                          tiene data, por favor asignarle un valor e intentar de nuevo \
-            #                       '''.format(str(dire), self.dat_fac[0]["customer_name"])
 
             datos_default = {
                 'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
@@ -441,8 +423,7 @@ class ExportInvoice:
                                                                'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
                                                                'facelec_gt_tax_net_services_amt'], as_dict=True)
 
-            # TODO VER ESCENARIO CUANDO HAY MAS DE UN IMPUESTO?????
-            # TODO VER ESCENARIO CUANDO NO HAY IMPUESTOS, ES POSIBLE???
+
             # Obtenemos los impuesto cofigurados para x compañia en la factura
             self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__invoice_code},
                                                      fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
@@ -465,22 +446,6 @@ class ExportInvoice:
 
                     if (int(detalle_stock) == 1):
                         obj_item["@BienOServicio"] = 'B'
-
-                    # NOTA: ESTOS CALCULOS COMENTADOS APLICAN PARA LA VERSION1 GFACE, OJO NO FEL
-                    # precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
-                    # Aplica si se esta usando lista de precios
-                    # if self.__dat_items[i]['price_list_rate'] != 0:
-                    #     precio_uni = 0
-                    #     precio_item = 0
-                    #     desc_item = 0
-
-                    #     precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
-
-                    #     # Calculo precio item
-                    #     precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
-
-                    #     # FIXME: Calculo descuento item
-                    #     # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
 
                     precio_uni = 0
                     precio_item = 0
@@ -522,7 +487,6 @@ class ExportInvoice:
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = 0  # Como es exportacion, no aplica
 
                     obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['amount'])))
-                    # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
 

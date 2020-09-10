@@ -14,6 +14,7 @@ from factura_electronica.fel.export_invoice import ExportInvoice
 # from timeit import default_timer as timer usar para medir tiempo ejecucion
 from factura_electronica.fel.fel import ElectronicInvoice
 from factura_electronica.fel.special_invoice import ElectronicSpecialInvoice
+from factura_electronica.fel.fel_exempt import ExemptElectronicInvoice
 from frappe import _
 
 
@@ -738,98 +739,99 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
 
 # INICIO FACTURAS EXENTAS DE IMPUESTOS
 @frappe.whitelist()
-def generate_exempt_electronic_invoice(invoice_code, naming_series, reference_inv, reason):
+def generate_exempt_electronic_invoice(invoice_code, naming_series):
+    """
+        Llama a la clase y sus metodos encargados de generar factura electronica,
+        validando primero los requisitos para que se posible la generacion
+
+        1. Valida si hay configuracion valida para generar factura electronica
+        2. valida la serie a utilizar
+        3. valida que no exista una anterior ya generada
+        4. Crea una instancia para construir facelec
+        4.1 Construye la estructura general para la peticion en JSON
+        4.2 La estrucutra JSON se convierte a XML para firmarla con la SAT
+        4.3 Si la firma es exitosa se solicita la generacion de facelec
+        4.4 Se validan las respuestas
+        4.5 Actualiza todas las tablas de la base de datos donde existe referencia a la
+        factura que se solicito como electronica, con la nueva serie brindada por la SAT
+
+
+        Args:
+            invoice_code (str): Name original de la factura
+            naming_series (str): Serie usada en factura
+
+        Returns:
+            tuple: True/False, msj, msj
+    """
+
     try:
-        actual_inv_name = invoice_code
+
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
         status_config = validate_configuration()
 
         if status_config[0] == False:
             return status_config
 
-        # PASO 1.1: VALIDAMOS LA SERIE A UTILIZAR PARA DEFINIR EL TIPO DE FACTURA ELECTRONIC A GENERAR
+        # PASO 1.1: VALIDAMOS LA SERIE A UTILIZAR PARA DEFINIR EL TIPO DE FACTURA ELECTRONICA A GENERAR
         if not frappe.db.exists('Configuracion Series FEL', {'parent': str(status_config[1]), 'serie': str(naming_series)}):
-            frappe.msgprint(msg=_('La serie utilizada en la factura no se encuentra configurada para Factura electronica \
-                                   Por favor agreguela en Series Fel de Configuracion Factura Electronica, y vuelva a intentar'),
-                            title=_('Proceso no completado'), indicator='red')
-            return False, 'No completed'
+            frappe.msgprint(_(f'La serie utilizada en la factura no se encuentra configurada para Factura electronica Exportacion \
+                                Por favor agreguela en Series Fel de Configuracion Factura Electronica, y vuelva a intentar'))
+            return False, f'La serie utilizada en la factura no se encuentra configurada para Factura electronica Exportacion \
+                            Por favor agreguela en Series Fel de Configuracion Factura Electronica, y vuelva a intentar'
 
-        # PASO 2: VALIDA EXISTENCIA DE REGISTROS EN ENVIOS FEL, PARA GENERAR EL DOCUMENTO
-        # ES NECESARIO CREARLA SOBRE UN DOCUMENTO ELECTRONICA YA GENERADO, ESTO SEGUN ESQUEMA XML
-        status_invoice = check_invoice_records(str(reference_inv))
-        if status_invoice[0] == False:  # Si ya existe en DB
-            frappe.msgprint(msg=_(f'La factura no se encuentra registrada como ya generada, para proceder es necesario tener la factura generada original\
-                                    como electronica FEL'),
-                            title=_('Proceso no completado'), indicator='yellow')
+        # PASO 2: VALIDACION EXTRA PARA NO GENERAR FACTURAS ELECTRONICA EXPORTACION DUPLICADAS, SI OCURRIERA EN ALGUN ESCENARIO
+        status_invoice = check_invoice_records(str(invoice_code))
+        if status_invoice[0] == True:
+            frappe.msgprint(_(f'La factura se encuentra registrada como ya generada, puedes validar los detalles en \
+                                Envios FEL, con codigo UUID {status_invoice[1]}'))
+            return False, f'La factura se encuentra registrada como ya generada, puedes validar los detalles en \
+                            Envios FEL, con codigo UUID {status_invoice[1]}'
 
-            return False, 'No completed'
-
-        # 2.1 - VALIDAMOS QUE NO SE HAYA GENERANDO ANTEIORMENTE OTRA NOTA DE CREDITO CON LA MISMA DATA
-        status_credit_note = check_invoice_records(str(invoice_code))
-        if status_credit_note[0] == True:  # Si ya existe en DB
-            new_serie_cre = frappe.db.get_value('Envio FEL', {'serie_para_factura': invoice_code}, 'name')
-            frappe.msgprint(msg=_(f'La nota de credito que solicitas generar, ya se encuentra registrada como generada en ENVIOS FEL, con UUID {new_serie_cre}'),
-                            title=_('Proceso no completado'), indicator='yellow')
-
-            return False, 'No completed'
-
-        # PASO 3: NOTA DE CREDITO ELECTRONICA
+        # PASO 3: FACTURA ELECTRONICA EXPORTACION
         # paso 3.1 - NUEVA INSTANCIA
-        # new_credit_note = ElectronicCreditNote(invoice_code, status_config[1], naming_series, reason)
-        new_credit_note = ElectronicCreditNote(actual_inv_name, reference_inv, status_config[1], naming_series, reason)
+        new_invoice = ExemptElectronicInvoice(invoice_code, status_config[1], naming_series)
 
-        # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
-        status = new_credit_note.build_credit_note()
+        # # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
+        status = new_invoice.build_invoice()
         if status[0] == False:  # Si la construccion de la peticion es False
-            frappe.msgprint(msg=_(f'Ocurrio un problema en el proceso de crear nota de credito electronica, mas detalle en: {status[1]}'),
-                            title=_('Proceso no completado'), indicator='red')
+            frappe.msgprint(_(f'Ocurrio un problema en el proceso, mas detalle en: {status}'))
+            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status}'
 
-            return False, 'No completed'
 
         # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
         # En este paso se convierte de JSON a XML y se codifica en base64
-        status_firma = new_credit_note.sign_invoice()
-        if status_firma[0] == False:  # Si no se firma correctamente
-            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de firmar Nota de Credito electronica, mas detalles en: {status_firma[1]}'),
-                            title=_('Proceso no completado'), indicator='red')
-            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
+        # status_firma = new_invoice.sign_invoice()
+        # if status_firma[0] == False:  # Si no se firma correctamente
+        #     return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
-        # # PASO 5: SOLICITAMOS FACTURA ELECTRONICA
-        status_facelec = new_credit_note.request_electronic_invoice()
-        if status_facelec[0] == False:
-            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'),
-                            title=_('Proceso no completado'), indicator='red')
-            return False, f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'
 
-        # # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
-        # # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
-        # # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
-        status_res = new_credit_note.response_validator()
-        if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
-            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar nota de credito electronica con INFILE, mas detalle en {status_res[1]}'),
-                            title=_('Proceso no completado'), indicator='red')
-            return status_res  # return tuple
+        # # PASO 5: SOLICITAMOS FACTURA ELECTRONICA EXPORTACION
+        # status_facelec = new_invoice.request_electronic_invoice()
+        # if status_facelec[0] == False:
+        #     return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
 
-        # # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
-        status_upgrade = new_credit_note.upgrade_records()
-        if status_upgrade[0] == False:
-            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de actualizar registros relacionados al documento, mas detalle en {status_upgrade[1]}'),
-                            title=_('Proceso no completado'), indicator='red')
-            return status_upgrade
+        # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
+        # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
+        # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
+        # status_res = new_invoice.response_validator()
+        # if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
+        #     return status_res  # return tuple
 
-        # PASO 8: SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
-        # # el UUID y la nueva serie para la factura
-        # return True,
+        # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
+        # status_upgrade = new_invoice.upgrade_records()
+        # if status_upgrade[0] == False:
+        #     return status_upgrade
+
+        # SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
+        # el UUID y la nueva serie para la factura
+        # return True, status_upgrade[1]
         # frappe.msgprint(_(str(status_upgrade)))
 
-        new_serie = frappe.db.get_value('Envio FEL', {'name': status_upgrade[1]}, 'serie_para_factura')
-        frappe.msgprint(msg=_(f'Electronic Credit Note generated with universal unique identifier <b>{status_upgrade[1]}</b>'),
-                        title=_('Process successfully completed'), indicator='green')
 
-        return True, str(new_serie)
+        frappe.msgprint('OK')
+        return True, 'test'
 
     except:
+        frappe.msgprint(str(frappe.get_traceback()))
         return False, str(frappe.get_traceback())
-
-
 # FIN FACTURAS EXENTAS DE IMPUESTOS
