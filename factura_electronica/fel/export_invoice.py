@@ -47,8 +47,8 @@ class ExportInvoice:
 
     def build_invoice(self):
         """
-        Valida las dependencias necesarias, para construir XML desde un JSON
-        para ser firmado certificado por la SAT y finalmente generar factura electronica
+        Valida las dependencias necesarias, para construir XML desde un JSON,
+        para ser firmado certificado por la SAT y finalmente generar factura electronica exportacion
 
         Returns:
             tuple: True/False, msj, msj
@@ -163,7 +163,7 @@ class ExportInvoice:
         """
 
         try:
-            self.date_invoice = str(frappe.db.get_value( 'Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
+            self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
@@ -374,9 +374,10 @@ class ExportInvoice:
         Returns:
             boolean: True/False
         """
+        # NOTA: La primer frase es la normal que se utilizaria en un factura
+        # La segunda frase hace referencia a que realizara una expotracion, y esta se encuentra exenta de impuesto
 
         try:
-            # TODO: Consultar todas las posibles combinaciones disponibles
             self.__d_frases = {
                 "dte:Frase": [
                     {
