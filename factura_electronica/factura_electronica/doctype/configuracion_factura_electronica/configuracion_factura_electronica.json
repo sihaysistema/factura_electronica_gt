@@ -55,6 +55,8 @@
   "url_de_anulacion",
   "llave_ws",
   "afiliacion_iva",
+  "tipo_frase_factura_exenta",
+  "codigo_escenario_factura_exenta",
   "local_currency",
   "configuracion_series_fel_section",
   "series_fel",
@@ -426,11 +428,22 @@
    "fieldname": "codigo_escenario_factura_exportacion",
    "fieldtype": "Data",
    "label": "Codigo Escenario Factura Exportacion"
+  },
+  {
+   "fieldname": "tipo_frase_factura_exenta",
+   "fieldtype": "Select",
+   "label": "Tipo Frase Factura Exenta",
+   "options": "\n1: Frase de retencio\u0301n del ISR\n2: Frase de retencio\u0301n del IVA\n3: Frase de no genera derecho a cre\u0301dito fiscal del IVA\n4: Frase de exento o no afecto al IVA"
+  },
+  {
+   "fieldname": "codigo_escenario_factura_exenta",
+   "fieldtype": "Data",
+   "label": "Codigo Escenario Factura Exenta"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-09-09 16:42:51.743939",
+ "modified": "2020-09-09 22:10:16.541070",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

@@ -602,6 +602,16 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
 
                 }
                 // final factura exportacion
+
+                // INICIO FACTURA EXENTA DE IMPUESTOS
+                // Para llevar un mejor registro, cargar una tabla de impuestos
+                // Aplica si el rate es 0
+                if (frm.doc.docstatus == 1 && frm.doc.taxes.length > 0) {
+                    if (frm.doc.taxes[0].rate == 0) {
+                        btn_exempt_invoice(frm);
+                    }
+                }
+                // FIN FACTURA EXENTA DE IMPUESTOS
             }
             // Si la modalidad recibida es automatica se realiza la factura electronica directamente
             // if (modalidad === 'automatico') {
@@ -1360,6 +1370,30 @@ function btn_export_invoice(frm) {
 
             frappe.call({
                 method: 'factura_electronica.fel_api.api_interface_export',
+                args: {
+                    invoice_code: frm.doc.name,
+                    naming_series: frm.doc.naming_series,
+                },
+                callback: function (data) {
+                    console.log(data.message);
+                },
+            });
+
+        }).addClass("btn-primary");
+}
+
+/**
+ * Generador de boton para factura exenta de impuestos
+ *
+ * @param {*} frm
+ */
+function btn_exempt_invoice(frm) {
+    cur_frm.clear_custom_buttons();  // Limpia otros customs buttons para generar uno nuevo
+    frm.add_custom_button(__("FACTURA ELECTRONICA EXENTA"),
+        function () {
+
+            frappe.call({
+                method: 'factura_electronica.fel_api.generate_exempt_electronic_invoice',
                 args: {
                     invoice_code: frm.doc.name,
                     naming_series: frm.doc.naming_series,
