@@ -398,7 +398,8 @@ class ExportInvoice:
             return True, 'OK'
 
         except:
-            return False, 'Error, no se puedo obtener valor de Codigo Escenario y Tipo Frase'
+            return False, 'Ocurrio un problema, no se pudo obtener valor de Codigo Escenario y Tipo Frase para factura exportacion \
+                          , por favor configurarla en Configuracion Factura Electronica e intentar de nuevo'
 
     def items(self):
         """
@@ -939,7 +940,7 @@ class ExportInvoice:
 
             except:
                 # En caso exista un error al renombrar la factura retornara el mensaje con el error
-                return False, f'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica \
+                return False, f'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica Exportacion \
                                 mas informacion en el siguiente log: {frappe.get_traceback()}'
 
             else:

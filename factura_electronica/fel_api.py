@@ -685,7 +685,7 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
                             Envios FEL, con codigo UUID {status_invoice[1]}'
 
         # Validamos que el rate en la tabla de impuestos sea 0, se hace para tener lo mismo en facelec y facelec normal
-        if not frappe.db.exists('Sales Taxes and Charges', {'parent': invoice_code, 'parentype': 'Sales Invoice', 'rate': 0}):
+        if not frappe.db.exists('Sales Taxes and Charges', {'parent': invoice_code, 'parenttype': 'Sales Invoice', 'rate': 0}):
             return False, f'No se puede proceder con la generacion de la factura electronica exportacion, se encontro un valor diferente de 0 \
                             en el impuesto, si desea generarla intente nuevamente manualmente estableciendo 0 al impuesto'
 
@@ -696,7 +696,7 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
         # # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
         status = new_invoice.build_invoice()
         if status[0] == False:  # Si la construccion de la peticion es False
-            return False, f'Ocurrio un problema en el proceso de generacion XML para peticion, mas detalle en: <code>{status}</code>'
+            return False, f'Ocurrio un problema en el proceso de generacion XML para peticion, mas detalle en: {status}'
 
 
         # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
@@ -730,7 +730,7 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
 
 
         frappe.msgprint('OK')
-        return True, 'test'
+        return True, 'Construccion completa'
 
     except:
         frappe.msgprint(str(frappe.get_traceback()))

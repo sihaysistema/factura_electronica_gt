@@ -1349,7 +1349,7 @@ function redondear(value, decimals) {
 function btn_export_invoice(frm) {
     // cur_frm.clear_custom_buttons('Factura Electronica');
     cur_frm.clear_custom_buttons();  // Limpia otros customs buttons para generar uno nuevo
-    frm.add_custom_button(__("FACTURA DE EXPORTACION"),
+    frm.add_custom_button(__("FACTURA ELECTRONICA EXPORTACION"),
         function () {
 
             frappe.call({

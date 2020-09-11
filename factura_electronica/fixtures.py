@@ -303,7 +303,8 @@ def fill_fixtures():
                     "Purchase Invoice-serie_original_del_documento",
                     "Sales Invoice-is_it_an_international_invoice",
                     "Customer-codigo_comprador",
-                    "Company-codigo_exportador"
+                    "Company-codigo_exportador",
+                    "Customer-codigo_consignatario_comprador"
                 ]
             ]
         ]

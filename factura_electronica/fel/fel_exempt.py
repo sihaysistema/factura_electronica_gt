@@ -47,7 +47,7 @@ class ExemptElectronicInvoice:
     def build_invoice(self):
         """
         Valida las dependencias necesarias, para construir XML desde un JSON
-        para ser firmado certificado por la SAT y finalmente generar factura electronica
+        para ser firmado certificado por la SAT y finalmente generar factura electronica exenta
 
         Returns:
             tuple: True/False, msj, msj
@@ -148,12 +148,6 @@ class ExemptElectronicInvoice:
 
         try:
             self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
-            # self.time_invoice = (datetime.min + frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).time().strftime("%H:%M:%S")
-
-            # if '.' in self.time_invoice:
-            #     # la ultima porcion elimina los milisegundos manualmente, las nuevas validaciones de INFILE no soportan miliseconds .rpartition('.')[0]
-
-            #     self.time_invoice = (datetime.min + frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).time().strftime("%H:%M:%S")
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
@@ -161,7 +155,6 @@ class ExemptElectronicInvoice:
                 "@FechaHoraEmision": str(nowdate())+'T'+str(nowtime().rpartition('.')[0]),  # Se usa la data al momento de crear a infile
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
-                # frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
             }
 
             return True, 'OK'
@@ -358,7 +351,6 @@ class ExemptElectronicInvoice:
         """
 
         try:
-            # TODO: Consultar todas las posibles combinaciones disponibles
             self.__d_frases = {
                 "dte:Frase": [
                     {
@@ -429,24 +421,6 @@ class ExemptElectronicInvoice:
                     if (int(detalle_stock) == 1):
                         obj_item["@BienOServicio"] = 'B'
 
-
-                    # NOTA: ESTOS CALCULOS COMENTADOS APLICAN PARA LA VERSION1 GFACE, OJO NO FEL
-                    # precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
-                    # Aplica si se esta usando lista de precios
-                    # if self.__dat_items[i]['price_list_rate'] != 0:
-                    #     precio_uni = 0
-                    #     precio_item = 0
-                    #     desc_item = 0
-
-                    #     precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
-
-                    #     # Calculo precio item
-                    #     precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
-
-                    #     # FIXME: Calculo descuento item
-                    #     # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
-
-
                     precio_uni = 0
                     precio_item = 0
                     desc_item = 0
@@ -511,7 +485,7 @@ class ExemptElectronicInvoice:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        "@TotalMontoImpuesto": 0
+                        "@TotalMontoImpuesto": 0  #exento
                     }
                 },
                 "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
@@ -534,8 +508,8 @@ class ExemptElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('mi_factura.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('mi_factura_exenta.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -583,8 +557,8 @@ class ExemptElectronicInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('reciibo_firmado.json', 'w') as f:
-            #     f.write(json.dumps(self.__doc_firmado, indent=2))
+            with open('factura_exenta_firmada.json', 'w') as f:
+                f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -634,8 +608,8 @@ class ExemptElectronicInvoice:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            # with open('RESPONSE_factura.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('response_factura_exenta.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
@@ -683,7 +657,7 @@ class ExemptElectronicInvoice:
             if not frappe.db.exists('Envio FEL', {'name': self.__response_ok['uuid']}):
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
-                resp_fel.tipo_documento = 'Factura Electronica'
+                resp_fel.tipo_documento = 'Factura Exenta'
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
@@ -878,7 +852,7 @@ class ExemptElectronicInvoice:
 
             except:
                 # En caso exista un error al renombrar la factura retornara el mensaje con el error
-                return False, f'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica \
+                return False, f'Error al renombrar Factura. Por favor intente de nuevo presionando el boton Factura Electronica Exenta \
                                 mas informacion en el siguiente log: {frappe.get_traceback()}'
 
             else:
