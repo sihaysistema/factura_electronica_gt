@@ -430,6 +430,20 @@ def fill_fixtures():
         ]
     }
 
+    frases_fel = {
+        "dt": "Frases FEL", "filters": [
+            [
+                "name", "in", [
+                    "1 Frase de retención del ISR",
+                    "2 Frase de retención del IVA",
+                    "3 Frase de no genera derecho a crédito fiscal del IVA",
+                    "4 Frase de exento o no afecto al IVA",
+                    "5 Frase de facturas especiales"
+                ]
+            ]
+        ]
+    }
+
     # NEW FUNCTIONALITY FOR EXPORTING
     fixtures_fillup.append(custom_field)
     fixtures_fillup.append(translation)

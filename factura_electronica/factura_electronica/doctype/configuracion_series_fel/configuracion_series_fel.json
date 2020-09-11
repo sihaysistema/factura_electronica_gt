@@ -10,7 +10,13 @@
   "column_break_3",
   "serie_sat",
   "detalles_exportacion_section",
-  "codigo_incoterm"
+  "codigo_incoterm",
+  "frases_sat_section",
+  "frases_factura_electronica_fel_section",
+  "tipo_frase",
+  "codigo_escenario",
+  "column_break_11",
+  "descripcion_de_codigo_frase"
  ],
  "fields": [
   {
@@ -50,10 +56,45 @@
    "fieldtype": "Select",
    "label": "Codigo INCOTERM",
    "options": "\nEXW\nFCA\nFAS\nFOB\nCFR\nCIF\nCPT\nCIP\nDDP\nDAP\nDAT\nZZZ"
+  },
+  {
+   "collapsible": 1,
+   "description": "Configure las frases necesarias para la serie",
+   "fieldname": "frases_sat_section",
+   "fieldtype": "Heading",
+   "label": "Frases SAT"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "frases_factura_electronica_fel_section",
+   "fieldtype": "Section Break",
+   "label": "Frases Factura Electronica FEL"
+  },
+  {
+   "fieldname": "tipo_frase",
+   "fieldtype": "Link",
+   "label": "Tipo Frase",
+   "options": "FEL Catalogo Frases"
+  },
+  {
+   "fieldname": "codigo_escenario",
+   "fieldtype": "Link",
+   "label": "Codigo Escenario",
+   "options": "Frases FEL"
+  },
+  {
+   "fieldname": "column_break_11",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "tipo_frase.descripcion",
+   "fieldname": "descripcion_de_codigo_frase",
+   "fieldtype": "Data",
+   "label": "Descripcion de codigo frase"
   }
  ],
  "istable": 1,
- "modified": "2020-09-09 11:47:28.828007",
+ "modified": "2020-09-11 16:03:28.791117",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Series FEL",

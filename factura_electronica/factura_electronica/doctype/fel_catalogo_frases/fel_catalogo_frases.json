@@ -1,0 +1,87 @@
+{
+ "autoname": "format:{codigo_tipo_frase} {nombre}",
+ "creation": "2020-09-11 14:47:41.286834",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "nombre",
+  "codigo_tipo_frase",
+  "column_break_3",
+  "descripcion",
+  "frases_section",
+  "frases_fel"
+ ],
+ "fields": [
+  {
+   "fieldname": "nombre",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nombre",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "codigo_tipo_frase",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Codigo Tipo Frase",
+   "reqd": 1
+  },
+  {
+   "fieldname": "descripcion",
+   "fieldtype": "Text",
+   "label": "Descripcion"
+  },
+  {
+   "fieldname": "frases_section",
+   "fieldtype": "Section Break",
+   "label": "Frases"
+  },
+  {
+   "fieldname": "frases_fel",
+   "fieldtype": "Table",
+   "label": "Frases FEL",
+   "options": "Frases FEL"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "modified": "2020-09-11 15:49:22.793159",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "FEL Catalogo Frases",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administrator",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

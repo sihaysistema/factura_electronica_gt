@@ -42,5 +42,17 @@ frappe.ui.form.on('Configuracion Factura Electronica', {
                 cur_frm.refresh_field('serie');
             }
         });
-    }
+    },
+    setup: function (frm) {
+        frm.set_query('isr_account_payable', 'tax_witholding_ranges', () => {
+            return {
+                filters: {
+                    company: frm.doc.name,
+                    is_group: 0
+                }
+            }
+        });
+
+        cur_frm.refresh_field('report_list');
+    },
 });
