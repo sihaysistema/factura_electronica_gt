@@ -35,24 +35,61 @@ frappe.ui.form.on('Configuracion Factura Electronica', {
         // NOTA: Se esta usando la misma funcion de facturas especiales
         frappe.call({
             method: "factura_electronica.factura_electronica.doctype.configuracion_factura_electronica.configuracion_factura_electronica.series_factura_especial",
-
             callback: function (r) {
                 // console.log(r.message);
                 frappe.meta.get_docfield('Serial Configuration For Purchase Invoice', 'serie', cur_frm.doc.name).options = r.message
                 cur_frm.refresh_field('serie');
             }
         });
-    },
-    setup: function (frm) {
-        frm.set_query('isr_account_payable', 'tax_witholding_ranges', () => {
-            return {
-                filters: {
-                    company: frm.doc.name,
-                    is_group: 0
-                }
+
+    }
+});
+
+
+frappe.ui.form.on('Configuracion Series FEL', {
+    // cdt is Child DocType name i.e Quotation Item
+    // cdn is the row name for e.g bbfcb8da6a
+    tipo_frase(frm, cdt, cdn) {
+        let row = frappe.get_doc(cdt, cdn);
+        // console.log('Esto es row', row);
+
+        frappe.call({
+            method: "factura_electronica.factura_electronica.doctype.configuracion_factura_electronica.configuracion_factura_electronica.get_phrases_fel",
+            args: {
+                code_type: row.tipo_frase
+            },
+            callback: function (r) {
+                console.log(r.message.join("\n"));
+
+                // frappe.meta.get_docfield('Configuracion Series FEL', 'codigo_escenario', frm.doc.name).options = r.message.join("\n")
+
+                // const field = frappe.meta.get_docfield("Configuracion Series FEL", "codigo_escenario", frm.doc.name);
+                // field.fieldtype = 'Select';
+                // field.options = r.message.join("\n");
+
+                // // frm.fields_dict.filter_fields.grid.refresh();
+
+                // refresh_field("series_fel");
+                // cur_frm.refresh_field('codigo_escenario');
             }
         });
-
-        cur_frm.refresh_field('report_list');
     },
-});
+    codigo_escenario(frm, cdt, cdn) {
+        let row = frappe.get_doc(cdt, cdn);
+        // console.log('Esto es row', row);
+
+        frappe.call({
+            method: "factura_electronica.factura_electronica.doctype.configuracion_factura_electronica.configuracion_factura_electronica.get_description_phrase_fel",
+            args: {
+                frase_catalogo: row.tipo_frase,
+                codigo_frase_hija: row.codigo_escenario
+            },
+            callback: function (r) {
+                console.log(r.message);
+                row.descripcion_codigo_escenario = r.message;
+                cur_frm.refresh_field('descripcion_codigo_escenario');
+                refresh_field("series_fel");
+            }
+        });
+    }
+})

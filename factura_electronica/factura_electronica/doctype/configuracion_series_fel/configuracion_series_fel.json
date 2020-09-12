@@ -14,9 +14,10 @@
   "frases_sat_section",
   "frases_factura_electronica_fel_section",
   "tipo_frase",
-  "codigo_escenario",
+  "descripcion_de_codigo_frase",
   "column_break_11",
-  "descripcion_de_codigo_frase"
+  "codigo_escenario",
+  "descripcion_codigo_escenario"
  ],
  "fields": [
   {
@@ -78,9 +79,10 @@
   },
   {
    "fieldname": "codigo_escenario",
-   "fieldtype": "Link",
+   "fieldtype": "Select",
    "label": "Codigo Escenario",
-   "options": "Frases FEL"
+   "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20",
+   "search_index": 1
   },
   {
    "fieldname": "column_break_11",
@@ -89,12 +91,19 @@
   {
    "fetch_from": "tipo_frase.descripcion",
    "fieldname": "descripcion_de_codigo_frase",
-   "fieldtype": "Data",
-   "label": "Descripcion de codigo frase"
+   "fieldtype": "Text",
+   "label": "Descripcion de codigo frase",
+   "read_only": 1
+  },
+  {
+   "fieldname": "descripcion_codigo_escenario",
+   "fieldtype": "Text",
+   "label": "Descripcion Codigo Escenario",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2020-09-11 16:03:28.791117",
+ "modified": "2020-09-11 18:21:53.767174",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Series FEL",

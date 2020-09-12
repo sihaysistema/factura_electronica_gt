@@ -37,7 +37,25 @@ def series_factura_especial():
 
 @frappe.whitelist()
 def get_phrases_fel(code_type):
-    series = frappe.get_meta("Frases FEL").get_field("name").options or ""
-    series = series.split('\n')
+    frases_list = frappe.db.get_list('Frases FEL', filters={'parent': code_type},
+                                     fields=['codigo_escenario'], as_list=True)
 
-    return series
+    # Ejemplo de lo retornado: (('2',), ('1',), ('3',), ('4',))
+
+    list_ok = []
+    for frase in frases_list:
+        list_ok.append(frase[0])
+
+    return list_ok
+
+
+@frappe.whitelist()
+def get_description_phrase_fel(frase_catalogo, codigo_frase_hija):
+
+    if frappe.db.exists('Frases FEL', {'parent': frase_catalogo,'codigo_escenario': codigo_frase_hija}):
+        descr = frappe.db.get_value('Frases FEL', {'parent': frase_catalogo, 'codigo_escenario': codigo_frase_hija}, 'escenario')
+
+        return descr
+
+    else:
+        return '<code>Codigo No disponible, para la frase seleccionada</code>'
