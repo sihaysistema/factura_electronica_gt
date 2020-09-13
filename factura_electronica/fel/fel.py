@@ -376,13 +376,25 @@ class ElectronicInvoice:
         """
 
         try:
-            # TODO: Consultar todas las posibles combinaciones disponibles
+            codigo_escenario = frappe.db.get_value('Configuracion Series FEL',
+                                                   {'parent': self.__config_name,
+                                                    'serie': self.__naming_serie},'codigo_escenario')
+            tipo_frase = frappe.db.get_value('Configuracion Series FEL',
+                                             {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                              'tipo_frase')[:1]
+
+            if not codigo_escenario:
+                return False, 'Ocurrio un problema, no se encontro el codigo de frase configurada para la serie, por favor \
+                               configurala en Series Fel e intenta de nuevo'
+
+            if not tipo_frase:
+                return False, 'Ocurrio un problema, no se encontro el tipo de frase configurada para la serie utilizada, por favor \
+                               configurala en Series Fel e intenta de nuevo'
+
             self.__d_frases = {
                 "dte:Frase": {
-                    "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
-                                                           {'name': self.__config_name}, 'codigo_escenario'), #"1",
-                    "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
-                                                     {'name': self.__config_name}, 'tipo_frase')[:1]  # "1"
+                    "@CodigoEscenario": codigo_escenario,
+                    "@TipoFrase": tipo_frase
                 }
             }
 

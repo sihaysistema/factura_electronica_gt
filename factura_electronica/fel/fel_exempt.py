@@ -351,19 +351,41 @@ class ExemptElectronicInvoice:
         """
 
         try:
+            codigo_escenario = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                                   'codigo_escenario')
+            tipo_frase = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                             'tipo_frase')[:1]
+
+            if not codigo_escenario:
+                return False, 'Ocurrio un problema, no se encontro ningun codigo escenario para la serie, por favor configurarla en \
+                               Series Fel e intentar de nuevo'
+
+            if not tipo_frase:
+                return False, 'Ocurrio un problema, no se encontro ningun tipo de frase para la serie, por favor configurarla en \
+                               Series Fel e intentar de nuevo'
+
+            codigo_escenario_fact_exenta = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                                               'codigo_escenario_factura_exenta')
+            tipo_frase_fact_exenta = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                                         'tipo_frase_factura_exenta')[:1]
+
+            if not codigo_escenario_fact_exenta:
+                return False, 'Ocurrio un problema, no se encontro ningun codigo escenario factura exenta para la serie, por favor configurarla en \
+                               Series Fel e intentar de nuevo'
+
+            if not tipo_frase_fact_exenta:
+                return False, 'Ocurrio un problema, no se encontro ningun tipo de frase exenta para la serie, por favor configurarla en \
+                               Series Fel e intentar de nuevo'
+
             self.__d_frases = {
                 "dte:Frase": [
                     {
-                        "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
-                                                               {'name': self.__config_name}, 'codigo_escenario'), #"1",
-                        "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
-                                                         {'name': self.__config_name}, 'tipo_frase')[:1]  # "1"
+                        "@CodigoEscenario": codigo_escenario, #"1",
+                        "@TipoFrase": tipo_frase  # "1"
                     },
                     {
-                        "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
-                                                               {'name': self.__config_name}, 'codigo_escenario_factura_exenta'), #"1",
-                        "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
-                                                         {'name': self.__config_name}, 'tipo_frase_factura_exenta')[:1]  # "1"
+                        "@CodigoEscenario": codigo_escenario_fact_exenta, #"1",
+                        "@TipoFrase": tipo_frase_fact_exenta  # "1"
                     }
                 ]
             }

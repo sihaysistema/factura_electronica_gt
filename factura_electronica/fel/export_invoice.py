@@ -378,19 +378,41 @@ class ExportInvoice:
         # La segunda frase hace referencia a que realizara una expotracion, y esta se encuentra exenta de impuesto
 
         try:
+            codigo_escenario = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                                   'codigo_escenario')
+            tipo_frase = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                             'tipo_frase')[:1]
+
+            if not codigo_escenario:
+                return False, 'Ocurrio un problema, no se encontro ningun codigo escenario para la serie, por favor configurarla en \
+                               Series Fel e intentar de nuevo'
+
+            if not tipo_frase:
+                return False, 'Ocurrio un problema, no se encontro ningun tipo de frase para la serie, por favor configurarla en \
+                               Series Fel e intentar de nuevo'
+
+            codigo_escenario_fact_exportacion = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                                                    'codigo_escenario_factura_exportacion')
+            tipo_frase_fact_exportacion = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                                              'tipo_frase_factura_exportacion')[:1]
+
+            if not codigo_escenario_fact_exportacion:
+                return False, 'Ocurrio un problema, no se encontro ningun codigo escenario factura exportacion para la serie, por favor configurarla en \
+                               Series Fel e intentar de nuevo'
+
+            if not tipo_frase_fact_exportacion:
+                return False, 'Ocurrio un problema, no se encontro ningun tipo de frase exportacion para la serie, por favor configurarla en \
+                               Series Fel e intentar de nuevo'
+
             self.__d_frases = {
                 "dte:Frase": [
                     {
-                        "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
-                                                                {'name': self.__config_name}, 'codigo_escenario'),  # "1",
-                        "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
-                                                         {'name': self.__config_name}, 'tipo_frase')[:1]  # "1"
+                        "@CodigoEscenario": codigo_escenario,  # "1",
+                        "@TipoFrase": tipo_frase  # "1"
                     },
                     {
-                        "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
-                                                                {'name': self.__config_name}, 'codigo_escenario_factura_exportacion'),  # "1",
-                        "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
-                                                         {'name': self.__config_name}, 'tipo_frase_factura_exportacion')[:1]  # "1"
+                        "@CodigoEscenario": codigo_escenario_fact_exportacion,  # "1",
+                        "@TipoFrase": tipo_frase_fact_exportacion  # "1"
                     }
                 ]
             }
