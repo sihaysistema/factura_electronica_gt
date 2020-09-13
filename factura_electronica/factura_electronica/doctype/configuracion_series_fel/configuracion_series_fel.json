@@ -17,7 +17,25 @@
   "descripcion_de_codigo_frase",
   "column_break_11",
   "codigo_escenario",
-  "descripcion_codigo_escenario"
+  "descripcion_codigo_escenario",
+  "frases_factura_especial_section",
+  "tipo_frase_factura_especial",
+  "descripcion_frase_factura_especial",
+  "column_break_17",
+  "codigo_escenario_factura_especial",
+  "descripcion_codigo_escenario_factura_especial",
+  "frases_factura_exportacion_section",
+  "tipo_frase_factura_exportacion",
+  "descripcion_frase_factura_exportacion",
+  "column_break_23",
+  "codigo_escenario_factura_exportacion",
+  "descripcion_codigo_escenario_factura_exportacion",
+  "frases_factura_exenta_section",
+  "tipo_frase_factura_exenta",
+  "descripcion_frase_factura_exenta",
+  "column_break_29",
+  "codigo_escenario_factura_exenta",
+  "descripcion_codigo_escenario_factura_exenta"
  ],
  "fields": [
   {
@@ -66,7 +84,6 @@
    "label": "Frases SAT"
   },
   {
-   "collapsible": 1,
    "fieldname": "frases_factura_electronica_fel_section",
    "fieldtype": "Section Break",
    "label": "Frases Factura Electronica FEL"
@@ -100,10 +117,112 @@
    "fieldtype": "Text",
    "label": "Descripcion Codigo Escenario",
    "read_only": 1
+  },
+  {
+   "fieldname": "frases_factura_especial_section",
+   "fieldtype": "Section Break",
+   "label": "Frases Factura Especial"
+  },
+  {
+   "fieldname": "tipo_frase_factura_especial",
+   "fieldtype": "Link",
+   "label": "Tipo Frase Factura Especial",
+   "options": "FEL Catalogo Frases"
+  },
+  {
+   "fieldname": "column_break_17",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "codigo_escenario_factura_especial",
+   "fieldtype": "Select",
+   "label": "Codigo Escenario Factura Especial",
+   "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+  },
+  {
+   "fieldname": "descripcion_codigo_escenario_factura_especial",
+   "fieldtype": "Text",
+   "label": "Descripcion Codigo Escenario Factura Especial",
+   "read_only": 1
+  },
+  {
+   "fieldname": "frases_factura_exportacion_section",
+   "fieldtype": "Section Break",
+   "label": "Frases Factura Exportacion"
+  },
+  {
+   "fieldname": "tipo_frase_factura_exportacion",
+   "fieldtype": "Link",
+   "label": "Tipo Frase Factura Exportacion",
+   "options": "FEL Catalogo Frases"
+  },
+  {
+   "fetch_from": "tipo_frase_factura_exportacion.descripcion",
+   "fieldname": "descripcion_frase_factura_exportacion",
+   "fieldtype": "Text",
+   "label": "Descripci\u00f3n Frase Factura Exportacion",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "tipo_frase_factura_especial.descripcion",
+   "fieldname": "descripcion_frase_factura_especial",
+   "fieldtype": "Text",
+   "label": "Descripci\u00f3n Frase Factura Especial",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_23",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "codigo_escenario_factura_exportacion",
+   "fieldtype": "Select",
+   "label": "Codigo Escenario Factura Exportacion",
+   "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+  },
+  {
+   "fieldname": "descripcion_codigo_escenario_factura_exportacion",
+   "fieldtype": "Text",
+   "label": "Descripcion Codigo Escenario Factura Exportacion",
+   "read_only": 1
+  },
+  {
+   "fieldname": "frases_factura_exenta_section",
+   "fieldtype": "Section Break",
+   "label": "Frases Factura Exenta"
+  },
+  {
+   "fieldname": "tipo_frase_factura_exenta",
+   "fieldtype": "Link",
+   "label": "Tipo Frase Factura Exenta",
+   "options": "FEL Catalogo Frases"
+  },
+  {
+   "fetch_from": "tipo_frase_factura_exenta.descripcion",
+   "fieldname": "descripcion_frase_factura_exenta",
+   "fieldtype": "Text",
+   "label": "Descripci\u00f3n Frase Factura Exenta",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_29",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "codigo_escenario_factura_exenta",
+   "fieldtype": "Select",
+   "label": "Codigo Escenario Factura Exenta",
+   "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+  },
+  {
+   "fieldname": "descripcion_codigo_escenario_factura_exenta",
+   "fieldtype": "Text",
+   "label": "Descripcion Codigo Escenario Factura Exenta",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2020-09-11 18:21:53.767174",
+ "modified": "2020-09-12 18:09:47.571876",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Series FEL",
