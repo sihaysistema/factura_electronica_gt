@@ -75,6 +75,15 @@ frappe.ui.form.on('Configuracion Series FEL', {
     //         }
     //     });
     // },
+    tipo_frase(frm, cdt, cdn) {
+        // limpia los cambios codigo_escenario, descripcion_codigo_escenario, cada
+        // vez que se cambia el valor de tipo frase, aplica para el resto de abajo
+        let row = frappe.get_doc(cdt, cdn);
+        row.codigo_escenario = ''
+        row.descripcion_codigo_escenario = ''
+
+        refresh_field("series_fel");
+    },
     codigo_escenario(frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
 
@@ -113,6 +122,13 @@ frappe.ui.form.on('Configuracion Series FEL', {
             }
         });
     },
+    tipo_frase_factura_exportacion(frm, cdt, cdn) {
+        let row = frappe.get_doc(cdt, cdn);
+        row.codigo_escenario_factura_exportacion = ''
+        row.descripcion_codigo_escenario_factura_exportacion = ''
+
+        refresh_field("series_fel");
+    },
     codigo_escenario_factura_exportacion(frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
 
@@ -131,6 +147,13 @@ frappe.ui.form.on('Configuracion Series FEL', {
                 refresh_field("series_fel");
             }
         });
+    },
+    tipo_frase_factura_exenta(frm, cdt, cdn) {
+        let row = frappe.get_doc(cdt, cdn);
+        row.codigo_escenario_factura_exenta = ''
+        row.descripcion_codigo_escenario_factura_exenta = ''
+
+        refresh_field("series_fel");
     },
     codigo_escenario_factura_exenta(frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -151,4 +174,34 @@ frappe.ui.form.on('Configuracion Series FEL', {
             }
         });
     }
-})
+});
+
+
+frappe.ui.form.on('Serial Configuration For Purchase Invoice', {
+    tipo_frase_factura_especial(frm, cdt, cdn) {
+        let row = frappe.get_doc(cdt, cdn);
+        row.codigo_escenario_factura_especial = ''
+        row.descripcion_codigo_escenario_factura_especial = ''
+
+        refresh_field("purchase_invoice_series");
+    },
+    codigo_escenario_factura_especial(frm, cdt, cdn) {
+        let row = frappe.get_doc(cdt, cdn);
+
+        frappe.call({
+            method: "factura_electronica.factura_electronica.doctype.configuracion_factura_electronica.configuracion_factura_electronica.get_description_phrase_fel",
+            args: {
+                frase_catalogo: row.tipo_frase_factura_especial,
+                codigo_frase_hija: row.codigo_escenario_factura_especial
+            },
+            callback: function (r) {
+                // console.log(r.message);
+
+                row.descripcion_codigo_escenario_factura_especial = r.message;
+                cur_frm.refresh_field('descripcion_codigo_escenario_factura_especial');
+
+                refresh_field("purchase_invoice_series");
+            }
+        });
+    }
+});

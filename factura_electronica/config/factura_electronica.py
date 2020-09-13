@@ -14,7 +14,14 @@ def get_data():
                     "name": "Configuracion Factura Electronica",
                     "description": _("Configuracion para factura electronicas"),
                     "onboard": 1,
-                }
+                },
+                {
+                    "type": "doctype",
+                    "name": "FEL Catalogo Frases",
+                    "description": _("FEL Catalogo Frases"),
+                    "onboard": 1,
+                },
+
             ]
         },
         {

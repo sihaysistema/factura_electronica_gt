@@ -98,7 +98,7 @@
    "fieldname": "codigo_escenario",
    "fieldtype": "Select",
    "label": "Codigo Escenario",
-   "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20",
+   "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20",
    "search_index": 1
   },
   {
@@ -119,8 +119,10 @@
    "read_only": 1
   },
   {
+   "collapsible": 1,
    "fieldname": "frases_factura_especial_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Frases Factura Especial"
   },
   {
@@ -137,7 +139,7 @@
    "fieldname": "codigo_escenario_factura_especial",
    "fieldtype": "Select",
    "label": "Codigo Escenario Factura Especial",
-   "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+   "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
   },
   {
    "fieldname": "descripcion_codigo_escenario_factura_especial",
@@ -178,7 +180,7 @@
    "fieldname": "codigo_escenario_factura_exportacion",
    "fieldtype": "Select",
    "label": "Codigo Escenario Factura Exportacion",
-   "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+   "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
   },
   {
    "fieldname": "descripcion_codigo_escenario_factura_exportacion",
@@ -212,7 +214,7 @@
    "fieldname": "codigo_escenario_factura_exenta",
    "fieldtype": "Select",
    "label": "Codigo Escenario Factura Exenta",
-   "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+   "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
   },
   {
    "fieldname": "descripcion_codigo_escenario_factura_exenta",
@@ -222,7 +224,7 @@
   }
  ],
  "istable": 1,
- "modified": "2020-09-12 18:09:47.571876",
+ "modified": "2020-09-12 18:31:53.470656",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Series FEL",
