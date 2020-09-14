@@ -565,6 +565,7 @@ class ExportInvoice:
                                                 as_dict=1)
 
             codigo_comprador = frappe.db.get_value('Customer', {'name': str(self.dat_fac[0]["customer"])}, 'codigo_comprador')
+            codigo_consignatario_comprador = frappe.db.get_value('Customer', {'name': str(self.dat_fac[0]["customer"])}, 'codigo_consignatario_comprador')
             codigo_incoterm = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                                   'codigo_incoterm')
 
@@ -577,6 +578,10 @@ class ExportInvoice:
             # Validaciones Codigo exportacion
             if not codigo_comprador:
                 return False, 'Complemento exportacion no generado, por favor agregar codigo de comprador en Cliente'
+
+            if not codigo_consignatario_comprador:
+                return False, 'Complemento exportacion no generado, por favor agregar codigo consignatario de comprador en Cliente, \
+                               si no tienes el dato puedes usar el mismo valor que codigo comprador'
 
             if not codigo_incoterm:
                 return False, 'Complemento exportacion no generado, por favor agregar codigo INCOTERM en configuracion series Factura Electronica'
@@ -596,7 +601,7 @@ class ExportInvoice:
                         "@xsi:schemaLocation": "http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0 C:\\Users\\Nadir\\Desktop\\SAT_FEL_FINAL_V1\\Esquemas\\GT_Complemento_Exportaciones-0.1.0.xsd",
                         "cex:NombreConsignatarioODestinatario": str(self.dat_fac[0]["customer_name"]),
                         "cex:DireccionConsignatarioODestinatario": str(dat_direccion[0].get('address_line1'))[:70],  # solo acepta 70 digitos
-                        "cex:CodigoConsignatarioODestinatario": codigo_comprador,
+                        "cex:CodigoConsignatarioODestinatario": codigo_consignatario_comprador,
                         "cex:NombreComprador": str(self.dat_fac[0]["customer_name"]),
                         "cex:CodigoComprador": codigo_comprador,
                         "cex:OtraReferencia": "EXPORTACION",
