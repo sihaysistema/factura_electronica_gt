@@ -701,36 +701,36 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
 
         # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
         # En este paso se convierte de JSON a XML y se codifica en base64
-        # status_firma = new_invoice.sign_invoice()
-        # if status_firma[0] == False:  # Si no se firma correctamente
-        #     return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
+        status_firma = new_invoice.sign_invoice()
+        if status_firma[0] == False:  # Si no se firma correctamente
+            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
 
         # # PASO 5: SOLICITAMOS FACTURA ELECTRONICA EXPORTACION
-        # status_facelec = new_invoice.request_electronic_invoice()
-        # if status_facelec[0] == False:
-        #     return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
+        status_facelec = new_invoice.request_electronic_invoice()
+        if status_facelec[0] == False:
+            return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
 
         # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
         # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
         # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
-        # status_res = new_invoice.response_validator()
-        # if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
-        #     return status_res  # return tuple
+        status_res = new_invoice.response_validator()
+        if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
+            return status_res  # return tuple
 
         # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
-        # status_upgrade = new_invoice.upgrade_records()
-        # if status_upgrade[0] == False:
-        #     return status_upgrade
+        status_upgrade = new_invoice.upgrade_records()
+        if status_upgrade[0] == False:
+            return status_upgrade
 
         # SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
         # el UUID y la nueva serie para la factura
-        # return True, status_upgrade[1]
+        return True, status_upgrade[1]
         # frappe.msgprint(_(str(status_upgrade)))
 
 
-        frappe.msgprint('OK')
-        return True, 'Construccion completa'
+        # frappe.msgprint('OK')
+        # return True, 'Construccion completa'
 
     except:
         frappe.msgprint(str(frappe.get_traceback()))
@@ -803,22 +803,23 @@ def generate_exempt_electronic_invoice(invoice_code, naming_series):
 
         # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
         # En este paso se convierte de JSON a XML y se codifica en base64
-        # status_firma = new_invoice.sign_invoice()
-        # if status_firma[0] == False:  # Si no se firma correctamente
-        #     return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
+        status_firma = new_invoice.sign_invoice()
+        if status_firma[0] == False:  # Si no se firma correctamente
+            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
 
         # # PASO 5: SOLICITAMOS FACTURA ELECTRONICA EXPORTACION
-        # status_facelec = new_invoice.request_electronic_invoice()
-        # if status_facelec[0] == False:
-        #     return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
+        status_facelec = new_invoice.request_electronic_invoice()
+        if status_facelec[0] == False:
+            return False, f'Ocurrio un problema al tratar de generar facturas electronica, mas detalles en: {status_facelec[1]}'
+
 
         # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
         # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
         # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
-        # status_res = new_invoice.response_validator()
-        # if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
-        #     return status_res  # return tuple
+        status_res = new_invoice.response_validator()
+        if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
+            return status_res  # return tuple
 
         # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
         # status_upgrade = new_invoice.upgrade_records()
