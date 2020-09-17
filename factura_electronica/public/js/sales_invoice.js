@@ -1357,7 +1357,10 @@ function btn_export_invoice(frm) {
                     naming_series: frm.doc.naming_series,
                 },
                 callback: function (data) {
-                    console.log(data.message);
+                    // console.log(data.message);
+                    let serie_de_factura = frm.doc.name;
+                    // Guarda la url actual
+                    let mi_url = window.location.href;
 
                     if (data.message[0] === true) {
                         // Crea una nueva url con el nombre del documento actualizado

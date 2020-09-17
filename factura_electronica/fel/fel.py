@@ -286,7 +286,7 @@ class ElectronicInvoice:
                 'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
                 'customer_name': 'Consumidor Final',
                 'address': 'Guatemala',
-                'pincode': '01001',
+                'pincode': '0',
                 'municipio': 'Guatemala',
                 'departamento': 'Guatemala',
                 'pais': 'GT'
@@ -297,7 +297,7 @@ class ElectronicInvoice:
                     'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
                     'customer_name': 'Consumidor Final',
                     'address': 'Guatemala',
-                    'pincode': '01001',
+                    'pincode': '0',
                     'municipio': 'Guatemala',
                     'departamento': 'Guatemala',
                     'pais': 'GT'

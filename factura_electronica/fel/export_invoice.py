@@ -88,8 +88,8 @@ class ExportInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                with open('exportacion.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion, indent=2))
+                # with open('exportacion.json', 'w') as f:
+                #     f.write(json.dumps(self.__base_peticion, indent=2))
 
                 return True, 'OK'
 
@@ -276,7 +276,7 @@ class ExportInvoice:
                 'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
                 'customer_name': 'Consumidor Final',
                 'address': 'Guatemala',
-                'pincode': '01001',
+                'pincode': '0',
                 'municipio': 'Guatemala',
                 'departamento': 'Guatemala',
                 'pais': 'GT'
@@ -287,7 +287,7 @@ class ExportInvoice:
                     'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
                     'customer_name': 'Consumidor Final',
                     'address': 'Guatemala',
-                    'pincode': '01001',
+                    'pincode': '0',
                     'municipio': 'Guatemala',
                     'departamento': 'Guatemala',
                     'pais': 'GT'
@@ -628,8 +628,8 @@ class ExportInvoice:
             self.__xml_string = xmltodict.unparse(
                 self.__base_peticion, pretty=True)
             # Usar solo para debug
-            with open('factura_exportacion.xml', 'w') as f:
-                f.write(self.__xml_string)
+            # with open('factura_exportacion.xml', 'w') as f:
+            #     f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -677,8 +677,8 @@ class ExportInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            with open('firmado_exportacion.json', 'w') as f:
-                f.write(json.dumps(self.__doc_firmado, indent=2))
+            # with open('firmado_exportacion.json', 'w') as f:
+            #     f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -728,8 +728,8 @@ class ExportInvoice:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            with open('response_fact_export.json', 'w') as f:
-                f.write(json.dumps(self.__response_ok, indent=2))
+            # with open('response_fact_export.json', 'w') as f:
+            #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
