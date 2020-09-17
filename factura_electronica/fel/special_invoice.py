@@ -387,13 +387,25 @@ class ElectronicSpecialInvoice:
         """
 
         try:
-            # ESTA SECCION DE INFO, DEBE SER CONFIRMADA CON INFILE, PARA QUE GENERE LA COMBINACION RECOMENDADA A USAR
+            codigo_escenario_fact_especial = frappe.db.get_value('Configuracion Series FEL',
+                                                                {'parent': self.__config_name,
+                                                                 'serie': self.__naming_serie},'codigo_escenario_factura_especial')
+            tipo_frase_fact_especial = frappe.db.get_value('Configuracion Series FEL',
+                                                          {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                                           'tipo_frase_factura_especial')[:1]
+
+            if not codigo_escenario_fact_especial:
+                return False, 'Ocurrio un problema, no se encontro el codigo de frase configurada para la serie Factura Especial, por favor \
+                               configurala en Series para Facturas de compras en Configuracion Factura Electronica e intenta de nuevo'
+
+            if not tipo_frase_fact_especial:
+                return False, 'Ocurrio un problema, no se encontro el tipo de frase configurada para la serie Factura Especial, por favor \
+                               configurala en Series para Facturas de compras en Configuracion Factura Electronica e intenta de nuevo'
+
             self.__d_frases = {
                 "dte:Frase": {
-                    "@CodigoEscenario": frappe.db.get_value('Configuracion Factura Electronica',
-                                                           {'name': self.__config_name}, 'codigo_escenario_factura_especial'), #"1",
-                    "@TipoFrase": frappe.db.get_value('Configuracion Factura Electronica',
-                                                     {'name': self.__config_name}, 'tipo_frase_factura_especial')[:1]  # "1"
+                    "@CodigoEscenario": codigo_escenario_fact_especial, #"1",
+                    "@TipoFrase": tipo_frase_fact_especial  # "1"
                 }
             }
 

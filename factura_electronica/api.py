@@ -815,14 +815,30 @@ def facelec_api(serie_factura, nombre_cliente, pre_se):
 
 @frappe.whitelist()
 def enviar_correo(nombre):
-    from frappe.core.doctype.communication.email import make
-    msg="Hola Mundo {}".format(nombre)
+    pass
+    # from frappe.core.doctype.communication.email import make
+    # msg="Hola Mundo {}".format(nombre)
 
-    try:
-        make(doctype="Sales Invoice", name=nombre, subject="Factura Electronica", content=msg, recipients=['m.monroyc22@gmail.com'],
-            send_email=True, sender="erp.sihaysistema@gmail.com")
+    # try:
+    #     make(doctype="Sales Invoice", name=nombre, subject="Factura Electronica", content=msg, recipients=['m.monroyc22@gmail.com'],
+    #         send_email=True, sender="erp.sihaysistema@gmail.com")
 
-        msg = """Email send successfully to Employee"""
-        frappe.msgprint(msg)
-    except:
-        frappe.msgprint("could not send")
+    #     msg = """Email send successfully to Employee"""
+    #     frappe.msgprint(msg)
+    # except:
+    #     frappe.msgprint("could not send")
+
+
+@frappe.whitelist()
+def validate_address(address_name):
+    # Validacion extra, para ver si en verdad existe la direccion
+
+    # Si no existe ninguna direccion con el nombre y el pais a Guatemala, es decir si aplica
+    # exportacion
+    if not frappe.db.exists('Address', {'name': str(address_name), 'country': 'Guatemala'}):
+        # SI APLICA FACTURA INTERNACIONAL
+        return True
+
+    else:
+        # NO APLICA FACTURA INTERNACIONAL
+        return False

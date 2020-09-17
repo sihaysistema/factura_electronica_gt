@@ -300,7 +300,11 @@ def fill_fixtures():
                     "Purchase Taxes and Charges-facelec_tax_name",
                     "Purchase Taxes and Charges-facelec_taxable_unit_code",
                     "Purchase Invoice-numero_autorizacion_fel",
-                    "Purchase Invoice-serie_original_del_documento"
+                    "Purchase Invoice-serie_original_del_documento",
+                    "Sales Invoice-is_it_an_international_invoice",
+                    "Customer-codigo_comprador",
+                    "Company-codigo_exportador",
+                    "Customer-codigo_consignatario_comprador"
                 ]
             ]
         ]
@@ -421,6 +425,20 @@ def fill_fixtures():
                     "PASSPORT",
                     "DUI",
                     "DPI"
+                ]
+            ]
+        ]
+    }
+
+    frases_fel = {
+        "dt": "Frases FEL", "filters": [
+            [
+                "name", "in", [
+                    "1 Frase de retención del ISR",
+                    "2 Frase de retención del IVA",
+                    "3 Frase de no genera derecho a crédito fiscal del IVA",
+                    "4 Frase de exento o no afecto al IVA",
+                    "5 Frase de facturas especiales"
                 ]
             ]
         ]

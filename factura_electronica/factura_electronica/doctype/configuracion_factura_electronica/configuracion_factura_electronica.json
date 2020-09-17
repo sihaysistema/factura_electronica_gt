@@ -46,6 +46,8 @@
   "codigo_escenario",
   "tipo_frase_factura_especial",
   "codigo_escenario_factura_especial",
+  "tipo_frase_factura_exportacion",
+  "codigo_escenario_factura_exportacion",
   "column_break_32",
   "alias",
   "url_firma",
@@ -53,6 +55,8 @@
   "url_de_anulacion",
   "llave_ws",
   "afiliacion_iva",
+  "tipo_frase_factura_exenta",
+  "codigo_escenario_factura_exenta",
   "local_currency",
   "configuracion_series_fel_section",
   "series_fel",
@@ -303,6 +307,7 @@
    "description": "FEL",
    "fieldname": "tipo_frase",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Tipo Frase",
    "options": "\n1: Frase de retencio\u0301n del ISR\n2: Frase de retencio\u0301n del IVA\n3: Frase de no genera derecho a cre\u0301dito fiscal del IVA\n4: Frase de exento o no afecto al IVA"
   },
@@ -361,8 +366,8 @@
    "description": "FEL",
    "fieldname": "codigo_escenario",
    "fieldtype": "Int",
-   "label": "Codigo Escenario",
-   "reqd": 1
+   "hidden": 1,
+   "label": "Codigo Escenario"
   },
   {
    "collapsible": 1,
@@ -406,18 +411,46 @@
   {
    "fieldname": "tipo_frase_factura_especial",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Tipo Frase Factura Especial",
    "options": "\n5: Frase de facturas especiales\n6: Frases de Regimen Especial de contribuyente agropecuario"
   },
   {
    "fieldname": "codigo_escenario_factura_especial",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Codigo Escenario Factura Especial"
+  },
+  {
+   "fieldname": "tipo_frase_factura_exportacion",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Tipo Frase Factura Exportacion",
+   "options": "\n1: Frase de retencio\u0301n del ISR\n2: Frase de retencio\u0301n del IVA\n3: Frase de no genera derecho a cre\u0301dito fiscal del IVA\n4: Frase de exento o no afecto al IVA"
+  },
+  {
+   "fieldname": "codigo_escenario_factura_exportacion",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Codigo Escenario Factura Exportacion"
+  },
+  {
+   "fieldname": "tipo_frase_factura_exenta",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Tipo Frase Factura Exenta",
+   "options": "\n1: Frase de retencio\u0301n del ISR\n2: Frase de retencio\u0301n del IVA\n3: Frase de no genera derecho a cre\u0301dito fiscal del IVA\n4: Frase de exento o no afecto al IVA"
+  },
+  {
+   "fieldname": "codigo_escenario_factura_exenta",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Codigo Escenario Factura Exenta"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-08-13 13:38:10.781226",
+ "modified": "2020-09-13 17:44:23.948607",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
