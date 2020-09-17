@@ -62,16 +62,12 @@ class ExportInvoice:
                 # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
                 self.__base_peticion = {
                     "dte:GTDocumento": {
-                        "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 1 vieja
-                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                        "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
+                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        "@Version": "0.4",
+                        "@Version": "0.1",
                         "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0 C:\\Users\\Nadir\\Desktop\\SAT_FEL_FINAL_V1\\Esquemas\\GT_Documento-0.1.0.xsd",
-                        # "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 02
-                        # "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
-                        # "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        # "@Version": "0.1",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {
