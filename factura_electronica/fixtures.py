@@ -431,7 +431,7 @@ def fill_fixtures():
     }
 
     frases_fel = {
-        "dt": "Frases FEL", "filters": [
+        "dt": "FEL Catalogo Frases", "filters": [
             [
                 "name", "in", [
                     "1 Frase de retención del ISR",
@@ -449,6 +449,7 @@ def fill_fixtures():
     fixtures_fillup.append(translation)
     fixtures_fillup.append(tax_category)
     fixtures_fillup.append(id_doctype)
+    fixtures_fillup.append(frases_fel)
 
     return fixtures_fillup
 
