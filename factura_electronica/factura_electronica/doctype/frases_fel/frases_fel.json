@@ -1,0 +1,92 @@
+{
+ "creation": "2020-09-11 14:58:10.315135",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "codigo_escenario",
+  "escenario",
+  "section_break_3",
+  "retener_isr",
+  "es_agente_retenedor",
+  "column_break_6",
+  "es_peque\u00f1o_contribuyente",
+  "incluye_iva",
+  "section_break_9",
+  "texto_a_colocar"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "codigo_escenario",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Codigo Escenario",
+   "reqd": 1,
+   "search_index": 1,
+   "width": "5"
+  },
+  {
+   "fieldname": "escenario",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "label": "Escenario",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "retener_isr",
+   "fieldtype": "Check",
+   "label": "Retener ISR"
+  },
+  {
+   "fieldname": "texto_a_colocar",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "label": "Texto a colocar",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "es_agente_retenedor",
+   "fieldtype": "Check",
+   "label": "Es Agente Retenedor"
+  },
+  {
+   "fieldname": "column_break_6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "es_peque\u00f1o_contribuyente",
+   "fieldtype": "Check",
+   "label": "Es Peque\u00f1o Contribuyente"
+  },
+  {
+   "default": "0",
+   "fieldname": "incluye_iva",
+   "fieldtype": "Check",
+   "label": "Incluye Iva"
+  },
+  {
+   "fieldname": "section_break_9",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "istable": 1,
+ "modified": "2020-09-11 15:30:02.148186",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Frases FEL",
+ "nsm_parent_field": "parent_frases_fel",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
