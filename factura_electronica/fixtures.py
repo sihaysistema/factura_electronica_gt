@@ -391,7 +391,7 @@ def fill_fixtures():
                     "Goods", "Support Documents", "Observations and Signatures", "DUCA Number", "Acceptance Date",
                     "Reference or Serial Number", "Exit Customs Office", "Entry Customs Office", "Initial Transit Customs Office",
                     "Purpose", "Exporter Identification Type and Number", "Exporter ID number", "Exporter ID type",
-                    "Exporter ID issuing country"
+                    "Exporter ID issuing country", "Non-Generated"
                 ]
             ]
         ]
