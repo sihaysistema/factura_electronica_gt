@@ -844,15 +844,15 @@ function validate_serie_purchase_invoice(frm) {
         callback: (r) => {
 
             if (r.message === true) {
-                console.log('Aplica para factura especial');
+                // console.log('Aplica para factura especial');
                 btn_factura_especial(frm);
 
-                console.log('Aplica para generar poliza de factura especial');
+                // console.log('Aplica para generar poliza de factura especial');
                 btn_poliza_factura_especial(frm);
             } else {
                 // Si no aplica limpiamos los custom buttons
                 // comentar esta porcion de codigo si tiene problemas con otros custom botones
-                console.log('No aplica para facturas especiales')
+                // console.log('No aplica para facturas especiales')
                 // frm.clear_custom_buttons('Actions');
                 cur_frm.page.clear_actions_menu()
                 // frm.refresh();

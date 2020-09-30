@@ -33,6 +33,10 @@ def execute(filters=None):
     columns = get_columns()
     data = get_data(filters)
 
+    # DEBUG: para ver la estructura de datos que se muestran en el reporte
+    # with open('datos_reporte_asl.json', 'w') as f:
+    #     f.write(json.dumps(data, indent=2, default=str))
+
     if len(data) > 0:  # Si hay datos que mostrar
         status_file = generate_asl_file(json.dumps(data, default=str))
         if status_file[0] == True:
