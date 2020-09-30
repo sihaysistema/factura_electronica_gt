@@ -29,8 +29,47 @@ def verificar_existencia_series(serie):
                                         fieldname=['rate', 'account_head', 'description'])
 
         return series_especiales, impuestos, plantilla_impuesto
-        
+
     else:
         # Mensaje alternativo
         # frappe.msgprint(_('No se encontraron series configuradas para Facturas Especiales'))
         return 'fail'
+
+
+@frappe.whitelist()
+def validate_serie_to_special_invoice(naming_series):
+    """
+    Obtiene el name si existe una configuracion validada para factura electronica, para
+    verificar si la serie que se esta usando el la factura de compra se puede usar
+    para generar facturas especiales electronica
+
+    Args:
+        naming_series (str): Serie utilizada en la factura de compra
+
+    Returns:
+        boolean: True/False
+    """
+    try:
+        # verifica que exista un documento validado, docstatus = 1 => validado
+        if frappe.db.exists('Configuracion Factura Electronica', {'docstatus': 1}):
+
+            configuracion_valida = frappe.db.get_values('Configuracion Factura Electronica',
+                                                        filters={'docstatus': 1},
+                                                        fieldname=['name', 'regimen'], as_dict=1)
+            if (len(configuracion_valida) == 1):  # se encontro una sola configuracion OK
+
+                if frappe.db.exists('Serial Configuration For Purchase Invoice',
+                                   {'parent': str(configuracion_valida[0]['name']), 'serie': naming_series,
+                                    'tipo_frase_factura_especial': '5 Frase de facturas especiales'}):
+                    return True
+                else:
+                    return False
+
+            elif (len(configuracion_valida) > 1):  # se encontro mas de una configuracion
+                return False
+
+        else:
+            return False  # No se encoentro ninguna configuracion
+
+    except:
+        return False  # Por si acaso ocurre un error, no aplicara

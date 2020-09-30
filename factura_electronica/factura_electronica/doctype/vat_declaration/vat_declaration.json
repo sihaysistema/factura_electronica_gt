@@ -12,6 +12,7 @@
   "posting_date",
   "documents_in_declaration_section",
   "declaration_items",
+  "total",
   "amended_from"
  ],
  "fields": [
@@ -62,10 +63,17 @@
    "options": "VAT Declaration",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "description": "Total of all invoices",
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "label": "Total",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2020-07-28 18:05:37.730574",
+ "modified": "2020-09-29 17:44:14.855213",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "VAT Declaration",

@@ -510,8 +510,8 @@ def validate_configuration():
                     una en Configuracion Factura Electronia')
 
     else:
-        return (False, 'No se encontro ninguna configuración, por favor crea y valida una en \
-                Configuracion Factura Electronica')
+        return (False, 'No se encontro ninguna configuración valida para generacion de facturas electronicas, por favor crea y valida una en \
+                        Configuracion Factura Electronica')
 
 
 def check_invoice_records(invoice_code):

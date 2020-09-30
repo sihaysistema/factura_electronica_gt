@@ -1138,8 +1138,7 @@ frappe.ui.form.on("Sales Invoice", {
                             if (data.message === 'Automatico') {
                                 //console.log('Configuracion encontrada: AUTOMATICO');
                                 // generarFacturaSINBTN(frm, cdt, cdn);
-                                verificacionCAE('automatico', frm, cdt,
-                                    cdn);
+                                verificacionCAE('automatico', frm, cdt, cdn);
                             }
                         }
                     });
