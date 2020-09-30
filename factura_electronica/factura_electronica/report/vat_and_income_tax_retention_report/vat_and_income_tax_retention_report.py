@@ -166,7 +166,7 @@ def get_purchases_invoice(filters):
 
     purchase_invoices = frappe.db.sql(
         f"""SELECT DISTINCT name AS invoce_number, posting_date AS invoice_date,
-            facelec_nit_fproveedor AS tax_id, supplier AS entity
+            facelec_nit_fproveedor AS tax_id, supplier AS entity, grant_total AS invoice_total
             FROM `tabPurchase Invoice`
             WHERE posting_date BETWEEN '{filters.from_date}' AND '{filters.to_date}'
             AND docstatus=1 AND company='{filters.company}';

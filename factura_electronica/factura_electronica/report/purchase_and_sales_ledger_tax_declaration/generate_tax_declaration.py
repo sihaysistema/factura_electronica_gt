@@ -4,28 +4,48 @@ from __future__ import unicode_literals
 import json
 import os
 from datetime import date, datetime, time
-
-import xmltodict
+import pandas as pd
 
 import frappe
+import xmltodict
 from frappe import _
+
 
 MONTHS_MAP = {
     "January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6,
     "July": 7, "August": 8, "September": 9, "October": 10, "November": 11, "December": 12
 }
 
+
 @frappe.whitelist()
 def generate_vat_declaration(company, year, month, declared, report_data):
+    """[summary]
+
+    Args:
+        company ([type]): [description]
+        year ([type]): [description]
+        month ([type]): [description]
+        declared ([type]): [description]
+        report_data ([type]): [description]
+    """
     try:
         # 1 - Cargar report_data con json load.
         # en_US: Loads the received data as if it was a json into a dictionary
         records = json.loads(report_data)
 
+        # por facilidad creamos un df para obtener el total de todas las facturas incluidas
+        total_inv = 0
+        if len(records) > 0:
+            df_inv = pd.DataFrame.from_dict(records).fillna(0)
+            total_inv = df_inv['total_valor_doc'].sum(skipna=True)
+
+            frappe.msgprint(str(total_inv))
+
         # DEBUG: SI quieres saber la estrucutra de datos descomenta
-        # with open('salida_report.json', 'w') as f:
+        # with open('data_reporte_declaracion.json', 'w') as f:
         #     f.write(json.dumps(records, indent=2, default=str))
 
+        # Guardara todas las facturas para la declaracion
         declaration_invoices = []
 
         # 2 - Por cada factura
@@ -45,16 +65,19 @@ def generate_vat_declaration(company, year, month, declared, report_data):
             if not frappe.db.exists('VAT Declaration', {'name': f"VAT Declaration {date.today()}"}):
                 # CREAMOS EL REGISTRO COMO VALIDADO
                 try:
-                    vat_dec = frappe.get_doc({
+                    data_decl = {
                         "doctype": "VAT Declaration",
                         "title": f"VAT Declaration {date.today()}",
                         "company": company,
-                        "posting_date": date.today(),
-                        "declaration_year": year,
+                        "posting_date": str(date.today()),
+                        "declaration_year": str(year),
                         "declaration_month": MONTHS_MAP.get(str(month)),
                         "declaration_items": declaration_invoices,
+                        "total": float(total_inv),
                         "docstatus": 1
-                    })
+                    }
+
+                    vat_dec = frappe.get_doc(data_decl)
 
                     # for validated documents: status_journal = vat_dec.insert(ignore_permissions=True)
                     # status_declaration = vat_dec.save(ignore_permissions=True)
@@ -62,11 +85,11 @@ def generate_vat_declaration(company, year, month, declared, report_data):
 
                 # SI OCURRE ALGUN ERROR
                 except:
-                    frappe.msgprint(msg=_(f'More details in the following log \n {frappe.get_traceback()}'),
+                    frappe.msgprint(msg=_(f'More details in the following log \n <code>{frappe.get_traceback()}</code>'),
                         title=_('Sorry, a problem occurred while trying to generate the VAT declaration'), indicator='red')
                     return
 
-                # SI LA CREACION ES EXITOSA, ACTUALIZAMOS LAS FACTURAS CON LA REFERENCIA
+                # SI LA CREACION ES EXITOSA, ACTUALIZAMOS LAS FACTURAS VENTA/COMPRA CON LA REFERENCIA
                 else:
                     # Por cada factura venta, compra
                     for record in records:

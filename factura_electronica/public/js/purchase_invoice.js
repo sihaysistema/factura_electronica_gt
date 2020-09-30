@@ -361,8 +361,8 @@ frappe.ui.form.on("Purchase Invoice", {
                 // FIN BOTON NOTA DE DEBITO
             }
 
-
             const tax_id_supplier = frm.doc.facelec_nit_fproveedor.replace("/", "");
+
             if (frm.doc.numero_autorizacion_fel) {
                 cur_frm.clear_custom_buttons();
 
@@ -374,23 +374,21 @@ frappe.ui.form.on("Purchase Invoice", {
 
             } else {
                 // boton para generar factura especial electronica
-                if (tax_id_supplier.toUpperCase() === "CF") {
-                    console.log('Aplica para factura especial');
-                    btn_factura_especial(frm);
-                }
-
+                // tax_id_supplier.toUpperCase() === "CF" &&
+                validate_serie_purchase_invoice(frm);
             }
 
             // INICIO boton para generar poliza contable con calculos y registro de retenciones
             // boton para generar factura especial electronica
-            if (tax_id_supplier.toUpperCase() === "CF") {
-                console.log('Aplica para generar poliza de factura especial');
-                btn_poliza_factura_especial(frm);
-            }
+            // tax_id_supplier.toUpperCase() === "CF" &&
+            validate_serie_purchase_invoice(frm);
+
             // FIN boton para generar poliza contable con calculos y registro de retenciones
         }
     },
     onload_post_render: function (frm, cdt, cdn) {
+
+        validate_serie_purchase_invoice(frm);
         // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
 
         // en-US: Enabling event listeners for child tables
@@ -555,35 +553,31 @@ frappe.ui.form.on("Purchase Invoice", {
         // }
     },
     naming_series: function (frm, cdt, cdn) {
-        // frappe call
-        // verifica si la serie es de factura especial
-        // si es verdadero
-        //obtiene la tabla de purchase taxes and charges
-        // borra la existente
-        // carga la nueva
-        // actualiza un campo read only de tipo chequecito que diga: "Factura Especial"
+
         console.log(frm.doc.naming_series);
 
-        frappe.call({
-            method: "factura_electronica.utils.special_invoice.verificar_existencia_series",
-            args: {
-                serie: frm.doc.naming_series
-            },
-            callback: function (r) {
-                // frm.reload_doc();
-                console.log(r.message);
+        /* No aplica para FEL
+        // frappe.call({
+        //     method: "factura_electronica.utils.special_invoice.verificar_existencia_series",
+        //     args: {
+        //         serie: frm.doc.naming_series
+        //     },
+        //     callback: function (r) {
+        //         // frm.reload_doc();
+        //         console.log(r.message);
 
-                if (r.message != 'fail') {
-                    // Limpia la tabla hija de Purchase Taxes and Charges
-                    cur_frm.clear_table("taxes");
-                    cur_frm.refresh_fields();
+        //         if (r.message != 'fail') {
+        //             // Limpia la tabla hija de Purchase Taxes and Charges
+        //             cur_frm.clear_table("taxes");
+        //             cur_frm.refresh_fields();
 
-                    // Asigna el nombre de la plantilla de impuestos a utilizar configurada
-                    frm.set_value('taxes_and_charges', r.message[2]);
-                    frm.refresh_field("taxes_and_charges");
-                }
-            }
-        });
+        //             // Asigna el nombre de la plantilla de impuestos a utilizar configurada
+        //             frm.set_value('taxes_and_charges', r.message[2]);
+        //             frm.refresh_field("taxes_and_charges");
+        //         }
+        //     }
+        // });
+        **/
     }
 });
 
@@ -693,11 +687,20 @@ frappe.ui.form.on("Purchase Invoice Item", {
 });
 
 
+// Funcion para evaluar los redondeos, important
 function redondeo_sales_invoice(a, b) {
     return a * b;
 }
 /* ----------------------------------------------------------------------------------------------------------------- */
 
+
+/**
+ * Agrega boton para generar facturas especiales electronicas, si ocurre un error
+ * mostrara un mensaje con la descripcion, si todo va bien automaticamente se reemplazara
+ * la pagina con los datos correctos
+ *
+ * @param {object} frm
+ */
 function btn_factura_especial(frm) {
     cur_frm.clear_custom_buttons();
     frm.add_custom_button(__("FACTURA ESPECIAL ELECTRONICA FEL"), function () {
@@ -732,6 +735,11 @@ function btn_factura_especial(frm) {
 }
 
 
+/**
+ * Agrega un boton para generar especificamente polizas contables para facturas especiales
+ *
+ * @param {object} frm
+ */
 function btn_poliza_factura_especial(frm) {
     cur_frm.page.add_action_item(__("Journal Entry for Special Invoice"), function () {
 
@@ -815,4 +823,41 @@ function btn_poliza_factura_especial(frm) {
 
         d.show();
     });
+}
+
+
+/**
+ * Verifica si la serie utilizada en la factura aplica para generar facturas especiales,
+ * Si es asi mostrara el boton para generar polizas contables para facturas especiales
+ * y el boton para generar facturas especiales especiales
+ *
+ * @param {object} frm
+ */
+function validate_serie_purchase_invoice(frm) {
+
+    frappe.call({
+        method: 'factura_electronica.utils.special_invoice.validate_serie_to_special_invoice',
+        args: {
+            naming_series: frm.doc.naming_series
+        },
+        freeze: false,
+        callback: (r) => {
+
+            if (r.message === true) {
+                // console.log('Aplica para factura especial');
+                btn_factura_especial(frm);
+
+                // console.log('Aplica para generar poliza de factura especial');
+                btn_poliza_factura_especial(frm);
+            } else {
+                // Si no aplica limpiamos los custom buttons
+                // comentar esta porcion de codigo si tiene problemas con otros custom botones
+                // console.log('No aplica para facturas especiales')
+                // frm.clear_custom_buttons('Actions');
+                cur_frm.page.clear_actions_menu()
+                // frm.refresh();
+            }
+
+        }
+    })
 }

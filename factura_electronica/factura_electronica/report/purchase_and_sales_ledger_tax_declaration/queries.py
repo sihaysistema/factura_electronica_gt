@@ -105,7 +105,7 @@ def get_sales_invoice(filters):
             customer_address AS invoice_address, net_total, shs_total_iva_fac AS iva, company_address AS company_address_invoice,
             docstatus, taxes_and_charges, facelec_record_type, facelec_record_number AS no_constancia_exension_adqui_insu_reten_iva,
             facelec_consumable_record_type AS tipo_constancia, facelec_record_value AS valor_constancia_exension_adqui_insu_reten_iva,
-            facelec_export_doc AS tipo_doc_ope, facelec_export_record AS no_doc_operacion
+            facelec_export_doc AS tipo_doc_ope, facelec_export_record AS no_doc_operacion, grand_total AS total_valor_doc
             FROM `tabSales Invoice`
             WHERE YEAR(posting_date)='{filters.year}' AND MONTH(posting_date)='{month}' AND (docstatus=1 OR docstatus=2)
             AND company='{filters.company}' {string_conditional}
