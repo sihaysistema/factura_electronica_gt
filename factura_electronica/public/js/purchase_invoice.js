@@ -331,7 +331,7 @@ frappe.ui.form.on("Purchase Invoice", {
                                     fieldname: "reason_adjust",
                                     fieldtype: "Data",
                                     reqd: 1,
-                                }, ],
+                                },],
                                 primary_action_label: "Submit",
                                 primary_action(values) {
                                     frappe.call({
@@ -500,7 +500,7 @@ frappe.ui.form.on("Purchase Invoice", {
         // es-GT: Este muestra el IVA que se calculo por medio de nuestra aplicación.
         var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
 
-        if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) {} else {
+        if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) { } else {
             // console.log("El descuento parece ser un numero definido, calculando con descuento.");
             discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
             // console.log("El IVA del descuento es:" + discount_amount_tax_value);
@@ -536,21 +536,21 @@ frappe.ui.form.on("Purchase Invoice", {
 
         // TODO: EN QUE QUEDO ESTO?
         // Si existe por lo menos una cuenta, se ejecuta frappe.call
-        // if (Object.keys(cuentas_registradas).length > 0) {
-        //     frappe.call({
-        //         method: "factura_electronica.utils.special_tax.add_gl_entry_other_special_tax",
-        //         args: {
-        //             invoice_name: frm.doc.name,
-        //             accounts: cuentas_registradas,
-        //             invoice_type: "Purchase Invoice"
-        //         },
-        //         // El callback se ejecuta tras finalizar la ejecucion del script python del lado
-        //         // del servidor
-        //         callback: function () {
-        //             // frm.reload_doc();
-        //         }
-        //     });
-        // }
+        if (Object.keys(cuentas_registradas).length > 0) {
+            frappe.call({
+                method: "factura_electronica.utils.special_tax.add_gl_entry_other_special_tax",
+                args: {
+                    invoice_name: frm.doc.name,
+                    accounts: cuentas_registradas,
+                    invoice_type: "Purchase Invoice"
+                },
+                // El callback se ejecuta tras finalizar la ejecucion del script python del lado
+                // del servidor
+                callback: function () {
+                    frm.reload_doc();
+                }
+            });
+        }
     },
     naming_series: function (frm, cdt, cdn) {
 
@@ -746,60 +746,60 @@ function btn_poliza_factura_especial(frm) {
         let d = new frappe.ui.Dialog({
             title: 'New Journal Entry with Withholding Tax for special invoice',
             fields: [{
-                    label: 'Cost Center',
-                    fieldname: 'cost_center',
-                    fieldtype: 'Link',
-                    options: 'Cost Center',
-                    "get_query": function () {
-                        return {
-                            filters: {
-                                'company': frm.doc.company
-                            }
-                        }
-                    },
-                    default: ""
-                },
-                {
-                    label: 'Source account',
-                    fieldname: 'credit_in_acc_currency',
-                    fieldtype: 'Link',
-                    options: 'Account',
-                    "reqd": 1,
-                    "get_query": function () {
-                        return {
-                            filters: {
-                                'company': frm.doc.company
-                            }
+                label: 'Cost Center',
+                fieldname: 'cost_center',
+                fieldtype: 'Link',
+                options: 'Cost Center',
+                "get_query": function () {
+                    return {
+                        filters: {
+                            'company': frm.doc.company
                         }
                     }
                 },
-                {
-                    fieldname: 'col_br_asdffg',
-                    fieldtype: 'Column Break'
-                },
-                {
-                    label: 'Is Multicurrency',
-                    fieldname: 'is_multicurrency',
-                    fieldtype: 'Check'
-                },
-                {
-                    label: 'NOTE',
-                    fieldname: 'note',
-                    fieldtype: 'Data',
-                    read_only: 1,
-                    default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el iva va incluido en la factura'
-                },
-                {
-                    label: 'Description',
-                    fieldname: 'section_asdads',
-                    fieldtype: 'Section Break',
-                    "collapsible": 1
-                },
-                {
-                    label: 'Description',
-                    fieldname: 'description',
-                    fieldtype: 'Long Text'
+                default: ""
+            },
+            {
+                label: 'Source account',
+                fieldname: 'credit_in_acc_currency',
+                fieldtype: 'Link',
+                options: 'Account',
+                "reqd": 1,
+                "get_query": function () {
+                    return {
+                        filters: {
+                            'company': frm.doc.company
+                        }
+                    }
                 }
+            },
+            {
+                fieldname: 'col_br_asdffg',
+                fieldtype: 'Column Break'
+            },
+            {
+                label: 'Is Multicurrency',
+                fieldname: 'is_multicurrency',
+                fieldtype: 'Check'
+            },
+            {
+                label: 'NOTE',
+                fieldname: 'note',
+                fieldtype: 'Data',
+                read_only: 1,
+                default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el iva va incluido en la factura'
+            },
+            {
+                label: 'Description',
+                fieldname: 'section_asdads',
+                fieldtype: 'Section Break',
+                "collapsible": 1
+            },
+            {
+                label: 'Description',
+                fieldname: 'description',
+                fieldtype: 'Long Text'
+            }
             ],
             primary_action_label: 'Create',
             primary_action(values) {
