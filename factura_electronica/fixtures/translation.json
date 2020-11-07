@@ -3694,5 +3694,19 @@
   "source_name": "VAT and Income Tax Retention Report",
   "status": "Saved",
   "target_name": "Reporte de Retenciones IVA e ISR"
+ },
+ {
+  "contributed_translation_doctype_name": "",
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2020-11-06 21:58:15.575434",
+  "name": "5df93a96bf",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "Trade Name",
+  "status": "",
+  "target_name": "Nombre Comercial o Ficticio"
  }
 ]
