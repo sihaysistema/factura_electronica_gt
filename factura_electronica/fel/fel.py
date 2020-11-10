@@ -230,7 +230,7 @@ class ElectronicInvoice:
                 nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
                                                    {'name': self.__config_name}, 'nombre_empresa_prueba')
             else:
-                nom_comercial = dat_compania[0]['facelec_trade_name']  # company_name
+                nom_comercial = dat_compania[0]['company_name']  # must be company_name, do not use trade name
 
             # Asignacion data
             self.__d_emisor = {
