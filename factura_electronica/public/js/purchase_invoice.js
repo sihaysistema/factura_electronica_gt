@@ -844,7 +844,7 @@ function validate_serie_purchase_invoice(frm) {
         },
         freeze: false,
         callback: (r) => {
-
+            console.log(r.message);
             if (r.message === true) {
                 // console.log('Aplica para factura especial');
                 btn_factura_especial(frm);
@@ -871,6 +871,7 @@ function clean_fields(frm) {
         // console.log('No Guardada');
         frm.set_value("facelec_tax_retention_guatemala", '');
         frm.set_value("numero_autorizacion_fel", '');
+        frm.set_value("serie_original_del_documento", '');
 
         frm.refresh_fields();
     }
