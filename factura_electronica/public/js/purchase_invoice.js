@@ -344,10 +344,10 @@ frappe.ui.form.on("Purchase Invoice", {
                                             reason: values.reason_adjust,
                                         },
                                         callback: function (r) {
-                                            console.log(r.message);
+                                            // console.log(r.message);
                                         },
                                     });
-                                    console.log(values);
+                                    // console.log(values);
                                     d.hide();
                                 },
                             });
@@ -356,7 +356,7 @@ frappe.ui.form.on("Purchase Invoice", {
                         },
                         () => {
                             // action to perform if No is selected
-                            console.log("Selecciono NO");
+                            // console.log("Selecciono NO");
                         }
                     );
                 }).addClass("btn-warning");
@@ -556,7 +556,7 @@ frappe.ui.form.on("Purchase Invoice", {
     },
     naming_series: function (frm, cdt, cdn) {
 
-        console.log(frm.doc.naming_series);
+        // console.log(frm.doc.naming_series);
 
         /* No aplica para FEL
         // frappe.call({
@@ -672,7 +672,7 @@ frappe.ui.form.on("Purchase Invoice Item", {
                 Tol: 0.001,
                 maxIter: 10000
             });
-            console.log(calcu);
+            // console.log(calcu);
 
             frm.doc.items[index].qty = calcu;
             frm.doc.items[index].stock_qty = calcu;
@@ -718,7 +718,7 @@ function btn_factura_especial(frm) {
                         naming_series: frm.doc.naming_series
                     },
                     callback: function (r) {
-                        console.log(r.message);
+                        // console.log(r.message);
                         if (r.message[0] === true) {
                             // Crea una nueva url con el nombre del documento actualizado
                             let url_nueva = mi_url.replace(serie_de_factura, r.message[1]);
@@ -731,7 +731,7 @@ function btn_factura_especial(frm) {
                 });
             }, () => {
                 // action to perform if No is selected
-                console.log('Selecciono NO')
+                // console.log('Selecciono NO')
             });
     }).addClass("btn-warning");
 }
@@ -815,7 +815,7 @@ function btn_poliza_factura_especial(frm) {
                         description: values.description
                     },
                     callback: function (r) {
-                        console.log(r.message);
+                        // console.log(r.message);
                         d.hide();
                         frm.refresh()
                     },
@@ -844,7 +844,7 @@ function validate_serie_purchase_invoice(frm) {
         },
         freeze: false,
         callback: (r) => {
-            console.log(r.message);
+            // console.log(r.message);
             if (r.message === true) {
                 // console.log('Aplica para factura especial');
                 btn_factura_especial(frm);
