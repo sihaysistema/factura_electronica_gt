@@ -308,6 +308,8 @@ function generar_tabla_html_factura_compra(frm) {
 
 frappe.ui.form.on("Purchase Invoice", {
     refresh: function (frm, cdt, cdn) {
+        // Limpieza de campos cuando se duplique una factura de compra
+        clean_fields(frm);
         // Por ahora se mostrara solo si la factura de compra se encuentra validada
         if (frm.doc.docstatus === 1) {
 
@@ -331,7 +333,7 @@ frappe.ui.form.on("Purchase Invoice", {
                                     fieldname: "reason_adjust",
                                     fieldtype: "Data",
                                     reqd: 1,
-                                }, ],
+                                },],
                                 primary_action_label: "Submit",
                                 primary_action(values) {
                                     frappe.call({
@@ -342,10 +344,10 @@ frappe.ui.form.on("Purchase Invoice", {
                                             reason: values.reason_adjust,
                                         },
                                         callback: function (r) {
-                                            console.log(r.message);
+                                            // console.log(r.message);
                                         },
                                     });
-                                    console.log(values);
+                                    // console.log(values);
                                     d.hide();
                                 },
                             });
@@ -354,7 +356,7 @@ frappe.ui.form.on("Purchase Invoice", {
                         },
                         () => {
                             // action to perform if No is selected
-                            console.log("Selecciono NO");
+                            // console.log("Selecciono NO");
                         }
                     );
                 }).addClass("btn-warning");
@@ -500,7 +502,7 @@ frappe.ui.form.on("Purchase Invoice", {
         // es-GT: Este muestra el IVA que se calculo por medio de nuestra aplicación.
         var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
 
-        if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) {} else {
+        if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) { } else {
             // console.log("El descuento parece ser un numero definido, calculando con descuento.");
             discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
             // console.log("El IVA del descuento es:" + discount_amount_tax_value);
@@ -536,25 +538,25 @@ frappe.ui.form.on("Purchase Invoice", {
 
         // TODO: EN QUE QUEDO ESTO?
         // Si existe por lo menos una cuenta, se ejecuta frappe.call
-        // if (Object.keys(cuentas_registradas).length > 0) {
-        //     frappe.call({
-        //         method: "factura_electronica.utils.special_tax.add_gl_entry_other_special_tax",
-        //         args: {
-        //             invoice_name: frm.doc.name,
-        //             accounts: cuentas_registradas,
-        //             invoice_type: "Purchase Invoice"
-        //         },
-        //         // El callback se ejecuta tras finalizar la ejecucion del script python del lado
-        //         // del servidor
-        //         callback: function () {
-        //             // frm.reload_doc();
-        //         }
-        //     });
-        // }
+        if (Object.keys(cuentas_registradas).length > 0) {
+            frappe.call({
+                method: "factura_electronica.utils.special_tax.add_gl_entry_other_special_tax",
+                args: {
+                    invoice_name: frm.doc.name,
+                    accounts: cuentas_registradas,
+                    invoice_type: "Purchase Invoice"
+                },
+                // El callback se ejecuta tras finalizar la ejecucion del script python del lado
+                // del servidor
+                callback: function () {
+                    frm.reload_doc();
+                }
+            });
+        }
     },
     naming_series: function (frm, cdt, cdn) {
 
-        console.log(frm.doc.naming_series);
+        // console.log(frm.doc.naming_series);
 
         /* No aplica para FEL
         // frappe.call({
@@ -670,7 +672,7 @@ frappe.ui.form.on("Purchase Invoice Item", {
                 Tol: 0.001,
                 maxIter: 10000
             });
-            console.log(calcu);
+            // console.log(calcu);
 
             frm.doc.items[index].qty = calcu;
             frm.doc.items[index].stock_qty = calcu;
@@ -716,7 +718,7 @@ function btn_factura_especial(frm) {
                         naming_series: frm.doc.naming_series
                     },
                     callback: function (r) {
-                        console.log(r.message);
+                        // console.log(r.message);
                         if (r.message[0] === true) {
                             // Crea una nueva url con el nombre del documento actualizado
                             let url_nueva = mi_url.replace(serie_de_factura, r.message[1]);
@@ -729,7 +731,7 @@ function btn_factura_especial(frm) {
                 });
             }, () => {
                 // action to perform if No is selected
-                console.log('Selecciono NO')
+                // console.log('Selecciono NO')
             });
     }).addClass("btn-warning");
 }
@@ -746,60 +748,60 @@ function btn_poliza_factura_especial(frm) {
         let d = new frappe.ui.Dialog({
             title: 'New Journal Entry with Withholding Tax for special invoice',
             fields: [{
-                    label: 'Cost Center',
-                    fieldname: 'cost_center',
-                    fieldtype: 'Link',
-                    options: 'Cost Center',
-                    "get_query": function () {
-                        return {
-                            filters: {
-                                'company': frm.doc.company
-                            }
-                        }
-                    },
-                    default: ""
-                },
-                {
-                    label: 'Source account',
-                    fieldname: 'credit_in_acc_currency',
-                    fieldtype: 'Link',
-                    options: 'Account',
-                    "reqd": 1,
-                    "get_query": function () {
-                        return {
-                            filters: {
-                                'company': frm.doc.company
-                            }
+                label: 'Cost Center',
+                fieldname: 'cost_center',
+                fieldtype: 'Link',
+                options: 'Cost Center',
+                "get_query": function () {
+                    return {
+                        filters: {
+                            'company': frm.doc.company
                         }
                     }
                 },
-                {
-                    fieldname: 'col_br_asdffg',
-                    fieldtype: 'Column Break'
-                },
-                {
-                    label: 'Is Multicurrency',
-                    fieldname: 'is_multicurrency',
-                    fieldtype: 'Check'
-                },
-                {
-                    label: 'NOTE',
-                    fieldname: 'note',
-                    fieldtype: 'Data',
-                    read_only: 1,
-                    default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el iva va incluido en la factura'
-                },
-                {
-                    label: 'Description',
-                    fieldname: 'section_asdads',
-                    fieldtype: 'Section Break',
-                    "collapsible": 1
-                },
-                {
-                    label: 'Description',
-                    fieldname: 'description',
-                    fieldtype: 'Long Text'
+                default: ""
+            },
+            {
+                label: 'Source account',
+                fieldname: 'credit_in_acc_currency',
+                fieldtype: 'Link',
+                options: 'Account',
+                "reqd": 1,
+                "get_query": function () {
+                    return {
+                        filters: {
+                            'company': frm.doc.company
+                        }
+                    }
                 }
+            },
+            {
+                fieldname: 'col_br_asdffg',
+                fieldtype: 'Column Break'
+            },
+            {
+                label: 'Is Multicurrency',
+                fieldname: 'is_multicurrency',
+                fieldtype: 'Check'
+            },
+            {
+                label: 'NOTE',
+                fieldname: 'note',
+                fieldtype: 'Data',
+                read_only: 1,
+                default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el iva va incluido en la factura'
+            },
+            {
+                label: 'Description',
+                fieldname: 'section_asdads',
+                fieldtype: 'Section Break',
+                "collapsible": 1
+            },
+            {
+                label: 'Description',
+                fieldname: 'description',
+                fieldtype: 'Long Text'
+            }
             ],
             primary_action_label: 'Create',
             primary_action(values) {
@@ -813,7 +815,7 @@ function btn_poliza_factura_especial(frm) {
                         description: values.description
                     },
                     callback: function (r) {
-                        console.log(r.message);
+                        // console.log(r.message);
                         d.hide();
                         frm.refresh()
                     },
@@ -842,7 +844,7 @@ function validate_serie_purchase_invoice(frm) {
         },
         freeze: false,
         callback: (r) => {
-
+            // console.log(r.message);
             if (r.message === true) {
                 // console.log('Aplica para factura especial');
                 btn_factura_especial(frm);
@@ -860,4 +862,17 @@ function validate_serie_purchase_invoice(frm) {
 
         }
     })
+}
+
+function clean_fields(frm) {
+    // Funcionalidad evita copiar CAE cuando se duplica una factura
+    // LIMPIA/CLEAN, permite limpiar los campos cuando se duplica una factura
+    if (frm.doc.status === 'Draft' || frm.doc.docstatus == 0) {
+        // console.log('No Guardada');
+        frm.set_value("facelec_tax_retention_guatemala", '');
+        frm.set_value("numero_autorizacion_fel", '');
+        frm.set_value("serie_original_del_documento", '');
+
+        frm.refresh_fields();
+    }
 }

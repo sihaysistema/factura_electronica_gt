@@ -62,6 +62,7 @@ frappe.ui.form.on("Item", {
 });
 
 // Validador NIT para customer
+// Descripcion de Nombre legal
 frappe.ui.form.on("Customer", {
     nit_face_customer: function (frm) {
         valNit(frm.doc.nit_face_customer, frm.doc.name, frm);
@@ -70,10 +71,16 @@ frappe.ui.form.on("Customer", {
     tax_id: function (frm) {
         valNit(frm.doc.tax_id, frm.doc.name, frm);
         frm.set_value('nit_face_customer', frm.doc.tax_id);
+    },
+    refresh: function (frm) {
+        var cust_name_desc = __("Legal Name, for tax, government or contract use. For Example: Apple, Inc. Amazon.com, Inc., The Home Depot, Inc.");
+        cur_frm.set_df_property("customer_name", "description", cust_name_desc);
+        frm.refresh_field('customer_name');
     }
 });
 
 // Validador NIT para Supplier
+// descripcion de nombre legal
 frappe.ui.form.on("Supplier", {
     facelec_nit_proveedor: function (frm) {
         valNit(frm.doc.facelec_nit_proveedor, frm.doc.name, frm);
@@ -82,6 +89,11 @@ frappe.ui.form.on("Supplier", {
     tax_id: function (frm) {
         valNit(frm.doc.tax_id, frm.doc.name, frm);
         frm.set_value('facelec_nit_proveedor', frm.doc.tax_id);
+    },
+    refresh: function (frm) {
+        var supp_name_desc = __("Legal Name, for tax, government or contract use. For Example: Apple, Inc. Amazon.com, Inc., The Home Depot, Inc.");
+        cur_frm.set_df_property("supplier_name", "description", supp_name_desc);
+        frm.refresh_field('supplier_name');
     }
 });
 

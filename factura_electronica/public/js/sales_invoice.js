@@ -929,7 +929,7 @@ frappe.ui.form.on("Sales Invoice", {
                                 d.show();
                             }, () => {
                                 // action to perform if No is selected
-                                console.log('Selecciono NO')
+                                // console.log('Selecciono NO')
                             })
 
                     }).addClass("btn-warning");
@@ -1191,7 +1191,7 @@ frappe.ui.form.on("Sales Invoice", {
     },
     es_nota_de_debito: function (frm) {
         if (frm.doc.es_nota_de_debito) {
-            console.log('Es nota de debito');
+            // console.log('Es nota de debito');
             cur_frm.set_df_property("naming_series", "read_only", 1);
 
             frappe.call({
@@ -1200,7 +1200,7 @@ frappe.ui.form.on("Sales Invoice", {
                     opt: 'debit'
                 },
                 callback: function (r) {
-                    console.log(r.message);
+                    // console.log(r.message);
 
                     if (r.message) {
                         // cur_frm.set_value('naming_series', '');
@@ -1215,7 +1215,7 @@ frappe.ui.form.on("Sales Invoice", {
     is_return: function (frm) {
         // Asignacion serie configurada para notas de credito
         if (frm.doc.is_return) {
-            console.log('Es retorno');
+            // console.log('Es retorno');
             cur_frm.set_df_property("naming_series", "read_only", 1);
 
             frappe.call({
@@ -1224,7 +1224,7 @@ frappe.ui.form.on("Sales Invoice", {
                     opt: 'credit'
                 },
                 callback: function (r) {
-                    console.log(r.message);
+                    // console.log(r.message);
                     if (r.message) {
                         cur_frm.set_value('naming_series', '');
                         cur_frm.set_value('naming_series', r.message);
@@ -1313,7 +1313,7 @@ frappe.ui.form.on("Sales Invoice Item", {
                 Tol: 0.001,
                 maxIter: 10000
             });
-            console.log(calcu);
+            // console.log(calcu);
 
             frm.doc.items[index].qty = calcu;
             frm.doc.items[index].stock_qty = calcu;
@@ -1431,6 +1431,6 @@ function clean_fields(frm) {
         frm.set_value("facelec_record_value", '');
         frm.refresh_fields();
 
-        console.log('Hay que limpiar')
+        // console.log('Hay que limpiar')
     }
 }
