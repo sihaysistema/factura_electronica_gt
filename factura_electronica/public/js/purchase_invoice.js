@@ -308,6 +308,8 @@ function generar_tabla_html_factura_compra(frm) {
 
 frappe.ui.form.on("Purchase Invoice", {
     refresh: function (frm, cdt, cdn) {
+        // Limpieza de campos cuando se duplique una factura de compra
+        clean_fields(frm);
         // Por ahora se mostrara solo si la factura de compra se encuentra validada
         if (frm.doc.docstatus === 1) {
 
@@ -860,4 +862,16 @@ function validate_serie_purchase_invoice(frm) {
 
         }
     })
+}
+
+function clean_fields(frm) {
+    // Funcionalidad evita copiar CAE cuando se duplica una factura
+    // LIMPIA/CLEAN, permite limpiar los campos cuando se duplica una factura
+    if (frm.doc.status === 'Draft' || frm.doc.docstatus == 0) {
+        // console.log('No Guardada');
+        frm.set_value("facelec_tax_retention_guatemala", '');
+        frm.set_value("numero_autorizacion_fel", '');
+
+        frm.refresh_fields();
+    }
 }
