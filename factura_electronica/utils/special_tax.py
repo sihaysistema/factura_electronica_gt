@@ -162,7 +162,7 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
                         new_gl_entry_tax.is_opening = 'No'
                         new_gl_entry_tax.posting_date = data_gl_entry[0]['posting_date']
 
-                        new_gl_entry_tax.save()
+                        new_gl_entry_tax.insert(ignore_permissions=True)
                     except:
                         frappe.msgprint(_(f'Error al insertar las cuentas de impuestos especiales en GL Entry, por favor verifique que el año fiscal sea el actual, mas detalles en: <code>{frappe.get_traceback()}</code>'))
 
