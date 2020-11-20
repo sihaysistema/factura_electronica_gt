@@ -73,31 +73,31 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
     else:
         if invoice_type == 'Sales Invoice':
             # Actualiza el total de factura con el nuevo monto
-            frappe.db.sql('''UPDATE `tabSales Invoice` SET total=%(nuevo_monto)s, 
+            frappe.db.sql('''UPDATE `tabSales Invoice` SET total=%(nuevo_monto)s,
                             base_net_total=%(nuevo_monto)s, total_taxes_and_charges=%(nuevo_valor_iva)s
                             WHERE name=%(serie_original)s''', {'nuevo_monto': str(total), 'nuevo_valor_iva': str(valor_iva), 'serie_original': invoice_name})
 
             frappe.db.sql('''UPDATE `tabSales Taxes and Charges` SET tax_amount=%(nuevo_monto)s,
                             base_tax_amount=%(nuevo_monto)s, base_tax_amount_after_discount_amount=%(nuevo_monto)s,
-                            tax_amount_after_discount_amount=%(nuevo_monto)s  
+                            tax_amount_after_discount_amount=%(nuevo_monto)s
                             WHERE parent=%(serie_original)s''', {'nuevo_monto': str(valor_iva), 'serie_original': invoice_name})
 
         if invoice_type == 'Purchase Invoice':
             # Actualiza el total de factura con el nuevo monto
-            frappe.db.sql('''UPDATE `tabPurchase Invoice` SET total=%(nuevo_monto)s, 
+            frappe.db.sql('''UPDATE `tabPurchase Invoice` SET total=%(nuevo_monto)s,
                             base_net_total=%(nuevo_monto)s, total_taxes_and_charges=%(nuevo_valor_iva)s
                             WHERE name=%(serie_original)s''', {'nuevo_monto': str(total), 'nuevo_valor_iva': str(valor_iva), 'serie_original': invoice_name})
 
             frappe.db.sql('''UPDATE `tabPurchase Taxes and Charges` SET tax_amount=%(nuevo_monto)s,
                             base_tax_amount=%(nuevo_monto)s, base_tax_amount_after_discount_amount=%(nuevo_monto)s,
-                            tax_amount_after_discount_amount=%(nuevo_monto)s  
+                            tax_amount_after_discount_amount=%(nuevo_monto)s
                             WHERE parent=%(serie_original)s''', {'nuevo_monto': str(valor_iva), 'serie_original': invoice_name})
 
 
 @frappe.whitelist()
 def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
     '''Agrega entradas a Gl Entry de facturas con la cuenta especial asignada.
-    
+
     Parametros:
     ----------
     * invoice_name (str) : Nombre de la factura
@@ -158,13 +158,13 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
                             new_gl_entry_tax.debit_in_account_currency = account_names[account_n]
                             new_gl_entry_tax.debit = account_names[account_n]
                             new_gl_entry_tax.cost_center = tax_rate[0]['cost_center']
-                        
+
                         new_gl_entry_tax.is_opening = 'No'
                         new_gl_entry_tax.posting_date = data_gl_entry[0]['posting_date']
-                        
-                        new_gl_entry_tax.save()
+
+                        new_gl_entry_tax.insert(ignore_permissions=True)
                     except:
-                        frappe.msgprint(_('Error al insertar las cuentas de impuestos especiales en GL Entry'))
+                        frappe.msgprint(_(f'Error al insertar las cuentas de impuestos especiales en GL Entry, por favor verifique que el año fiscal sea el actual, mas detalles en: <code>{frappe.get_traceback()}</code>'))
 
             # Funcion encargada de realizar calculos con los impuestos especiales, y actualizar la factura
             # con los monton correctos
