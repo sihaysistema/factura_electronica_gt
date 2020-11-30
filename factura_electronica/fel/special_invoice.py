@@ -51,6 +51,7 @@ class ElectronicSpecialInvoice:
         self.__config_name = conf_name
         self.__naming_serie = naming_series
         self.__log_error = []
+        self.__d_frases = {}
 
     def build_special_invoice(self):
         """
@@ -387,10 +388,10 @@ class ElectronicSpecialInvoice:
         """
 
         try:
-            codigo_escenario_fact_especial = frappe.db.get_value('Configuracion Series FEL',
+            codigo_escenario_fact_especial = frappe.db.get_value('Serial Configuration For Purchase Invoice',
                                                                 {'parent': self.__config_name,
                                                                  'serie': self.__naming_serie},'codigo_escenario_factura_especial')
-            tipo_frase_fact_especial = frappe.db.get_value('Configuracion Series FEL',
+            tipo_frase_fact_especial = frappe.db.get_value('Serial Configuration For Purchase Invoice',
                                                           {'parent': self.__config_name, 'serie': self.__naming_serie},
                                                            'tipo_frase_factura_especial')[:1]
 
