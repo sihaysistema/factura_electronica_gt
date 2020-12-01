@@ -490,7 +490,7 @@ class ExportInvoice:
                     obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
-                    obj_item["dte:Descripcion"] = self.__dat_items[i]['description']
+                    obj_item["dte:Descripcion"] = self.__dat_items[i]['item_name']  # descrition
                     obj_item["dte:PrecioUnitario"] = round(precio_uni, 2)
                     obj_item["dte:Precio"] = round(precio_item, 2)
                     obj_item["dte:Descuento"] = round(desc_item, 2)

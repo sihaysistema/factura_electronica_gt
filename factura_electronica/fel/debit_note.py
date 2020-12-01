@@ -421,7 +421,7 @@ class ElectronicDebitNote:
                     obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
-                    obj_item["dte:Descripcion"] = self.__dat_items[i]['description']
+                    obj_item["dte:Descripcion"] = self.__dat_items[i]['item_name']  # description
                     obj_item["dte:PrecioUnitario"] = abs(precio_uni)
                     obj_item["dte:Precio"] = abs(precio_item)
                     obj_item["dte:Descuento"] = abs(desc_item)

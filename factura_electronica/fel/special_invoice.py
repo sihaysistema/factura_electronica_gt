@@ -510,7 +510,7 @@ class ElectronicSpecialInvoice:
                     obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_p_purchase_three_digit']
-                    obj_item["dte:Descripcion"] = self.__dat_items[i]['description']
+                    obj_item["dte:Descripcion"] = self.__dat_items[i]['item_name']  # description
                     obj_item["dte:PrecioUnitario"] = precio_uni
                     obj_item["dte:Precio"] = precio_item
                     obj_item["dte:Descuento"] = desc_item
