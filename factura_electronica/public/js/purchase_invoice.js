@@ -365,8 +365,8 @@ frappe.ui.form.on("Purchase Invoice", {
 
             const tax_id_supplier = frm.doc.facelec_nit_fproveedor.replace("/", "");
 
-            if (frm.doc.numero_autorizacion_fel) {
-                cur_frm.clear_custom_buttons();
+            if (frm.doc.numero_autorizacion_fel && frm.doc.serie_original_del_documento) {
+                // cur_frm.clear_custom_buttons();
 
                 frm.add_custom_button(__("VER PDF DOCUMENTO ELECTRONICO"),
                     function () {
