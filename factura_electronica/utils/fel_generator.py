@@ -753,7 +753,7 @@ class FacturaElectronicaFEL:
 
                 decodedBytes = base64.b64decode(mensajes['xml_certificado'])
                 decodedStr = str(decodedBytes, "utf-8")
-                resp_fel.xml_certificado = decodedStr
+                resp_fel.xml_certificado = ''  # decodedStr
 
                 resp_fel.save()
         except:
