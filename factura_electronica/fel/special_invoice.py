@@ -51,6 +51,7 @@ class ElectronicSpecialInvoice:
         self.__config_name = conf_name
         self.__naming_serie = naming_series
         self.__log_error = []
+        self.__d_frases = {}
 
     def build_special_invoice(self):
         """
@@ -195,7 +196,7 @@ class ElectronicSpecialInvoice:
                                                 fieldname=['company', 'shipping_address', 'facelec_nit_fproveedor',
                                                            'supplier_address', 'supplier_name', 'total_taxes_and_charges',
                                                            'grand_total', 'net_total', 'currency', 'credit_to',
-                                                           'conversion_rate'], as_dict=1)
+                                                           'conversion_rate', 'contact_person'], as_dict=1)
             if len(self.dat_fac) == 0:
                 return False, f'''No se encontro ninguna factura con serie: {self.__invoice_code}.\
                                   Por favor valida los datos de la factura que deseas procesar'''
@@ -275,6 +276,10 @@ class ElectronicSpecialInvoice:
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['supplier_address']},
                                                  fieldname=['address_line1', 'email_id', 'pincode',
                                                             'state', 'city', 'country'], as_dict=1)
+
+            contact_per = frappe.db.get_values('Contact Identification', filters={'parent': self.dat_fac[0]['contact_person'],
+                                                                                  'id_prefix': 'DPI'},
+                                               fieldname=['id_number'], as_dict=1)
             # NOTE: se quitara esta validacion para permitir usar valores default en caso no exista una direccion
             # o campos especificacion de direccion
             # if len(dat_direccion) == 0:
@@ -303,7 +308,7 @@ class ElectronicSpecialInvoice:
                     'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
                     'supplier_name': 'Consumidor Final',
                     'address': 'Guatemala',
-                    'pincode': '01001',
+                    'pincode': '0',
                     'municipio': 'Guatemala',
                     'departamento': 'Guatemala',
                     'pais': 'GT'
@@ -313,10 +318,18 @@ class ElectronicSpecialInvoice:
                 # electronico, los demas campos se pueden dejar como defualt para ciudad
                 if str(self.dat_fac[0]['facelec_nit_fproveedor']).upper() == 'C/F':
                     self.nit_proveedor_limpio = (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', '')
+                    ok_dpi = ''
+                    try:
+                        ok_dpi = contact_per[0]['id_number']
+                    except:
+                        frappe.msgprint(msg=_('No se encontro un DPI para cliente, por favor agregarlo en contacto e intentar de nuevo'),
+                                        title=_('Tarea no completada'), indicator='red', raise_exception=1)
+
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
-                        "@IDReceptor": (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
+                        "@IDReceptor": ok_dpi,  # (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
                         "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
+                        "@TipoEspecial":"CUI",
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -326,11 +339,20 @@ class ElectronicSpecialInvoice:
                         }
                     }
                 else:
+                    # Si si hay un NIT
                     self.nit_proveedor_limpio = str(self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')
+                    ok_dpi = ''
+                    try:
+                        ok_dpi = contact_per[0]['id_number']
+                    except:
+                        frappe.msgprint(msg=_('No se encontro un DPI para cliente, por favor agregarlo en contacto e intentar de nuevo'),
+                                        title=_('Tarea no completada'), indicator='red', raise_exception=1)
+
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
-                        "@IDReceptor": str(self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', ''),  # NIT
+                        "@IDReceptor": ok_dpi,  # str(self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', ''),  # NIT
                         "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
+                        "@TipoEspecial":"CUI",
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -344,11 +366,19 @@ class ElectronicSpecialInvoice:
                 # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
                 # electronico, los demas campos se pueden dejar como defualt para ciudad
                 self.nit_proveedor_limpio = (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', '')
+                ok_dpi = ''
+                try:
+                    ok_dpi = contact_per[0]['id_number']
+                except:
+                    frappe.msgprint(msg=_('No se encontro un DPI para cliente, por favor agregarlo en contacto e intentar de nuevo'),
+                                    title=_('Tarea no completada'), indicator='red', raise_exception=1)
+
                 if str(self.dat_fac[0]['facelec_nit_fproveedor']).upper() == 'C/F':
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
-                        "@IDReceptor": (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
+                        "@IDReceptor": ok_dpi, # (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
                         "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
+                        "@TipoEspecial":"CUI",
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
@@ -357,7 +387,7 @@ class ElectronicSpecialInvoice:
                             "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
                         }
                     }
-                else:
+                else:  # Si hay NIT
                     self.nit_proveedor_limpio = str(self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
@@ -387,10 +417,10 @@ class ElectronicSpecialInvoice:
         """
 
         try:
-            codigo_escenario_fact_especial = frappe.db.get_value('Configuracion Series FEL',
+            codigo_escenario_fact_especial = frappe.db.get_value('Serial Configuration For Purchase Invoice',
                                                                 {'parent': self.__config_name,
                                                                  'serie': self.__naming_serie},'codigo_escenario_factura_especial')
-            tipo_frase_fact_especial = frappe.db.get_value('Configuracion Series FEL',
+            tipo_frase_fact_especial = frappe.db.get_value('Serial Configuration For Purchase Invoice',
                                                           {'parent': self.__config_name, 'serie': self.__naming_serie},
                                                            'tipo_frase_factura_especial')[:1]
 
@@ -544,7 +574,13 @@ class ElectronicSpecialInvoice:
             self.company = self.dat_fac[0]['company']
             self.grand_total_invoice = self.dat_fac[0]['grand_total']
 
-            ISR = round(apply_formula_isr(self.net_total, self.company), 2)  # automaticamente verfica si es 5% o 7%
+            # NOTE: TODO: AGREGAR IF IS ES MENOR A Q2,500, DEBE EXISTIR EN ESCENARIO DE RETENCIONES
+            ISR = 0
+            try:
+                ISR = round(apply_formula_isr(self.net_total, self.company), 2)  # automaticamente verfica si es 5% o 7%
+            except:
+                ISR = 0
+
             IVA = round((self.grand_total_invoice/((self.iva_rate/100) + 1)) * self.iva_rate/100, 2)  # (monto/1.12) * 0.12
             MONTO_TOTAL_COMPLEMENTO = round(self.grand_total_invoice - (ISR + IVA), 2)
 
