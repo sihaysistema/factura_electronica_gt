@@ -4,6 +4,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "nota",
   "codigo_escenario",
   "escenario",
   "section_break_3",
@@ -75,10 +76,18 @@
   {
    "fieldname": "section_break_9",
    "fieldtype": "Section Break"
+  },
+  {
+   "default": "Los campos descritos a continuaci\u00f3n solo son de referencia.",
+   "fieldname": "nota",
+   "fieldtype": "Data",
+   "label": "Nota",
+   "options": "Los campos descritos a continuaci\u00f3n solo son de referencia.",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2020-09-11 15:30:02.148186",
+ "modified": "2020-12-03 15:02:11.062715",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Frases FEL",
