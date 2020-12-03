@@ -347,7 +347,7 @@
    "description": "FEL",
    "fieldname": "llave_ws",
    "fieldtype": "Data",
-   "label": "Llave WS"
+   "label": "Llave Web Service"
   },
   {
    "fieldname": "company",
@@ -450,7 +450,7 @@
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-09-13 17:44:23.948607",
+ "modified": "2020-12-03 14:35:12.153272",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
