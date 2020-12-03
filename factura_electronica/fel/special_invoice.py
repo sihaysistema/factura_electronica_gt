@@ -468,6 +468,8 @@ class ElectronicSpecialInvoice:
                                                         'facelec_p_gt_tax_net_fuel_amt', 'facelec_p_gt_tax_net_goods_amt',
                                                         'facelec_p_gt_tax_net_services_amt'], as_dict=True)
 
+            switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
+
             # segun los esquemas XML, solo mostramos el impuesto de IVA, algunos de los impuestos que pueden ir son
             # (depende del emisor y el tipo de documento electronico a generar):
             # Petroleo, Turismo Hospedaje, Timbre de prensa, Bomberos, Tasa Municipal
@@ -507,10 +509,12 @@ class ElectronicSpecialInvoice:
                     desc_item = float('{0:.2f}'.format(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty'] - float(self.__dat_items[i]['amount'])))
 
                     contador += 1
+                    description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
+
                     obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_p_purchase_three_digit']
-                    obj_item["dte:Descripcion"] = self.__dat_items[i]['item_name']  # description
+                    obj_item["dte:Descripcion"] = description_to_item  # description
                     obj_item["dte:PrecioUnitario"] = precio_uni
                     obj_item["dte:Precio"] = precio_item
                     obj_item["dte:Descuento"] = desc_item

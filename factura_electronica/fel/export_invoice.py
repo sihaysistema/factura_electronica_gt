@@ -445,6 +445,7 @@ class ExportInvoice:
                                                                'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
                                                                'facelec_gt_tax_net_services_amt'], as_dict=True)
 
+            switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
             # Obtenemos los impuesto cofigurados para x compañia en la factura
             self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__invoice_code},
@@ -487,10 +488,12 @@ class ExportInvoice:
                                                          * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
 
                     contador += 1
+                    description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
+
                     obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
-                    obj_item["dte:Descripcion"] = self.__dat_items[i]['item_name']  # descrition
+                    obj_item["dte:Descripcion"] = description_to_item  #  self.__dat_items[i]['item_name']  # descrition
                     obj_item["dte:PrecioUnitario"] = round(precio_uni, 2)
                     obj_item["dte:Precio"] = round(precio_item, 2)
                     obj_item["dte:Descuento"] = round(desc_item, 2)

@@ -388,6 +388,8 @@ class ElectronicCreditNote:
                                                         'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
                                                         'facelec_gt_tax_net_services_amt'], as_dict=True)
 
+            switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
+
             # TODO VER ESCENARIO CUANDO HAY MAS DE UN IMPUESTO?????
             # TODO VER ESCENARIO CUANDO NO HAY IMPUESTOS, ES POSIBLE???
             # Obtenemos los impuesto cofigurados para x compañia en la factura
@@ -425,10 +427,12 @@ class ElectronicCreditNote:
                     desc_item = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(float(self.__dat_items[i]['amount'])))))
 
                     contador += 1
+                    description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
+
                     obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
-                    obj_item["dte:Descripcion"] = self.__dat_items[i]['item_name']  # description
+                    obj_item["dte:Descripcion"] = description_to_item  #  self.__dat_items[i]['item_name']  # description
                     obj_item["dte:PrecioUnitario"] = abs(precio_uni)
                     obj_item["dte:Precio"] = abs(precio_item)
                     obj_item["dte:Descuento"] = abs(desc_item)
