@@ -235,7 +235,7 @@ class ExportInvoice:
                                                       {'name': self.__config_name}, 'afiliacion_iva'),
                 "@CodigoEstablecimiento": dat_direccion[0]['facelec_establishment'],
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
-                "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', ''),
+                "@NITEmisor": str((dat_compania[0]['nit_face_company']).replace('-', '')).upper(),
                 "@NombreComercial": nom_comercial,
                 "@NombreEmisor": nom_comercial,
                 "dte:DireccionEmisor": {
@@ -704,7 +704,7 @@ class ExportInvoice:
 
         try:
             data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
-            nit_company = frappe.db.get_value('Company', {'name': self.dat_fac[0]['nit_face_customer']}, 'nit_face_company')
+            nit_company = (str(frappe.db.get_value('Company', {'name': self.dat_fac[0]['company']}, 'nit_face_company')).replace('-', '')).upper()
 
             url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
             user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
