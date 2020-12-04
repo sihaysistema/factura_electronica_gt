@@ -17,6 +17,14 @@ app_license = "GNU General Public License (v3)"
 # fixtures = ["Custom Field", "Tax Category"]
 
 fixtures = fill_fixtures()
+jenv = {
+    "methods": [
+        'currency_in_words:factura_electronica.currency_in_words'
+    ]
+}
+
+
+
 
 # Includes in <head>
 # ------------------
