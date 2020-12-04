@@ -475,7 +475,8 @@ class ElectronicInvoice:
                     desc_item = 0
 
                     # Precio unitario, (sin aplicarle descuento)
-                    precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
+                    # precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
+                    precio_uni = float(self.__dat_items[i]['rate'])
 
                     # Calculo precio item (precio sin aplicarle descuento * cantidad)
                     # precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['rate'])))
@@ -559,8 +560,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('mi_factura.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('mi_factura.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
