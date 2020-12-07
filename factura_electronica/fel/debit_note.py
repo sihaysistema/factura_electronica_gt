@@ -197,7 +197,7 @@ class ElectronicDebitNote:
 
             # De la compañia, obtenemos direccion 1, email, codigo postal, departamento, municipio, pais
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['company_address']},
-                                                 fieldname=['address_line1', 'email_id', 'pincode',
+                                                 fieldname=['address_line1', 'email_id', 'pincode', 'county',
                                                             'state', 'city', 'country', 'facelec_establishment'],
                                                  as_dict=1)
             if len(dat_direccion) == 0:
@@ -234,8 +234,8 @@ class ElectronicDebitNote:
                 "dte:DireccionEmisor": {
                     "dte:Direccion": dat_direccion[0]['address_line1'],
                     "dte:CodigoPostal": dat_direccion[0]['pincode'],  # Codig postal
-                    "dte:Municipio": dat_direccion[0]['state'],  # Municipio
-                    "dte:Departamento": dat_direccion[0]['city'],  # Departamento
+                    "dte:Municipio": dat_direccion[0]['county'],  # Municipio
+                    "dte:Departamento": dat_direccion[0]['state'],  # Departamento
                     "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper()  # CODIG PAIS
                 }
             }
@@ -257,7 +257,7 @@ class ElectronicDebitNote:
         # Intentara obtener data de direccion cliente
         try:
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['customer_address']},
-                                                 fieldname=['address_line1', 'email_id', 'pincode',
+                                                 fieldname=['address_line1', 'email_id', 'pincode', 'county',
                                                             'state', 'city', 'country'], as_dict=1)
             # NOTE: se quitara esta validacion para permitir usar valores default en caso no exista una direccion
             # o campos especificacion de direccion
@@ -333,8 +333,8 @@ class ElectronicDebitNote:
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
-                            "dte:Municipio": dat_direccion[0].get('state', datos_default.get('municipio')),
-                            "dte:Departamento": dat_direccion[0].get('city', datos_default.get('departamento')),
+                            "dte:Municipio": dat_direccion[0].get('county', datos_default.get('municipio')),
+                            "dte:Departamento": dat_direccion[0].get('state', datos_default.get('departamento')),
                             "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
                         }
                     }
@@ -346,8 +346,8 @@ class ElectronicDebitNote:
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
-                            "dte:Municipio": dat_direccion[0].get('state', datos_default.get('municipio')),
-                            "dte:Departamento": dat_direccion[0].get('city', datos_default.get('departamento')),
+                            "dte:Municipio": dat_direccion[0].get('county', datos_default.get('municipio')),
+                            "dte:Departamento": dat_direccion[0].get('state', datos_default.get('departamento')),
                             "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
                         }
                     }
