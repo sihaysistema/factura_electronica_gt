@@ -525,6 +525,7 @@ class ElectronicInvoice:
         except:
             return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
+# Aqui se calcula el valor del impuesto (IVA)
     def totals(self):
         """
         Funcion encargada de realizar totales de los impuestos sobre la factura
@@ -542,7 +543,11 @@ class ElectronicInvoice:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
+                        # OJO: Al obtener el total del IVA desde Total taxes and charges, puede haber error en el calculo.
+                        # "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
+                        # Aqui obtenemos el iva que fue sumado por cada fila de items, esto se hace asi porque auqi de una vez le quitamos impuestos especiales.
+                        # TODO Aqui es muy probable que redondeemos para la SAT.
+                        "@TotalMontoImpuesto": float('{0:.2f}'.format(float(gran_tot)))
                     }
                 },
                 "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
