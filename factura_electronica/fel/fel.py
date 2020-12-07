@@ -537,7 +537,7 @@ class ElectronicInvoice:
         try:
             gran_tot = 0
             for i in self.__dat_items:
-                gran_tot += i['facelec_amount_minus_excise_tax']
+                gran_tot += i['facelec_sales_tax_for_this_row']
 
             self.__d_totales = {
                 "dte:TotalImpuestos": {
