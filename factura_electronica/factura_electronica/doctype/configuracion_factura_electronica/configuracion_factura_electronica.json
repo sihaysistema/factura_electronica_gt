@@ -456,7 +456,7 @@
    "label": "Otras Configuraciones"
   },
   {
-   "description": "Seleccione de que campo de Item obtendr\u00e1 la descripci\u00f3n para generar Factura Electr\u00f3nica",
+   "description": "Seleccione el campo que desea para el nombre del producto a mostrarse en la factura de la Emitida por la SAT.",
    "fieldname": "descripcion_item",
    "fieldtype": "Select",
    "label": "Descripcion Item",
@@ -465,7 +465,7 @@
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-12-03 14:55:44.023591",
+ "modified": "2020-12-07 11:05:33.147051",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
