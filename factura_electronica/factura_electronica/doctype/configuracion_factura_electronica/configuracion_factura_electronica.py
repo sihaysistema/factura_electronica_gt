@@ -50,12 +50,12 @@ def get_phrases_fel(code_type):
 
 
 @frappe.whitelist()
-def get_description_phrase_fel(frase_catalogo, codigo_frase_hija):
-
+def get_description_phrase_fel(frase_catalogo='', codigo_frase_hija=''):
     if frappe.db.exists('Frases FEL', {'parent': frase_catalogo,'codigo_escenario': codigo_frase_hija}):
         descr = frappe.db.get_value('Frases FEL', {'parent': frase_catalogo, 'codigo_escenario': codigo_frase_hija}, 'escenario')
+        descr_especi = frappe.db.get_value('Frases FEL', {'parent': frase_catalogo, 'codigo_escenario': codigo_frase_hija}, 'texto_a_colocar')
 
-        return descr
+        return {'descr': descr, 'descr_especi': descr_especi}
 
     else:
         return '<code>Codigo No disponible, para la frase seleccionada</code>'

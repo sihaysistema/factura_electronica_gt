@@ -14,7 +14,8 @@
   "descripci\u00f3n_frase_factura_especial",
   "column_break_8",
   "codigo_escenario_factura_especial",
-  "descripcion_codigo_escenario_factura_especial"
+  "descripcion_codigo_escenario_factura_especial",
+  "descripcion_especifica_factura_especial"
  ],
  "fields": [
   {
@@ -76,10 +77,16 @@
    "fieldtype": "Text",
    "label": "Descripcion Codigo Escenario Factura Especial",
    "read_only": 1
+  },
+  {
+   "fieldname": "descripcion_especifica_factura_especial",
+   "fieldtype": "Text",
+   "label": "Descripcion Especifica Factura Especial",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2020-09-12 18:29:47.607457",
+ "modified": "2020-12-03 15:50:31.966606",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Serial Configuration For Purchase Invoice",

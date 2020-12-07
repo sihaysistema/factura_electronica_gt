@@ -308,6 +308,7 @@ def fill_fixtures():
                     "Customer-facelec_trade_name",
                     "Company-facelec_trade_name",
                     "Supplier-facelec_trade_name",
+                    "Tax Category-facelec_description",
                 ]
             ]
         ]

@@ -84,8 +84,8 @@ class ExemptElectronicInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                with open('mi_factura_exenta.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion))
+                # with open('mi_factura_exenta.json', 'w') as f:
+                #     f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:
@@ -193,7 +193,7 @@ class ExemptElectronicInvoice:
 
             # De la compañia, obtenemos direccion 1, email, codigo postal, departamento, municipio, pais
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['company_address']},
-                                                 fieldname=['address_line1', 'email_id', 'pincode',
+                                                 fieldname=['address_line1', 'email_id', 'pincode', 'county',
                                                             'state', 'city', 'country', 'facelec_establishment'],
                                                  as_dict=1)
             if len(dat_direccion) == 0:
@@ -230,8 +230,8 @@ class ExemptElectronicInvoice:
                 "dte:DireccionEmisor": {
                     "dte:Direccion": dat_direccion[0]['address_line1'],
                     "dte:CodigoPostal": dat_direccion[0]['pincode'],  # Codig postal
-                    "dte:Municipio": dat_direccion[0]['state'],  # Municipio
-                    "dte:Departamento": dat_direccion[0]['city'],  # Departamento
+                    "dte:Municipio": dat_direccion[0]['county'],  # Municipio
+                    "dte:Departamento": dat_direccion[0]['state'],  # Departamento
                     "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper()  # CODIG PAIS
                 }
             }
@@ -253,7 +253,7 @@ class ExemptElectronicInvoice:
         # Intentara obtener data de direccion cliente
         try:
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['customer_address']},
-                                                 fieldname=['address_line1', 'email_id', 'pincode',
+                                                 fieldname=['address_line1', 'email_id', 'pincode', 'county',
                                                             'state', 'city', 'country'], as_dict=1)
 
             datos_default = {
@@ -317,8 +317,8 @@ class ExemptElectronicInvoice:
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
-                            "dte:Municipio": dat_direccion[0].get('state', datos_default.get('municipio')),
-                            "dte:Departamento": dat_direccion[0].get('city', datos_default.get('departamento')),
+                            "dte:Municipio": dat_direccion[0].get('county', datos_default.get('municipio')),
+                            "dte:Departamento": dat_direccion[0].get('state', datos_default.get('departamento')),
                             "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
                         }
                     }
@@ -330,8 +330,8 @@ class ExemptElectronicInvoice:
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
-                            "dte:Municipio": dat_direccion[0].get('state', datos_default.get('municipio')),
-                            "dte:Departamento": dat_direccion[0].get('city', datos_default.get('departamento')),
+                            "dte:Municipio": dat_direccion[0].get('county', datos_default.get('municipio')),
+                            "dte:Departamento": dat_direccion[0].get('state', datos_default.get('departamento')),
                             "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
                         }
                     }
@@ -419,6 +419,8 @@ class ExemptElectronicInvoice:
                                                         'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
                                                         'facelec_gt_tax_net_services_amt'], as_dict=True)
 
+            switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
+
             # TODO VER ESCENARIO CUANDO HAY MAS DE UN IMPUESTO?????
             # TODO VER ESCENARIO CUANDO NO HAY IMPUESTOS, ES POSIBLE???
             # Obtenemos los impuesto cofigurados para x compañia en la factura
@@ -460,10 +462,12 @@ class ExemptElectronicInvoice:
                     desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate']) * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
 
                     contador += 1
+                    description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
+
                     obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
-                    obj_item["dte:Descripcion"] = self.__dat_items[i]['item_name']  # description
+                    obj_item["dte:Descripcion"] = description_to_item  # description
                     obj_item["dte:PrecioUnitario"] = round(precio_uni, 2)
                     obj_item["dte:Precio"] = round(precio_item, 2)
                     obj_item["dte:Descuento"] = round(desc_item, 2)

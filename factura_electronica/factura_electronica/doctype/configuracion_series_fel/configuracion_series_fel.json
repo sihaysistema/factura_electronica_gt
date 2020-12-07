@@ -18,24 +18,28 @@
   "column_break_11",
   "codigo_escenario",
   "descripcion_codigo_escenario",
+  "descripcion_especifica",
   "frases_factura_especial_section",
   "tipo_frase_factura_especial",
   "descripcion_frase_factura_especial",
   "column_break_17",
   "codigo_escenario_factura_especial",
   "descripcion_codigo_escenario_factura_especial",
+  "descripcion_especifica_escenario_factura_especial",
   "frases_factura_exportacion_section",
   "tipo_frase_factura_exportacion",
   "descripcion_frase_factura_exportacion",
   "column_break_23",
   "codigo_escenario_factura_exportacion",
   "descripcion_codigo_escenario_factura_exportacion",
+  "descripcion_especifica_factura_exportacion",
   "frases_factura_exenta_section",
   "tipo_frase_factura_exenta",
   "descripcion_frase_factura_exenta",
   "column_break_29",
   "codigo_escenario_factura_exenta",
-  "descripcion_codigo_escenario_factura_exenta"
+  "descripcion_codigo_escenario_factura_exenta",
+  "descripcion_especifica_factura_exenta"
  ],
  "fields": [
   {
@@ -221,10 +225,33 @@
    "fieldtype": "Text",
    "label": "Descripcion Codigo Escenario Factura Exenta",
    "read_only": 1
+  },
+  {
+   "fieldname": "descripcion_especifica",
+   "fieldtype": "Text",
+   "label": "Descripcion Especifica",
+   "read_only": 1
+  },
+  {
+   "fieldname": "descripcion_especifica_escenario_factura_especial",
+   "fieldtype": "Data",
+   "label": "Descripcion Especifica Escenario Factura Especial"
+  },
+  {
+   "fieldname": "descripcion_especifica_factura_exportacion",
+   "fieldtype": "Text",
+   "label": "Descripcion Especifica Factura Exportacion",
+   "read_only": 1
+  },
+  {
+   "fieldname": "descripcion_especifica_factura_exenta",
+   "fieldtype": "Text",
+   "label": "Descripcion Especifica Factura Exenta",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2020-09-12 18:31:53.470656",
+ "modified": "2020-12-03 15:48:42.607166",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Series FEL",

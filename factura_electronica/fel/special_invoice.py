@@ -213,7 +213,7 @@ class ElectronicSpecialInvoice:
 
             # De la compañia, obtenemos direccion 1, email, codigo postal, departamento, municipio, pais
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['shipping_address']},
-                                                 fieldname=['address_line1', 'email_id', 'pincode',
+                                                 fieldname=['address_line1', 'email_id', 'pincode', 'county',
                                                             'state', 'city', 'country', 'facelec_establishment'],
                                                  as_dict=1)
             if len(dat_direccion) == 0:
@@ -245,14 +245,14 @@ class ElectronicSpecialInvoice:
                                                      {'name': self.__config_name}, 'afiliacion_iva'),
                 "@CodigoEstablecimiento": dat_direccion[0]['facelec_establishment'],
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
-                "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', ''),
+                "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', '').upper(),
                 "@NombreComercial": nom_comercial,
                 "@NombreEmisor": nom_comercial,
                 "dte:DireccionEmisor": {
                     "dte:Direccion": dat_direccion[0]['address_line1'],
                     "dte:CodigoPostal": dat_direccion[0]['pincode'],  # Codig postal
-                    "dte:Municipio": dat_direccion[0]['state'],  # Municipio
-                    "dte:Departamento": dat_direccion[0]['city'],  # Departamento
+                    "dte:Municipio": dat_direccion[0]['county'],  # Municipio
+                    "dte:Departamento": dat_direccion[0]['state'],  # Departamento
                     "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper()  # CODIG PAIS
                 }
             }
@@ -274,7 +274,7 @@ class ElectronicSpecialInvoice:
         # Intentara obtener data de direccion cliente
         try:
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['supplier_address']},
-                                                 fieldname=['address_line1', 'email_id', 'pincode',
+                                                 fieldname=['address_line1', 'email_id', 'pincode', 'county',
                                                             'state', 'city', 'country'], as_dict=1)
 
             contact_per = frappe.db.get_values('Contact Identification', filters={'parent': self.dat_fac[0]['contact_person'],
@@ -382,8 +382,8 @@ class ElectronicSpecialInvoice:
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
-                            "dte:Municipio": dat_direccion[0].get('state', datos_default.get('municipio')),
-                            "dte:Departamento": dat_direccion[0].get('city', datos_default.get('departamento')),
+                            "dte:Municipio": dat_direccion[0].get('county', datos_default.get('municipio')),
+                            "dte:Departamento": dat_direccion[0].get('state', datos_default.get('departamento')),
                             "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
                         }
                     }
@@ -396,8 +396,8 @@ class ElectronicSpecialInvoice:
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
-                            "dte:Municipio": dat_direccion[0].get('state', datos_default.get('municipio')),
-                            "dte:Departamento": dat_direccion[0].get('city', datos_default.get('departamento')),
+                            "dte:Municipio": dat_direccion[0].get('county', datos_default.get('municipio')),
+                            "dte:Departamento": dat_direccion[0].get('state', datos_default.get('departamento')),
                             "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
                         }
                     }
@@ -468,6 +468,8 @@ class ElectronicSpecialInvoice:
                                                         'facelec_p_gt_tax_net_fuel_amt', 'facelec_p_gt_tax_net_goods_amt',
                                                         'facelec_p_gt_tax_net_services_amt'], as_dict=True)
 
+            switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
+
             # segun los esquemas XML, solo mostramos el impuesto de IVA, algunos de los impuestos que pueden ir son
             # (depende del emisor y el tipo de documento electronico a generar):
             # Petroleo, Turismo Hospedaje, Timbre de prensa, Bomberos, Tasa Municipal
@@ -507,10 +509,12 @@ class ElectronicSpecialInvoice:
                     desc_item = float('{0:.2f}'.format(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty'] - float(self.__dat_items[i]['amount'])))
 
                     contador += 1
+                    description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
+
                     obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_p_purchase_three_digit']
-                    obj_item["dte:Descripcion"] = self.__dat_items[i]['item_name']  # description
+                    obj_item["dte:Descripcion"] = description_to_item  # description
                     obj_item["dte:PrecioUnitario"] = precio_uni
                     obj_item["dte:Precio"] = precio_item
                     obj_item["dte:Descuento"] = desc_item
