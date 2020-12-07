@@ -476,6 +476,7 @@ class ElectronicInvoice:
                     precio_uni = 0
                     precio_item = 0
                     desc_item = 0
+                    desc_fila = 0
 
                     # Precio unitario, (sin aplicarle descuento)
                     # precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
@@ -487,8 +488,15 @@ class ElectronicInvoice:
 
                     # Calculo descuento monto item
                     # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['discount_amount'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
-                    # monto - ((descuento + precio_con_descuento) * cantidad)
-                    desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate']) * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
+                    # monto - ((descuento_total_aplicado_en_la_linea + precio_con_descuento) * cantidad)
+                    # Funcion Tropicalrambler #2
+                    desc_fila = float(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'])
+
+                    #desc_item = float('{0:.2f}'.format(float(self.__dat_items[i]['amount']) - ((self.__dat_items[i]['rate'] - self.__dat_items[i]['discount_amount']) * ))))
+                    # Funcion Tropicalrambler
+                    #desc_item = float('{0:.2f}'.format(float(self.__dat_items[i]['amount']) - ((self.__dat_items[i]['rate'] - self.__dat_items[i]['discount_amount']) * float(self.__dat_items[i]['qty']))))
+                    # Funcion M Monroy
+                    # desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate']) * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
 
                     contador += 1
                     description_to_item = resultado = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
@@ -498,8 +506,8 @@ class ElectronicInvoice:
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = description_to_item  # description
                     obj_item["dte:PrecioUnitario"] = round(precio_uni, 2)
-                    obj_item["dte:Precio"] = round(precio_item, 2)
-                    obj_item["dte:Descuento"] = round(desc_item, 2)
+                    obj_item["dte:Precio"] = round(precio_item, 2) # Correcto según el esquema XML
+                    obj_item["dte:Descuento"] = round(desc_fila, 2)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -507,7 +515,7 @@ class ElectronicInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))  # net_amount
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount'])) # net_amount
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
                                                                                                       float(self.__taxes_fact[0]['rate']/100))
 
