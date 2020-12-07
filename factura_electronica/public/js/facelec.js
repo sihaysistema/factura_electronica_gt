@@ -178,17 +178,19 @@ frappe.ui.form.on("Company", {
 
 // ================================================================================================================ //
 
-// descripciones campos address
+// en: Address field descriptions in spanish
+// es-GT: descripciones campos de direcciones en español
 frappe.ui.form.on("Address", {
     refresh: function (frm) {
-        frm.set_df_property("city", "description", __("<b>FEL: Ciudad</b>"));
-        frm.set_df_property("state", "description", __("<b>FEL: Departamento</b>"));
-        frm.set_df_property("county", "description", __("<b>FEL: Municipio</b>"));
+        frm.set_df_property("address_line1", "description", __("<b>* FEL: Direccion Comercial 1</b>"));
+        frm.set_df_property("city", "description", __("<b>FEL: Ciudad</b>  p. ej.: Antigua Guatemala"));
+        frm.set_df_property("state", "description", __("<b>FEL: Departamento</b>  p. ej.: Sacatepéquez"));
+        frm.set_df_property("county", "description", __("<b>Municipio</b>  p. ej.: Antigua Guatemala"));
 
-        frm.set_df_property("address_line1", "description", __("<b>FEL: Direccion Comercial 1</b>"));
-        frm.set_df_property("country", "description", __("<b>FEL: Pais</b>"));
-        frm.set_df_property("email_id", "description", __("<b>FEL: Correo Electronico</b>"));
-        frm.set_df_property("pincode", "description", __("<b>FEL: Código Postal</b>"));
+        frm.set_df_property("country", "description", __("<b>FEL: Pais</b>  p. ej: Guatemala"));
+        frm.set_df_property("email_id", "description", __("<b>FEL: Correo Electronico</b>  p. ej: micorreo@hola.com"));
+        frm.set_df_property("phone", "description", __("<b>Teléfono:</b>  p. ej: +502 2333-2516"));
+        frm.set_df_property("pincode", "description", __("<b>FEL: Código Postal</b>  p. ej.: 03001"));
         frm.set_df_property("is_primary_address", "description", __("<b>FEL: Dirección para facturar</b>"));
     }
 });
