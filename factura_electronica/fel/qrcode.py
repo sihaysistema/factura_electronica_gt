@@ -40,7 +40,7 @@ def create_fel_svg_qrcode(authorization_number):
     FSGreenCMYK = colors.PCMYKColor(60.83,0,95.9,0)
 
     # en_US:  First, we draw a QR code with the selected contents. For now it is a URL. Plan is to call a webpage which calls a Python method delivering data for that specific shipment.
-    qr_code = qr.QrCodeWidget(qr_contents[2],barFillColor=FSBluecmyk, x=-15, y=-15, barWidth=200, barHeight=200)
+    qr_code = qr.QrCodeWidget(qr_contents[2],barFillColor=FSBluecmyk, x=-15, y=-15, barWidth=100, barHeight=100)
     # en_US: We get the bounds of the drawn QR Code. This will help resize.
     bounds = qr_code.getBounds() # Returns position x, position y, size x, size y
     # en_US: We set the width of the QR code drawing to the width bounds returned
@@ -48,7 +48,7 @@ def create_fel_svg_qrcode(authorization_number):
     # en_US: We set the width of the QR code drawing to the width bounds returned
     height = bounds[3] - bounds[1]
     # en_US: We create a drawing container with a specified size. We adjust the container to fit the QR Code, using the object size and a percentage amount
-    qr1 = Drawing(200, 200)
+    qr1 = Drawing(100, 100)
 
     # en_US: We add the QR code to the code container
     qr1.add(qr_code)
