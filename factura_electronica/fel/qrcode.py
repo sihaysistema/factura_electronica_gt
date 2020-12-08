@@ -86,5 +86,21 @@ def create_fel_svg_qrcode(authorization_number):
     # do not return this, it's a mess!!
     # qr_svg_string = ET.tostring(myroot, encoding="utf-8", method="xml")
 
-    # print(qr_svg_string)
+        # find position of first '>'
+    # find position of second '>'
+    # Erase everything before second '>'
+    first = svg_as_string.find('>',0)
+    second = svg_as_string.find('>',first+1)
+    # print(first)
+    # print(second)
+    print(svg_as_string[second+2:])
+
+    # We are slicing through this:
+    '''
+    <?xml version="1.0" encoding="utf-8"?>
+    <!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.0//EN' 'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
+    <
+    '''
+    qr_svg_string = svg_as_string[second+2:]
+
     return qr_svg_string
