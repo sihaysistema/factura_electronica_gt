@@ -447,6 +447,7 @@ class ElectronicInvoice:
                 for i in range(0, longitems):
                     obj_item = {}  # por fila
 
+                    # TODO  FUTURE Validar por Is Service, Is Good.  Si Is Fuel = Is Good. Si Is Exempt = Is Good.
                     detalle_stock = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'is_stock_item')
                     # Validacion de Bien o Servicio, en base a detalle de stock
                     if (int(detalle_stock) == 0):
