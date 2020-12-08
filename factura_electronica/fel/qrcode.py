@@ -84,7 +84,7 @@ def create_fel_svg_qrcode(authorization_number):
     qr_svg_string = svg_as_string
 
     # do not return this, it's a mess!!
-    qr_svg_string = ET.tostring(myroot, encoding="utf-8", method="xml")
+    # qr_svg_string = ET.tostring(myroot, encoding="utf-8", method="xml")
 
     # print(qr_svg_string)
     return qr_svg_string
