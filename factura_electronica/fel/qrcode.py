@@ -24,9 +24,9 @@ import xml.etree.ElementTree as ET
 @frappe.whitelist()
 def create_fel_svg_qrcode(authorization_number):
     """
-    Create QR Code example and return it as an svg string.
-    Takes in variables for QR Code assembly on-the-fly
-    Debug function can also save the SVG file, PDF, PNG
+    Create QR Code and return it as an svg string.
+    Takes in variable for FEL Authorization Number for QR Code assembly on-the-fly
+    SVG String currently is a simple string parsing technique, not a sophisticated XML parsing.
     """
     qr_code_url = 'https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=' + str(authorization_number)
 
