@@ -480,7 +480,8 @@ class ElectronicInvoice:
                     desc_fila = 0
 
                     # Precio unitario, (sin aplicarle descuento)
-                    precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
+                    # FIXME: ESTIMAR DESCUENTOS
+                    precio_uni = float(self.__dat_items[i]['rate']) # + self.__dat_items[i]['discount_amount'])
                     # precio_uni = float(self.__dat_items[i]['rate'])
 
                     # Calculo precio item (precio sin aplicarle descuento * cantidad)
@@ -491,7 +492,8 @@ class ElectronicInvoice:
                     # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['discount_amount'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
                     # monto - ((descuento_total_aplicado_en_la_linea + precio_con_descuento) * cantidad)
                     # Funcion Tropicalrambler #2
-                    desc_fila = float(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'])
+                    # FIXME: ESTIMAR DESCUENTOS
+                    desc_fila = 0 # float(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'])
 
                     #desc_item = float('{0:.2f}'.format(float(self.__dat_items[i]['amount']) - ((self.__dat_items[i]['rate'] - self.__dat_items[i]['discount_amount']) * ))))
                     # Funcion Tropicalrambler
@@ -540,7 +542,7 @@ class ElectronicInvoice:
         except:
             return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
-# Aqui se calcula el valor del impuesto (IVA)
+    # Aqui se calcula el valor del impuesto (IVA)
     def totals(self):
         """
         Funcion encargada de realizar totales de los impuestos sobre la factura
