@@ -480,8 +480,8 @@ class ElectronicInvoice:
                     desc_fila = 0
 
                     # Precio unitario, (sin aplicarle descuento)
-                    # precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
-                    precio_uni = float(self.__dat_items[i]['rate'])
+                    precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
+                    # precio_uni = float(self.__dat_items[i]['rate'])
 
                     # Calculo precio item (precio sin aplicarle descuento * cantidad)
                     # precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['rate'])))
@@ -506,9 +506,9 @@ class ElectronicInvoice:
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = description_to_item  # description
-                    obj_item["dte:PrecioUnitario"] = round(precio_uni, 2)
-                    obj_item["dte:Precio"] = round(precio_item, 2) # Correcto según el esquema XML
-                    obj_item["dte:Descuento"] = round(desc_fila, 2)
+                    obj_item["dte:PrecioUnitario"] = round(precio_uni, 3)
+                    obj_item["dte:Precio"] = round(precio_item, 3) # Correcto según el esquema XML
+                    obj_item["dte:Descuento"] = round(desc_fila, 3)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
