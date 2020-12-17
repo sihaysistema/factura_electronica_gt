@@ -480,8 +480,8 @@ class ElectronicInvoice:
                     desc_fila = 0
 
                     # Precio unitario, (sin aplicarle descuento)
-                    # precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
-                    precio_uni = float(self.__dat_items[i]['rate'])
+                    precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
+                    # precio_uni = float(self.__dat_items[i]['rate'])
 
                     # Calculo precio item (precio sin aplicarle descuento * cantidad)
                     # precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['rate'])))
@@ -506,9 +506,9 @@ class ElectronicInvoice:
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = description_to_item  # description
-                    obj_item["dte:PrecioUnitario"] = round(precio_uni, 2)
-                    obj_item["dte:Precio"] = round(precio_item, 2) # Correcto según el esquema XML
-                    obj_item["dte:Descuento"] = round(desc_fila, 2)
+                    obj_item["dte:PrecioUnitario"] = round(precio_uni, 3)
+                    obj_item["dte:Precio"] = round(precio_item, 3) # Correcto según el esquema XML
+                    obj_item["dte:Descuento"] = round(desc_fila, 3)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -516,11 +516,17 @@ class ElectronicInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount'])) # net_amount
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
+                    # obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount'])) # net_amount
+                    # obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
+                    #                                                                                  float(self.__taxes_fact[0]['rate']/100))
+
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.3f}'.format(float(self.__dat_items[i]['net_amount'])) # net_amount
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.3f}'.format(float(self.__dat_items[i]['net_amount']) *
                                                                                                       float(self.__taxes_fact[0]['rate']/100))
 
-                    obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['amount'])))
+
+
+                    obj_item["dte:Total"] = '{0:.3f}'.format((float(self.__dat_items[i]['amount'])))
                     # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
@@ -556,10 +562,10 @@ class ElectronicInvoice:
                         # "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
                         # Aqui obtenemos el iva que fue sumado por cada fila de items, esto se hace asi porque auqi de una vez le quitamos impuestos especiales.
                         # TODO Aqui es muy probable que redondeemos para la SAT.
-                        "@TotalMontoImpuesto": float('{0:.2f}'.format(float(gran_tot)))
+                        "@TotalMontoImpuesto": float('{0:.3f}'.format(float(gran_tot)))
                     }
                 },
-                "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
+                "dte:GranTotal": float('{0:.3f}'.format(float(self.dat_fac[0]['grand_total'])))
             }
 
             return True, 'OK'
@@ -625,15 +631,15 @@ class ElectronicInvoice:
             response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
 
             # DEBUGGING WRITE JSON PETITION TO SITES FOLDER
-            with open('peticion.json', 'w') as f:
-                 f.write(json.dumps(self.__data_a_firmar, indent=2))
+            # with open('peticion.json', 'w') as f:
+            #      f.write(json.dumps(self.__data_a_firmar, indent=2))
 
             # Guardamos en una variable privada la respuesta
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            with open('recibido_firmado.json', 'w') as f:
-                 f.write(json.dumps(self.__doc_firmado, indent=2))
+            # with open('recibido_firmado.json', 'w') as f:
+            #      f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:

@@ -416,15 +416,18 @@ class ElectronicCreditNote:
 
                     # Calculo precio unitario
                     precio_uni = 0
-                    precio_uni = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['rate']) + float(abs(self.__dat_items[i]['price_list_rate']) - abs(self.__dat_items[i]['rate'])))))
+                    # precio_uni = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['rate']) + float(abs(self.__dat_items[i]['price_list_rate']) - abs(self.__dat_items[i]['rate'])))))
+                    precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
 
                     # Calculo precio item
                     precio_item = 0
-                    precio_item = abs(float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate']))))
+                    # precio_item = abs(float('{0:.3f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate']))))
+                    precio_item = precio_uni * float(self.__dat_items[i]['qty'])
 
                     # Calculo descuento item
-                    desc_item = 0
-                    desc_item = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(float(self.__dat_items[i]['amount'])))))
+                    desc_fila = 0
+                    # desc_fila = abs(float('{0:.3f}'.format(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(float(self.__dat_items[i]['amount'])))))
+                    desc_fila = float(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'])
 
                     contador += 1
                     description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
@@ -433,9 +436,9 @@ class ElectronicCreditNote:
                     obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = description_to_item  #  self.__dat_items[i]['item_name']  # description
-                    obj_item["dte:PrecioUnitario"] = abs(precio_uni)
-                    obj_item["dte:Precio"] = abs(precio_item)
-                    obj_item["dte:Descuento"] = abs(desc_item)
+                    obj_item["dte:PrecioUnitario"] = round(abs(precio_uni), 3)
+                    obj_item["dte:Precio"] = round(abs(precio_item), 3)
+                    obj_item["dte:Descuento"] = round(abs(desc_fila), 3)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -443,11 +446,11 @@ class ElectronicCreditNote:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))))
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(float('{0:.3f}'.format(float(self.__dat_items[i]['net_amount']))))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(float('{0:.3f}'.format(float(self.__dat_items[i]['net_amount']) *
                                                                                                       float(self.__taxes_fact[0]['rate']/100))))
 
-                    obj_item["dte:Total"] = abs(float('{0:.2f}'.format((float(self.__dat_items[i]['amount'])))))
+                    obj_item["dte:Total"] = abs(float('{0:.3f}'.format((float(self.__dat_items[i]['amount'])))))
                     # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
@@ -478,10 +481,11 @@ class ElectronicCreditNote:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        "@TotalMontoImpuesto": abs(float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges']))))
+                        # "@TotalMontoImpuesto": abs(float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges']))))
+                        "@TotalMontoImpuesto": float('{0:.3f}'.format(float(gran_tot)))
                     }
                 },
-                "dte:GranTotal": abs(float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total']))))
+                "dte:GranTotal": abs(float('{0:.3f}'.format(float(self.dat_fac[0]['grand_total']))))
             }
 
             return True, 'OK'

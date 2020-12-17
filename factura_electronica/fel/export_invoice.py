@@ -471,7 +471,7 @@ class ExportInvoice:
 
                     precio_uni = 0
                     precio_item = 0
-                    desc_item = 0
+                    desc_fila = 0
 
                     # Precio unitario, (sin aplicarle descuento)
                     precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
@@ -482,10 +482,11 @@ class ExportInvoice:
                     precio_item = precio_uni * float(self.__dat_items[i]['qty'])
 
                     # Calculo descuento monto item
-                    # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['discount_amount'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
+                    # desc_fila = float('{0:.2f}'.format((self.__dat_items[i]['discount_amount'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
                     # monto - ((descuento + precio_con_descuento) * cantidad)
-                    desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate'])
-                                                         * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
+                    # desc_fila = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate'])
+                    #                                      * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
+                    desc_fila = float(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'])
 
                     contador += 1
                     description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
@@ -494,9 +495,9 @@ class ExportInvoice:
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = description_to_item  #  self.__dat_items[i]['item_name']  # descrition
-                    obj_item["dte:PrecioUnitario"] = round(precio_uni, 2)
-                    obj_item["dte:Precio"] = round(precio_item, 2)
-                    obj_item["dte:Descuento"] = round(desc_item, 2)
+                    obj_item["dte:PrecioUnitario"] = round(precio_uni, 3)
+                    obj_item["dte:Precio"] = round(precio_item, 3)
+                    obj_item["dte:Descuento"] = round(desc_fila, 3)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -504,10 +505,10 @@ class ExportInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))  # net_amount
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.3f}'.format(float(self.__dat_items[i]['net_amount']))  # net_amount
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = 0  # Como es exportacion, no aplica
 
-                    obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['amount'])))
+                    obj_item["dte:Total"] = '{0:.3f}'.format((float(self.__dat_items[i]['amount'])))
 
                     items_ok.append(obj_item)
 
@@ -540,7 +541,7 @@ class ExportInvoice:
                         "@TotalMontoImpuesto": 0  # exportacion
                     }
                 },
-                "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
+                "dte:GranTotal": float('{0:.3f}'.format(float(self.dat_fac[0]['grand_total'])))
             }
 
             return True, 'OK'
