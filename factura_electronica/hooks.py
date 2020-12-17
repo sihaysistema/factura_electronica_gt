@@ -19,7 +19,8 @@ app_license = "GNU General Public License (v3)"
 fixtures = fill_fixtures()
 jenv = {
     "methods": [
-        'currency_in_words:factura_electronica.currency_in_words'
+        'currency_in_words:factura_electronica.currency_in_words',
+        'fel_qr_svg:factura_electronica.fel.qrcode.create_fel_svg_qrcode'
     ]
 }
 

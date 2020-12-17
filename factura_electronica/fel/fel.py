@@ -447,6 +447,7 @@ class ElectronicInvoice:
                 for i in range(0, longitems):
                     obj_item = {}  # por fila
 
+                    # TODO  FUTURE Validar por Is Service, Is Good.  Si Is Fuel = Is Good. Si Is Exempt = Is Good.
                     detalle_stock = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'is_stock_item')
                     # Validacion de Bien o Servicio, en base a detalle de stock
                     if (int(detalle_stock) == 0):
@@ -476,6 +477,7 @@ class ElectronicInvoice:
                     precio_uni = 0
                     precio_item = 0
                     desc_item = 0
+                    desc_fila = 0
 
                     # Precio unitario, (sin aplicarle descuento)
                     # precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
@@ -487,8 +489,15 @@ class ElectronicInvoice:
 
                     # Calculo descuento monto item
                     # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['discount_amount'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
-                    # monto - ((descuento + precio_con_descuento) * cantidad)
-                    desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate']) * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
+                    # monto - ((descuento_total_aplicado_en_la_linea + precio_con_descuento) * cantidad)
+                    # Funcion Tropicalrambler #2
+                    desc_fila = float(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'])
+
+                    #desc_item = float('{0:.2f}'.format(float(self.__dat_items[i]['amount']) - ((self.__dat_items[i]['rate'] - self.__dat_items[i]['discount_amount']) * ))))
+                    # Funcion Tropicalrambler
+                    #desc_item = float('{0:.2f}'.format(float(self.__dat_items[i]['amount']) - ((self.__dat_items[i]['rate'] - self.__dat_items[i]['discount_amount']) * float(self.__dat_items[i]['qty']))))
+                    # Funcion M Monroy
+                    # desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate']) * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
 
                     contador += 1
                     description_to_item = resultado = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
@@ -498,8 +507,8 @@ class ElectronicInvoice:
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = description_to_item  # description
                     obj_item["dte:PrecioUnitario"] = round(precio_uni, 2)
-                    obj_item["dte:Precio"] = round(precio_item, 2)
-                    obj_item["dte:Descuento"] = round(desc_item, 2)
+                    obj_item["dte:Precio"] = round(precio_item, 2) # Correcto según el esquema XML
+                    obj_item["dte:Descuento"] = round(desc_fila, 2)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -507,7 +516,7 @@ class ElectronicInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))  # net_amount
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount'])) # net_amount
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
                                                                                                       float(self.__taxes_fact[0]['rate']/100))
 
@@ -525,6 +534,7 @@ class ElectronicInvoice:
         except:
             return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
+# Aqui se calcula el valor del impuesto (IVA)
     def totals(self):
         """
         Funcion encargada de realizar totales de los impuestos sobre la factura
@@ -536,13 +546,17 @@ class ElectronicInvoice:
         try:
             gran_tot = 0
             for i in self.__dat_items:
-                gran_tot += i['facelec_amount_minus_excise_tax']
+                gran_tot += i['facelec_sales_tax_for_this_row']
 
             self.__d_totales = {
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
+                        # OJO: Al obtener el total del IVA desde Total taxes and charges, puede haber error en el calculo.
+                        # "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
+                        # Aqui obtenemos el iva que fue sumado por cada fila de items, esto se hace asi porque auqi de una vez le quitamos impuestos especiales.
+                        # TODO Aqui es muy probable que redondeemos para la SAT.
+                        "@TotalMontoImpuesto": float('{0:.2f}'.format(float(gran_tot)))
                     }
                 },
                 "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
@@ -610,12 +624,16 @@ class ElectronicInvoice:
             headers = {"content-type": "application/json"}
             response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
 
+            # DEBUGGING WRITE JSON PETITION TO SITES FOLDER
+            with open('peticion.json', 'w') as f:
+                 f.write(json.dumps(self.__data_a_firmar, indent=2))
+
             # Guardamos en una variable privada la respuesta
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('reciibo_firmado.json', 'w') as f:
-            #     f.write(json.dumps(self.__doc_firmado, indent=2))
+            with open('recibido_firmado.json', 'w') as f:
+                 f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -665,8 +683,9 @@ class ElectronicInvoice:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            # with open('RESPONSE_factura.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
+            with open('RESPONSE_factura.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 

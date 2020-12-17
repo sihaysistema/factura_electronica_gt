@@ -4,3 +4,4 @@ pyopenssl
 pandas
 numpy
 numinwords
+reportlab
