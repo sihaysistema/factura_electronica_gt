@@ -11,6 +11,7 @@ nuevos fixtures que estes creando se agreguen al listado fixtures.
 
 """
 
+
 def fill_fixtures():
     # We declare fixtures as an empty list.
     fixtures_fillup = []
@@ -304,11 +305,7 @@ def fill_fixtures():
                     "Sales Invoice-is_it_an_international_invoice",
                     "Customer-codigo_comprador",
                     "Company-codigo_exportador",
-                    "Customer-codigo_consignatario_comprador",
-                    "Customer-facelec_trade_name",
-                    "Company-facelec_trade_name",
-                    "Supplier-facelec_trade_name",
-                    "Tax Category-facelec_description",
+                    "Customer-codigo_consignatario_comprador"
                 ]
             ]
         ]
@@ -395,8 +392,8 @@ def fill_fixtures():
                     "Goods", "Support Documents", "Observations and Signatures", "DUCA Number", "Acceptance Date",
                     "Reference or Serial Number", "Exit Customs Office", "Entry Customs Office", "Initial Transit Customs Office",
                     "Purpose", "Exporter Identification Type and Number", "Exporter ID number", "Exporter ID type",
-                    "Exporter ID issuing country", "Non-Generated", "Trade Name",
-                    "Name used for advertising or trade purposes. For Example: Apple, Amazon or Home Depot", "Legal Name, for tax, government or contract use. For Example: Apple, Inc. Amazon.com, Inc., The Home Depot, Inc.",
+                    "Exporter ID issuing country", "Cost Center", "Target account", "Applies for VAT withholding",
+                    "Applies for ISR withholding",
                 ]
             ]
         ]
