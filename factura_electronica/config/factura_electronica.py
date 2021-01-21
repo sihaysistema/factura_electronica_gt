@@ -149,6 +149,13 @@ def get_data():
                     "name": "GT Purchase Ledger",
                     "is_query_report": True,
                     "onboard": 1
+                },
+                {
+                    "type": "report",
+                    "label": _("GT Sales Ledger"),
+                    "name": "GT Sales Ledger",
+                    "is_query_report": True,
+                    "onboard": 1
                 }
             ]
         }
