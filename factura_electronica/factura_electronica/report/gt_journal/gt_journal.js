@@ -5,11 +5,10 @@
 frappe.query_reports["GT Journal"] = {
     "filters": [
         {
-            "fieldname":"",
-            "label":__(""),
-            "fieltype":"",
-            "options":"",
-            "default":"",
+            "fieldname":"company",
+            "label":__("Company"),
+            "fieldtype":"Link",
+            "options":"Company",
             "reqd":1,
             on_change: function () {
                 frappe.db.get_value('Company', frappe.query_report.get_filter_value('company'), 'tax_id')
@@ -26,15 +25,15 @@ frappe.query_reports["GT Journal"] = {
         {
             "fieldname":"tipo_poliza",
             "label":__("Tipo Póliza"),
-            "fieltype":"Link",
-            "options":"Tipo Poliza",
+            "fieldtype":"Link",
+            "options":"Tipo Poliza"
             // "default":"",
             // "reqd":1
         },
         {
             "fieldname":"from_date",
             "label":__("From Date"),
-            "fieltype":"Date",
+            "fieldtype":"Date",
             // "options":"",
             "default":frappe.datetime.add_months(frappe.datetime.get_today(), -1),
             "reqd":1,
@@ -43,26 +42,26 @@ frappe.query_reports["GT Journal"] = {
         {
             "fieldname":"to_date",
             "label":__("To Date"),
-            "fieltype":"Date",
+            "fieldtype":"Date",
             // "options":"",
             "default":frappe.datetime.get_today(),
             "reqd":1,
             "width":"60px"
         },
         {
-            "fieltype":"Break",
+            "fieldtype":"Break",
         },
         {
             "fieldname":"nit",
             "label":__("NIT"),
-            "fieltype":"Data",
+            "fieldtype":"Data",
             "default":"",
             "read_only":1
         },
         {
             "fieldname":"company_currency",
             "label":__("Company Default Currency"),
-            "fieltype":"Select",
+            "fieldtype":"Select",
             "options":erpnext.get_presentation_currency_list(),
             "default":"",
             "read_only":1

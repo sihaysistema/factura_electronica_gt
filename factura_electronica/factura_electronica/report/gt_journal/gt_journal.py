@@ -12,8 +12,7 @@ def execute(filters=None):
         return [], []
 
     columns = get_columns()
-    # data = get_all_data(filters)
-    data = []
+    data = get_all_data(filters)
 
     return columns, data
 
@@ -114,19 +113,16 @@ def get_all_data(filters):
         }
         data.append(data_d)
 
-        data.extend(get_account_data(
-            je['name'], je['posting_date'], filters))
+        data.extend(get_account_data(je['name'], je['posting_date'], filters))
 
         # Generates totals rows
         data.append({
             'explicacion': '<b>Sub-Total</b>',
             'debito': je['total_debit'],
             'credito': je['total_credit'],
-            # Adds the company currency, to display the formatted values
-            'currency': filters.company_currency
+            'currency': filters.company_currency  # Adds the company currency, to display the formatted values
         })
-        # Generate blank row to separate Journal Entries
-        data.append({})
+        data.append({}) # Generate blank row to separate Journal Entries
 
     return data
 
@@ -151,7 +147,6 @@ def get_account_data(parent, fecha, filters):
                                       FROM `tabJournal Entry Account`
                                       WHERE parent=%(parent_)s''',
                                    {'parent_': str(parent), 'moneda': filters.company_currency}, as_dict=True)
-    account_detail[0]['fecha'] = datetime.strftime(
-        fecha, '%d/%m/%Y')  # str(fecha)
+    account_detail[0]['fecha'] = datetime.strftime(fecha, '%d/%m/%Y')  # str(fecha)
 
     return account_detail
