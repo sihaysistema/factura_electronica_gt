@@ -156,6 +156,13 @@ def get_data():
                     "name": "GT Sales Ledger",
                     "is_query_report": True,
                     "onboard": 1
+                },
+                {
+                    "type": "report",
+                    "label": _("GT Journal"),
+                    "name": "GT Journal",
+                    "is_query_report": True,
+                    "onboard": 1
                 }
             ]
         }
