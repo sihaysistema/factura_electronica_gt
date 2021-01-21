@@ -842,3 +842,29 @@ def validate_address(address_name):
     else:
         # NO APLICA FACTURA INTERNACIONAL
         return False
+
+
+@frappe.whitelist()
+def get_address(company):
+    try:
+        link_address = frappe.db.get_value('Dynamic Link', {'link_doctype': 'Company', 'parenttype': 'Address',
+                                                            'link_name': str(company)}, 'parent')
+
+        address = frappe.db.get_value('Address', {'name': link_address}, 'address_line1')
+
+        return address
+
+    except:
+        return ''
+
+
+@frappe.whitelist()
+def download_excel_purchase_ledger():
+    """
+    Permite descargar el excel con nombre Libro compras GT
+    """
+    frappe.local.response.filename = "Libro Compras.xlsx"
+    with open("Libro Compras.xlsx", "rb") as fileobj:
+        filedata = fileobj.read()
+    frappe.local.response.filecontent = filedata
+    frappe.local.response.type = "download"
