@@ -1,0 +1,30 @@
+{
+ "add_total_row": 0,
+ "creation": "2021-01-20 22:00:44.684333",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "idx": 0,
+ "is_standard": "Yes",
+ "modified": "2021-01-20 22:00:44.684333",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "GT Sales Ledger",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Sales Invoice",
+ "report_name": "GT Sales Ledger",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Administrator"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Auditor"
+  }
+ ]
+}

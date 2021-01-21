@@ -868,3 +868,15 @@ def download_excel_purchase_ledger():
         filedata = fileobj.read()
     frappe.local.response.filecontent = filedata
     frappe.local.response.type = "download"
+
+
+@frappe.whitelist()
+def download_excel_sales_ledger():
+    """
+    Permite descargar el excel con nombre Libro compras GT
+    """
+    frappe.local.response.filename = "Libro Ventas.xlsx"
+    with open("Libro Ventas.xlsx", "rb") as fileobj:
+        filedata = fileobj.read()
+    frappe.local.response.filecontent = filedata
+    frappe.local.response.type = "download"
