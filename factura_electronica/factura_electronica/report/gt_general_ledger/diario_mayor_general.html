@@ -1,0 +1,141 @@
+<style>
+    h1 {
+        font-weight: 700;
+        margin-top: 60px;
+    }
+
+    img {
+        margin-top: -20px;
+    }
+
+    h3 {
+        margin-top: -15px;
+    }
+
+    h2 {
+        margin-top: -15px;
+    }
+
+    table.table>thead>tr>th {
+        border: 1px solid #000000 !important;
+    }
+
+    table.table>tbody>tr>td {
+        border: 1px solid #000000 !important;
+        border: none !important;
+    }
+
+    .darkFont {
+        color: #000000;
+    }
+
+    .bordes {
+        border-top: 1px solid;
+        border-bottom: 1px solid;
+    }
+</style>
+
+<img src="/files/logo-company.png" style="height: 85px; padding-left: 0px; margin-bottom: -70px;" />
+<h1 class="text-center darkFont">{%= filters.company %}</h1>
+<h3 class="text-center darkFont">NIT: {%= filters.nit %}</h3>
+
+<h2 class="text-center darkFont">{%= __("Diario Mayor General") %}</h2>
+<h4 class="text-center darkFont">
+    {% if (filters.party_name) { %}
+    {%= filters.party_name %}
+    {% } else if (filters.party && filters.show_name) { %}
+    {%= filters.party %}
+    {% } else if (filters.account) { %}
+    {%= filters.account %}
+    {% } %}
+</h4>
+<h6 class="text-center darkFont">
+    {% if (filters.tax_id) { %}
+    {%= __("Tax Id: ")%} {%= filters.tax_id %}
+    {% } %}
+</h6>
+
+<h5 class="text-center">
+    {%= __("Del") %}
+    {%= frappe.datetime.str_to_user(filters.from_date) %}
+    {%= __("al") %}
+    {%= frappe.datetime.str_to_user(filters.to_date) %}
+</h5>
+
+{% if (filters.cost_center) { %}
+<p class="customColor"> {%= __("Centro Costo") %} <span>:</span> {%= filters.cost_center %}</p>
+{% } else { %}
+<p class="customColor"> {%= __("Centro Costo: Todos los centros de costo") %}</p>
+{% } %}
+
+
+
+<div class="table-responsive">
+    <table class="table">
+        <thead class="thead-dark">
+            <tr>
+                <th style="width: 12%; color: #000000; background-color: #fff !important;">{%= __("Date") %}</th>
+                <th style=" width: 15%; color: #000000; background-color: #fff !important;">{%= __("Ref") %}</th>
+                <th style="width: 25%; color: #000000; background-color: #fff !important;">{%= __("Explicación") %}
+                </th>
+                <th style=" width: 15%; color: #000000; background-color: #fff !important;">{%= __("Debit") %}</th>
+                <th style="width: 15%; color: #000000; background-color: #fff !important;">{%= __("Credit") %}</th>
+                <th style=" width: 18%; color: #000000; background-color: #fff !important;">
+                    {%= __("Balance (Dr - Cr)") %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for(var i=0, l=data.length-1; i<l; i++) { %}
+            <tr>
+                {% if(data[i].posting_date) { %}
+                <!-- Fecha -->
+                <td>{%= frappe.datetime.str_to_user(data[i].posting_date) %}</td>
+
+                <td>{%= data[i].voucher_type %}
+                    <br>{%= data[i].voucher_no %}
+                    <br><b>Cuenta:</b> {%= data[i].account %}</td>
+
+                <td>
+                    {% if(!(filters.party || filters.account)) { %}
+                    {%= data[i].party || data[i].account %}
+                    <br>
+                    {% } %}
+
+                    {{ __("Against") }}: {%= data[i].against %}
+                    <br>{%= __("Remarks") %}: {%= data[i].remarks %}
+                    {% if(data[i].bill_no) { %}
+                    <br>{%= __("Supplier Invoice No") %}: {%= data[i].bill_no %}
+                    {% } %}
+                </td>
+
+                <td style="text-align: right">
+                    {%= format_currency(data[i].debit, filters.presentation_currency) %}</td>
+                <td style="text-align: right">
+                    {%= format_currency(data[i].credit, filters.presentation_currency) %}</td>
+                {% } else { %}
+
+                <td></td>
+                <td></td>
+
+                <td><b>{%= frappe.format(data[i].account, {fieldtype: "Link"}) || "&nbsp;" %}</b></td>
+
+                <td style="text-align: right">
+                    {%= data[i].account && format_currency(data[i].debit, filters.presentation_currency) %}
+                </td>
+
+                <td style="text-align: right">
+                    {%= data[i].account && format_currency(data[i].credit, filters.presentation_currency) %}
+                </td>
+                {% } %}
+
+                <td style="text-align: right">
+                    {%= format_currency(data[i].balance, filters.presentation_currency) %}
+                </td>
+            </tr>
+            {% } %}
+        </tbody>
+    </table>
+</div>
+<p class="text-left text-muted bordes">Fecha y Hora de Emisión
+    {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}
+</p>
