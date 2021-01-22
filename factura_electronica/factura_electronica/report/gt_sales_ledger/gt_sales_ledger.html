@@ -1,0 +1,255 @@
+{% var longitud = data.length-1 %}
+
+{% for(var iii=0, lll=Math.ceil((((data.length)-1)/10)); iii<lll; iii++) { %}
+
+<style>
+    @page {
+        /* en-US: This attribute establishes the page size in W x H for any browser*/
+        /* Size attribute is always width x height, leave single whitespace, and specify units.*/
+        /* Letter Landscape: 279mm 216mm*/
+        /* US Legal Landscape: 356mm 216mm; */
+        /* Guatemalan Oficio Landscape: 330mm 216mm; */
+        /* Letter Portrait: 216mm 279mm; */
+        /* US Legal Portrait: 216mm 356mm; */
+        /* Guatemalan Oficio Portrait: 216mm 330mm; */
+        size: 216mm 330mm !important;
+        /* Chrome sets own margins, we change these printer settings */
+        /* Order: Top, Right, Bottom, Left*/
+        /* margin: 0mm 5mm 5mm 5mm; */
+        /* Could also use margin-top: 5mm; margin-right: 5mm; margin-bottom: 5mm; margin-left: 5mm; */
+    }
+
+    #page-container {
+        position: relative;
+        min-height: 100vh;
+        font-family: "Times New Roman";
+    }
+
+    #header {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 4.5rem;
+        /* Header height */
+    }
+
+    #content-wrap {
+        padding-top: 4.5rem;
+        /* Header height */
+        padding-bottom: 2.5rem;
+        /* Footer height */
+    }
+
+    #footer {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 2.5rem;
+        /* Footer height */
+        border-top: 1px solid #d1d8dd;
+    }
+
+    #header>h2 {
+        font-weight: bold;
+    }
+
+    .print-format .whiteTable th {
+        background-color: white !important;
+        border-bottom: 0px !important;
+        text-align: center;
+        font-weight: normal;
+        max-width: 216mm !important;
+        min-height: 230mm !important;
+    }
+
+    .table.whiteTable>tbody>tr>td {
+        border-top: transparent;
+        font-size: 9px;
+    }
+
+    .table.whiteTable>thead {
+        border-bottom: 1px solid #d1d8dd;
+    }
+
+    .table.whiteTable td {
+        padding-top: 0rem !important;
+    }
+
+    .table.whiteTable>tbody>tr>td.totalRow {
+        border-top: 1px solid #d1d8dd;
+        border-bottom: 3px solid #d1d8dd;
+    }
+
+    .table td.headerTableMain {
+        font-style: italic;
+        font-weight: bold;
+        width: 30%;
+        text-align: right;
+        border-top: transparent;
+    }
+
+    .table td.headerTableData {
+        font-weight: bold;
+        width: 50%;
+        border-top: transparent;
+    }
+
+    .table td.headerTableDetails {
+        width: 20%;
+        border-left: #000000 1px solid;
+        border-right: #000000 1px solid;
+        border-top: #000000 1px solid;
+        border-bottom: #000000 1px solid;
+    }
+
+    .headerTable {
+        border-top: #000000 1px solid;
+        border-bottom: #000000 1px solid;
+        border-right: #000000 1px solid;
+        border-left: #000000 1px solid;
+    }
+
+    .summaryTable {
+        border-top: 1px solid #d1d8dd;
+        border-bottom: 1px solid #d1d8dd;
+        border-right: 1px solid #d1d8dd;
+        border-left: 1px solid #d1d8dd;
+    }
+
+    table td.summaryTableText {
+        width: 50%;
+        text-align: right;
+        border-top: transparent;
+    }
+
+    .table td.summaryTableRight {
+        text-align: right;
+        border-top: transparent;
+    }
+
+    .table td.summaryTableLeft {
+        text-align: left;
+        border-top: transparent;
+    }
+</style>
+
+<div id="page-container">
+    <div id="header">
+        <h2 class="text-center">{%= __("SALES LEDGER") %}</h2>
+    </div>
+    <div id="content-wrap">
+        <div class="row justify-content-center">
+            <div class="col-xs-12">
+                <div class="table-responsive">
+                    <table class="headerTable table">
+                        <tr>
+                            <td class="headerTableMain">
+                                {%= __("MONTH'S OPERATION") %}:
+                            </td>
+                            <td class="headerTableData">
+                                OCTUBRE /2019
+                            </td>
+                            <td class="headerTableDetails" rowspan="2">
+                                {%= __("PAGE") %}: {%= iii + 1 %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="headerTableMain">
+                                {%= __("NAME OR BUSINESS NAME") %}:
+                            </td>
+                            <td class="headerTableData">
+                                {%= filters.company %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="headerTableMain">
+                                {%= __("ADDRESS") %}:
+                            </td>
+
+                            <td class="headerTableData">
+                                {%= filters.address %}
+                            </td>
+
+                            <td class="headerTableDetails" rowspan="2">
+                                <p>{%= __("RESOLUTION") %}</p>
+                                <p>SIN RESOLUCIÓN</p>
+                                <p>{%= __("Date") %}: {%= filters.to_date %}</p>
+                                <p>{%= __("From page") %}: {%= __("to") %}: </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="headerTableMain">
+                                {%= __("NIT") %}
+                            </td>
+                            <td class="headerTableData">
+                                {%= filters.nit %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-xs-12">
+                <table class="table whiteTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">{%= __("Date") %}</th>
+                            <th scope="col">{%= __("Type Doc.") %}</th>
+                            <th scope="col">{%= __("Num Doc.") %}</th>
+                            <th scope="col">{%= __("NIT/Cédula") %}</th>
+                            <th scope="col">{%= __("Customer") %}</th>
+                            <th scope="col">{%= __("Exempt Sales") %}</th>
+                            <th scope="col">{%= __("Sales Of Goods") %}</th>
+                            <th scope="col">{%= __("Sales Of Services") %}</th>
+                            <th scope="col">{%= __("Export Sales") %}</th>
+                            <th scope="col">{%= __("Goods IVA") %}</th>
+                            <th scope="col">{%= __("Services IVA") %}</th>
+                            <th scope="col">{%= __("Total") %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {% if (data.length-1 <= longitud) { %}
+                        {% var array_ok = data.splice(0, 10) %}
+                        {% } %}
+
+                        {% for(var i=0, l=array_ok.length; i<l; i++) { %}
+                        <tr>
+                            <td>{%= array_ok[i].date %}</td>
+                            <td>{%= array_ok[i].type_doc %}</td>
+                            <td>{%= array_ok[i].num_doc %}</td>
+                            <td>{%= array_ok[i].tax_id %}</td>
+                            <td>{%= array_ok[i].customer %}</td>
+                            <td style="text-align: right">{%= format_currency(array_ok[i].exempt_sales, filters.company_currency) %}</td>
+                            <td style="text-align: right">{%= format_currency(array_ok[i].sales_of_goods, filters.company_currency) %}</td>
+                            <td style="text-align: right">{%= format_currency(array_ok[i].sales_of_services, filters.company_currency) %}</td>
+                            <td style="text-align: right">{%= format_currency(array_ok[i].export_sales, filters.company_currency) %}</td>
+                            <td style="text-align: right">{%= format_currency(array_ok[i].goods_iva, filters.company_currency) %}</td>
+                            <td style="text-align: right">{%= format_currency(array_ok[i].services_iva, filters.company_currency) %}</td>
+                            <td style="text-align: right">{%= format_currency(array_ok[i].total, filters.company_currency) %}</td>
+                        </tr>
+                        {% } %}
+
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+    <footer id="footer">
+        <div class="">
+            <div class="row">
+                <div class="col-xs-6">
+                    <p class="text-left">{%= __("Date of issue") %}:
+                        {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}
+                    </p>
+                </div>
+                <div class="col-xs-6">
+                    <p class="text-right">{%= __("Page") %} {%= iii + 1 %}</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <div class="page-break"></div>
+</div>
+{% } %}

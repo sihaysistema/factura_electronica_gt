@@ -135,6 +135,34 @@ def get_data():
                     "name": "VAT Payable and Receivable Conciliation",
                     "is_query_report": True,
                     "onboard": 1
+                },
+                {
+                    "type": "report",
+                    "label": _("GT General Ledger"),
+                    "name": "GT General Ledger",
+                    "is_query_report": True,
+                    "onboard": 1
+                },
+                {
+                    "type": "report",
+                    "label": _("GT Purchase Ledger"),
+                    "name": "GT Purchase Ledger",
+                    "is_query_report": True,
+                    "onboard": 1
+                },
+                {
+                    "type": "report",
+                    "label": _("GT Sales Ledger"),
+                    "name": "GT Sales Ledger",
+                    "is_query_report": True,
+                    "onboard": 1
+                },
+                {
+                    "type": "report",
+                    "label": _("GT Journal"),
+                    "name": "GT Journal",
+                    "is_query_report": True,
+                    "onboard": 1
                 }
             ]
         }

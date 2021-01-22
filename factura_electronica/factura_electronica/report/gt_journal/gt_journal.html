@@ -1,0 +1,130 @@
+{% var longitud = data.length-1 %}
+{% for(var iii=0, lll=Math.ceil((((data.length)-1)/5)); iii<lll; iii++) { %} <style>
+    table.table>thead>tr>th {
+    border: 1px solid #000000 !important;
+    }
+
+    table.table>tbody>tr>td {
+    border: 1px solid #000000 !important;
+    border: none !important;
+    }
+
+    .customColor {
+    color: #343a40;
+    }
+
+    img {
+    margin-top: -20px;
+    }
+
+    h1 {
+    font-weight: 700;
+    margin-top: 50px;
+    }
+
+    h3 {
+    margin-top: -15px;
+    }
+
+    h2 {
+    margin-top: -15px;
+    }
+
+    .darkFont {
+    color: #000000;
+    }
+
+    .bordes {
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+    }
+    </style>
+    <img src="" style="height: 70px; padding-left: 0px; margin-bottom: -75px;" />
+    <h1 class="text-center darkFont">{%= filters.company %}</h1>
+    <h3 class="text-center darkFont">NIT: {%= filters.nit %}</h3>
+
+    <h2 class="text-center darkFont">{%= __("GT Journal") %}</h2>
+
+    <h5 class="text-center customColor">
+        {%= __("Del") %}
+        {%= frappe.datetime.str_to_user(filters.from_date) %}
+        {%= __("a") %}
+        {%= frappe.datetime.str_to_user(filters.to_date) %}
+    </h5>
+
+    {% if (filters.tipo_poliza) { %}
+    <p class="customColor"> {%= __("Tipo póliza") %} <span>:</span> {%= filters.tipo_poliza %}</p>
+    {% } else { %}
+    <p class="customColor"> {%= __("Tipo póliza: TODOS LOS TIPOS") %}</p>
+    {% } %}
+
+    <p class="customColor"> {%= __("Detalle: Sumario de pólizas por tipo") %} </p>
+
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th style="background-color: #fff !important;">{%= __("Fecha") %}</th>
+                    <th style="background-color: #fff !important;">{%= __("Póliza") %}</th>
+                    <th style="background-color: #fff !important;">{%= __("Explicación") %}
+                    </th>
+                    <th style="background-color: #fff !important;">{%= __("Debito") %}</th>
+                    <th style="background-color: #fff !important;">{%= __("Credito") %}</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                {% if (data.length-1 <= longitud) { %} {% var array_ok=data.splice(0, 5) %} {% } %} {% for(var i=0,
+                    l=array_ok.length; i<l; i++) { %} <tr>
+
+                    <td>{%= array_ok[i].fecha %}</td>
+
+                    <td>{%= array_ok[i].poliza %}</td>
+
+                    <td>{%= array_ok[i].explicacion %}</td>
+
+                    {% if (array_ok[i].fecha === '<b>Tipo de póliza</b>') { %}
+                    <td style="text-align: right">{%= (array_ok[i].debito) %}</td>
+
+                    {% } else if (!array_ok[i].fecha && !array_ok[i].poliza && !array_ok[i].explicacion) { %}
+                    <td style="text-align: right">{%= (array_ok[i].debito) %}</td>
+
+                    {% } else if (array_ok[i].explicacion === '<b>Sub-Total</b>') { %}
+                    <td style="text-align: right; text-decoration: underline black;">
+                        {%= format_currency(array_ok[i].debito) %}
+                    </td>
+
+                    {% } else { %}
+                    <td style="text-align: right">{%= format_currency(array_ok[i].debito) %}</td>
+                    {% } %}
+
+
+                    {% if (array_ok[i].fecha === '<b>Tipo póliza</b>') { %}
+                    <td style="text-align: right">{%= (array_ok[i].credito) %}</td>
+
+                    {% } else if (!array_ok[i].fecha && !array_ok[i].poliza && !array_ok[i].explicacion) { %}
+                    <td style="text-align: right">{%= (array_ok[i].credito) %}</td>
+
+                    {% } else if (array_ok[i].explicacion === '<b>Sub-Total</b>') { %}
+                    <td style="text-align: right; text-decoration: underline black;">
+                        {%= format_currency(array_ok[i].credito) %}
+                    </td>
+
+                    {% } else { %}
+                    <td style="text-align: right">{%= format_currency(array_ok[i].credito) %}</td>
+                    {% } %}
+
+
+                    </tr>
+                    {% } %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-right text-muted bordes">Fecha y Hora de Emisión
+        {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}
+    </p>
+
+    <div class="page-break"></div>
+
+    {% } %}
