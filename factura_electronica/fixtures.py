@@ -305,7 +305,8 @@ def fill_fixtures():
                     "Sales Invoice-is_it_an_international_invoice",
                     "Customer-codigo_comprador",
                     "Company-codigo_exportador",
-                    "Customer-codigo_consignatario_comprador"
+                    "Customer-codigo_consignatario_comprador",
+                    "Sales Invoice Item-facelec_is_discount",
                 ]
             ]
         ]

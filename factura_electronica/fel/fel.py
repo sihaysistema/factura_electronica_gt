@@ -429,9 +429,6 @@ class ElectronicInvoice:
                                                         'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
                                                         'facelec_gt_tax_net_services_amt'], as_dict=True)
 
-            # TODO VER ESCENARIO CUANDO HAY MAS DE UN IMPUESTO?????
-            # TODO VER ESCENARIO CUANDO NO HAY IMPUESTOS, ES POSIBLE???
-
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
             # Obtenemos los impuesto cofigurados para x compañia en la factura
@@ -482,7 +479,7 @@ class ElectronicInvoice:
 
                     # Precio unitario, (sin aplicarle descuento)
                     # FIXME: ESTIMAR DESCUENTOS
-                    precio_uni = flt(self.__dat_items[i]['rate'], self.__precision) # + self.__dat_items[i]['discount_amount'])
+                    precio_uni = flt(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'], self.__precision) # + self.__dat_items[i]['discount_amount'])
                     # precio_uni = float(self.__dat_items[i]['rate'])
 
                     # Calculo precio item (precio sin aplicarle descuento * cantidad)
@@ -494,7 +491,8 @@ class ElectronicInvoice:
                     # monto - ((descuento_total_aplicado_en_la_linea + precio_con_descuento) * cantidad)
                     # Funcion Tropicalrambler #2
                     # FIXME: ESTIMAR DESCUENTOS
-                    desc_fila = 0 # float(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'])
+                    desc_fila = 0
+                    desc_fila = float(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'])
 
                     #desc_item = float('{0:.2f}'.format(float(self.__dat_items[i]['amount']) - ((self.__dat_items[i]['rate'] - self.__dat_items[i]['discount_amount']) * ))))
                     # Funcion Tropicalrambler
@@ -554,7 +552,7 @@ class ElectronicInvoice:
         try:
             gran_tot = 0
             for i in self.__dat_items:
-                gran_tot += i['facelec_sales_tax_for_this_row']
+                gran_tot += flt(i['facelec_sales_tax_for_this_row'], self.__precision)
 
             self.__d_totales = {
                 "dte:TotalImpuestos": {
@@ -606,42 +604,42 @@ class ElectronicInvoice:
 
         # Generamos la peticion para firmar
         try:
-            url = frappe.db.get_value('Configuracion Factura Electronica',
-                                     {'name': self.__config_name}, 'url_firma')
+            url = str(frappe.db.get_value('Configuracion Factura Electronica',
+                                     {'name': self.__config_name}, 'url_firma')).strip()
 
             # codigo = frappe.db.get_value('Configuracion Factura Electronica',
             #                             {'name': self.__config_name}, 'codigo')
 
-            alias = frappe.db.get_value('Configuracion Factura Electronica',
-                                       {'name': self.__config_name}, 'alias')
+            alias = str(frappe.db.get_value('Configuracion Factura Electronica',
+                                       {'name': self.__config_name}, 'alias')).strip()
 
-            anulacion = frappe.db.get_value('Configuracion Factura Electronica',
-                                           {'name': self.__config_name}, 'es_anulacion')
+            anulacion = str(frappe.db.get_value('Configuracion Factura Electronica',
+                                           {'name': self.__config_name}, 'es_anulacion')).strip()
 
-            self.__llave = frappe.db.get_value('Configuracion Factura Electronica',
-                                              {'name': self.__config_name}, 'llave_pfx')
+            self.__llave = str(frappe.db.get_value('Configuracion Factura Electronica',
+                                              {'name': self.__config_name}, 'llave_pfx')).strip()
 
             self.__data_a_firmar = {
                 "llave": self.__llave, # LLAVE
                 "archivo": str(self.__encoded_str),  # En base64
                 # "codigo": codigo, # Número interno de cada transacción
-                "alias":  alias, # USUARIO
+                "alias": alias, # USUARIO
                 "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
             }
-
-            headers = {"content-type": "application/json"}
-            response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
 
             # DEBUGGING WRITE JSON PETITION TO SITES FOLDER
             # with open('peticion.json', 'w') as f:
             #      f.write(json.dumps(self.__data_a_firmar, indent=2))
 
+            headers = {"content-type": "application/json"}
+            response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
+
             # Guardamos en una variable privada la respuesta
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('recibido_firmado.json', 'w') as f:
-            #      f.write(json.dumps(self.__doc_firmado, indent=2))
+            with open('recibido_firmado.json', 'w') as f:
+                 f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
