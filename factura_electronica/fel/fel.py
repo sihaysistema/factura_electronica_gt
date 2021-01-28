@@ -427,7 +427,7 @@ class ElectronicInvoice:
                                                         'facelec_amount_minus_excise_tax',
                                                         'facelec_other_tax_amount', 'facelec_three_digit_uom_code',
                                                         'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
-                                                        'facelec_gt_tax_net_services_amt'], as_dict=True)
+                                                        'facelec_gt_tax_net_services_amt', 'facelec_is_discount'], as_dict=True)
 
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
@@ -474,31 +474,20 @@ class ElectronicInvoice:
 
                     precio_uni = 0
                     precio_item = 0
-                    desc_item = 0
                     desc_fila = 0
+
+                    desc_item_fila = 0
+                    if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
+                        desc_item_fila = self.__dat_items[i]['discount_amount']
 
                     # Precio unitario, (sin aplicarle descuento)
-                    # FIXME: ESTIMAR DESCUENTOS
-                    precio_uni = flt(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'], self.__precision) # + self.__dat_items[i]['discount_amount'])
-                    # precio_uni = float(self.__dat_items[i]['rate'])
+                    # Al precio unitario se le suma el descuento que genera ERP, ya que es neceario enviar precio sin descuentos, en las operaciones restantes es neceario
+                    precio_uni = flt(self.__dat_items[i]['rate'] + desc_item_fila, self.__precision)
 
-                    # Calculo precio item (precio sin aplicarle descuento * cantidad)
-                    # precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['rate'])))
-                    precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)  # float('{0:.2f}'.format((self.__dat_items[i]['amount'])))
+                    precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
 
-                    # Calculo descuento monto item
-                    # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['discount_amount'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
-                    # monto - ((descuento_total_aplicado_en_la_linea + precio_con_descuento) * cantidad)
-                    # Funcion Tropicalrambler #2
-                    # FIXME: ESTIMAR DESCUENTOS
                     desc_fila = 0
-                    desc_fila = float(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'])
-
-                    #desc_item = float('{0:.2f}'.format(float(self.__dat_items[i]['amount']) - ((self.__dat_items[i]['rate'] - self.__dat_items[i]['discount_amount']) * ))))
-                    # Funcion Tropicalrambler
-                    #desc_item = float('{0:.2f}'.format(float(self.__dat_items[i]['amount']) - ((self.__dat_items[i]['rate'] - self.__dat_items[i]['discount_amount']) * float(self.__dat_items[i]['qty']))))
-                    # Funcion M Monroy
-                    # desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate']) * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
+                    desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
 
                     contador += 1
                     description_to_item = resultado = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
@@ -517,9 +506,6 @@ class ElectronicInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    # obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount'])) # net_amount
-                    # obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
-                    #                                                                                  float(self.__taxes_fact[0]['rate']/100))
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['net_amount'], self.__precision)  # net_amount
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['net_amount'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
@@ -558,10 +544,6 @@ class ElectronicInvoice:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        # OJO: Al obtener el total del IVA desde Total taxes and charges, puede haber error en el calculo.
-                        # "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
-                        # Aqui obtenemos el iva que fue sumado por cada fila de items, esto se hace asi porque auqi de una vez le quitamos impuestos especiales.
-                        # TODO Aqui es muy probable que redondeemos para la SAT.
                         "@TotalMontoImpuesto": flt(gran_tot, self.__precision)
                     }
                 },
