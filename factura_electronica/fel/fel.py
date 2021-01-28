@@ -544,7 +544,7 @@ class ElectronicInvoice:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        "@TotalMontoImpuesto": flt(gran_tot, self.__precision)
+                        "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
                     }
                 },
                 "dte:GranTotal": flt(self.dat_fac[0]['grand_total'], self.__precision)

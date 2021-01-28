@@ -13,7 +13,7 @@ import xmltodict
 import frappe
 from factura_electronica.utils.formulas import apply_formula_isr
 from frappe import _, _dict
-from frappe.utils import flt
+from frappe.utils import flt, cint
 
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 
@@ -469,7 +469,7 @@ class ElectronicSpecialInvoice:
                                                         'facelec_p_amount_minus_excise_tax',
                                                         'facelec_p_other_tax_amount', 'facelec_p_purchase_three_digit',
                                                         'facelec_p_gt_tax_net_fuel_amt', 'facelec_p_gt_tax_net_goods_amt',
-                                                        'facelec_p_gt_tax_net_services_amt'], as_dict=True)
+                                                        'facelec_p_gt_tax_net_services_amt', 'facelec_is_discount'], as_dict=True)
 
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
@@ -499,10 +499,15 @@ class ElectronicSpecialInvoice:
                     if (int(detalle_stock) == 1):
                         obj_item["@BienOServicio"] = 'B'
 
+
+                    desc_item_fila = 0
+                    if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
+                        desc_item_fila = self.__dat_items[i]['discount_amount']
+
                     # Calculo precio unitario
                     precio_uni = 0
                     # precio_uni = float('{0:.2f}'.format(self.__dat_items[i]['rate'] + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
-                    precio_uni = flt(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'], self.__precision)
+                    precio_uni = flt(self.__dat_items[i]['rate'] + desc_item_fila, self.__precision)
 
                     # Calculo precio item
                     precio_item = 0
@@ -511,8 +516,7 @@ class ElectronicSpecialInvoice:
 
                     # Calculo descuento item: Segun esquema XML se obtiene los montos descuento
                     desc_fila = 0
-                    # desc_fila = float('{0:.2f}'.format(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty'] - float(self.__dat_items[i]['amount'])))
-                    # desc_fila = flt(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'], self.__precision)
+                    desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
 
                     contador += 1
                     description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
@@ -559,7 +563,7 @@ class ElectronicSpecialInvoice:
         try:
             gran_tot = 0
             for i in self.__dat_items:
-                gran_tot += i['facelec_p_amount_minus_excise_tax']
+                gran_tot += flt(i['facelec_p_sales_tax_for_this_row'], self.__precision)
 
             self.__d_totales = {
                 "dte:TotalImpuestos": {

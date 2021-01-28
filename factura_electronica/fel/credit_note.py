@@ -20,6 +20,8 @@ from factura_electronica.utils.utilities_facelec import get_currency_precision
 # fuente para el diario de devolución de ventas. En otras palabras, la nota
 # de crédito es evidencia de la reducción en las ventas. Wikipedia (Inglés)
 
+# EN RESUMEN, ES DEVOLUCION
+
 # NOTAS:
 # 1. INSTANCIA FACT
 
@@ -158,11 +160,11 @@ class ElectronicCreditNote:
             # NOTA: LA FECHA Y HORA DE EMISION A USAR ES DE LA FACTURA ELECTRONICA FEL ORIGINAL, SOBRE LA CUAL
             # SE ESTA HACIENDO LA NOTA DE CREDITO
             self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_date'))
-            self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_time'))
+            self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_time'))  # self.__inv_credit_note
 
             if '.' in self.time_invoice:
                 # la ultima porcion elimina los milisegundos manualmente, las nuevas validaciones de INFILE no soportan miliseconds
-                self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).rpartition('.')[0]
+                self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_time')).rpartition('.')[0]
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'currency'),
@@ -389,7 +391,7 @@ class ElectronicCreditNote:
                                                         'facelec_amount_minus_excise_tax',
                                                         'facelec_other_tax_amount', 'facelec_three_digit_uom_code',
                                                         'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
-                                                        'facelec_gt_tax_net_services_amt'], as_dict=True)
+                                                        'facelec_gt_tax_net_services_amt', 'facelec_is_discount'], as_dict=True)
 
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
@@ -415,20 +417,22 @@ class ElectronicCreditNote:
                     if (int(detalle_stock) == 1):
                         obj_item["@BienOServicio"] = 'B'
 
+                    desc_item_fila = 0
+                    if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
+                        desc_item_fila = self.__dat_items[i]['discount_amount']
+
                     # Calculo precio unitario
                     precio_uni = 0
-                    # precio_uni = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['rate']) + float(abs(self.__dat_items[i]['price_list_rate']) - abs(self.__dat_items[i]['rate'])))))
-                    precio_uni = flt(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'], self.__precision)
+                    precio_uni = flt(self.__dat_items[i]['rate'] + desc_item_fila, self.__precision)
 
                     # Calculo precio item
                     precio_item = 0
-                    # precio_item = abs(float('{0:.3f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate']))))
                     precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
 
                     # Calculo descuento item
                     desc_fila = 0
                     # desc_fila = abs(float('{0:.3f}'.format(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(float(self.__dat_items[i]['amount'])))))
-                    # desc_fila = flt(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'], self.__precision)
+                    desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
 
                     contador += 1
                     description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
@@ -476,14 +480,13 @@ class ElectronicCreditNote:
         try:
             gran_tot = 0
             for i in self.__dat_items:
-                gran_tot += i['facelec_amount_minus_excise_tax']
+                gran_tot += flt(i['facelec_sales_tax_for_this_row'], self.__precision)
 
             self.__d_totales = {
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        # "@TotalMontoImpuesto": abs(float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges']))))
-                        "@TotalMontoImpuesto": flt(gran_tot, self.__precision)
+                        "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
                     }
                 },
                 "dte:GranTotal": abs(flt(self.dat_fac[0]['grand_total'], self.__precision))
@@ -541,8 +544,8 @@ class ElectronicCreditNote:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('mi_nota_credito.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('mi_nota_credito.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -641,8 +644,8 @@ class ElectronicCreditNote:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            # with open('resp_electronic_credit_note.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('response_credit_note.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 

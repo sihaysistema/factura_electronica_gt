@@ -447,7 +447,7 @@ class ExportInvoice:
                                                                'facelec_amount_minus_excise_tax',
                                                                'facelec_other_tax_amount', 'facelec_three_digit_uom_code',
                                                                'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
-                                                               'facelec_gt_tax_net_services_amt'], as_dict=True)
+                                                               'facelec_gt_tax_net_services_amt', 'facelec_is_discount'], as_dict=True)
 
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
@@ -477,21 +477,18 @@ class ExportInvoice:
                     precio_item = 0
                     desc_fila = 0
 
-                    # Precio unitario, (sin aplicarle descuento)
-                    precio_uni = flt(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'], self.__precision)
+                    desc_item_fila = 0
+                    if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
+                        desc_item_fila = self.__dat_items[i]['discount_amount']
 
-                    # Calculo precio item (precio sin aplicarle descuento * cantidad)
-                    # precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['rate'])))
-                    # float('{0:.2f}'.format((self.__dat_items[i]['amount'])))
+                    # Precio unitario, (sin aplicarle descuento)
+                    precio_uni = flt(self.__dat_items[i]['rate'] + desc_item_fila, self.__precision)
+
                     precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
 
                     # Calculo descuento monto item
-                    # desc_fila = float('{0:.2f}'.format((self.__dat_items[i]['discount_amount'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
-                    # monto - ((descuento + precio_con_descuento) * cantidad)
-                    # desc_fila = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate'])
-                    #                                      * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
                     desc_fila = 0
-                    # desc_fila = flt(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'], self.__precision)
+                    desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
 
                     contador += 1
                     description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']

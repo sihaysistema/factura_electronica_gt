@@ -307,6 +307,7 @@ def fill_fixtures():
                     "Company-codigo_exportador",
                     "Customer-codigo_consignatario_comprador",
                     "Sales Invoice Item-facelec_is_discount",
+                    "Purchase Invoice Item-facelec_is_discount",
                 ]
             ]
         ]
