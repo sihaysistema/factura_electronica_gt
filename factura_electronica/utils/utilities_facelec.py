@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2020, Si Hay Sistema and contributors
+# For license information, please see license.txt
+
 from __future__ import unicode_literals
 
 import datetime
+import json
 import unicodedata
 from xml.sax.saxutils import escape
 
-import pandas as pd
-import json
-
 import frappe
+import pandas as pd
 from frappe import _
+from frappe.utils import cint, flt
 
 
 def encuentra_errores(cadena):
@@ -155,3 +158,22 @@ def clean_traceback_py(mensaje):
     msj_e = len(x) - 2
 
     return str(x[msj_e]) + str(x[msj_e+1])
+
+
+def get_currency_precision():
+    """
+    Obtiene el numero de decimales a usar en los calculos para los reportes, solo se usa en los calculos
+
+    NOTA: si la precision esta configurada en 0, se hara un redondeo al proximo numero entero
+
+    Returns:
+        int: numero de decimales
+    """
+
+    try:
+        precision = 2
+        precision = cint(frappe.db.get_single_value('System Settings', 'currency_precision'))
+        return precision
+
+    except:
+        return 2

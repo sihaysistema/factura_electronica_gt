@@ -12,6 +12,9 @@ import xmltodict
 
 import frappe
 from frappe import _, _dict
+from frappe.utils import cint, flt
+
+from factura_electronica.utils.utilities_facelec import get_currency_precision
 
 # Una nota de débito o memorando de débito es un documento comercial emitido por
 # un comprador a un vendedor para solicitar formalmente una nota de crédito.
@@ -47,6 +50,7 @@ class ElectronicDebitNote:
         self.__naming_serie = naming_series
         self.__reason = reason
         self.__log_error = []
+        self.__precision = get_currency_precision()
 
     def build_debit_note(self):
         """
@@ -88,8 +92,8 @@ class ElectronicDebitNote:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                with open('debit_note.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion))
+                # with open('debit_note.json', 'w') as f:
+                #     f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:
@@ -409,15 +413,15 @@ class ElectronicDebitNote:
 
                     # Calculo precio unitario
                     precio_uni = 0
-                    precio_uni = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['rate']) + float(abs(self.__dat_items[i]['price_list_rate']) - abs(self.__dat_items[i]['rate'])))))
+                    precio_uni = abs(flt(abs(self.__dat_items[i]['rate']) + abs(self.__dat_items[i]['price_list_rate']) - abs(self.__dat_items[i]['rate'])), self.__precision)
 
                     # Calculo precio item
                     precio_item = 0
-                    precio_item = abs(float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate']))))
+                    precio_item = abs(flt(self.__dat_items[i]['qty'] * self.__dat_items[i]['price_list_rate'], self.__precision))
 
                     # Calculo descuento item
                     desc_item = 0
-                    desc_item = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(float(self.__dat_items[i]['amount'])))))
+                    # desc_item = abs(flt(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(self.__dat_items[i]['amount']), self.__precision))
 
                     contador += 1
                     description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
@@ -436,11 +440,10 @@ class ElectronicDebitNote:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))))
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(float('{0:.2f}'.format(float(self.__dat_items[i]['net_amount']) *
-                                                                                                      float(self.__taxes_fact[0]['rate']/100))))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(flt(self.__dat_items[i]['net_amount'], self.__precision))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(flt(self.__dat_items[i]['net_amount'] * (self.__taxes_fact[0]['rate']/100), self.__precision))
 
-                    obj_item["dte:Total"] = abs(float('{0:.2f}'.format((float(self.__dat_items[i]['amount'])))))
+                    obj_item["dte:Total"] = abs(flt(self.__dat_items[i]['amount'], self.__precision))
                     # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
@@ -471,10 +474,10 @@ class ElectronicDebitNote:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        "@TotalMontoImpuesto": float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
+                        "@TotalMontoImpuesto": flt(self.dat_fac[0]['total_taxes_and_charges'], self.__precision)
                     }
                 },
-                "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
+                "dte:GranTotal": flt(self.dat_fac[0]['grand_total'], self.__precision)
             }
 
             return True, 'OK'

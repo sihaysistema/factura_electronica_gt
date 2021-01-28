@@ -7,11 +7,13 @@ import base64
 import datetime
 import json
 
+import frappe
 import requests
 import xmltodict
-
-import frappe
 from frappe import _, _dict
+from frappe.utils import cint, flt
+
+from factura_electronica.utils.utilities_facelec import get_currency_precision
 
 # Una nota de crédito es un documento comercial emitido por
 # un vendedor a un comprador. Las notas de crédito actúan como un documento
@@ -48,6 +50,7 @@ class ElectronicCreditNote:
         self.__reason = reason
         self.__inv_credit_note = actual_inv_name  # HACE REFERENCIA A LA NUEVA NOTA DE CREDITO
         self.__log_error = []
+        self.__precision = get_currency_precision()
 
     def build_credit_note(self):
         """
@@ -390,8 +393,6 @@ class ElectronicCreditNote:
 
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
-            # TODO VER ESCENARIO CUANDO HAY MAS DE UN IMPUESTO?????
-            # TODO VER ESCENARIO CUANDO NO HAY IMPUESTOS, ES POSIBLE???
             # Obtenemos los impuesto cofigurados para x compañia en la factura
             self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__inv_credit_note},
                                                      fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
@@ -417,17 +418,17 @@ class ElectronicCreditNote:
                     # Calculo precio unitario
                     precio_uni = 0
                     # precio_uni = abs(float('{0:.2f}'.format(abs(self.__dat_items[i]['rate']) + float(abs(self.__dat_items[i]['price_list_rate']) - abs(self.__dat_items[i]['rate'])))))
-                    precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
+                    precio_uni = flt(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'], self.__precision)
 
                     # Calculo precio item
                     precio_item = 0
                     # precio_item = abs(float('{0:.3f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate']))))
-                    precio_item = precio_uni * float(self.__dat_items[i]['qty'])
+                    precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
 
                     # Calculo descuento item
                     desc_fila = 0
                     # desc_fila = abs(float('{0:.3f}'.format(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(float(self.__dat_items[i]['amount'])))))
-                    desc_fila = float(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'])
+                    # desc_fila = flt(self.__dat_items[i]['qty'] * self.__dat_items[i]['discount_amount'], self.__precision)
 
                     contador += 1
                     description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
@@ -436,9 +437,9 @@ class ElectronicCreditNote:
                     obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = description_to_item  #  self.__dat_items[i]['item_name']  # description
-                    obj_item["dte:PrecioUnitario"] = round(abs(precio_uni), 3)
-                    obj_item["dte:Precio"] = round(abs(precio_item), 3)
-                    obj_item["dte:Descuento"] = round(abs(desc_fila), 3)
+                    obj_item["dte:PrecioUnitario"] = flt(abs(precio_uni), self.__precision)
+                    obj_item["dte:Precio"] = flt(abs(precio_item), self.__precision)
+                    obj_item["dte:Descuento"] = flt(abs(desc_fila), self.__precision)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -446,11 +447,11 @@ class ElectronicCreditNote:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(float('{0:.3f}'.format(float(self.__dat_items[i]['net_amount']))))
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(float('{0:.3f}'.format(float(self.__dat_items[i]['net_amount']) *
-                                                                                                      float(self.__taxes_fact[0]['rate']/100))))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(flt(self.__dat_items[i]['net_amount'], self.__precision))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(flt(self.__dat_items[i]['net_amount'] *
+                                                                                            (self.__taxes_fact[0]['rate']/100), self.__precision))
 
-                    obj_item["dte:Total"] = abs(float('{0:.3f}'.format((float(self.__dat_items[i]['amount'])))))
+                    obj_item["dte:Total"] = abs(flt(self.__dat_items[i]['amount'], self.__precision))
                     # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
@@ -482,10 +483,10 @@ class ElectronicCreditNote:
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
                         # "@TotalMontoImpuesto": abs(float('{0:.2f}'.format(float(self.dat_fac[0]['total_taxes_and_charges']))))
-                        "@TotalMontoImpuesto": float('{0:.3f}'.format(float(gran_tot)))
+                        "@TotalMontoImpuesto": flt(gran_tot, self.__precision)
                     }
                 },
-                "dte:GranTotal": abs(float('{0:.3f}'.format(float(self.dat_fac[0]['grand_total']))))
+                "dte:GranTotal": abs(flt(self.dat_fac[0]['grand_total'], self.__precision))
             }
 
             return True, 'OK'
@@ -494,10 +495,16 @@ class ElectronicCreditNote:
             return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.__inv_credit_note, str(frappe.get_traceback()))
 
     def complements(self):
+        """
+        Complemento para notas de credito, esto se debe aplicar sobre facturas electronicas ya emitidas,
+        especificando el porque del ajuste
+
+        Returns:
+            bool: estado de operacion
+        """
         try:
             datos_fel_invoice = frappe.db.get_values('Envio FEL', filters={'serie_para_factura': self.__invoice_code},
-                                                     fieldname=['uuid', 'numero', 'serie', 'fecha'],
-                                                     as_dict=1)
+                                                     fieldname=['uuid', 'numero', 'serie', 'fecha'], as_dict=1)
             fecha_procesada = datos_fel_invoice[0]["fecha"].split('T')[0]
 
             self.__d_complements = {

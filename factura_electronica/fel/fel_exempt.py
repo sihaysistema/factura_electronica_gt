@@ -14,6 +14,9 @@ import xmltodict
 
 import frappe
 from frappe import _, _dict
+from frappe.utils import cint, flt
+
+from factura_electronica.utils.utilities_facelec import get_currency_precision
 
 # NOTAS:
 # 1. INSTANCIA FACT
@@ -43,6 +46,7 @@ class ExemptElectronicInvoice:
         self.__config_name = conf_name
         self.__naming_serie = naming_series
         self.__log_error = []
+        self.__precision = get_currency_precision()
 
     def build_invoice(self):
         """
@@ -450,16 +454,16 @@ class ExemptElectronicInvoice:
                     desc_item = 0
 
                     # Precio unitario, (sin aplicarle descuento)
-                    precio_uni = float(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'])
+                    precio_uni = flt(self.__dat_items[i]['rate'] + self.__dat_items[i]['discount_amount'], self.__precision)
 
                     # Calculo precio item (precio sin aplicarle descuento * cantidad)
                     # precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['rate'])))
-                    precio_item = precio_uni * float(self.__dat_items[i]['qty'])  # float('{0:.2f}'.format((self.__dat_items[i]['amount'])))
+                    precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)  # float('{0:.2f}'.format((self.__dat_items[i]['amount'])))
 
                     # Calculo descuento monto item
                     # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['discount_amount'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
                     # monto - ((descuento + precio_con_descuento) * cantidad)
-                    desc_item = float('{0:.2f}'.format((((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate']) * float(self.__dat_items[i]['qty'])) - float(self.__dat_items[i]['amount']))))
+                    desc_item = flt((self.__dat_items[i]['discount_amount'] + self.__dat_items[i]['rate']) * (self.__dat_items[i]['qty'] - float(self.__dat_items[i]['amount'])), self.__precision)
 
                     contador += 1
                     description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
@@ -468,9 +472,9 @@ class ExemptElectronicInvoice:
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                     obj_item["dte:Descripcion"] = description_to_item  # description
-                    obj_item["dte:PrecioUnitario"] = round(precio_uni, 2)
-                    obj_item["dte:Precio"] = round(precio_item, 2)
-                    obj_item["dte:Descuento"] = round(desc_item, 2)
+                    obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
+                    obj_item["dte:Precio"] = flt(precio_item, self.__precision)
+                    obj_item["dte:Descuento"] = flt(desc_item, self.__precision)
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -478,10 +482,10 @@ class ExemptElectronicInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = '{0:.2f}'.format(float(self.__dat_items[i]['net_amount']))  # net_amount
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['net_amount'], self.__precision)  # net_amount
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = 0  # exento
 
-                    obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['amount'])))
+                    obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
 
                     items_ok.append(obj_item)
 
@@ -511,10 +515,10 @@ class ExemptElectronicInvoice:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        "@TotalMontoImpuesto": 0  #exento
+                        "@TotalMontoImpuesto": flt(0, self.__precision)  #exento
                     }
                 },
-                "dte:GranTotal": float('{0:.2f}'.format(float(self.dat_fac[0]['grand_total'])))
+                "dte:GranTotal": flt(self.dat_fac[0]['grand_total'], self.__precision)
             }
 
             return True, 'OK'
