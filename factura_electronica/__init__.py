@@ -8,7 +8,7 @@ import math
 import datetime
 locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
 
-__version__ = '07.00.00'
+__version__ = '7.00.00'
 
 @frappe.whitelist()
 def currency_in_words(amount, currency, cent_in_numb=0):
