@@ -308,6 +308,8 @@ def fill_fixtures():
                     "Customer-codigo_consignatario_comprador",
                     "Sales Invoice Item-facelec_is_discount",
                     "Purchase Invoice Item-facelec_is_discount",
+                    "Sales Taxes and Charges-taxable_unit_name",
+                    "Purchase Taxes and Charges-taxable_unit_name"
                 ]
             ]
         ]

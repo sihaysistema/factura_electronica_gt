@@ -498,6 +498,7 @@ class ElectronicInvoice:
                     obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
 
                     # Agregamos los impuestos
+                    # IVA
                     obj_item["dte:Impuestos"] = {}
                     obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
 
@@ -506,6 +507,28 @@ class ElectronicInvoice:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['net_amount'], self.__precision)  # net_amount
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['net_amount'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
+
+                    # PETROLEO
+
+                    # TURISMO HOSPEDAJE
+
+                    # TURISMO PASAJES
+
+                    # TIMBRE DE PRENSA
+
+                    # BOMBEROS
+
+                    # TASA MUNICIPAL
+
+                    # BEBIDAS ALCOHOLICAS
+
+                    # TABACO
+
+                    # CEMENTO
+
+                    # BEBIDAS NO ALCOHOLICAS
+
+                    # TARIFA PORTUARIA
 
                     obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
 

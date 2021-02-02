@@ -583,5 +583,20 @@
   "tax": "TARIFA PORTUARIA",
   "taxable_unit_code": "1",
   "taxable_unit_name": "Tarifa Portuaria"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Catalog Of Taxable Units",
+  "factor": 0.0,
+  "modified": "2021-02-02 15:40:56.432799",
+  "name": "No Aplicable",
+  "operates_over_box": null,
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "short_name": null,
+  "tax": null,
+  "taxable_unit_code": null,
+  "taxable_unit_name": "No Aplicable"
  }
 ]
