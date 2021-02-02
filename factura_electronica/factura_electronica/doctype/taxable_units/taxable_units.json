@@ -1,0 +1,57 @@
+{
+ "creation": "2021-02-02 11:43:45.977895",
+ "description": "Impuestos para Factura Electronica",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "taxable_unit_code",
+  "taxable_unit_name",
+  "short_name",
+  "operates_over_box",
+  "factor"
+ ],
+ "fields": [
+  {
+   "fieldname": "taxable_unit_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Taxable Unit Code"
+  },
+  {
+   "fieldname": "taxable_unit_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Taxable Unit Name"
+  },
+  {
+   "fieldname": "short_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Short Name"
+  },
+  {
+   "fieldname": "operates_over_box",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Operates Over Box"
+  },
+  {
+   "fieldname": "factor",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Factor"
+  }
+ ],
+ "istable": 1,
+ "modified": "2021-02-02 11:44:04.725007",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Taxable Units",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

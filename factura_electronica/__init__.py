@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import frappe
-from numinwords import numinwords
-from frappe import _
+
+import datetime
 import locale
 import math
-import datetime
+
+import frappe
+from frappe import _
+from numinwords import numinwords
+
 locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
 
 __version__ = '7.00.00'

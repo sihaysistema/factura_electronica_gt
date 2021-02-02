@@ -21,7 +21,19 @@ def get_data():
                     "description": _("FEL Catalogo Frases"),
                     "onboard": 1,
                 },
-
+                {
+                    "type": "doctype",
+                    "name": "Tax Category GT",
+                    "description": _("Tax Category GT"),
+                    "onboard": 1
+                },
+                {
+                    "type": "doctype",
+                    "name": "Catalog Of Taxable Units",
+                    "description": _("Catalog Of Taxable Units"),
+                    "dependencies": ["Tax Category GT"],
+                    "onboard": 1
+                },
             ]
         },
         {
@@ -108,7 +120,7 @@ def get_data():
                     "name": "Unique Customs Declaration",
                     "description": _("Unique Customs Declaration"),
                     "onboard": 1
-                },
+                }
             ]
         },
         {

@@ -424,14 +424,16 @@ class ElectronicInvoice:
                                                         'discount_amount', 'price_list_rate', 'net_rate',
                                                         'stock_uom', 'serial_no', 'item_group', 'rate',
                                                         'amount', 'facelec_sales_tax_for_this_row',
-                                                        'facelec_amount_minus_excise_tax',
+                                                        'facelec_amount_minus_excise_tax', 'facelec_is_service',
+                                                        'facelec_is_good', 'factelecis_fuel', 'facelec_si_is_exempt',
                                                         'facelec_other_tax_amount', 'facelec_three_digit_uom_code',
                                                         'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
                                                         'facelec_gt_tax_net_services_amt', 'facelec_is_discount'], as_dict=True)
 
+            # Configuracion para obtener descripcion de item de Item Name o de Descripcion (segun user)
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
-            # Obtenemos los impuesto cofigurados para x compañia en la factura
+            # Obtenemos los impuesto cofigurados para x compañia en la factura (IVA)
             self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__invoice_code},
                                                      fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
 
@@ -445,37 +447,32 @@ class ElectronicInvoice:
                 for i in range(0, longitems):
                     obj_item = {}  # por fila
 
-                    # TODO  FUTURE Validar por Is Service, Is Good.  Si Is Fuel = Is Good. Si Is Exempt = Is Good.
-                    detalle_stock = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'is_stock_item')
-                    # Validacion de Bien o Servicio, en base a detalle de stock
-                    if (int(detalle_stock) == 0):
+                    # VALIDACION V1 - EN FUNCION A SI TIENE O NO STOCK (NO USAR)
+                    # detalle_stock = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'is_stock_item')
+                    # # Validacion de Bien o Servicio, en base a detalle de stock
+                    # if (int(detalle_stock) == 0):
+                    #     obj_item["@BienOServicio"] = 'S'
+                    # if (int(detalle_stock) == 1):
+                    #     obj_item["@BienOServicio"] = 'B'
+
+                    # Is Service, Is Good.  Si Is Fuel = Is Good. Si Is Exempt = Is Good.
+                    if cint(self.__dat_items[i]['facelec_is_service']) == 1:
                         obj_item["@BienOServicio"] = 'S'
 
-                    if (int(detalle_stock) == 1):
+                    elif cint(self.__dat_items[i]['facelec_is_good']) == 1:
                         obj_item["@BienOServicio"] = 'B'
 
+                    elif cint(self.__dat_items[i]['factelecis_fuel']) == 1:
+                        obj_item["@BienOServicio"] = 'B'
 
-                    # NOTA: ESTOS CALCULOS COMENTADOS APLICAN PARA LA VERSION1 GFACE, OJO NO FEL
-                    # precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
-                    # Aplica si se esta usando lista de precios
-                    # if self.__dat_items[i]['price_list_rate'] != 0:
-                    #     precio_uni = 0
-                    #     precio_item = 0
-                    #     desc_item = 0
-
-                    #     precio_uni = float('{0:.2f}'.format((self.__dat_items[i]['rate']) + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
-
-                    #     # Calculo precio item
-                    #     precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
-
-                    #     # FIXME: Calculo descuento item
-                    #     # desc_item = float('{0:.2f}'.format((self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - float(self.__dat_items[i]['amount'])))
-
+                    elif cint(self.__dat_items[i]['facelec_si_is_exempt']) == 1:
+                        obj_item["@BienOServicio"] = 'B'
 
                     precio_uni = 0
                     precio_item = 0
                     desc_fila = 0
 
+                    # Logica para validacion si aplica Descuento
                     desc_item_fila = 0
                     if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
                         desc_item_fila = self.__dat_items[i]['discount_amount']
@@ -510,13 +507,9 @@ class ElectronicInvoice:
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['net_amount'], self.__precision)  # net_amount
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['net_amount'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
 
-
-
                     obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
-                    # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
-
 
             i_fel = {"dte:Item": items_ok}
             self.__d_items = i_fel
