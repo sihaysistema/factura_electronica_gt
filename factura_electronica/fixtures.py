@@ -400,7 +400,16 @@ def fill_fixtures():
                     "Exporter ID issuing country", "Cost Center", "Target account", "Applies for VAT withholding",
                     "Applies for ISR withholding", "Trade Name", "Name used for advertising or trade purposes. For Example: Apple, Amazon or Home Depot",
                     "Legal Name, for tax, government or contract use. For Example: Apple, Inc. Amazon.com, Inc., The Home Depot, Inc.",
-                    "Taxable Unit Name", "Catalog Of Taxable Units", "Operates Over Box", "Tax Category GT", "Is Exempt"
+                    "Taxable Unit Name", "Catalog Of Taxable Units", "Operates Over Box", "Tax Category GT", "Is Exempt",
+                    "Tax Rate per UOM", "Tax amount per each stock quantity of this item", "Must be a liability account.",
+                    "Other Tax Amount", "Subtotal amount of excise tax for this line", "Amount minus excise tax",
+                    "Amount with excise tax amount deducted. This amount is subject to sales tax.", "Sales Tax for this Row",
+                    "Is it an international invoice?", "Type of Expense for Tax purposes", "Net Goods Amount", "Net Services Amount",
+                    "Net Fuel Amount", "Excise tax calculation", "Three digit UOM code as requested by Infile",
+                    "Purchase and Sales Ledger Tax Declaration", "VAT Payable and Receivable Conciliation",
+                    "GT General Ledger", "GT Purchase Ledger", "GT Sales Ledger", "GT Journal",
+                    "Tax Retention Guatemala", "VAT Declaration", "Batch Electronic Invoice", "Batch Status",
+                    "Purchase and Sales Ledger Tax Declaration Report"
                 ]
             ]
         ]
