@@ -400,6 +400,7 @@ def fill_fixtures():
                     "Exporter ID issuing country", "Cost Center", "Target account", "Applies for VAT withholding",
                     "Applies for ISR withholding", "Trade Name", "Name used for advertising or trade purposes. For Example: Apple, Amazon or Home Depot",
                     "Legal Name, for tax, government or contract use. For Example: Apple, Inc. Amazon.com, Inc., The Home Depot, Inc.",
+                    "Taxable Unit Name", "Catalog Of Taxable Units", "Operates Over Box", "Tax Category GT", "Is Exempt"
                 ]
             ]
         ]
