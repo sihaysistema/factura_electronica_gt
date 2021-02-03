@@ -92,8 +92,8 @@ class ElectronicInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                with open('mi_factura.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion))
+                # with open('mi_factura.json', 'w') as f:
+                #     f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:
@@ -625,7 +625,7 @@ class ElectronicInvoice:
                             "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
                         },
                         {
-                            "@NombreCorto": "PETROLEO",
+                            "@NombreCorto": "PETROLEO",  # VALOR FIJO PARA COMBUSTIBLES
                             "@TotalMontoImpuesto": abs(flt(total_idp, self.__precision))
                         }]
                     },
@@ -658,8 +658,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            with open('mi_factura.xml', 'w') as f:
-                f.write(self.__xml_string)
+            # with open('mi_factura.xml', 'w') as f:
+            #     f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -711,8 +711,8 @@ class ElectronicInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            with open('recibido_firmado.json', 'w') as f:
-                 f.write(json.dumps(self.__doc_firmado, indent=2))
+            # with open('recibido_firmado.json', 'w') as f:
+            #      f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -763,8 +763,8 @@ class ElectronicInvoice:
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
-            with open('RESPONSE_factura.json', 'w') as f:
-                f.write(json.dumps(self.__response_ok, indent=2))
+            # with open('RESPONSE_factura.json', 'w') as f:
+            #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
@@ -838,9 +838,10 @@ class ElectronicInvoice:
                 resp_fel.serie = self.__response_ok['serie']
                 resp_fel.numero = self.__response_ok['numero']
 
-                decodedBytes = base64.b64decode(self.__response_ok['xml_certificado'])
-                decodedStr = str(decodedBytes, "utf-8")
-                resp_fel.xml_certificado = decodedStr
+                # Guarda el documento firmado encriptado en base64
+                # decodedBytes = str(self.__response_ok['xml_certificado']) # base64.b64decode(self.__response_ok['xml_certificado'])
+                # decodedStr = str(decodedBytes, "utf-8")
+                resp_fel.xml_certificado = json.dumps(self.__doc_firmado, indent=2) # decodedStr
 
                 resp_fel.save(ignore_permissions=True)
 
