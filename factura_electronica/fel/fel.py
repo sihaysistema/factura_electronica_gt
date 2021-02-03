@@ -92,8 +92,8 @@ class ElectronicInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                # with open('mi_factura.json', 'w') as f:
-                #     f.write(json.dumps(self.__base_peticion))
+                with open('mi_factura.json', 'w') as f:
+                    f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:
@@ -498,25 +498,25 @@ class ElectronicInvoice:
                         obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
 
                         # Agregamos los impuestos
-                        # IVA
+                        # IVA e IDP
+                        nombre_corto = str(frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'tax_name'))
+                        codigo_uni_gravable = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'taxable_unit_code')
+
                         obj_item["dte:Impuestos"] = {}
-                        obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
-
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'], self.__precision)  # net_amount
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
-
-                        # IDP
-                        obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
-
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
-
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'], self.__precision)  # net_amount
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
-
+                        obj_item["dte:Impuestos"]["dte:Impuesto"] = [
+                            {
+                                "dte:NombreCorto": self.__taxes_fact[0]['tax_name'],
+                                "dte:CodigoUnidadGravable": self.__taxes_fact[0]['taxable_unit_code'],
+                                "dte:MontoGravable": flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'], self.__precision),  # net_amount
+                                "dte:MontoImpuesto": flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
+                            },
+                            {
+                                "dte:NombreCorto": nombre_corto,
+                                "dte:CodigoUnidadGravable": codigo_uni_gravable,
+                                "dte:CantidadUnidadesGravables": float(self.__dat_items[i]['qty']),  # net_amount
+                                "dte:MontoImpuesto": flt(self.__dat_items[i]['facelec_other_tax_amount'], self.__precision)
+                            }
+                        ]
 
                         obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
 
@@ -613,21 +613,21 @@ class ElectronicInvoice:
 
             for i in self.__dat_items:
                 gran_tot += flt(i['facelec_sales_tax_for_this_row'], self.__precision)
-                if cint(self.__dat_items[i]['factelecis_fuel']) == 1:
+                if cint(i['factelecis_fuel']) == 1:
                     is_idp = True
                     total_idp += flt(i['facelec_other_tax_amount'], self.__precision)
 
             if is_idp == True:
                 self.__d_totales = {
                     "dte:TotalImpuestos": {
-                        "dte:TotalImpuesto": {
+                        "dte:TotalImpuesto": [{
                             "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
                             "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
                         },
-                        "dte:TotalImpuesto": {
+                        {
                             "@NombreCorto": "PETROLEO",
                             "@TotalMontoImpuesto": abs(flt(total_idp, self.__precision))
-                        }
+                        }]
                     },
                     "dte:GranTotal": flt(self.dat_fac[0]['grand_total'], self.__precision)
                 }

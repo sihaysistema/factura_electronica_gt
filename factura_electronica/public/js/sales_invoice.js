@@ -864,8 +864,8 @@ frappe.ui.form.on("Sales Invoice", {
         // Si la factura de venta se convierte a nota de credito,
         // para cumplir esta debe ser una factura electronica ya generada, segun esquema XML
         if (frm.doc.is_return && frm.doc.docstatus == 1 && (frm.doc.status === "Paid" ||
-                frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue" ||
-                frm.doc.status === "Return")) { //  && frm.doc.numero_autorizacion_fel
+            frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc.status === "Overdue" ||
+            frm.doc.status === "Return")) { //  && frm.doc.numero_autorizacion_fel
 
             // APLICA SOLO PARA NOTAS DE CREDITO, PARA VER PDF
             if (frm.doc.status === "Return") {
@@ -913,7 +913,7 @@ frappe.ui.form.on("Sales Invoice", {
                                                     // Crea una nueva url con el nombre del documento actualizado
                                                     let url_nueva = mi_url.replace(
                                                         serie_de_factura, data
-                                                        .message[1]);
+                                                            .message[1]);
                                                     // Asigna la nueva url a la ventana actual
                                                     window.location.assign(url_nueva);
                                                     // Recarga la pagina
@@ -951,70 +951,70 @@ frappe.ui.form.on("Sales Invoice", {
                 let d = new frappe.ui.Dialog({
                     title: __('New Journal Entry with Withholding Tax'),
                     fields: [{
-                            label: 'Cost Center',
-                            fieldname: 'cost_center',
-                            fieldtype: 'Link',
-                            options: 'Cost Center',
-                            "get_query": function () {
-                                return {
-                                    filters: {
-                                        'company': frm.doc.company
-                                    }
-                                }
-                            },
-                            default: ""
-                        },
-                        {
-                            label: 'Target account',
-                            fieldname: 'debit_in_acc_currency',
-                            fieldtype: 'Link',
-                            options: 'Account',
-                            "reqd": 1,
-                            "get_query": function () {
-                                return {
-                                    filters: {
-                                        'company': frm.doc.company
-                                    }
+                        label: 'Cost Center',
+                        fieldname: 'cost_center',
+                        fieldtype: 'Link',
+                        options: 'Cost Center',
+                        "get_query": function () {
+                            return {
+                                filters: {
+                                    'company': frm.doc.company
                                 }
                             }
                         },
-                        {
-                            fieldname: 'col_br_asdffg',
-                            fieldtype: 'Column Break'
-                        },
-                        {
-                            label: 'Is Multicurrency',
-                            fieldname: 'is_multicurrency',
-                            fieldtype: 'Check'
-                        },
-                        {
-                            label: 'Applies for VAT withholding',
-                            fieldname: 'is_iva_withholding',
-                            fieldtype: 'Check'
-                        },
-                        {
-                            label: 'Applies for ISR withholding',
-                            fieldname: 'is_isr_withholding',
-                            fieldtype: 'Check'
-                        },
-                        {
-                            label: 'NOTE',
-                            fieldname: 'note',
-                            fieldtype: 'Data',
-                            read_only: 1,
-                            default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el IVA va incluido en la factura'
-                        },
-                        {
-                            label: 'Description',
-                            fieldname: 'section_asdads',
-                            fieldtype: 'Section Break',
-                            "collapsible": 1
-                        },
-                        {
-                            label: 'Description',
-                            fieldname: 'description',
-                            fieldtype: 'Long Text'
+                        default: ""
+                    },
+                    {
+                        label: 'Target account',
+                        fieldname: 'debit_in_acc_currency',
+                        fieldtype: 'Link',
+                        options: 'Account',
+                        "reqd": 1,
+                        "get_query": function () {
+                            return {
+                                filters: {
+                                    'company': frm.doc.company
+                                }
+                            }
                         }
+                    },
+                    {
+                        fieldname: 'col_br_asdffg',
+                        fieldtype: 'Column Break'
+                    },
+                    {
+                        label: 'Is Multicurrency',
+                        fieldname: 'is_multicurrency',
+                        fieldtype: 'Check'
+                    },
+                    {
+                        label: 'Applies for VAT withholding',
+                        fieldname: 'is_iva_withholding',
+                        fieldtype: 'Check'
+                    },
+                    {
+                        label: 'Applies for ISR withholding',
+                        fieldname: 'is_isr_withholding',
+                        fieldtype: 'Check'
+                    },
+                    {
+                        label: 'NOTE',
+                        fieldname: 'note',
+                        fieldtype: 'Data',
+                        read_only: 1,
+                        default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el IVA va incluido en la factura'
+                    },
+                    {
+                        label: 'Description',
+                        fieldname: 'section_asdads',
+                        fieldtype: 'Section Break',
+                        "collapsible": 1
+                    },
+                    {
+                        label: 'Description',
+                        fieldname: 'description',
+                        fieldtype: 'Long Text'
+                    }
                     ],
                     primary_action_label: 'Create',
                     primary_action(values) {
@@ -1107,7 +1107,7 @@ frappe.ui.form.on("Sales Invoice", {
             // con las ('cuentas encontradas
             //console.log('---------------------- se encontro por lo menos una cuenta--------------------');
             frappe.call({
-                method: "factura_electronica.resources_facelec.special_tax.add_gl_entry_other_special_tax",
+                method: "factura_electronica.utils.special_tax.add_gl_entry_other_special_tax",
                 args: {
                     invoice_name: frm.doc.name,
                     accounts: cuentas_registradas,
@@ -1240,8 +1240,8 @@ frappe.ui.form.on("Sales Invoice", {
 });
 
 frappe.ui.form.on("Sales Invoice Item", {
-    items_add: function (frm, cdt, cdn) {},
-    items_move: function (frm, cdt, cdn) {},
+    items_add: function (frm, cdt, cdn) { },
+    items_move: function (frm, cdt, cdn) { },
     before_items_remove: function (frm, cdt, cdn) {
         frm.doc.items.forEach((item_row_1, index_1) => {
             if (item_row_1.name == cdn) {

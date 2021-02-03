@@ -309,7 +309,8 @@ def fill_fixtures():
                     "Sales Invoice Item-facelec_is_discount",
                     "Purchase Invoice Item-facelec_is_discount",
                     "Sales Taxes and Charges-taxable_unit_name",
-                    "Purchase Taxes and Charges-taxable_unit_name"
+                    "Purchase Taxes and Charges-taxable_unit_name",
+                    "Item-taxable_unit_name", "Item-taxable_unit_code", "Item-tax_name",
                 ]
             ]
         ]
