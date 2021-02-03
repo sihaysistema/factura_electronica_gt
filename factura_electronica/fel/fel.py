@@ -428,7 +428,8 @@ class ElectronicInvoice:
                                                         'facelec_is_good', 'factelecis_fuel', 'facelec_si_is_exempt',
                                                         'facelec_other_tax_amount', 'facelec_three_digit_uom_code',
                                                         'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
-                                                        'facelec_gt_tax_net_services_amt', 'facelec_is_discount'], as_dict=True)
+                                                        'facelec_gt_tax_net_services_amt', 'facelec_is_discount',
+                                                        'facelec_tax_rate_per_uom'], as_dict=True)
 
             # Configuracion para obtener descripcion de item de Item Name o de Descripcion (segun user)
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
@@ -439,6 +440,7 @@ class ElectronicInvoice:
 
             # Verificamos la cantidad de items
             longitems = len(self.__dat_items)
+            apply_oil_tax = False
 
             if longitems != 0:
                 contador = 0  # Utilizado para enumerar las lineas en factura electronica
@@ -446,14 +448,6 @@ class ElectronicInvoice:
                 # Si existe un solo item a facturar la iteracion se hara una vez, si hay mas lo contrario mas iteraciones
                 for i in range(0, longitems):
                     obj_item = {}  # por fila
-
-                    # VALIDACION V1 - EN FUNCION A SI TIENE O NO STOCK (NO USAR)
-                    # detalle_stock = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'is_stock_item')
-                    # # Validacion de Bien o Servicio, en base a detalle de stock
-                    # if (int(detalle_stock) == 0):
-                    #     obj_item["@BienOServicio"] = 'S'
-                    # if (int(detalle_stock) == 1):
-                    #     obj_item["@BienOServicio"] = 'B'
 
                     # Is Service, Is Good.  Si Is Fuel = Is Good. Si Is Exempt = Is Good.
                     if cint(self.__dat_items[i]['facelec_is_service']) == 1:
@@ -464,49 +458,110 @@ class ElectronicInvoice:
 
                     elif cint(self.__dat_items[i]['factelecis_fuel']) == 1:
                         obj_item["@BienOServicio"] = 'B'
+                        apply_oil_tax = True
 
                     elif cint(self.__dat_items[i]['facelec_si_is_exempt']) == 1:
                         obj_item["@BienOServicio"] = 'B'
 
-                    precio_uni = 0
-                    precio_item = 0
-                    desc_fila = 0
+                    # NOTE: TODO: REFACTORIZAR CODIGO PARA FUTUROS IMPUESTOS, SE HACE ASI PARA NO COMPLICAR EL CODIGO
 
-                    # Logica para validacion si aplica Descuento
-                    desc_item_fila = 0
-                    if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
-                        desc_item_fila = self.__dat_items[i]['discount_amount']
+                    # PETROLEO
+                    if apply_oil_tax == True:
+                        precio_uni = 0
+                        precio_item = 0
+                        desc_fila = 0
 
-                    # Precio unitario, (sin aplicarle descuento)
-                    # Al precio unitario se le suma el descuento que genera ERP, ya que es neceario enviar precio sin descuentos, en las operaciones restantes es neceario
-                    precio_uni = flt(self.__dat_items[i]['rate'] + desc_item_fila, self.__precision)
+                        # Logica para validacion si aplica Descuento
+                        desc_item_fila = 0
+                        if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
+                            desc_item_fila = self.__dat_items[i]['discount_amount']
 
-                    precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
+                        # Precio unitario, (sin aplicarle descuento)
+                        # Al precio unitario se le suma el descuento que genera ERP, ya que es neceario enviar precio sin descuentos, en las operaciones restantes es neceario
+                        # (Precio Unitario - Monto IDP) + Descuento
+                        precio_uni = flt((self.__dat_items[i]['rate'] - self.__dat_items[i]['facelec_tax_rate_per_uom']) + desc_item_fila, self.__precision)
 
-                    desc_fila = 0
-                    desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
+                        precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
 
-                    contador += 1
-                    description_to_item = resultado = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
+                        desc_fila = 0
+                        desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
 
-                    obj_item["@NumeroLinea"] = contador
-                    obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
-                    obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
-                    obj_item["dte:Descripcion"] = description_to_item  # description
-                    obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
-                    obj_item["dte:Precio"] = flt(precio_item, self.__precision) # Correcto según el esquema XML
-                    obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
+                        contador += 1
+                        description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
 
-                    # Agregamos los impuestos
-                    # IVA
-                    obj_item["dte:Impuestos"] = {}
-                    obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
+                        obj_item["@NumeroLinea"] = contador
+                        obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
+                        obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
+                        obj_item["dte:Descripcion"] = description_to_item  # description
+                        obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
+                        obj_item["dte:Precio"] = flt(precio_item, self.__precision) # Correcto según el esquema XML
+                        obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
 
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
+                        # Agregamos los impuestos
+                        # IVA
+                        obj_item["dte:Impuestos"] = {}
+                        obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
 
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['net_amount'], self.__precision)  # net_amount
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['net_amount'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
+
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'], self.__precision)  # net_amount
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
+
+                        # IDP
+                        obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
+
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
+
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'], self.__precision)  # net_amount
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
+
+
+                        obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
+
+                    else:
+                        precio_uni = 0
+                        precio_item = 0
+                        desc_fila = 0
+
+                        # Logica para validacion si aplica Descuento
+                        desc_item_fila = 0
+                        if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
+                            desc_item_fila = self.__dat_items[i]['discount_amount']
+
+                        # Precio unitario, (sin aplicarle descuento)
+                        # Al precio unitario se le suma el descuento que genera ERP, ya que es neceario enviar precio sin descuentos, en las operaciones restantes es neceario
+                        precio_uni = flt(self.__dat_items[i]['rate'] + desc_item_fila, self.__precision)
+
+                        precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
+
+                        desc_fila = 0
+                        desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
+
+                        contador += 1
+                        description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
+
+                        obj_item["@NumeroLinea"] = contador
+                        obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
+                        obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
+                        obj_item["dte:Descripcion"] = description_to_item  # description
+                        obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
+                        obj_item["dte:Precio"] = flt(precio_item, self.__precision) # Correcto según el esquema XML
+                        obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
+
+                        # Agregamos los impuestos
+                        # IVA
+                        obj_item["dte:Impuestos"] = {}
+                        obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
+
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
+
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['net_amount'], self.__precision)  # net_amount
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['net_amount'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
+
+                        obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
 
                     # PETROLEO
 
@@ -530,7 +585,7 @@ class ElectronicInvoice:
 
                     # TARIFA PORTUARIA
 
-                    obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
+
 
                     items_ok.append(obj_item)
 
@@ -552,20 +607,40 @@ class ElectronicInvoice:
         """
 
         try:
+            is_idp = False
             gran_tot = 0
+            total_idp = 0
+
             for i in self.__dat_items:
                 gran_tot += flt(i['facelec_sales_tax_for_this_row'], self.__precision)
+                if cint(self.__dat_items[i]['factelecis_fuel']) == 1:
+                    is_idp = True
+                    total_idp += flt(i['facelec_other_tax_amount'], self.__precision)
 
-            self.__d_totales = {
-                "dte:TotalImpuestos": {
-                    "dte:TotalImpuesto": {
-                        "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
-                        "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
-                    }
-                },
-                "dte:GranTotal": flt(self.dat_fac[0]['grand_total'], self.__precision)
-            }
-
+            if is_idp == True:
+                self.__d_totales = {
+                    "dte:TotalImpuestos": {
+                        "dte:TotalImpuesto": {
+                            "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
+                            "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
+                        },
+                        "dte:TotalImpuesto": {
+                            "@NombreCorto": "PETROLEO",
+                            "@TotalMontoImpuesto": abs(flt(total_idp, self.__precision))
+                        }
+                    },
+                    "dte:GranTotal": flt(self.dat_fac[0]['grand_total'], self.__precision)
+                }
+            else:
+                self.__d_totales = {
+                    "dte:TotalImpuestos": {
+                        "dte:TotalImpuesto": {
+                            "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
+                            "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
+                        }
+                    },
+                    "dte:GranTotal": flt(self.dat_fac[0]['grand_total'], self.__precision)
+                }
             return True, 'OK'
 
         except:
