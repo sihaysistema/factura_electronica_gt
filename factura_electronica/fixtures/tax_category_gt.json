@@ -1,0 +1,122 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:09:08.400419",
+  "name": "IVA",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "IVA"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:09:29.152294",
+  "name": "PETROLEO",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "PETROLEO"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:09:43.592079",
+  "name": "TURISMO HOSPEDAJE",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "TURISMO HOSPEDAJE"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:09:57.105925",
+  "name": "TURISMO PASAJES",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "TURISMO PASAJES"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:10:13.764178",
+  "name": "TIMBRE DE PRENSA",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "TIMBRE DE PRENSA"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:10:20.048663",
+  "name": "BOMBEROS",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "BOMBEROS"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:10:31.514998",
+  "name": "TASA MUNICIPAL",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "TASA MUNICIPAL"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:10:50.464499",
+  "name": "BEBIDAS ALCOHOLICAS",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "BEBIDAS ALCOHOLICAS"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:10:59.876890",
+  "name": "TABACO",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "TABACO"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:11:10.222114",
+  "name": "CEMENTO",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "CEMENTO"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:11:27.325006",
+  "name": "BEBIDAS NO ALCOHOLICAS",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "BEBIDAS NO ALCOHOLICAS"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tax Category GT",
+  "modified": "2021-02-02 14:11:39.199946",
+  "name": "TARIFA PORTUARIA",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_name": "TARIFA PORTUARIA"
+ }
+]

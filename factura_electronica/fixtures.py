@@ -308,6 +308,9 @@ def fill_fixtures():
                     "Customer-codigo_consignatario_comprador",
                     "Sales Invoice Item-facelec_is_discount",
                     "Purchase Invoice Item-facelec_is_discount",
+                    "Sales Taxes and Charges-taxable_unit_name",
+                    "Purchase Taxes and Charges-taxable_unit_name",
+                    "Item-taxable_unit_name", "Item-taxable_unit_code", "Item-tax_name",
                 ]
             ]
         ]
@@ -397,6 +400,7 @@ def fill_fixtures():
                     "Exporter ID issuing country", "Cost Center", "Target account", "Applies for VAT withholding",
                     "Applies for ISR withholding", "Trade Name", "Name used for advertising or trade purposes. For Example: Apple, Amazon or Home Depot",
                     "Legal Name, for tax, government or contract use. For Example: Apple, Inc. Amazon.com, Inc., The Home Depot, Inc.",
+                    "Taxable Unit Name", "Catalog Of Taxable Units", "Operates Over Box", "Tax Category GT", "Is Exempt"
                 ]
             ]
         ]
@@ -449,13 +453,22 @@ def fill_fixtures():
         ]
     }
 
+    tax_cat = {
+        "dt": "Tax Category GT"
+    }
+
+    cat_taxable_units = {
+        "dt": "Catalog Of Taxable Units"
+    }
+
     # NEW FUNCTIONALITY FOR EXPORTING
     fixtures_fillup.append(custom_field)
     fixtures_fillup.append(translation)
     fixtures_fillup.append(tax_category)
     fixtures_fillup.append(id_doctype)
     fixtures_fillup.append(frases_fel)
+    fixtures_fillup.append(tax_cat)
+    fixtures_fillup.append(cat_taxable_units)
 
     return fixtures_fillup
 
-# fixtures = fill_fixtures()

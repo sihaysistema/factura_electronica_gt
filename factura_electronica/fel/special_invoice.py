@@ -466,7 +466,8 @@ class ElectronicSpecialInvoice:
                                                         'discount_amount', 'price_list_rate', 'net_rate',
                                                         'stock_uom', 'item_group', 'rate', 'amount',
                                                         'facelec_p_sales_tax_for_this_row',
-                                                        'facelec_p_amount_minus_excise_tax',
+                                                        'facelec_p_amount_minus_excise_tax', 'facelec_p_is_fuel',
+                                                        'facelec_p_is_good', 'facelec_p_is_service', 'facelec_pr_is_exempt',
                                                         'facelec_p_other_tax_amount', 'facelec_p_purchase_three_digit',
                                                         'facelec_p_gt_tax_net_fuel_amt', 'facelec_p_gt_tax_net_goods_amt',
                                                         'facelec_p_gt_tax_net_services_amt', 'facelec_is_discount'], as_dict=True)
@@ -491,14 +492,26 @@ class ElectronicSpecialInvoice:
                 for i in range(0, longitems):
                     obj_item = {}  # por fila
 
-                    detalle_stock = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'is_stock_item')
-                    # Validacion de Bien o Servicio, en base a detalle de stock
-                    if (int(detalle_stock) == 0):
+                    # detalle_stock = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'is_stock_item')
+                    # # Validacion de Bien o Servicio, en base a detalle de stock
+                    # if (int(detalle_stock) == 0):
+                    #     obj_item["@BienOServicio"] = 'S'
+
+                    # if (int(detalle_stock) == 1):
+                    #     obj_item["@BienOServicio"] = 'B'
+
+                    if cint(self.__dat_items[i]['facelec_p_is_service']) == 1:
                         obj_item["@BienOServicio"] = 'S'
 
-                    if (int(detalle_stock) == 1):
+                    elif cint(self.__dat_items[i]['facelec_p_is_good']) == 1:
                         obj_item["@BienOServicio"] = 'B'
 
+                    elif cint(self.__dat_items[i]['facelec_p_is_fuel']) == 1:
+                        obj_item["@BienOServicio"] = 'B'
+                        # apply_oil_tax = True
+
+                    elif cint(self.__dat_items[i]['facelec_pr_is_exempt']) == 1:
+                        obj_item["@BienOServicio"] = 'B'
 
                     desc_item_fila = 0
                     if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
