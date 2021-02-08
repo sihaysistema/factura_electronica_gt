@@ -1046,7 +1046,11 @@ frappe.ui.form.on("Sales Invoice", {
         }
         // FIN GENERACION POLIZA CON RETENCIONES
 
-
+        // Inicio Cancelador de documentos electronicos FEL
+        if (frm.doc.docstatus == 2 && frm.doc.numero_autorizacion_fel) {
+            btn_canceller(frm);
+        }
+        // FIn Cancelador de documentos electronicos FEL
     },
     validate: function (frm) {
         generar_tabla_html(frm);
@@ -1433,4 +1437,58 @@ function clean_fields(frm) {
 
         // console.log('Hay que limpiar')
     }
+}
+
+function btn_canceller(frm) {
+    cur_frm.clear_custom_buttons();
+    frm.add_custom_button(__("CANCEL DOCUMENT FEL"), function () {
+        // Permite hacer confirmaciones
+        frappe.confirm(__('Are you sure you want to proceed to cancell a Sales Invoice FEL?'),
+            () => {
+                let d = new frappe.ui.Dialog({
+                    title: __('Cancell Sales Invoice FEL'),
+                    fields: [{
+                        label: 'Reason for cancellation?',
+                        fieldname: 'reason_calcelation',
+                        fieldtype: 'Data',
+                        reqd: 1
+                    }],
+                    primary_action_label: 'Submit',
+                    primary_action(values) {
+                        let serie_de_factura = frm.doc.name;
+                        // Guarda la url actual
+                        let mi_url = window.location.href;
+
+                        frappe.call({
+                            method: 'factura_electronica.fel_api.invoice_canceller',
+                            args: {
+                                invoice_code: frm.doc.name
+                            },
+                            callback: function (data) {
+                                console.log(data.message);
+
+                                // if (data.message[0] === true) {
+                                //     // Crea una nueva url con el nombre del documento actualizado
+                                //     let url_nueva = mi_url.replace(
+                                //         serie_de_factura, data
+                                //             .message[1]);
+                                //     // Asigna la nueva url a la ventana actual
+                                //     window.location.assign(url_nueva);
+                                //     // Recarga la pagina
+                                //     frm.reload_doc();
+                                // }
+                            },
+                        });
+
+                        d.hide();
+                    }
+                });
+
+                d.show();
+            }, () => {
+                // action to perform if No is selected
+                // console.log('Selecciono NO')
+            })
+
+    }).addClass("btn-danger");
 }

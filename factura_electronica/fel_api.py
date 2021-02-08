@@ -8,14 +8,16 @@ import json
 import time
 
 import frappe
+from frappe import _
+
 from factura_electronica.controllers.journal_entry_special import JournalEntrySpecialISR
+from factura_electronica.fel.canceller import CancelDocument
 from factura_electronica.fel.credit_note import ElectronicCreditNote
 from factura_electronica.fel.export_invoice import ExportInvoice
 # from timeit import default_timer as timer usar para medir tiempo ejecucion
 from factura_electronica.fel.fel import ElectronicInvoice
-from factura_electronica.fel.special_invoice import ElectronicSpecialInvoice
 from factura_electronica.fel.fel_exempt import ExemptElectronicInvoice
-from frappe import _
+from factura_electronica.fel.special_invoice import ElectronicSpecialInvoice
 
 
 # INICIO FEL NORMAL
@@ -840,3 +842,14 @@ def generate_exempt_electronic_invoice(invoice_code, naming_series):
         frappe.msgprint(str(frappe.get_traceback()))
         return False, str(frappe.get_traceback())
 # FIN FACTURAS EXENTAS DE IMPUESTOS
+
+
+@frappe.whitelist()
+def invoice_canceller(invoice_name, document='Sales Invoice'):
+    status_config = validate_configuration()
+
+    if status_config[0] == True:
+        cancell_invoice = CancelDocument.cancel_doc(invoice_name, status_config[1], document)
+
+    else:
+        return  status_config[1]
