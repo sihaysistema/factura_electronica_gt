@@ -1048,6 +1048,17 @@ frappe.ui.form.on("Sales Invoice", {
 
         // Inicio Cancelador de documentos electronicos FEL
         if (frm.doc.docstatus == 2 && frm.doc.numero_autorizacion_fel) {
+            // Si la anulacion electronica ya fue realizada, se mostrara boton para ver pdf doc anulado
+            frappe.db.exists('Envio FEL', { name: frm.doc.numero_autorizacion_fel, status: "Cancelled" })
+                .then(exists => {
+                    cur_frm.clear_custom_buttons();
+                    frm.add_custom_button(__("VER PDF DOCUMENTO ELECTRONICO ANULADO"),
+                        function () {
+                            window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
+                                frm.doc.numero_autorizacion_fel);
+                        }).addClass("btn-primary");
+                })
+            // SI no aplica lo anterior se muestra btn para anular doc
             btn_canceller(frm);
         }
         // FIn Cancelador de documentos electronicos FEL
@@ -1449,34 +1460,21 @@ function btn_canceller(frm) {
                     title: __('Cancell Sales Invoice FEL'),
                     fields: [{
                         label: 'Reason for cancellation?',
-                        fieldname: 'reason_calcelation',
+                        fieldname: 'reason_cancelation',
                         fieldtype: 'Data',
                         reqd: 1
                     }],
                     primary_action_label: 'Submit',
                     primary_action(values) {
-                        let serie_de_factura = frm.doc.name;
-                        // Guarda la url actual
-                        let mi_url = window.location.href;
-
                         frappe.call({
                             method: 'factura_electronica.fel_api.invoice_canceller',
                             args: {
-                                invoice_code: frm.doc.name
+                                invoice_name: frm.doc.name,
+                                reason_cancelation: values.reason_cancelation || 'Anulación',
+                                document: 'Sales Invoice',
                             },
                             callback: function (data) {
                                 console.log(data.message);
-
-                                // if (data.message[0] === true) {
-                                //     // Crea una nueva url con el nombre del documento actualizado
-                                //     let url_nueva = mi_url.replace(
-                                //         serie_de_factura, data
-                                //             .message[1]);
-                                //     // Asigna la nueva url a la ventana actual
-                                //     window.location.assign(url_nueva);
-                                //     // Recarga la pagina
-                                //     frm.reload_doc();
-                                // }
                             },
                         });
 

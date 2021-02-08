@@ -845,11 +845,48 @@ def generate_exempt_electronic_invoice(invoice_code, naming_series):
 
 
 @frappe.whitelist()
-def invoice_canceller(invoice_name, document='Sales Invoice'):
+def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='Sales Invoice'):
+    """[summary]
+
+    Args:
+        invoice_name ([type]): [description]
+        document (str, optional): [description]. Defaults to 'Sales Invoice'.
+    """
+
     status_config = validate_configuration()
 
     if status_config[0] == True:
-        cancell_invoice = CancelDocument.cancel_doc(invoice_name, status_config[1], document)
+        cancel_invoice = CancelDocument(invoice_name, status_config[1], reason_cancelation, document)
+
+        status_req = cancel_invoice.validate_requirements()
+        if not status_req[0]:
+            frappe.msgprint(status_req[1])
+            return
+
+        status_build = cancel_invoice.build_request()
+        if not status_build[0]:
+            frappe.msgprint(f'Petición no generada: No se encontraron los datos necesarios, por favor asegurese de tener los datos necesarios para compania y cliente')
+            return
+
+        status_firma = cancel_invoice.sign_invoice()
+        if not status_firma[0]:
+            frappe.msgprint(status_firma[1])
+            return
+
+        status_process = cancel_invoice.request_cancel()
+        if not status_process[0]:
+            frappe.msgprint(status_process[1])
+            return
+
+        status_validador_res = cancel_invoice.response_validator()
+        if not status_validador_res[0]:
+            frappe.msgprint(status_process[1])
+            return
+        else:
+            frappe.msgprint('Factura Anulada con Exito, para ver el documento anulado, presione el boton ver PDF Factura Electronica')
+            return
+
 
     else:
-        return  status_config[1]
+        frappe.msgprint(status_config[1])
+        return
