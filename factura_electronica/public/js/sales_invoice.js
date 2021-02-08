@@ -1049,17 +1049,22 @@ frappe.ui.form.on("Sales Invoice", {
         // Inicio Cancelador de documentos electronicos FEL
         if (frm.doc.docstatus == 2 && frm.doc.numero_autorizacion_fel) {
             // Si la anulacion electronica ya fue realizada, se mostrara boton para ver pdf doc anulado
-            frappe.db.exists('Envio FEL', { name: frm.doc.numero_autorizacion_fel, status: "Cancelled" })
-                .then(exists => {
+            frappe.call('factura_electronica.api.invoice_exists', {
+                uuid: frm.doc.numero_autorizacion_fel
+            }).then(r => {
+                // console.log(r.message)
+                if (r.message) {
                     cur_frm.clear_custom_buttons();
                     frm.add_custom_button(__("VER PDF DOCUMENTO ELECTRONICO ANULADO"),
                         function () {
                             window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
                                 frm.doc.numero_autorizacion_fel);
                         }).addClass("btn-primary");
-                })
-            // SI no aplica lo anterior se muestra btn para anular doc
-            btn_canceller(frm);
+                } else {
+                    // SI no aplica lo anterior se muestra btn para anular doc
+                    btn_canceller(frm);
+                }
+            })
         }
         // FIn Cancelador de documentos electronicos FEL
     },
@@ -1474,7 +1479,8 @@ function btn_canceller(frm) {
                                 document: 'Sales Invoice',
                             },
                             callback: function (data) {
-                                console.log(data.message);
+                                // console.log(data.message);
+                                frm.reload_doc();
                             },
                         });
 

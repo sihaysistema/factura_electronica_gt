@@ -880,3 +880,11 @@ def download_excel_sales_ledger():
         filedata = fileobj.read()
     frappe.local.response.filecontent = filedata
     frappe.local.response.type = "download"
+
+
+@frappe.whitelist()
+def invoice_exists(uuid):
+    if frappe.db.exists('Envio FEL', {'name': uuid, 'status': 'Cancelled'}):
+        return True
+    else:
+        return False
