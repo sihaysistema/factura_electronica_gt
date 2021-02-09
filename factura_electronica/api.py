@@ -3,21 +3,21 @@
 
 from __future__ import unicode_literals
 
+import json
+from datetime import date, datetime
+
 import frappe
 import requests
-import xmltodict, json
-
+import xmltodict
 from frappe import _
-from datetime import datetime, date
 from frappe.utils import get_site_name
 
+from factura_electronica.utils.facelec_db import actualizarTablas as actualizartb
+from factura_electronica.utils.facelec_db import guardar_factura_electronica as guardar
+from factura_electronica.utils.facelec_generator import construir_xml
+from factura_electronica.utils.fel_generator import FacturaElectronicaFEL
 from factura_electronica.utils.utilities_facelec import encuentra_errores as errores
 from factura_electronica.utils.utilities_facelec import normalizar_texto, validar_configuracion
-from factura_electronica.utils.facelec_generator import construir_xml
-
-from factura_electronica.utils.facelec_db import guardar_factura_electronica as guardar
-from factura_electronica.utils.facelec_db import actualizarTablas as actualizartb
-from factura_electronica.utils.fel_generator import FacturaElectronicaFEL
 
 
 def peticion_factura_electronica(datos_xml, url_servicio):
@@ -880,3 +880,25 @@ def download_excel_sales_ledger():
         filedata = fileobj.read()
     frappe.local.response.filecontent = filedata
     frappe.local.response.type = "download"
+
+
+@frappe.whitelist()
+def invoice_exists(uuid):
+    if frappe.db.exists('Envio FEL', {'name': uuid, 'status': 'Cancelled'}):
+        return True
+    else:
+        return False
+
+
+@frappe.whitelist()
+def btn_activator(electronic_doc):
+    try:
+        status = validar_configuracion()
+        if status[0] == 1:
+            # Verifica si el doc electronico a generar esta activado en config facelec
+            if frappe.db.exists('Configuracion Factura Electronica', {'name': status[1], electronic_doc: 1}):
+                return True
+            else:
+                return False
+    except:
+        return False

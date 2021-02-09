@@ -460,36 +460,6 @@ function eliminar_pdf() {
     }).addClass("btn-primary");
 }
 
-// Funcion antigua para generar factura electronica GFACE
-// function generar_boton_factura(tipo_factura, frm) {
-//     frm.add_custom_button(__(tipo_factura), function () {
-//         // frm.reload(); permite hacer un refresh de todo el documento
-//         frm.reload_doc();
-//         let serie_de_factura = frm.doc.name;
-//         // Guarda la url actual
-//         let mi_url = window.location.href;
-//         frappe.call({
-//             method: "factura_electronica.api.generar_factura_electronica",
-//             args: {
-//                 serie_factura: frm.doc.name,
-//                 nombre_cliente: frm.doc.customer,
-//                 pre_se: frm.doc.naming_series
-//             },
-//             // El callback recibe como parametro el dato retornado por el script python del lado del servidor
-//             callback: function (data) {
-//                 if (data.message !== undefined) {
-//                     // Crea una nueva url con el nombre del documento actualizado
-//                     let url_nueva = mi_url.replace(serie_de_factura, data.message);
-//                     // Asigna la nueva url a la ventana actual
-//                     window.location.assign(url_nueva);
-//                     // Recarga la pagina
-//                     frm.reload_doc();
-//                 }
-//             }
-//         });
-//     }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
-// }
-
 function generar_boton_factura(tipo_factura, frm) {
     frm.add_custom_button(__(tipo_factura), function () {
         // frm.reload(); permite hacer un refresh de todo el documento
@@ -558,37 +528,51 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
     // FACTURAS FACE, CFACE, FACTURA EXPORTACION
     // Este codigo entra en funcionamiento cuando la generacion automatica de la factura no es exitosa.
     // esto permite volver intentarlo hasta obtener el cae de la factura en que se estre trabajando.
-    if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" ||
-        frm.doc.status === "Overdue" || frm.doc.status != "Credit Note Issued") {
+    if ((frm.doc.status === "Paid") || (frm.doc.status === "Unpaid") || (frm.doc.status === "Submitted") ||
+        (frm.doc.status === "Overdue") || (frm.doc.status != "Credit Note Issued") || (frm.doc.status != "Return")) {
         // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
         // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
 
-        // Si hay ya un identificador para facelec, muestra boton para ver pdf en linea
+        // GFACE: Si hay ya un identificador para facelec, muestra boton para ver pdf en linea
         if (frm.doc.cae_factura_electronica) {
             cur_frm.clear_custom_buttons();
             pdf_button(frm.doc.cae_factura_electronica, frm);
 
-            // Si hay ya un identificador para facelec, muestra boton para ver pdf en linea
+            // FEL: Si hay ya un identificador para facelec, muestra boton para ver pdf en linea
         } else if (frm.doc.numero_autorizacion_fel) {
             cur_frm.clear_custom_buttons();
             pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
 
-            // Si no aplica ninguno de los anteiores, se muestra los respectivos botones para generar
+            // FEL: Si no aplica ninguno de los anteiores, se muestra los respectivos botones para generar
         } else {
             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
             // NOTA: Se dejo por default solo para hacerlo manualmente, si se quiere automatico
             // hay que desarrollarlo :D
             if (modalidad === 'manual') {
-                // NOTA: Por default mostrara la opcion de generar factura electronica normal,
-                // pero si no aplica se borrara y mostrara el que si aplica
-                generar_boton_factura('Factura Electronica', frm);
 
-                // inicio factura exportacion
+                // INICIO FEL FACTURA
+                frappe.call('factura_electronica.api.btn_activator', {
+                    electronic_doc: 'factura_venta_fel'
+                }).then(r => {
+                    // console.log(r.message)
+                    if (r.message && frm.doc.is_return == 0 && cur_frm.doc.is_it_an_international_invoice == 0) {
+                        generar_boton_factura('Factura Electronica FEL', frm)
+                    }
+                });
+                // FIN FEL FACTURA
+
+
+                // INICIO FACTURA EXPORTACION FEL
                 // aplica solo si la factura esta validada y si la opcion international is active
                 // NOTA: Debe tener la cuenta de impuestos con Rate 0, El nit de cliente por defualt
                 // se usara CF aunque tenga uno asignado
                 if (frm.doc.docstatus == 1 && cur_frm.doc.is_it_an_international_invoice == 1) {
-                    btn_export_invoice(frm);
+                    frappe.call('factura_electronica.api.btn_activator', {
+                        electronic_doc: 'factura_exportacion_fel'
+                    }).then(r => {
+                        // console.log(r.message)
+                        if (r.message) btn_export_invoice(frm);
+                    });
 
                     // NOTA: USAR EN CASO SE BASE EN DIRECCION DE CLIENTE
                     // Si el pais en la direccion de cliente es diferente a Guatemala se mostrara
@@ -610,72 +594,20 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
                     // });
 
                 }
-                // final factura exportacion
+                // FIN FACTURA EXPORTACION FEL
 
-                // INICIO FACTURA EXENTA DE IMPUESTOS
+                // INICIO FACTURA EXENTA DE IMPUESTOS (ALPHA)!!!
                 // Para llevar un mejor registro, cargar una tabla de impuestos con rate
                 // Ya que se mostrara solo y solo el rate del iva es 0
-                if (cur_frm.doc.is_it_an_international_invoice == 0 && frm.doc.docstatus == 1 && frm.doc.taxes.length > 0) {
-                    if (frm.doc.taxes[0].rate == 0) {
-                        btn_exempt_invoice(frm);
-                    }
-                }
+                // if (cur_frm.doc.is_it_an_international_invoice == 0 && frm.doc.docstatus == 1 && frm.doc.taxes.length > 0) {
+                //     if (frm.doc.taxes[0].rate == 0) {
+                //         btn_exempt_invoice(frm);
+                //     }
+                // }
                 // FIN FACTURA EXENTA DE IMPUESTOS
             }
-            // Si la modalidad recibida es automatica se realiza la factura electronica directamente
-            // if (modalidad === 'automatico') {
-            //     generar_factura_sin_btn(frm);
-            // }
         }
     }
-
-    // NO APLICA PARA FEL
-    // Codigo para Notas de Credito NCE
-    // El codigo se ejecutara segun el estado del documento, puede ser: Retornar
-    // if (frm.doc.status === "Return") {
-    //     //var nombre = 'Nota Credito';
-    //     // SI en el campo de 'cae_nota_de_credito' ya se encuentra el dato correspondiente, ocultara el boton
-    //     // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
-    //     if (frm.doc.cae_factura_electronica) {
-    //         cur_frm.clear_custom_buttons();
-    //         pdf_button(frm.doc.cae_factura_electronica, frm);
-    //         // guardar_pdf(frm);
-    //     } else {
-    //         // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
-    //         if (modalidad === 'manual') {
-    //             generar_boton_factura('Nota Credito Electronica', frm);
-    //         }
-    //         // Si la modalidad recibida es automatica se realiza la factura electronica directamente
-    //         if (modalidad === 'automatico') {
-    //             generar_factura_sin_btn(frm);
-    //         }
-    //     }
-    // }
-
-    // NO APLICA PARA FEL
-    // Codigo para notas de debito
-    // Codigo para Notas de Credito NDE
-    // if (frm.doc.status === "Paid" || frm.doc.status === "Unpaid" || frm.doc.status === "Submitted" || frm.doc
-    //     .status === "Overdue") {
-    //     //var nombre = 'Nota Debito';
-    //     if (frm.doc.es_nota_de_debito) {
-    //         cur_frm.clear_custom_buttons('Factura Electronica');
-    //         if (frm.doc.cae_factura_electronica) {
-    //             cur_frm.clear_custom_buttons();
-    //             pdf_button(frm.doc.cae_factura_electronica, frm);
-    //             // guardar_pdf(frm);
-    //         } else {
-    //             // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
-    //             if (modalidad === 'manual') {
-    //                 generar_boton_factura('Nota Debito Electronica', frm);
-    //             }
-    //             // Si la modalidad recibida es automatica se realiza la factura electronica directamente
-    //             if (modalidad === 'automatico') {
-    //                 generar_factura_sin_btn(frm);
-    //             }
-    //         }
-    //     }
-    // }
     /* -------------------------------------------------------------------------------------- */
 }
 
@@ -841,16 +773,7 @@ frappe.ui.form.on("Sales Invoice", {
 
         clean_fields(frm);
 
-        // Works OK! No es necesario?
-        // frm.add_custom_button("UOM Recalculation", function () {
-        //     frm.doc.items.forEach((item) => {
-        //         // for each button press each line is being processed.
-        //         //console.log("item contains: " + item);
-        //         //Importante
-        //         facelec_tax_calc_new(frm, "Sales Invoice Item", item.name);
-        //     });
-        // });
-
+        // Inicio btn para generar factura electronica FEL
         // Cuando el documento se actualiza, la funcion verificac que exista un cae.
         // En caso exista un cae, mostrara un boton para ver el PDF de la factura electronica generada.
         // En caso no exista un cae mostrara el boton para generar la factura electronica
@@ -859,6 +782,7 @@ frappe.ui.form.on("Sales Invoice", {
         if (frm.doc.docstatus === 1) {
             verificacionCAE('manual', frm, cdt, cdn);
         }
+        // FIN btn para generar factura electronica FEL
 
         // INICIO BOTON PARA GENERAR NOTA DE CREDITO ELECTRONICA
         // Si la factura de venta se convierte a nota de credito,
@@ -869,71 +793,80 @@ frappe.ui.form.on("Sales Invoice", {
 
             // APLICA SOLO PARA NOTAS DE CREDITO, PARA VER PDF
             if (frm.doc.status === "Return") {
-                // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
-                // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
-                if (frm.doc.numero_autorizacion_fel) {
-                    cur_frm.clear_custom_buttons();
-                    frm.add_custom_button(__("VER PDF NOTA CREDITO ELECTRONICA"),
-                        function () {
-                            window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
-                                frm.doc.numero_autorizacion_fel);
-                        }).addClass("btn-primary");
+                frappe.call('factura_electronica.api.btn_activator', {
+                    electronic_doc: 'nota_credito_fel'
+                }).then(r => {
+                    // console.log(r.message)
+                    if (r.message) {
+                        // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
+                        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
+                        if (frm.doc.numero_autorizacion_fel) {
+                            cur_frm.clear_custom_buttons();
+                            frm.add_custom_button(__("VER PDF NOTA CREDITO ELECTRONICA"),
+                                function () {
+                                    window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
+                                        frm.doc.numero_autorizacion_fel);
+                                }).addClass("btn-primary");
 
-                } else {
-                    cur_frm.clear_custom_buttons();
-                    frm.add_custom_button(__("CREDIT NOTE FEL"), function () {
-                        // Permite hacer confirmaciones
-                        frappe.confirm(__('Are you sure you want to proceed to generate a credit note?'),
-                            () => {
-                                let d = new frappe.ui.Dialog({
-                                    title: __('Generate Credit Note'),
-                                    fields: [{
-                                        label: 'Reason Adjusment?',
-                                        fieldname: 'reason_adjust',
-                                        fieldtype: 'Data',
-                                        reqd: 1
-                                    }],
-                                    primary_action_label: 'Submit',
-                                    primary_action(values) {
-                                        let serie_de_factura = frm.doc.name;
-                                        // Guarda la url actual
-                                        let mi_url = window.location.href;
+                        } else {
+                            cur_frm.clear_custom_buttons();
+                            frm.add_custom_button(__("CREDIT NOTE FEL"), function () {
+                                // Permite hacer confirmaciones
+                                frappe.confirm(__('Are you sure you want to proceed to generate a credit note?'),
+                                    () => {
+                                        let d = new frappe.ui.Dialog({
+                                            title: __('Generate Credit Note'),
+                                            fields: [{
+                                                label: 'Reason Adjusment?',
+                                                fieldname: 'reason_adjust',
+                                                fieldtype: 'Data',
+                                                reqd: 1
+                                            }],
+                                            primary_action_label: 'Submit',
+                                            primary_action(values) {
+                                                let serie_de_factura = frm.doc.name;
+                                                // Guarda la url actual
+                                                let mi_url = window.location.href;
 
-                                        frappe.call({
-                                            method: 'factura_electronica.fel_api.generate_credit_note',
-                                            args: {
-                                                invoice_code: frm.doc.name,
-                                                naming_series: frm.doc.naming_series,
-                                                reference_inv: frm.doc.return_against,
-                                                reason: values.reason_adjust
-                                            },
-                                            callback: function (data) {
-                                                console.log(data.message);
-                                                if (data.message[0] === true) {
-                                                    // Crea una nueva url con el nombre del documento actualizado
-                                                    let url_nueva = mi_url.replace(
-                                                        serie_de_factura, data
-                                                            .message[1]);
-                                                    // Asigna la nueva url a la ventana actual
-                                                    window.location.assign(url_nueva);
-                                                    // Recarga la pagina
-                                                    frm.reload_doc();
-                                                }
-                                            },
+                                                frappe.call({
+                                                    method: 'factura_electronica.fel_api.generate_credit_note',
+                                                    args: {
+                                                        invoice_code: frm.doc.name,
+                                                        naming_series: frm.doc.naming_series,
+                                                        reference_inv: frm.doc.return_against,
+                                                        reason: values.reason_adjust
+                                                    },
+                                                    callback: function (data) {
+                                                        console.log(data.message);
+                                                        if (data.message[0] === true) {
+                                                            // Crea una nueva url con el nombre del documento actualizado
+                                                            let url_nueva = mi_url.replace(
+                                                                serie_de_factura, data
+                                                                    .message[1]);
+                                                            // Asigna la nueva url a la ventana actual
+                                                            window.location.assign(url_nueva);
+                                                            // Recarga la pagina
+                                                            frm.reload_doc();
+                                                        }
+                                                    },
+                                                });
+
+                                                d.hide();
+                                            }
                                         });
 
-                                        d.hide();
-                                    }
-                                });
+                                        d.show();
+                                    }, () => {
+                                        // action to perform if No is selected
+                                        // console.log('Selecciono NO')
+                                    })
 
-                                d.show();
-                            }, () => {
-                                // action to perform if No is selected
-                                // console.log('Selecciono NO')
-                            })
-
-                    }).addClass("btn-warning");
-                }
+                            }).addClass("btn-warning");
+                        }
+                    } else {
+                        cur_frm.clear_custom_buttons();
+                    }
+                });
             }
 
         } else {
@@ -1047,6 +980,34 @@ frappe.ui.form.on("Sales Invoice", {
         // FIN GENERACION POLIZA CON RETENCIONES
 
 
+        // Inicio Cancelador de documentos electronicos FEL
+        if (frm.doc.docstatus == 2 && frm.doc.numero_autorizacion_fel && frm.doc.is_return == 0) {
+            frappe.call('factura_electronica.api.btn_activator', {
+                electronic_doc: 'anulador_de_facturas_ventas_fel'
+            }).then(r => {
+                // console.log(r.message)
+                if (r.message) {
+                    // Si la anulacion electronica ya fue realizada, se mostrara boton para ver pdf doc anulado
+                    frappe.call('factura_electronica.api.invoice_exists', {
+                        uuid: frm.doc.numero_autorizacion_fel
+                    }).then(r => {
+                        // console.log(r.message)
+                        if (r.message) {
+                            cur_frm.clear_custom_buttons();
+                            frm.add_custom_button(__("VER PDF DOCUMENTO ELECTRONICO ANULADO"),
+                                function () {
+                                    window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
+                                        frm.doc.numero_autorizacion_fel);
+                                }).addClass("btn-primary");
+                        } else {
+                            // SI no aplica lo anterior se muestra btn para anular doc
+                            btn_canceller(frm);
+                        }
+                    })
+                }
+            });
+        }
+        // FIn Cancelador de documentos electronicos FEL
     },
     validate: function (frm) {
         generar_tabla_html(frm);
@@ -1346,7 +1307,7 @@ function redondear(value, decimals) {
 function btn_export_invoice(frm) {
     cur_frm.clear_custom_buttons(); // Limpia otros customs buttons para generar uno nuevo
 
-    frm.add_custom_button(__("FACTURA ELECTRONICA EXPORTACION"),
+    frm.add_custom_button(__("FACTURA ELECTRONICA EXPORTACION FEL"),
         function () {
 
             frappe.call({
@@ -1433,4 +1394,46 @@ function clean_fields(frm) {
 
         // console.log('Hay que limpiar')
     }
+}
+
+function btn_canceller(frm) {
+    cur_frm.clear_custom_buttons();
+    frm.add_custom_button(__("CANCEL DOCUMENT FEL"), function () {
+        // Permite hacer confirmaciones
+        frappe.confirm(__('Are you sure you want to proceed to cancell a Sales Invoice FEL?'),
+            () => {
+                let d = new frappe.ui.Dialog({
+                    title: __('Cancell Sales Invoice FEL'),
+                    fields: [{
+                        label: 'Reason for cancellation?',
+                        fieldname: 'reason_cancelation',
+                        fieldtype: 'Data',
+                        reqd: 1
+                    }],
+                    primary_action_label: 'Submit',
+                    primary_action(values) {
+                        frappe.call({
+                            method: 'factura_electronica.fel_api.invoice_canceller',
+                            args: {
+                                invoice_name: frm.doc.name,
+                                reason_cancelation: values.reason_cancelation || 'Anulación',
+                                document: 'Sales Invoice',
+                            },
+                            callback: function (data) {
+                                // console.log(data.message);
+                                frm.reload_doc();
+                            },
+                        });
+
+                        d.hide();
+                    }
+                });
+
+                d.show();
+            }, () => {
+                // action to perform if No is selected
+                // console.log('Selecciono NO')
+            })
+
+    }).addClass("btn-danger");
 }

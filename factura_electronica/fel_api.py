@@ -8,14 +8,16 @@ import json
 import time
 
 import frappe
+from frappe import _
+
 from factura_electronica.controllers.journal_entry_special import JournalEntrySpecialISR
+from factura_electronica.fel.canceller import CancelDocument
 from factura_electronica.fel.credit_note import ElectronicCreditNote
 from factura_electronica.fel.export_invoice import ExportInvoice
 # from timeit import default_timer as timer usar para medir tiempo ejecucion
 from factura_electronica.fel.fel import ElectronicInvoice
-from factura_electronica.fel.special_invoice import ElectronicSpecialInvoice
 from factura_electronica.fel.fel_exempt import ExemptElectronicInvoice
-from frappe import _
+from factura_electronica.fel.special_invoice import ElectronicSpecialInvoice
 
 
 # INICIO FEL NORMAL
@@ -46,34 +48,34 @@ def api_interface(invoice_code, naming_series):
             # Si ocurre algun error en la fase final de facelec
             # Aplica para los mensjaes base de datos actualizados
             if type(state_of[1]) is dict:
-                frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
-                                title=_('Process not completed'), indicator='red')
+                frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar Factura Electronica, mas detalles en el siguiente log: {state_of[1]}'),
+                                title=_('Proceso no completado'), indicator='red')
                 return False, state_of[1]
             else:
-                frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
-                                title=_('Process not completed'), indicator='red')
+                frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar Factura Electronica, mas detalles en el siguiente log: {state_of[1]}'),
+                                title=_('Proceso no completado'), indicator='red')
                 return False, state_of[1]
 
         # Si el proceso es OK
         if type(state_of[1]) is dict:
             # end = timer()  \n\n\n {end - start}
             new_serie = frappe.db.get_value('Envio FEL', {'name': state_of[1]["msj"]}, 'serie_para_factura')
-            frappe.msgprint(msg=_(f'Electronic invoice generated with universal unique identifier <b>{state_of[1]["msj"]}</b>'),
-                            title=_('Process successfully completed'), indicator='green')
+            frappe.msgprint(msg=_(f'Factura Electronica generada con UUID <b>{state_of[1]["msj"]}</b>'),
+                            title=_('Proceso completado exitosamente'), indicator='green')
 
             return True, str(new_serie)
 
         else:
             # end = timer()
             new_serie = frappe.db.get_value('Envio FEL', {'name': state_of[1]}, 'serie_para_factura')
-            frappe.msgprint(msg=_(f'Electronic invoice generated with universal unique identifier <b>{state_of[1]}</b>'),
-                            title=_('Process successfully completed'), indicator='green')
+            frappe.msgprint(msg=_(f'Factura Electronica generada con UUID <b>{state_of[1]}</b>'),
+                            title=_('Proceso completado exitosamente'), indicator='green')
 
             return True, str(new_serie)
 
     except:
         frappe.msgprint(
-            _(f'A problem occurred while processing the request, more info at: {frappe.get_traceback()}'))
+            _(f'Ocurrio un problme al tratar de generar Factura Electronicas, mas detalles en el siguiente log: {frappe.get_traceback()}'))
         return False, 'An error occurred in the process of generating an electronic invoice'
 
 
@@ -840,3 +842,51 @@ def generate_exempt_electronic_invoice(invoice_code, naming_series):
         frappe.msgprint(str(frappe.get_traceback()))
         return False, str(frappe.get_traceback())
 # FIN FACTURAS EXENTAS DE IMPUESTOS
+
+
+@frappe.whitelist()
+def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='Sales Invoice'):
+    """[summary]
+
+    Args:
+        invoice_name ([type]): [description]
+        document (str, optional): [description]. Defaults to 'Sales Invoice'.
+    """
+
+    status_config = validate_configuration()
+
+    if status_config[0] == True:
+        cancel_invoice = CancelDocument(invoice_name, status_config[1], reason_cancelation, document)
+
+        status_req = cancel_invoice.validate_requirements()
+        if not status_req[0]:
+            frappe.msgprint(status_req[1])
+            return
+
+        status_build = cancel_invoice.build_request()
+        if not status_build[0]:
+            frappe.msgprint(f'Petición no generada: No se encontraron los datos necesarios, por favor asegurese de tener los datos necesarios para compania y cliente')
+            return
+
+        status_firma = cancel_invoice.sign_invoice()
+        if not status_firma[0]:
+            frappe.msgprint(status_firma[1])
+            return
+
+        status_process = cancel_invoice.request_cancel()
+        if not status_process[0]:
+            frappe.msgprint(status_process[1])
+            return
+
+        status_validador_res = cancel_invoice.response_validator()
+        if not status_validador_res[0]:
+            frappe.msgprint(status_process[1])
+            return
+        else:
+            frappe.msgprint('Factura Anulada con Exito, para ver el documento anulado, presione el boton ver PDF Factura Electronica')
+            return
+
+
+    else:
+        frappe.msgprint(status_config[1])
+        return

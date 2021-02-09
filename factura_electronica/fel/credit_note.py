@@ -11,7 +11,7 @@ import frappe
 import requests
 import xmltodict
 from frappe import _, _dict
-from frappe.utils import cint, flt
+from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 
@@ -528,8 +528,8 @@ class ElectronicCreditNote:
 
                         obj_item["dte:Total"] = abs(flt(self.__dat_items[i]['amount'], self.__precision))
 
+                    apply_oil_tax = False
                     items_ok.append(obj_item)
-
 
             i_fel = {"dte:Item": items_ok}
             self.__d_items = i_fel
@@ -632,10 +632,11 @@ class ElectronicCreditNote:
         """
 
         try:
+            self.__start_datetime = get_datetime()
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('mi_nota_credito.xml', 'w') as f:
+            # with open('NOTA-CREDITO-FEL.xml', 'w') as f:
             #     f.write(self.__xml_string)
 
         except:
@@ -755,6 +756,7 @@ class ElectronicCreditNote:
             # Verifica que no existan errores
             if self.__response_ok['resultado'] == True and self.__response_ok['cantidad_errores'] == 0:
                 # # Se encarga de guardar las respuestas de INFILE-SAT esto para llevar registro
+                self.__end_datetime = get_datetime()
                 status_saved = self.save_answers()
 
                 # Al primer error encontrado retornara un detalle con el mismo
@@ -784,6 +786,7 @@ class ElectronicCreditNote:
             if not frappe.db.exists('Envio FEL', {'name': self.__response_ok['uuid']}):
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
+                resp_fel.status = 'Valid'
                 resp_fel.tipo_documento = 'Nota de Credito'
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
@@ -814,6 +817,8 @@ class ElectronicCreditNote:
                 # decodedBytes = str(self.__response_ok['xml_certificado']) # base64.b64decode(self.__response_ok['xml_certificado'])
                 # decodedStr = str(decodedBytes, "utf-8")
                 resp_fel.xml_certificado = json.dumps(self.__doc_firmado, indent=2) # decodedStr
+                resp_fel.enviado = str(self.__start_datetime)
+                resp_fel.recibido = str(self.__end_datetime)
 
                 resp_fel.save(ignore_permissions=True)
 

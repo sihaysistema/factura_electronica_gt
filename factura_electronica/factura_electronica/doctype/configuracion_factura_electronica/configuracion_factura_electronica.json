@@ -14,6 +14,13 @@
   "company",
   "usar_datos_prueba",
   "nombre_empresa_prueba",
+  "documentos_electronicos_section",
+  "factura_venta_fel",
+  "nota_credito_fel",
+  "anulador_de_facturas_ventas_fel",
+  "column_break_13",
+  "factura_exportacion_fel",
+  "factura_especial_fel",
   "datos_proveedor_factura_electronica",
   "clave",
   "usuario",
@@ -301,10 +308,12 @@
    "label": "URL Firma"
   },
   {
-   "description": "FEL",
+   "default": "N",
+   "description": "FEL: Por default se usa N",
    "fieldname": "es_anulacion",
    "fieldtype": "Data",
-   "label": "Es Anulacion"
+   "label": "Es Anulacion",
+   "read_only": 1
   },
   {
    "description": "FEL",
@@ -461,11 +470,51 @@
    "fieldtype": "Select",
    "label": "Descripcion Item",
    "options": "Nombre de Item\nDescripcion de Item"
+  },
+  {
+   "description": "<b>A continuaci\u00f3n los generadores disponibles en Factura Electr\u00f3nica App, seleccione los que desee para esta instancia: </b>",
+   "fieldname": "documentos_electronicos_section",
+   "fieldtype": "Section Break",
+   "label": "Documentos Electronicos"
+  },
+  {
+   "default": "0",
+   "fieldname": "factura_venta_fel",
+   "fieldtype": "Check",
+   "label": "Factura Venta FEL"
+  },
+  {
+   "default": "0",
+   "fieldname": "nota_credito_fel",
+   "fieldtype": "Check",
+   "label": "Nota Credito FEL"
+  },
+  {
+   "default": "0",
+   "fieldname": "anulador_de_facturas_ventas_fel",
+   "fieldtype": "Check",
+   "label": "Anulador de Facturas Ventas FEL"
+  },
+  {
+   "fieldname": "column_break_13",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "factura_exportacion_fel",
+   "fieldtype": "Check",
+   "label": "Factura Exportacion FEL"
+  },
+  {
+   "default": "0",
+   "fieldname": "factura_especial_fel",
+   "fieldtype": "Check",
+   "label": "Factura Especial FEL"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2020-12-07 11:05:33.147051",
+ "modified": "2021-02-08 20:17:36.713592",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

@@ -5,6 +5,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "status",
   "detalles_fel_column",
   "tipo_documento",
   "resultado",
@@ -29,6 +30,7 @@
   "serie",
   "numero",
   "serie_para_factura",
+  "xml_firmado_para_generar_doc_electronico_section",
   "xml_certificado",
   "registro_tiempo",
   "registro_tiempo_section",
@@ -42,7 +44,8 @@
    "fieldname": "detalles_fel_column",
    "fieldtype": "Section Break",
    "in_preview": 1,
-   "label": "Detalles FEL"
+   "label": "Detalles FEL",
+   "read_only": 1
   },
   {
    "fieldname": "resultado",
@@ -53,12 +56,15 @@
   {
    "fieldname": "fecha",
    "fieldtype": "Data",
-   "label": "Fecha"
+   "in_list_view": 1,
+   "label": "Fecha",
+   "read_only": 1
   },
   {
    "fieldname": "origen",
    "fieldtype": "Text",
-   "label": "Origen"
+   "label": "Origen",
+   "read_only": 1
   },
   {
    "fieldname": "descripcion",
@@ -70,12 +76,14 @@
    "collapsible": 1,
    "fieldname": "control_emision_section",
    "fieldtype": "Section Break",
-   "label": "Control Emision"
+   "label": "Control Emision",
+   "read_only": 1
   },
   {
    "fieldname": "saldo",
    "fieldtype": "Currency",
-   "label": "Saldo"
+   "label": "Saldo",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_8",
@@ -84,69 +92,84 @@
   {
    "fieldname": "creditos",
    "fieldtype": "Currency",
-   "label": "Creditos"
+   "label": "Creditos",
+   "read_only": 1
   },
   {
    "collapsible": 1,
    "fieldname": "alertas_infile_section",
    "fieldtype": "Section Break",
-   "label": "Alertas INFILE/SAT"
+   "label": "Alertas INFILE/SAT",
+   "read_only": 1
   },
   {
    "fieldname": "alertas",
    "fieldtype": "Data",
-   "label": "Alertas"
+   "label": "Alertas",
+   "read_only": 1
   },
   {
    "fieldname": "descripcion_alertas_infile",
    "fieldtype": "Text",
-   "label": "Descripcion Alertas INFILE"
+   "label": "Descripcion Alertas INFILE",
+   "read_only": 1
   },
   {
    "fieldname": "alertas_sat",
    "fieldtype": "Data",
-   "label": "Alertas SAT"
+   "label": "Alertas SAT",
+   "read_only": 1
   },
   {
    "fieldname": "descripcion_alertas_sat",
    "fieldtype": "Text",
-   "label": "Descripcion Alertas SAT"
+   "label": "Descripcion Alertas SAT",
+   "read_only": 1
   },
   {
    "fieldname": "cantidad_errores",
    "fieldtype": "Data",
-   "label": "Cantidad Errores"
+   "label": "Cantidad Errores",
+   "read_only": 1
   },
   {
    "fieldname": "descripcion_errores",
    "fieldtype": "Text",
-   "label": "Descripcion Errores"
+   "label": "Descripcion Errores",
+   "read_only": 1
   },
   {
    "fieldname": "informacion_adicional",
    "fieldtype": "Text",
-   "label": "Informacion Adicional"
+   "label": "Informacion Adicional",
+   "read_only": 1
   },
   {
    "fieldname": "uuid",
    "fieldtype": "Data",
+   "in_standard_filter": 1,
    "label": "UUID",
+   "read_only": 1,
    "unique": 1
   },
   {
    "fieldname": "serie",
    "fieldtype": "Data",
-   "label": "Serie"
+   "label": "Serie",
+   "read_only": 1
   },
   {
    "fieldname": "numero",
    "fieldtype": "Data",
-   "label": "Numero"
+   "label": "Numero",
+   "read_only": 1
   },
   {
    "fieldname": "xml_certificado",
    "fieldtype": "Code",
-   "label": "XML Certificado"
+   "label": "XML Firmado",
+   "options": "Json",
+   "read_only": 1
   },
   {
    "bold": 1,
@@ -171,7 +194,8 @@
   {
    "fieldname": "detalles_factura_electronica_generada_section",
    "fieldtype": "Section Break",
-   "label": "Detalles Factura Electronica Generada"
+   "label": "Detalles Factura Electronica Generada",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_26",
@@ -180,21 +204,43 @@
   {
    "fieldname": "serie_factura_original",
    "fieldtype": "Data",
-   "label": "Serie Factura Original"
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Serie Factura Original",
+   "read_only": 1
   },
   {
    "fieldname": "serie_para_factura",
    "fieldtype": "Data",
-   "label": "Serie para Factura"
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Serie para Factura",
+   "read_only": 1
   },
   {
    "fieldname": "tipo_documento",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Tipo Documento",
-   "options": "\nFactura Electronica\nFactura Especial\nFactura Exportacion\nFactura Exenta\nNota de Credito\nNota de Debito\nAnulacion"
+   "options": "\nFactura Electronica\nFactura Especial\nFactura Exportacion\nFactura Exenta\nNota de Credito\nNota de Debito\nAnulacion",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Valid\nCancelled",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "xml_firmado_para_generar_doc_electronico_section",
+   "fieldtype": "Section Break",
+   "label": "XML FIRMADO PARA GENERAR DOC ELECTRONICO"
   }
  ],
- "modified": "2020-09-09 09:01:32.509432",
+ "modified": "2021-02-08 16:25:31.992194",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Envio FEL",
@@ -367,9 +413,10 @@
    "write": 1
   }
  ],
- "sort_field": "modified",
+ "show_name_in_global_search": 1,
+ "show_preview_popup": 1,
+ "sort_field": "fecha",
  "sort_order": "DESC",
  "track_changes": 1,
- "track_seen": 1,
- "track_views": 1
+ "track_seen": 1
 }
