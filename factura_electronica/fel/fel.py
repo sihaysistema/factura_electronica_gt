@@ -563,7 +563,8 @@ class ElectronicInvoice:
 
                         obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
 
-                    # PETROLEO
+                    # Reseteamos el status
+                    apply_oil_tax = False
 
                     # TURISMO HOSPEDAJE
 
@@ -585,8 +586,6 @@ class ElectronicInvoice:
 
                     # TARIFA PORTUARIA
 
-
-
                     items_ok.append(obj_item)
 
             i_fel = {"dte:Item": items_ok}
@@ -597,7 +596,7 @@ class ElectronicInvoice:
         except:
             return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
-    # Aqui se calcula el valor del impuesto (IVA)
+    # Aqui se calcula total impuestos
     def totals(self):
         """
         Funcion encargada de realizar totales de los impuestos sobre la factura
@@ -617,6 +616,7 @@ class ElectronicInvoice:
                     is_idp = True
                     total_idp += flt(i['facelec_other_tax_amount'], self.__precision)
 
+            # Escenario PETROLEO
             if is_idp == True:
                 self.__d_totales = {
                     "dte:TotalImpuestos": {
@@ -631,6 +631,8 @@ class ElectronicInvoice:
                     },
                     "dte:GranTotal": flt(self.dat_fac[0]['grand_total'], self.__precision)
                 }
+
+            # ESCENARIO IVA
             else:
                 self.__d_totales = {
                     "dte:TotalImpuestos": {
@@ -655,11 +657,12 @@ class ElectronicInvoice:
         """
 
         try:
+            self.__start_datetime = get_datetime()
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('mi_factura.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('mi_factura.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -763,8 +766,8 @@ class ElectronicInvoice:
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
-            # with open('RESPONSE_factura.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('RESPONSE_factura.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
@@ -783,6 +786,7 @@ class ElectronicInvoice:
             # Verifica que no existan errores
             if self.__response_ok['resultado'] == True and self.__response_ok['cantidad_errores'] == 0:
                 # # Se encarga de guardar las respuestas de INFILE-SAT esto para llevar registro
+                self.__end_datetime = get_datetime()
                 status_saved = self.save_answers()
 
                 # Al primer error encontrado retornara un detalle con el mismo
@@ -812,6 +816,7 @@ class ElectronicInvoice:
             if not frappe.db.exists('Envio FEL', {'name': self.__response_ok['uuid']}):
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
+                resp_fel.status = 'Valid'
                 resp_fel.tipo_documento = 'Factura Electronica'
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
@@ -842,6 +847,8 @@ class ElectronicInvoice:
                 # decodedBytes = str(self.__response_ok['xml_certificado']) # base64.b64decode(self.__response_ok['xml_certificado'])
                 # decodedStr = str(decodedBytes, "utf-8")
                 resp_fel.xml_certificado = json.dumps(self.__doc_firmado, indent=2) # decodedStr
+                resp_fel.enviado = str(self.__start_datetime)
+                resp_fel.recibido = str(self.__end_datetime)
 
                 resp_fel.save(ignore_permissions=True)
 

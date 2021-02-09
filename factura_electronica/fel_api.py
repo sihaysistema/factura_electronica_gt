@@ -48,34 +48,34 @@ def api_interface(invoice_code, naming_series):
             # Si ocurre algun error en la fase final de facelec
             # Aplica para los mensjaes base de datos actualizados
             if type(state_of[1]) is dict:
-                frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
-                                title=_('Process not completed'), indicator='red')
+                frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar Factura Electronica, mas detalles en el siguiente log: {state_of[1]}'),
+                                title=_('Proceso no completado'), indicator='red')
                 return False, state_of[1]
             else:
-                frappe.msgprint(msg=_(f'A problem occurred in the process, more details in the following log: {state_of[1]}'),
-                                title=_('Process not completed'), indicator='red')
+                frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar Factura Electronica, mas detalles en el siguiente log: {state_of[1]}'),
+                                title=_('Proceso no completado'), indicator='red')
                 return False, state_of[1]
 
         # Si el proceso es OK
         if type(state_of[1]) is dict:
             # end = timer()  \n\n\n {end - start}
             new_serie = frappe.db.get_value('Envio FEL', {'name': state_of[1]["msj"]}, 'serie_para_factura')
-            frappe.msgprint(msg=_(f'Electronic invoice generated with universal unique identifier <b>{state_of[1]["msj"]}</b>'),
-                            title=_('Process successfully completed'), indicator='green')
+            frappe.msgprint(msg=_(f'Factura Electronica generada con UUID <b>{state_of[1]["msj"]}</b>'),
+                            title=_('Proceso completado exitosamente'), indicator='green')
 
             return True, str(new_serie)
 
         else:
             # end = timer()
             new_serie = frappe.db.get_value('Envio FEL', {'name': state_of[1]}, 'serie_para_factura')
-            frappe.msgprint(msg=_(f'Electronic invoice generated with universal unique identifier <b>{state_of[1]}</b>'),
-                            title=_('Process successfully completed'), indicator='green')
+            frappe.msgprint(msg=_(f'Factura Electronica generada con UUID <b>{state_of[1]}</b>'),
+                            title=_('Proceso completado exitosamente'), indicator='green')
 
             return True, str(new_serie)
 
     except:
         frappe.msgprint(
-            _(f'A problem occurred while processing the request, more info at: {frappe.get_traceback()}'))
+            _(f'Ocurrio un problme al tratar de generar Factura Electronicas, mas detalles en el siguiente log: {frappe.get_traceback()}'))
         return False, 'An error occurred in the process of generating an electronic invoice'
 
 
