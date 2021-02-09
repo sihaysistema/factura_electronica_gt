@@ -555,7 +555,7 @@ function verificacionCAE(modalidad, frm, cdt, cdn) {
                     electronic_doc: 'factura_venta_fel'
                 }).then(r => {
                     // console.log(r.message)
-                    if (r.message && frm.doc.is_return == 0) {
+                    if (r.message && frm.doc.is_return == 0 && cur_frm.doc.is_it_an_international_invoice == 0) {
                         generar_boton_factura('Factura Electronica FEL', frm)
                     }
                 });
@@ -979,6 +979,7 @@ frappe.ui.form.on("Sales Invoice", {
         }
         // FIN GENERACION POLIZA CON RETENCIONES
 
+
         // Inicio Cancelador de documentos electronicos FEL
         if (frm.doc.docstatus == 2 && frm.doc.numero_autorizacion_fel && frm.doc.is_return == 0) {
             frappe.call('factura_electronica.api.btn_activator', {
@@ -1306,7 +1307,7 @@ function redondear(value, decimals) {
 function btn_export_invoice(frm) {
     cur_frm.clear_custom_buttons(); // Limpia otros customs buttons para generar uno nuevo
 
-    frm.add_custom_button(__("FACTURA ELECTRONICA EXPORTACION"),
+    frm.add_custom_button(__("FACTURA ELECTRONICA EXPORTACION FEL"),
         function () {
 
             frappe.call({

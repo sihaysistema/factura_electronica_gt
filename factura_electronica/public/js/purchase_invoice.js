@@ -846,10 +846,16 @@ function validate_serie_purchase_invoice(frm) {
         callback: (r) => {
             // console.log(r.message);
             if (r.message === true) {
-                // console.log('Aplica para factura especial');
-                btn_factura_especial(frm);
 
-                // console.log('Aplica para generar poliza de factura especial');
+                // Si el generador de fesp esta activada en config facelec aparecera el btn
+                frappe.call('factura_electronica.api.btn_activator', {
+                    electronic_doc: 'factura_especial_fel'
+                }).then(r => {
+                    // console.log(r.message)
+                    if (r.message) btn_factura_especial(frm);
+                });
+
+                // Generador polizas para facturas especiales
                 btn_poliza_factura_especial(frm);
             } else {
                 // Si no aplica limpiamos los custom buttons

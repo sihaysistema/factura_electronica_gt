@@ -7,14 +7,13 @@ import base64
 import datetime
 import json
 
+import frappe
 import requests
 import xmltodict
-
-import frappe
-from factura_electronica.utils.formulas import apply_formula_isr
 from frappe import _, _dict
-from frappe.utils import flt, cint
+from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
+from factura_electronica.utils.formulas import apply_formula_isr
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 
 # La contenida en el artículo 52 se refiere al documento que utiliza y emite
@@ -659,12 +658,17 @@ class ElectronicSpecialInvoice:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
 
         try:
+            self.__start_datetime = get_datetime()
             # To base64: Convierte a base64, para enviarlo en la peticion
             self.__encoded_bytes = base64.b64encode(self.__xml_string.encode("utf-8"))
             self.__encoded_str = str(self.__encoded_bytes, "utf-8")
             # Usar solo para debug
             # with open('codificado.txt', 'w') as f:
             #         f.write(self.__encoded_str)
+
+            with open('FACTURA-ESPECIAL-FEL.xml', 'w') as f:
+                f.write(self.__xml_string)
+
         except:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
 
@@ -772,6 +776,7 @@ class ElectronicSpecialInvoice:
             # Verifica que no existan errores
             if self.__response_ok['resultado'] == True and self.__response_ok['cantidad_errores'] == 0:
                 # # Se encarga de guardar las respuestas de INFILE-SAT esto para llevar registro
+                self.__end_datetime = get_datetime()
                 status_saved = self.save_answers()
 
                 # Al primer error encontrado retornara un detalle con el mismo
@@ -801,6 +806,7 @@ class ElectronicSpecialInvoice:
             if not frappe.db.exists('Envio FEL', {'name': self.__response_ok['uuid']}):
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
+                resp_fel.status = 'Valid'
                 resp_fel.tipo_documento = 'Factura Especial'
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
@@ -827,9 +833,12 @@ class ElectronicSpecialInvoice:
                 resp_fel.serie = self.__response_ok['serie']
                 resp_fel.numero = self.__response_ok['numero']
 
-                decodedBytes = base64.b64decode(self.__response_ok['xml_certificado'])
-                decodedStr = str(decodedBytes, "utf-8")
-                resp_fel.xml_certificado = decodedStr
+                # decodedBytes = base64.b64decode(self.__response_ok['xml_certificado'])
+                # decodedStr = str(decodedBytes, "utf-8")
+                # resp_fel.xml_certificado = decodedStr
+                resp_fel.xml_certificado = json.dumps(self.__doc_firmado, indent=2) # decodedStr
+                resp_fel.enviado = str(self.__start_datetime)
+                resp_fel.recibido = str(self.__end_datetime)
 
                 resp_fel.save(ignore_permissions=True)
 
