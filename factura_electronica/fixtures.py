@@ -311,6 +311,15 @@ def fill_fixtures():
                     "Sales Taxes and Charges-taxable_unit_name",
                     "Purchase Taxes and Charges-taxable_unit_name",
                     "Item-taxable_unit_name", "Item-taxable_unit_code", "Item-tax_name",
+                    "Expense Claim Detail-reference",
+                    "Expense Claim Detail-details_reference",
+                    "Expense Claim Detail-supplier", "Expense Claim Detail-nit",
+                    "Expense Claim Detail-date", "Expense Claim Detail-goods",
+                    "Expense Claim Detail-services", "Expense Claim Detail-fuel",
+                    "Expense Claim Detail-column_break_9", "Expense Claim Detail-grand_total",
+                    "Expense Claim Detail-account_credit", "Expense Claim Detail-payable_account",
+                    "Expense Claim Detail-column_break_26", "Expense Claim Detail-column_break_28",
+                    "Expense Claim Detail-section_break_30", "Expense Claim Detail-from_invoice_reference",
                 ]
             ]
         ]

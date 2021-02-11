@@ -194,3 +194,18 @@ frappe.ui.form.on("Address", {
         frm.set_df_property("is_primary_address", "description", __("<b>FEL: Dirección para facturar</b>"));
     }
 });
+
+
+frappe.ui.form.on("Expense Claim Detail", {
+    reference: function (frm, cdt, cdn) {
+        /** Al campo amount le asigna el valor de grand total obtenido de la factura seleccionada */
+        let row = frappe.get_doc(cdt, cdn);
+        if (row.reference) {
+            row.amount = row.grand_total;
+            frm.refresh();
+        } else {
+            row.amount = '';
+            frm.refresh();
+        }
+    },
+});
