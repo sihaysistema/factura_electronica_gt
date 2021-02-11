@@ -2,16 +2,16 @@
 from __future__ import unicode_literals
 
 import datetime
-import locale
+# import locale
 import math
 
 import frappe
 from frappe import _
 from numinwords import numinwords
 
-locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
+# locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
 
-__version__ = '7.00.03'
+__version__ = '7.00.04'
 
 @frappe.whitelist()
 def currency_in_words(amount, currency, cent_in_numb=0):
