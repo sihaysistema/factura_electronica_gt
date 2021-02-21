@@ -403,54 +403,6 @@ def generar_tabla_html_factura_compra(tabla):
     )
 
 
-def data_sales_invoice(data):
-    '''Complementacion de calculos para Sales Invoice API PNE'''
-    sales_invoice = data
-
-    taxes = sales_invoice.taxes
-
-    rate_iva = taxes[0].rate
-    # TODO: VERIFICAR SI RECIBE UN MONTO DE OTRA APP Y COMPARARLO
-
-    # prueba = ''
-    try:
-        total_iva_factura = 0
-        # Calculos
-        # TODO: COMPLEMENTAR CALCULOS PARA COMBUSTIBLES
-        for item in sales_invoice.items:
-            # Aplica para impuestos, en caso sea diferente sera 0
-            rate_per_uom = item.facelec_tax_rate_per_uom or 0
-            this_row_tax_amount = (item.qty) * rate_per_uom
-            this_row_taxable_amount = ((item.rate) * (item.qty)) - ((item.qty) * rate_per_uom)
-
-            item.facelec_other_tax_amount = rate_per_uom * ((item.qty) * 1)
-            item.facelec_amount_minus_excise_tax = ((item.qty) * (item.rate)) - ((item.qty) * rate_per_uom)
-
-            # calculos para combustible
-            if (item.facelecis_fuel):
-                item.facelec_gt_tax_net_fuel_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
-                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_fuel_amt) * (rate_iva / 100)
-
-            # calculos para bienes
-            if (item.facelec_is_good):
-                item.facelec_gt_tax_net_goods_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
-                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_goods_amt) * (rate_iva / 100)
-
-            # # calculos para servicios
-            if (item.facelec_is_service):
-                item.facelec_gt_tax_net_services_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
-                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_services_amt) * (rate_iva / 100)
-
-        for item_iva in sales_invoice.items:
-            total_iva_factura += item_iva.facelec_sales_tax_for_this_row
-
-        sales_invoice.shs_total_iva_fac = total_iva_factura
-    except:
-        return {'Calculos facelec': 'error en calculos'}
-    # else:
-    #     return sales_invoice
-
-
 # FACTURA ELECTRONICA API OLD GFACE
 def generar_factura_electronica_api(serie_factura, nombre_cliente, pre_se):
     '''Funcion API PNE para generar Facturas Electronicas REST-API'''
@@ -902,3 +854,61 @@ def btn_activator(electronic_doc):
                 return False
     except:
         return False
+
+
+@frappe.whitelist()
+def calculations(obj_sales_invoice):
+    """
+    Aplicador de calculos universal
+
+    Args:
+        obj_sales_invoice (Object): Objeto de la clase Sales Invoice
+
+    Returns:
+        Object: Objeto de la clase Sales Invoice modificado con calculos correspondientes
+    """
+
+    # TODO: WIP: ADAPTAR ESCENARIO IDP
+
+    sales_invoice = obj_sales_invoice
+    taxes = sales_invoice.taxes
+    # Obtiene monto impuesto
+    rate_iva = taxes[0].rate
+
+    try:
+        total_iva_factura = 0
+        # Calculos
+        for item in sales_invoice.items:
+            # Aplica para impuestos, en caso sea diferente sera 0
+            rate_per_uom = item.facelec_tax_rate_per_uom or 0
+            this_row_tax_amount = (item.qty) * rate_per_uom
+            this_row_taxable_amount = ((item.rate) * (item.qty)) - ((item.qty) * rate_per_uom)
+
+            item.facelec_other_tax_amount = rate_per_uom * ((item.qty) * 1)
+            item.facelec_amount_minus_excise_tax = ((item.qty * item.rate) - (item.qty * rate_per_uom))
+
+            # calculos para combustible
+            if (item.facelecis_fuel):
+                item.facelec_gt_tax_net_fuel_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_fuel_amt) * (rate_iva / 100)
+
+            # calculos para bienes
+            if (item.facelec_is_good):
+                item.facelec_gt_tax_net_goods_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_goods_amt) * (rate_iva / 100)
+
+            # # calculos para servicios
+            if (item.facelec_is_service):
+                item.facelec_gt_tax_net_services_amt = (item.facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+                item.facelec_sales_tax_for_this_row = (item.facelec_gt_tax_net_services_amt) * (rate_iva / 100)
+
+        for item_iva in sales_invoice.items:
+            total_iva_factura += item_iva.facelec_sales_tax_for_this_row
+
+        sales_invoice.shs_total_iva_fac = total_iva_factura
+
+    except:
+        return False, f'Ocurrio un problema al aplicar los calculos, asegurese de tener correctamente configurados los items, mas detalles en: {frappe.get_traceback()} '
+
+    else:
+        return True, 'OK'
