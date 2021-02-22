@@ -931,7 +931,7 @@ def pos_calculations(doc, event):
         facelec_gt_tax_net_goods_amt = 0
         facelec_gt_tax_net_services_amt = 0
         facelec_sales_tax_for_this_row = 0
-        TOTAL_IVA_FACT = 0
+        total_iva_fact = 0
 
         # Calculos
         for item in sales_invoice.items:
@@ -947,21 +947,21 @@ def pos_calculations(doc, event):
             if (item.factelecis_fuel):
                 facelec_gt_tax_net_fuel_amt = (facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
                 facelec_sales_tax_for_this_row = (facelec_gt_tax_net_fuel_amt) * (rate_iva / 100)
-                TOTAL_IVA_FACT += facelec_sales_tax_for_this_row
+                total_iva_fact += facelec_sales_tax_for_this_row
 
             # calculos para bienes
             if (item.facelec_is_good):
                 facelec_gt_tax_net_goods_amt = (facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
                 facelec_sales_tax_for_this_row = (facelec_gt_tax_net_goods_amt) * (rate_iva / 100)
-                TOTAL_IVA_FACT += facelec_sales_tax_for_this_row
+                total_iva_fact += facelec_sales_tax_for_this_row
 
             # # calculos para servicios
             if (item.facelec_is_service):
                 facelec_gt_tax_net_services_amt = (facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
                 facelec_sales_tax_for_this_row = (facelec_gt_tax_net_services_amt) * (rate_iva / 100)
-                TOTAL_IVA_FACT += facelec_sales_tax_for_this_row
+                total_iva_fact += facelec_sales_tax_for_this_row
 
-            frappe.db.set_value('Sales Invoice Item', {'parent': doc.name}, {
+            frappe.db.set_value('Sales Invoice Item', {'parent': doc.name, 'item_code': item.item_code, 'qty': item.qty, 'rate': item.rate}, {
                 'facelec_other_tax_amount': facelec_other_tax_amount,
                 'facelec_amount_minus_excise_tax': facelec_amount_minus_excise_tax,
                 'facelec_gt_tax_net_fuel_amt': facelec_gt_tax_net_fuel_amt,
@@ -970,11 +970,7 @@ def pos_calculations(doc, event):
                 'facelec_gt_tax_net_services_amt': facelec_gt_tax_net_services_amt,
             })
 
-        with open('debug-pos.txt', 'w') as f:
-            f.write(str(TOTAL_IVA_FACT))
-
-        frappe.db.set_value('Sales Invoice', doc.name, 'shs_total_iva_fac', TOTAL_IVA_FACT, update_modified=True)
+        frappe.db.set_value('Sales Invoice', doc.name, 'shs_total_iva_fac', total_iva_fact, update_modified=True)
 
     except:
-        with open('debug-pos-error.txt', 'w') as f:
-            f.write(str(frappe.get_traceback()))
+        frappe.msgprint(frappe.get_traceback(), title="Error ejecución calculos Factura Electronica", raise_exception=1)
