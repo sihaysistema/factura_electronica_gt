@@ -943,6 +943,15 @@ def pos_calculations(doc, event):
             facelec_other_tax_amount = rate_per_uom * ((item.qty) * 1)
             facelec_amount_minus_excise_tax = ((item.qty * item.rate) - (item.qty * rate_per_uom))
 
+            if item.discount_percentage != 0:
+                facelec_is_discount = 1
+
+            elif item.discount_amount != 0:
+                facelec_is_discount = 1
+
+            else:
+                facelec_is_discount = 0
+
             # calculos para combustible
             if (item.factelecis_fuel):
                 facelec_gt_tax_net_fuel_amt = (facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
@@ -968,9 +977,10 @@ def pos_calculations(doc, event):
                 'facelec_sales_tax_for_this_row': facelec_sales_tax_for_this_row,
                 'facelec_gt_tax_net_goods_amt': facelec_gt_tax_net_goods_amt,
                 'facelec_gt_tax_net_services_amt': facelec_gt_tax_net_services_amt,
+                'facelec_is_discount': facelec_is_discount
             })
 
         frappe.db.set_value('Sales Invoice', doc.name, 'shs_total_iva_fac', total_iva_fact, update_modified=True)
 
     except:
-        frappe.msgprint(frappe.get_traceback(), title="Error ejecución calculos Factura Electronica", raise_exception=1)
+        frappe.msgprint(f'Mas detalles en el siguiente log {frappe.get_traceback()}', title="Error ejecución calculos Factura Electronica", raise_exception=1)
