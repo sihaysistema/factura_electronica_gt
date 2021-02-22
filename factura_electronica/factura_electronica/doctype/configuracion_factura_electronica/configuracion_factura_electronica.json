@@ -81,9 +81,10 @@
    "columns": 5,
    "fieldname": "generacion_factura",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Modalidad Generacion Factura Electronica",
-   "options": "MANUAL\nAUTOMATICO",
-   "reqd": 1
+   "options": "MANUAL",
+   "read_only": 1
   },
   {
    "fieldname": "url_descarga_pdf",
@@ -99,9 +100,10 @@
    "description": "Activa/Desactiva la funcionalidad para descargar el PDF de factura electronica, guardarlo en el servidor y adjuntarlo a la factura",
    "fieldname": "descargar_pdf_factura_electronica",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Descargar PDF Factura Electronica",
-   "options": "DESACTIVAR\nACTIVAR",
-   "reqd": 1
+   "options": "DESACTIVAR",
+   "read_only": 1
   },
   {
    "depends_on": "eval:(doc.regimen === 'GFACE')",
@@ -249,7 +251,8 @@
    "fieldname": "regimen",
    "fieldtype": "Select",
    "label": "Regimen",
-   "options": "\nGFACE\nFEL",
+   "options": "FEL",
+   "read_only": 1,
    "reqd": 1
   },
   {
@@ -263,7 +266,7 @@
    "description": "FEL",
    "fieldname": "llave_pfx",
    "fieldtype": "Data",
-   "label": "Llave PFX para firmar"
+   "label": "Llave PFX para firmar (Token Signer)"
   },
   {
    "description": "FEL",
@@ -280,7 +283,7 @@
    "description": "FEL",
    "fieldname": "alias",
    "fieldtype": "Data",
-   "label": "Alias"
+   "label": "Alias (Prefijo WS)"
   },
   {
    "collapsible": 1,
@@ -324,7 +327,7 @@
    "options": "\n1: Frase de retencio\u0301n del ISR\n2: Frase de retencio\u0301n del IVA\n3: Frase de no genera derecho a cre\u0301dito fiscal del IVA\n4: Frase de exento o no afecto al IVA"
   },
   {
-   "description": "FEL: Envia copia de factura electronica generada en Factura Especial (solo si aplica el escenario de no tener datos de proveedor)",
+   "description": "<b>FEL:</b> Envia copia de factura electronica generada para el escenario <b>Cliente/Proveedor no provee su correo electronico</b>",
    "fieldname": "correo_copia",
    "fieldtype": "Data",
    "label": "Correo Copia"
@@ -514,7 +517,7 @@
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2021-02-08 20:17:36.713592",
+ "modified": "2021-02-21 00:11:34.785866",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
