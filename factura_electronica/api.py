@@ -995,4 +995,8 @@ def pos_calculations(doc, event):
 
     else:
         # Si los calculos se aplican correctamente se genera factura electronica
-        api_interface(doc.name, sales_invoice.naming_series)
+        validar_config = validar_configuracion()
+        if validar_config[0] == 1:
+            is_facelec_pos = frappe.db.get_value('Configuracion Factura Electronica', {'name': validar_config[1]}, 'factura_electronica_fel_pos')
+            if is_facelec_pos == 1:
+                api_interface(doc.name, sales_invoice.naming_series)
