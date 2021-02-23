@@ -18,6 +18,7 @@ from factura_electronica.utils.facelec_generator import construir_xml
 from factura_electronica.utils.fel_generator import FacturaElectronicaFEL
 from factura_electronica.utils.utilities_facelec import encuentra_errores as errores
 from factura_electronica.utils.utilities_facelec import normalizar_texto, validar_configuracion
+from factura_electronica.fel_api import api_interface  # Aplica para facturas de VENTA POS
 
 
 def peticion_factura_electronica(datos_xml, url_servicio):
@@ -916,10 +917,17 @@ def calculations(obj_sales_invoice):
 
 @frappe.whitelist()
 def pos_calculations(doc, event):
+    """
+    Realiza calculos sobre Bienes, Servicios, Combustibles (No disponible) en el trigger Pagar
+    de POS
+
+    Args:
+        doc (obj): Object de la clase Sales Invoice/Sales Invoice Item
+        event (str): Nombre del evento ejecutado
+    """
     try:
         sales_invoice = frappe.get_doc('Sales Invoice', {'name': doc.name})
         taxes = sales_invoice.taxes
-        # Obtiene monto impuesto
         rate_iva = taxes[0].rate
 
         rate_per_uom = 0
@@ -964,7 +972,7 @@ def pos_calculations(doc, event):
                 facelec_sales_tax_for_this_row = (facelec_gt_tax_net_goods_amt) * (rate_iva / 100)
                 total_iva_fact += facelec_sales_tax_for_this_row
 
-            # # calculos para servicios
+            # calculos para servicios
             if (item.facelec_is_service):
                 facelec_gt_tax_net_services_amt = (facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
                 facelec_sales_tax_for_this_row = (facelec_gt_tax_net_services_amt) * (rate_iva / 100)
@@ -984,3 +992,7 @@ def pos_calculations(doc, event):
 
     except:
         frappe.msgprint(f'Mas detalles en el siguiente log {frappe.get_traceback()}', title="Error ejecución calculos Factura Electronica", raise_exception=1)
+
+    else:
+        # Si los calculos se aplican correctamente se genera factura electronica
+        api_interface(doc.name, sales_invoice.naming_series)

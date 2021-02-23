@@ -21,6 +21,7 @@
   "column_break_13",
   "factura_exportacion_fel",
   "factura_especial_fel",
+  "factura_electronica_fel_pos",
   "datos_proveedor_factura_electronica",
   "clave",
   "usuario",
@@ -513,11 +514,17 @@
    "fieldname": "factura_especial_fel",
    "fieldtype": "Check",
    "label": "Factura Especial FEL"
+  },
+  {
+   "default": "0",
+   "fieldname": "factura_electronica_fel_pos",
+   "fieldtype": "Check",
+   "label": "Factura Electronica FEL (POS)"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2021-02-21 00:11:34.785866",
+ "modified": "2021-02-22 15:33:51.480297",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
