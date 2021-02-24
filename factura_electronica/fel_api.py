@@ -122,6 +122,7 @@ def api_facelec(invoice_name, naming_serie):
         }
 
 
+# generador para Lotes, Factura Individual
 def generate_electronic_invoice(invoice_code, naming_series):
     """
     Llama a la clase y sus metodos encargados de generar factura electronica,

@@ -16,11 +16,15 @@ from frappe import _
 @frappe.whitelist()
 def batch_generator_api(invoices):
     try:
+        invoices = json.loads(invoices)
         status_invoices = batch_generator(invoices)
-        frappe.msgprint(_(str(status_invoices)))
+        if status_invoices[0]:
+            frappe.msgprint(_(f'Lote generado con exito, puedes verlo <a href="#Form/Batch%20Electronic%20Invoice/{status_invoices[1]}" target="_blank"><b>aqui</b></a>'))
+        else:
+            frappe.msgprint(_(f'Lote no pudo se creado, mas detalles en el siguiente log: {status_invoices[1]}'))
 
     except:
-        pass
+        frappe.msgprint(_(f'Lote no pudo ser creado, mas detalles en el siguiente log: {frappe.get_traceback()}'))
 
 
 @frappe.whitelist()

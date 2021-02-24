@@ -9,6 +9,7 @@
         "public/js/purchase_receipt.js",
         "public/js/purchase_order.js",
         "public/js/supplier_quotation.js",
-        "public/js/goalSeek.js"
+        "public/js/goalSeek.js",
+        "public/js/sales_invoice_actions.js"
     ]
 }
