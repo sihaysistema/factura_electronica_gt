@@ -5,6 +5,7 @@ frappe.ui.form.on('Batch Electronic Invoice', {
     setup: function (frm) {
         frm.set_indicator_formatter('invoice',
             function (doc) {
+                // Si la factura tienen UUID generado green : darkgrey
                 return (doc.numero_autorizacion_fel) ? "green" : "darkgrey"
             })
     },

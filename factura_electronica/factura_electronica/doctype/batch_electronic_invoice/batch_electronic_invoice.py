@@ -58,10 +58,10 @@ def submit_invoice(invoices):
     invoices = json.loads(invoices)
 
     for invoice in invoices:
-        # get an existing document
-        if not frappe.db.exists('Sales Invoice', {'name': str(invoice.get('invoice')), 'docstatus': 1, 'status': 'Draft'}) and \
-        frappe.db.exists('Sales Invoice', {'name': str(invoice.get('invoice'))}):
-
+        # Si la factura iterada se encuentra como draft, se validara
+        if frappe.db.exists('Sales Invoice', {'name': str(invoice.get('invoice')), 'status': 'Draft', 'docstatus': 0}):
+            # if not frappe.db.exists('Sales Invoice', {'name': str(invoice.get('invoice')), 'docstatus': 1, 'status': 'Draft'}) and \
+            #     frappe.db.exists('Sales Invoice', {'name': str(invoice.get('invoice'))}):
             invoice = frappe.get_doc('Sales Invoice', {'name': str(invoice.get('invoice'))})
             invoice.docstatus = 1
             invoice.submit()
@@ -120,7 +120,7 @@ def electronic_invoices_batch(invoice_list, doc_name, doct):
                 frappe.db.set_value('Batch Electronic Invoice', doc_name, 'details', json.dumps(log_invoices))
 
         # return doc_name
-        frappe.msgprint(msg=_('Electronic Invoices generated'), title=_('Success'), indicator='green')
+        frappe.msgprint(msg=_('You will find more details in the log'), title=_('Processed batch'), indicator='green')
 
     except:
         frappe.msgprint(_(str(frappe.get_traceback())))
