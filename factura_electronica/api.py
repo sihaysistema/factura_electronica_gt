@@ -926,77 +926,81 @@ def pos_calculations(doc, event):
         event (str): Nombre del evento ejecutado
     """
     try:
+        validar_config = validar_configuracion()
         sales_invoice = frappe.get_doc('Sales Invoice', {'name': doc.name})
-        taxes = sales_invoice.taxes
-        rate_iva = taxes[0].rate
 
-        rate_per_uom = 0
-        this_row_tax_amount = 0
-        facelec_other_tax_amount = 0
-        this_row_taxable_amount = 0
-        facelec_amount_minus_excise_tax = 0
-        facelec_gt_tax_net_fuel_amt = 0
-        facelec_gt_tax_net_goods_amt = 0
-        facelec_gt_tax_net_services_amt = 0
-        facelec_sales_tax_for_this_row = 0
-        total_iva_fact = 0
+        # Si es una factura generada desde POS y exista una configuracion facelc
+        if sales_invoice.is_pos:
+            taxes = sales_invoice.taxes
+            rate_iva = taxes[0].rate
 
-        # Calculos
-        for item in sales_invoice.items:
-            # Aplica para impuestos, en caso sea diferente sera 0
-            rate_per_uom = item.facelec_tax_rate_per_uom or 0
-            this_row_tax_amount = (item.qty) * rate_per_uom
-            this_row_taxable_amount = ((item.rate) * (item.qty)) - ((item.qty) * rate_per_uom)
+            rate_per_uom = 0
+            this_row_tax_amount = 0
+            facelec_other_tax_amount = 0
+            this_row_taxable_amount = 0
+            facelec_amount_minus_excise_tax = 0
+            facelec_gt_tax_net_fuel_amt = 0
+            facelec_gt_tax_net_goods_amt = 0
+            facelec_gt_tax_net_services_amt = 0
+            facelec_sales_tax_for_this_row = 0
+            total_iva_fact = 0
 
-            facelec_other_tax_amount = rate_per_uom * ((item.qty) * 1)
-            facelec_amount_minus_excise_tax = ((item.qty * item.rate) - (item.qty * rate_per_uom))
+            # Calculos
+            for item in sales_invoice.items:
+                # Aplica para impuestos, en caso sea diferente sera 0
+                rate_per_uom = item.facelec_tax_rate_per_uom or 0
+                this_row_tax_amount = (item.qty) * rate_per_uom
+                this_row_taxable_amount = ((item.rate) * (item.qty)) - ((item.qty) * rate_per_uom)
 
-            if item.discount_percentage != 0:
-                facelec_is_discount = 1
+                facelec_other_tax_amount = rate_per_uom * ((item.qty) * 1)
+                facelec_amount_minus_excise_tax = ((item.qty * item.rate) - (item.qty * rate_per_uom))
 
-            elif item.discount_amount != 0:
-                facelec_is_discount = 1
+                if item.discount_percentage != 0:
+                    facelec_is_discount = 1
 
-            else:
-                facelec_is_discount = 0
+                elif item.discount_amount != 0:
+                    facelec_is_discount = 1
 
-            # calculos para combustible
-            if (item.factelecis_fuel):
-                facelec_gt_tax_net_fuel_amt = (facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
-                facelec_sales_tax_for_this_row = (facelec_gt_tax_net_fuel_amt) * (rate_iva / 100)
-                total_iva_fact += facelec_sales_tax_for_this_row
+                else:
+                    facelec_is_discount = 0
 
-            # calculos para bienes
-            if (item.facelec_is_good):
-                facelec_gt_tax_net_goods_amt = (facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
-                facelec_sales_tax_for_this_row = (facelec_gt_tax_net_goods_amt) * (rate_iva / 100)
-                total_iva_fact += facelec_sales_tax_for_this_row
+                # calculos para combustible
+                if (item.factelecis_fuel):
+                    facelec_gt_tax_net_fuel_amt = (facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+                    facelec_sales_tax_for_this_row = (facelec_gt_tax_net_fuel_amt) * (rate_iva / 100)
+                    total_iva_fact += facelec_sales_tax_for_this_row
 
-            # calculos para servicios
-            if (item.facelec_is_service):
-                facelec_gt_tax_net_services_amt = (facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
-                facelec_sales_tax_for_this_row = (facelec_gt_tax_net_services_amt) * (rate_iva / 100)
-                total_iva_fact += facelec_sales_tax_for_this_row
+                # calculos para bienes
+                if (item.facelec_is_good):
+                    facelec_gt_tax_net_goods_amt = (facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+                    facelec_sales_tax_for_this_row = (facelec_gt_tax_net_goods_amt) * (rate_iva / 100)
+                    total_iva_fact += facelec_sales_tax_for_this_row
 
-            frappe.db.set_value('Sales Invoice Item', {'parent': doc.name, 'item_code': item.item_code, 'qty': item.qty, 'rate': item.rate}, {
-                'facelec_other_tax_amount': facelec_other_tax_amount,
-                'facelec_amount_minus_excise_tax': facelec_amount_minus_excise_tax,
-                'facelec_gt_tax_net_fuel_amt': facelec_gt_tax_net_fuel_amt,
-                'facelec_sales_tax_for_this_row': facelec_sales_tax_for_this_row,
-                'facelec_gt_tax_net_goods_amt': facelec_gt_tax_net_goods_amt,
-                'facelec_gt_tax_net_services_amt': facelec_gt_tax_net_services_amt,
-                'facelec_is_discount': facelec_is_discount
-            })
+                # calculos para servicios
+                if (item.facelec_is_service):
+                    facelec_gt_tax_net_services_amt = (facelec_amount_minus_excise_tax) / (1 + (rate_iva / 100))
+                    facelec_sales_tax_for_this_row = (facelec_gt_tax_net_services_amt) * (rate_iva / 100)
+                    total_iva_fact += facelec_sales_tax_for_this_row
 
-        frappe.db.set_value('Sales Invoice', doc.name, 'shs_total_iva_fac', total_iva_fact, update_modified=True)
+                frappe.db.set_value('Sales Invoice Item', {'parent': doc.name, 'item_code': item.item_code, 'qty': item.qty, 'rate': item.rate}, {
+                    'facelec_other_tax_amount': facelec_other_tax_amount,
+                    'facelec_amount_minus_excise_tax': facelec_amount_minus_excise_tax,
+                    'facelec_gt_tax_net_fuel_amt': facelec_gt_tax_net_fuel_amt,
+                    'facelec_sales_tax_for_this_row': facelec_sales_tax_for_this_row,
+                    'facelec_gt_tax_net_goods_amt': facelec_gt_tax_net_goods_amt,
+                    'facelec_gt_tax_net_services_amt': facelec_gt_tax_net_services_amt,
+                    'facelec_is_discount': facelec_is_discount
+                })
+
+            frappe.db.set_value('Sales Invoice', doc.name, 'shs_total_iva_fac', total_iva_fact, update_modified=True)
+
+            # Si los calculos se aplican correctamente se genera factura electronica
+            validar_config = validar_configuracion()
+            if validar_config[0] == 1:
+                is_facelec_pos = frappe.db.get_value('Configuracion Factura Electronica', {'name': validar_config[1]}, 'factura_electronica_fel_pos')
+                if is_facelec_pos == 1:
+                    api_interface(doc.name, sales_invoice.naming_series)
 
     except:
         frappe.msgprint(f'Mas detalles en el siguiente log {frappe.get_traceback()}', title="Error ejecución calculos Factura Electronica", raise_exception=1)
 
-    else:
-        # Si los calculos se aplican correctamente se genera factura electronica
-        validar_config = validar_configuracion()
-        if validar_config[0] == 1:
-            is_facelec_pos = frappe.db.get_value('Configuracion Factura Electronica', {'name': validar_config[1]}, 'factura_electronica_fel_pos')
-            if is_facelec_pos == 1:
-                api_interface(doc.name, sales_invoice.naming_series)
