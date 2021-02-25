@@ -2,6 +2,13 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Batch Electronic Invoice', {
+    setup: function (frm) {
+        frm.set_indicator_formatter('invoice',
+            function (doc) {
+                // Si la factura tienen UUID generado green : darkgrey
+                return (doc.numero_autorizacion_fel) ? "green" : "darkgrey"
+            })
+    },
     refresh: function (frm) {
 
         frm.set_intro(__(
@@ -40,7 +47,7 @@ frappe.ui.form.on('Batch Electronic Invoice', {
                 invoices: frm.doc.batch_invoices || []
             },
             callback: function (r) {
-                console.log(r.message);
+                // console.log(r.message);
                 frm.reload_doc();
             },
         });

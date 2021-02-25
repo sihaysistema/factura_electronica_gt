@@ -419,7 +419,7 @@ def fill_fixtures():
                     "Purchase and Sales Ledger Tax Declaration", "VAT Payable and Receivable Conciliation",
                     "GT General Ledger", "GT Purchase Ledger", "GT Sales Ledger", "GT Journal",
                     "Tax Retention Guatemala", "VAT Declaration", "Batch Electronic Invoice", "Batch Status",
-                    "Purchase and Sales Ledger Tax Declaration Report"
+                    "Purchase and Sales Ledger Tax Declaration Report", "Supplier Invoice Prefix", "Supplier Invoice Number",
                 ]
             ]
         ]
