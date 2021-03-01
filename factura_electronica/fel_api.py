@@ -737,7 +737,6 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
         frappe.msgprint(str(frappe.get_traceback()))
         return False, str(frappe.get_traceback())
 
-
 # FIN EXPORTACIONES ############################################################################################################
 
 
@@ -845,6 +844,7 @@ def generate_exempt_electronic_invoice(invoice_code, naming_series):
 # FIN FACTURAS EXENTAS DE IMPUESTOS
 
 
+# CANCELADOR DE FACTURAS ELECTRONICAS FEL
 @frappe.whitelist()
 def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='Sales Invoice'):
     """[summary]

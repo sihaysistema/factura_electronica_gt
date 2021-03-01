@@ -44,6 +44,7 @@ class ElectronicInvoice:
         self.__naming_serie = naming_series
         self.__log_error = []
         self.__precision = get_currency_precision()
+        self.__default_address = False
 
     def build_invoice(self):
         """
@@ -294,6 +295,7 @@ class ElectronicInvoice:
             }
 
             if len(dat_direccion) == 0:  # Si no hay direccion registrada
+                self.__default_address = True
                 datos_default = {
                     'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
                     'customer_name': 'Consumidor Final',
@@ -334,6 +336,7 @@ class ElectronicInvoice:
                     }
 
             else:
+                self.__default_address = False
                 # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
                 # electronico, los demas campos se pueden dejar como defualt para ciudad
                 if str(self.dat_fac[0]['nit_face_customer']).upper() == 'C/F':
@@ -1021,6 +1024,8 @@ class ElectronicInvoice:
             else:
                 # Si los datos se Guardan correctamente, se retornara la serie, que sera capturado por api.py
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
-
+                if self.__default_address:
+                    frappe.msgprint(_(f'Factura generada exitosamente, sin embargo se sugiere configurar correctamente la dirección del cliente, \
+                        porque se usaron datos default. Haga clic <a href="#List/Address/List"><b>Aquí</b></a> para configurarlo de una vez.'))
                 # Se utilizara el UUID como clave para orquestar el resto de las apps que lo necesiten
                 return True, factura_guardada[0]['uuid']
