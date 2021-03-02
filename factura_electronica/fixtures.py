@@ -420,6 +420,10 @@ def fill_fixtures():
                     "GT General Ledger", "GT Purchase Ledger", "GT Sales Ledger", "GT Journal",
                     "Tax Retention Guatemala", "VAT Declaration", "Batch Electronic Invoice", "Batch Status",
                     "Purchase and Sales Ledger Tax Declaration Report", "Supplier Invoice Prefix", "Supplier Invoice Number",
+                    "Account for Excise Tax", "CREDIT NOTE FEL", "Are you sure you want to proceed to generate a credit note?",
+                    "Generate Credit Note", "Reason Adjusment?", "CANCEL DOCUMENT FEL", "Are you sure you want to proceed to cancell a Sales Invoice FEL?",
+                    "Cancell Sales Invoice FEL", "Reason for cancellation?", "DEBIT NOTE FEL", "Are you sure you want to proceed to generate a electronic debit note?",
+                    "Generate Electronic Debit Note", "Are you sure you want to proceed to generate a Electronic Special Invoice?"
                 ]
             ]
         ]

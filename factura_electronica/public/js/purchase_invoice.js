@@ -324,12 +324,12 @@ frappe.ui.form.on("Purchase Invoice", {
                 frm.add_custom_button(__("DEBIT NOTE FEL"), function () {
                     // Permite hacer confirmaciones
                     frappe.confirm(
-                        __("Are you sure you want to proceed to generate a debit note?"),
+                        __("Are you sure you want to proceed to generate a electronic debit note?"),
                         () => {
                             let d = new frappe.ui.Dialog({
-                                title: __("Generate Credit Note"),
+                                title: __("Generate Electronic Debit Note"),
                                 fields: [{
-                                    label: "Reason Adjusment?",
+                                    label: __("Reason Adjusment?"),
                                     fieldname: "reason_adjust",
                                     fieldtype: "Data",
                                     reqd: 1,
@@ -706,7 +706,7 @@ function redondeo_sales_invoice(a, b) {
 function btn_factura_especial(frm) {
     cur_frm.clear_custom_buttons();
     frm.add_custom_button(__("FACTURA ESPECIAL ELECTRONICA FEL"), function () {
-        frappe.confirm(__('Are you sure you want to proceed to generate a Special Invoice?'),
+        frappe.confirm(__('Are you sure you want to proceed to generate a Electronic Special Invoice?'),
             () => {
                 let serie_de_factura = frm.doc.name;
                 // Guarda la url actual

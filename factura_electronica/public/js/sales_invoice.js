@@ -817,12 +817,12 @@ frappe.ui.form.on("Sales Invoice", {
                                         let d = new frappe.ui.Dialog({
                                             title: __('Generate Credit Note'),
                                             fields: [{
-                                                label: 'Reason Adjusment?',
+                                                label: __('Reason Adjusment?'),
                                                 fieldname: 'reason_adjust',
                                                 fieldtype: 'Data',
                                                 reqd: 1
                                             }],
-                                            primary_action_label: 'Submit',
+                                            primary_action_label: __('Submit'),
                                             primary_action(values) {
                                                 let serie_de_factura = frm.doc.name;
                                                 // Guarda la url actual
@@ -1405,7 +1405,7 @@ function btn_canceller(frm) {
                 let d = new frappe.ui.Dialog({
                     title: __('Cancell Sales Invoice FEL'),
                     fields: [{
-                        label: 'Reason for cancellation?',
+                        label: __('Reason for cancellation?'),
                         fieldname: 'reason_cancelation',
                         fieldtype: 'Data',
                         reqd: 1
