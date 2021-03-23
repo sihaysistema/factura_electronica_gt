@@ -22,20 +22,6 @@ from factura_electronica.utils.utilities_facelec import get_currency_precision
 
 # EN RESUMEN, ES DEVOLUCION
 
-# NOTAS:
-# 1. INSTANCIA FACT
-
-# 2. BUILD
-# 2.1 VALIDATOR
-
-# 3. FIRMAR FACTURA
-# 3.1 VALIDAR RESPUESTAS
-
-# 4. SOLICITAR FEL
-# 4.1 VALIDAR RESPUESTAS
-
-# 5 GUARDAR REGISTROS ENVIOS, LOG
-# 5.1 ACTUALIZAR REGISTROS
 
 class ElectronicCreditNote:
     def __init__(self, actual_inv_name, invoice_code, conf_name, naming_series, reason):

@@ -18,21 +18,6 @@ from frappe.utils import cint, flt
 
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 
-# NOTAS:
-# 1. INSTANCIA FACT
-
-# 2. BUILD
-# 2.1 VALIDATOR
-
-# 3. FIRMAR FACTURA
-# 3.1 VALIDAR RESPUESTAS
-
-# 4. SOLICITAR FEL
-# 4.1 VALIDAR RESPUESTAS
-
-# 5 GUARDAR REGISTROS ENVIOS, LOG
-# 5.1 ACTUALIZAR REGISTROS
-
 
 class ExportInvoice:
     def __init__(self, invoice_code, conf_name, naming_series):
@@ -163,14 +148,19 @@ class ExportInvoice:
         """
 
         try:
-            self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
+            opt_config = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
+
+            if opt_config == 'Fecha y tiempo de peticion a INFILE':
+                ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
+            else:
+                date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date')
+                ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
+                ok_datetime = str(date_invoice_inv)+'T'+str(ok_time)
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                # "@FechaHoraEmision": str(self.date_invoice)+'T'+str(self.time_invoice),  #f'{self.date_invoice}T{str(self.time_invoice)}',  #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                # Se usa la data al momento de crear a infile
                 "@Exp": "SI",
-                "@FechaHoraEmision": str(nowdate())+'T'+str(nowtime().rpartition('.')[0]),
+                "@FechaHoraEmision": ok_datetime,
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
             }

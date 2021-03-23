@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Si Hay Sistema and contributors
+# Copyright (c) 2021, Si Hay Sistema and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
@@ -7,6 +7,7 @@ import base64
 import datetime
 import json
 
+import datetime
 import frappe
 import requests
 import xmltodict
@@ -15,7 +16,12 @@ from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 
-class ElectronicInvoice:
+# La factura cambiaria es el título de crédito que en la compraventa de mercaderías
+# el vendedor podrá librar y entregar o remitir al comprador y que incorpora un
+# derecho de crédito sobre la totalidad o la parte insoluta de la compraventa.
+
+
+class ExchangeInvoice:
     def __init__(self, invoice_code, conf_name, naming_series):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
@@ -63,9 +69,13 @@ class ElectronicInvoice:
                                     "dte:Receptor": self.__d_receptor,
                                     "dte:Frases": self.__d_frases,
                                     "dte:Items": self.__d_items,
-                                    "dte:Totales": self.__d_totales
+                                    "dte:Totales": self.__d_totales,
+                                    "dte:Complementos": 'self.__d_totales,'
                                 }
                             }
+                        },
+                        "dte:Adenda": {
+                            "auto-generated_for_wildcard": 'null'
                         }
                     }
                 }
@@ -134,27 +144,29 @@ class ElectronicInvoice:
         """
 
         try:
-            self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
-            # self.time_invoice = (datetime.min + frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).time().strftime("%H:%M:%S")
+            opt_config = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
 
-            # if '.' in self.time_invoice:
-            #     # la ultima porcion elimina los milisegundos manualmente, las nuevas validaciones de INFILE no soportan miliseconds .rpartition('.')[0]
+            if opt_config == 'Fecha y tiempo de peticion a INFILE':
+                ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
 
-            #     self.time_invoice = (datetime.min + frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).time().strftime("%H:%M:%S")
+            else:
+                date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date')
+                ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
+                ok_datetime = str(date_invoice_inv)+'T'+str(ok_time) #.rpartition('.')[0]
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
                 # "@FechaHoraEmision": str(self.date_invoice)+'T'+str(self.time_invoice),  #f'{self.date_invoice}T{str(self.time_invoice)}',  #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@FechaHoraEmision": str(nowdate())+'T'+str(nowtime().rpartition('.')[0]),  # Se usa la data al momento de crear a infile
+                "@NumeroAcceso": "1111111111",  # TODO: HAY QUE TENER CREDENCIALES PARA PROBAR
+                "@FechaHoraEmision": ok_datetime,  # Se usa la data al momento de crear a infile
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
-                # frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
-            }
+                }
 
             return True, 'OK'
 
         except:
-            return False, f'Error en obtener data para datos generales mas detalles en :\n {str(frappe.get_traceback())}'
+            return False, f'Error en obtener data para datos generales :\n {str(frappe.get_traceback())}'
 
     def sender(self):
         """
@@ -618,6 +630,25 @@ class ElectronicInvoice:
         except:
             return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
+    def exch_complement(self):
+        compl = {
+            "dte:Complemento": {
+                "@IDComplemento": "FCAM",
+                "@NombreComplemento": "AbonosFacturaCambiaria",
+                "@URIComplemento": "#AbonosFacturaCambiaria",
+                "cfc:AbonosFacturaCambiaria": {
+                    "@xmlns:cfc": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
+                    "@Version": "1",
+                    "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
+                    "cfc:Abono": {
+                        "cfc:NumeroAbono": "1",
+                        "cfc:FechaVencimiento": "2019-02-07",
+                        "cfc:MontoAbono": "448.00"
+                    }
+                }
+            }
+        }
+
     def sign_invoice(self):
         """
         Funcion encargada de solicitar firma para archivo XML
@@ -631,8 +662,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('FACTURA-FEL.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('FACTURA-FEL.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
