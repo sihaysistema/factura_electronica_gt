@@ -177,3 +177,72 @@ def get_currency_precision():
 
     except:
         return 2
+
+
+def is_valid_to_fel(doctype, docname):
+    """[summary]
+
+    Args:
+        doctype ([type]): [description]
+        docname ([type]): [description]
+    """
+
+    # FACT, FACTEXP, NCRED, FESP, NDEB, CANCEL
+    status_list = ['Credit Note Issued', 'Return']
+    stat = validate_configuration()
+    docinv = frappe.get_doc(doctype, {'name': docname})
+
+    if stat[0] == True:
+        config_name = stat[1]
+    else:
+        return stat
+
+    # Condiciones para FEL Sales Invoice -> FEL Normal, Factura Exportación
+    if (docinv.doctype == 'Sales Invoice') and (docinv.docstatus == 1) and (docinv.status not in status_list):
+        # Validacion de serie
+        if frappe.db.exists('Configuracion Series FEL', {'parent': config_name, 'serie': docinv.naming_series}):
+            values = frappe.db.get_values('Configuracion Series FEL',
+                                          filters={'parent': config_name, 'serie': docinv.naming_series},
+                                          fieldname=['serie'], as_dict=1)
+            return values[0]['serie'], True
+        else:
+            return _('Serie de factura no configurada, por favor agregarla en configuración Factura Electrónica para generar documento FEL'), False
+
+
+    # Condiciones para FEL Sales Invoice -> Nota Credito
+    if (docinv.doctype == 'Sales Invoice') and (docinv.docstatus == 1) and (docinv.status not in status_list):
+        # Validacion de serie
+        if frappe.db.exists('Configuracion Series FEL', {'parent': config_name, 'serie': docinv.naming_series}):
+            values = frappe.db.get_values('Configuracion Series FEL',
+                                          filters={'parent': config_name, 'serie': docinv.naming_series},
+                                          fieldname=['serie'], as_dict=1)
+            return values[0]['serie'], True
+        else:
+            return _('Serie de factura no configurada, por favor agregarla en configuración Factura Electrónica para generar documento FEL'), False
+
+
+
+def validate_configuration():
+    """
+    Verifica que exista una configuracion valida para generar Factura electronica
+
+    Returns:
+        tuple: En primera posicion True/False, segunda posicion mensaje status
+    """
+
+    # verifica que exista un documento validado, docstatus = 1 => validado
+    if frappe.db.exists('Configuracion Factura Electronica', {'docstatus': 1}):
+
+        configuracion_valida = frappe.db.get_values('Configuracion Factura Electronica',
+                                                    filters={'docstatus': 1},
+                                                    fieldname=['name', 'regimen'], as_dict=1)
+        if (len(configuracion_valida) == 1):
+            return (True, str(configuracion_valida[0]['name']))
+
+        elif (len(configuracion_valida) > 1):
+            return (False, 'Se encontro mas de una configuración, por favor verifica que solo exista \
+                    una en Configuracion Factura Electronia')
+
+    else:
+        return (False, 'No se encontro ninguna configuración valida para generacion de facturas electronicas, por favor crea y valida una en \
+                        Configuracion Factura Electronica')
