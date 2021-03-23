@@ -8,6 +8,15 @@ import { goalSeek } from './goalSeek.js';
 
 
 /* 1 Funcion calculadora para Sales Invoice ------------------------------------------------------------------------ */
+
+/**
+ * Funcion central encargada de los calculos realtime y para
+ * usar en generación de docs electrónicos
+ *
+ * @param {Object} frm
+ * @param {String} cdt
+ * @param {String} cdn
+ */
 function facelec_tax_calc_new(frm, cdt, cdn) {
 
     // es-GT: Valida que exista una tabla de impuestos, sea 0 con rate 12
@@ -92,7 +101,14 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
 }
 
 
-// Sin necesidad de guardar el formulario.  Esto costo una buenas horas de trabajo!!
+/**
+ * Genera iteraciones extra sobre los items, y asegurar calculos mas
+ * precisos
+ *
+ * @param {Object} frm
+ * @param {String} cdt
+ * @param {String} cdn
+ */
 function each_item(frm, cdt, cdn) {
     // es-GT: Esta permite ya que se calcule correctamente desde el INICIO!
     // es-GT: Sin necesidad de Guardar antes!
@@ -104,15 +120,13 @@ function each_item(frm, cdt, cdn) {
 
 
 /* 3 Funciones para otros impuestos IDP ... ------------------------------------------------------------------------ */
+
 /**
- * Parametros:
- * #1 frm = formulario que se esta trabajando
- * #2 tax_account = nombre de la cuenta
+ * Genera la suma total de impuestos especiales
  *
- * Funcionamiento:
- * Recorre la tabla items, por cada item que encuentre con el nombre de
- * cuenta recibido, lo ira concatenando en una variable que al finalizar
- * el recorrido de la tabla lo retornara a quien haya invocado la fucnion
+ * @param {Object} frm
+ * @param {String} tax_account - Nombre cuenta impuesto especial
+ * @return {float}
  */
 function facelec_add_taxes(frm, tax_account) {
     var total_sumatoria = 0;
@@ -128,16 +142,12 @@ function facelec_add_taxes(frm, tax_account) {
 
 
 /**
- * Parametros:
- * #1 frm = formulario que se esta trabajando
- * #2 cdt = Doctype
- * #3 cdn = Docname
+ * Recorre items, en busca de impuestos especiales, para luego ser sumados
+ * con los que sean del mismo tipo
  *
- * Funcionamiento:
- * Recorre la tabla items, por cada item encontrado, si tiene una cuenta asignada,
- * recorrera la tabla hija shs_otros_impuestos en busca de cuentas con el mismo nombre
- * de cuenta anteriormente encontrado, para totalizar el valor del impuestos, para todos
- * los items que tienen la misma cuenta configurada.
+ * @param {Object} frm
+ * @param {String} cdt
+ * @param {String} cdn
  */
 function sumar_otros_impuestos_shs(frm, cdt, cdn) {
     frm.doc.items.forEach((item_row_1, index_1) => {
@@ -163,12 +173,9 @@ function sumar_otros_impuestos_shs(frm, cdt, cdn) {
 
 
 /**
- * Parametros:
- * #1 frm = formulario que se esta trabajando
+ * Suma el total de montos que se encuentren en Otros Impuestos Especiales
  *
- * Funcionamiento:
- * Recorre la tabla hija shs_otros_impuestos, realiza sumatoria de todos las filas
- * que tenga una cuenta, el valor totalizado se asigna al campo shs_total_otros_imp_incl
+ * @param {*} frm
  */
 function shs_total_other_tax(frm) {
     var total_tax = 0;
@@ -185,17 +192,12 @@ function shs_total_other_tax(frm) {
 
 
 /**
- * Parametros:
- * #1 frm = formulario que se esta trabajando
- * #2 cdt = Doctype
- * #3 cdn = Docname
+ * Recorre items en busca de impuestos especiales, para agregarlo en la tabla del otros impuestos
+ * sumar, y acumular por tipo
  *
- * Funcionamiento:
- * Recorre la tabla items, por cada fila con una cuenta asignada buscara en la tabla hija
- * shs_otros_impuestos por una fila con el mismo nombre de la cuenta anteriormente encontrada,
- * si no la encuentra en shs_otros_impuestos creara una nueva fila, y le asignara los valores
- * de nombre de cuenta y el total para esa cuenta. Si la cuenta ya se encuentra creada en
- * shs_otros_impuestos le sumara los valores encontrados.
+ * @param {Object} frm
+ * @param {String} cdt
+ * @param {String} cdn
  */
 function facelec_otros_impuestos_fila(frm, cdt, cdn) {
     cur_frm.refresh_field("shs_otros_impuestos");
@@ -254,10 +256,15 @@ function facelec_otros_impuestos_fila(frm, cdt, cdn) {
 }
 
 
+/**
+ * Recalculo los montos de impuestos especiales, cuando se eliminan n filas
+ *
+ * @param {*} frm
+ * @param {*} cdn
+ * @param {*} tax_account_n - Nombre cuenta impuestos especial
+ * @param {*} otro_impuesto - Monto impuesto que se esta eliminando
+ */
 function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
-    /**
-     * Se encarga de recalcular el total de otros impuestos cuando se elimina un item
-     */
     // recorre items
     frm.doc.items.forEach((item_row, i1) => {
         if (item_row.facelec_tax_rate_per_uom_account === tax_account_n) {
@@ -269,7 +276,7 @@ function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
                         cur_frm.refresh_field("shs_otros_impuestos");
                         shs_total_other_tax(frm);
                         cur_frm.refresh_field("shs_otros_impuestos");
-                        console.log('Total tax', tax_row.total);
+                        // console.log('Total tax', tax_row.total);
                         if (!tax_row.total) {
                             // console.log('SE ELIMINARA LA FILA ---------------->');
                             // Elimina la fila con valor 0
@@ -281,16 +288,16 @@ function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
             }
         }
     });
-
 }
 
 /* 4 --------------------------------------------------------------------------------------------------------------- */
+
 /**
- * Funcionamiento: recibe como parametro frm, y cuenta_b, lo que hace es, buscar en todas las filas de taxes
- * si existe ya una cuenta con el nombre de la cuenta recibida por parametro, en caso ya exista esa cuenta en
- * la tabla no hace nada, pero si encuentra que no hay una cuenta igual a la recibida en el parametro, entonces
- * la funcion encargada agregara una nueva fila con los datos correspondientes, esta funcion retorna true
- * en caso si encuentre una cuenta existente
+ * Buscador de cuentas en tabla hija de otros impuestos
+ *
+ * @param {*} frm
+ * @param {*} cuenta_b
+ * @return {*}
  */
 function buscar_account(frm, cuenta_b) {
     var estado = false;
@@ -306,7 +313,11 @@ function buscar_account(frm, cuenta_b) {
 }
 
 
-// Para mostrar otros impuestos especiales
+/**
+ * Renderiza tabla HTML con detalles de impuestos e impuestos especiales
+ *
+ * @param {*} frm
+ */
 function generar_tabla_html(frm) {
     if (frm.doc.items.length > 0) {
         const mi_array = frm.doc.items;
@@ -466,6 +477,7 @@ frappe.ui.form.on("Sales Invoice", {
                             }
                         });
                     }
+
                     // Generación Facturas Electrónicas FEL - Normal Type
                     if (r.message[0] === 'FACT' && r.message[2]) {
                         generar_boton_factura(__('Factura Electrónica FEL'), frm)
@@ -474,6 +486,7 @@ frappe.ui.form.on("Sales Invoice", {
                             pdf_button_fel(frm.doc.numero_autorizacion_fel, frm)
                         }
                     }
+
                     // Generación Facturas Electrónicas FEL - Export
                     if (r.message[0] === 'FACT' && r.message[1] == 'export') {
                         btn_export_invoice(frm);
@@ -482,6 +495,7 @@ frappe.ui.form.on("Sales Invoice", {
                             pdf_button_fel(frm.doc.numero_autorizacion_fel, frm)
                         }
                     }
+
                     // Generación Nota Credito Electronica
                     if (r.message[0] === 'NCRE' && r.message[1] === 'valido' && r.message[2]) {
                         btn_credit_note(frm);

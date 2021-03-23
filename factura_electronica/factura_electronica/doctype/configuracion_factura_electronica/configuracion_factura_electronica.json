@@ -75,7 +75,8 @@
   "mensaje",
   "enviado_por",
   "otras_configuraciones_section",
-  "descripcion_item"
+  "descripcion_item",
+  "fecha_y_tiempo_documento_electronica"
  ],
  "fields": [
   {
@@ -520,11 +521,18 @@
    "fieldname": "factura_electronica_fel_pos",
    "fieldtype": "Check",
    "label": "Factura Electronica FEL (POS)"
+  },
+  {
+   "description": "Seleccione la opci\u00f3n de fecha y tiempo para enviar en el XML para generaci\u00f3n de documentos electr\u00f3nicos",
+   "fieldname": "fecha_y_tiempo_documento_electronica",
+   "fieldtype": "Select",
+   "label": "Fecha y tiempo documento electronica",
+   "options": "Fecha y tiempo de peticion a INFILE\nFecha y tiempo creacion documento"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2021-02-22 15:33:51.480297",
+ "modified": "2021-03-23 12:49:23.740643",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

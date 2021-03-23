@@ -7,6 +7,7 @@ import base64
 import datetime
 import json
 
+import datetime
 import frappe
 import requests
 import xmltodict
@@ -14,21 +15,6 @@ from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
 from factura_electronica.utils.utilities_facelec import get_currency_precision
-
-# NOTAS:
-# 1. INSTANCIA FACT
-
-# 2. BUILD
-# 2.1 VALIDATOR
-
-# 3. FIRMAR FACTURA
-# 3.1 VALIDAR RESPUESTAS
-
-# 4. SOLICITAR FEL
-# 4.1 VALIDAR RESPUESTAS
-
-# 5 GUARDAR REGISTROS ENVIOS, LOG
-# 5.1 ACTUALIZAR REGISTROS
 
 class ElectronicInvoice:
     def __init__(self, invoice_code, conf_name, naming_series):
@@ -63,13 +49,6 @@ class ElectronicInvoice:
                 # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
                 self.__base_peticion = {
                     "dte:GTDocumento": {
-                        # "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 1 vieja
-                        # "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
-                        # "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
-                        # "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        # "@Version": "0.4",
-                        # "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
-
                         "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 2
                         "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -156,27 +135,28 @@ class ElectronicInvoice:
         """
 
         try:
-            self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
-            # self.time_invoice = (datetime.min + frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).time().strftime("%H:%M:%S")
+            opt_config = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
 
-            # if '.' in self.time_invoice:
-            #     # la ultima porcion elimina los milisegundos manualmente, las nuevas validaciones de INFILE no soportan miliseconds .rpartition('.')[0]
+            if opt_config == 'Fecha y tiempo de peticion a INFILE':
+                ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
 
-            #     self.time_invoice = (datetime.min + frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).time().strftime("%H:%M:%S")
+            else:
+                date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date')
+                ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
+                ok_datetime = str(date_invoice_inv)+'T'+str(ok_time) #.rpartition('.')[0]
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
                 # "@FechaHoraEmision": str(self.date_invoice)+'T'+str(self.time_invoice),  #f'{self.date_invoice}T{str(self.time_invoice)}',  #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@FechaHoraEmision": str(nowdate())+'T'+str(nowtime().rpartition('.')[0]),  # Se usa la data al momento de crear a infile
+                "@FechaHoraEmision": ok_datetime,  # Se usa la data al momento de crear a infile
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
-                # frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
-            }
+                }
 
             return True, 'OK'
 
         except:
-            return False, f'Error en obtener data para datos generales mas detalles en :\n {str(frappe.get_traceback())}'
+            return False, f'Error en obtener data para datos generales :\n {str(frappe.get_traceback())}'
 
     def sender(self):
         """
@@ -271,18 +251,6 @@ class ElectronicInvoice:
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['customer_address']},
                                                  fieldname=['address_line1', 'email_id', 'pincode', 'county',
                                                             'state', 'city', 'country'], as_dict=1)
-            # NOTE: se quitara esta validacion para permitir usar valores default en caso no exista una direccion
-            # o campos especificacion de direccion
-            # if len(dat_direccion) == 0:
-            #     return False, f'''No se encontro ninguna direccion para el cliente {self.dat_fac[0]["customer_name"]}.\
-            #                       Por favor asigna un direccion y vuelve a intentarlo'''
-
-            # # Validacion data direccion cliente
-            # for dire in dat_direccion[0]:
-            #     if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
-            #         return False, '''No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no\
-            #                          tiene data, por favor asignarle un valor e intentar de nuevo \
-            #                       '''.format(str(dire), self.dat_fac[0]["customer_name"])
 
             datos_default = {
                 'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
@@ -514,6 +482,7 @@ class ElectronicInvoice:
                                 "dte:MontoImpuesto": flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
                             },
                             {
+                                # IDP
                                 "dte:NombreCorto": nombre_corto,
                                 "dte:CodigoUnidadGravable": codigo_uni_gravable,
                                 "dte:CantidadUnidadesGravables": float(self.__dat_items[i]['qty']),  # net_amount
@@ -599,10 +568,10 @@ class ElectronicInvoice:
         except:
             return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
-    # Aqui se calcula total impuestos
     def totals(self):
         """
         Funcion encargada de realizar totales de los impuestos sobre la factura
+        y grand total
 
         Returns:
             tuple: True/False, msj, msj
@@ -664,8 +633,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('FACTURA-FEL.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('FACTURA-FEL.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
