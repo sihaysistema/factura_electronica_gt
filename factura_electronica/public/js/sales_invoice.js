@@ -6,6 +6,7 @@
 import { valNit } from './facelec.js';
 import { goalSeek } from './goalSeek.js';
 
+
 /* 1 Funcion calculadora para Sales Invoice ------------------------------------------------------------------------ */
 function facelec_tax_calc_new(frm, cdt, cdn) {
 
@@ -90,6 +91,7 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
     });
 }
 
+
 // Sin necesidad de guardar el formulario.  Esto costo una buenas horas de trabajo!!
 function each_item(frm, cdt, cdn) {
     // es-GT: Esta permite ya que se calcule correctamente desde el INICIO!
@@ -100,7 +102,6 @@ function each_item(frm, cdt, cdn) {
     });
 }
 
-/* 2 --------------------------------------------------------------------------------------------------------------- */
 
 /* 3 Funciones para otros impuestos IDP ... ------------------------------------------------------------------------ */
 /**
@@ -124,6 +125,7 @@ function facelec_add_taxes(frm, tax_account) {
 
     return total_sumatoria;
 }
+
 
 /**
  * Parametros:
@@ -159,6 +161,7 @@ function sumar_otros_impuestos_shs(frm, cdt, cdn) {
     });
 }
 
+
 /**
  * Parametros:
  * #1 frm = formulario que se esta trabajando
@@ -179,6 +182,7 @@ function shs_total_other_tax(frm) {
     cur_frm.set_value('shs_total_otros_imp_incl', total_tax);
     frm.refresh_field("shs_total_otros_imp_incl");
 }
+
 
 /**
  * Parametros:
@@ -262,6 +266,7 @@ function facelec_otros_impuestos_fila(frm, cdt, cdn) {
 
 }
 
+
 function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
     /**
      * Se encarga de recalcular el total de otros impuestos cuando se elimina un item
@@ -320,104 +325,9 @@ function buscar_account(frm, cuenta_b) {
     return estado;
 }
 
-/* 6 Funciones creadoras de botones --------------------------------------------------------------------------------------- */
 
-
-/* 7 Funciones Verificadoras ------------------------------------------------------------------------------------------------- */
-// DEFINICION: Se encarga de validar si hay existencia de UUID o CAE en Factura de Venta
-// Si no lo hay mostrara el boton de Factura Electronica, Factura Exportacion o Factura Exenta segun el escenario al que
-// aplique
-function verificacionCAE(modalidad, frm, cdt, cdn) {
-
-    /* ------------------------------ COMPROBACIONES DE CAE ------------------------------ */
-    // FACTURAS FACE, CFACE, FACTURA EXPORTACION
-    // Este codigo entra en funcionamiento cuando la generacion automatica de la factura no es exitosa.
-    // esto permite volver intentarlo hasta obtener el cae de la factura en que se estre trabajando.
-    if ((frm.doc.status === "Paid") || (frm.doc.status === "Unpaid") || (frm.doc.status === "Submitted") ||
-        (frm.doc.status === "Overdue") || (frm.doc.status != "Credit Note Issued") || (frm.doc.status != "Return")) {
-        // SI en el campo de 'cae_factura_electronica' ya se encuentra el dato correspondiente, ocultara el boton
-        // para generar el documento, para luego mostrar el boton para obtener el PDF del documento ya generado.
-
-        // GFACE: Si hay ya un identificador para facelec, muestra boton para ver pdf en linea
-        if (frm.doc.cae_factura_electronica) {
-            cur_frm.clear_custom_buttons();
-            pdf_button(frm.doc.cae_factura_electronica, frm);
-
-            // FEL: Si hay ya un identificador para facelec, muestra boton para ver pdf en linea
-        } else if (frm.doc.numero_autorizacion_fel) {
-            cur_frm.clear_custom_buttons();
-            pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
-
-            // FEL: Si no aplica ninguno de los anteiores, se muestra los respectivos botones para generar
-        } else {
-            // Si la modalidad recibida es manual se genera un boton para hacer la factura electronica manualmente
-            // NOTA: Se dejo por default solo para hacerlo manualmente, si se quiere automatico
-            // hay que desarrollarlo :D
-            if (modalidad === 'manual') {
-
-                // INICIO FEL FACTURA
-                frappe.call('factura_electronica.api.btn_activator', {
-                    electronic_doc: 'factura_venta_fel'
-                }).then(r => {
-                    // console.log(r.message)
-                    if (r.message && frm.doc.is_return == 0 && cur_frm.doc.is_it_an_international_invoice == 0) {
-                        generar_boton_factura('Factura Electronica FEL', frm)
-                    }
-                });
-                // FIN FEL FACTURA
-
-
-                // INICIO FACTURA EXPORTACION FEL
-                // aplica solo si la factura esta validada y si la opcion international is active
-                // NOTA: Debe tener la cuenta de impuestos con Rate 0, El nit de cliente por defualt
-                // se usara CF aunque tenga uno asignado
-                if (frm.doc.docstatus == 1 && cur_frm.doc.is_it_an_international_invoice == 1) {
-                    frappe.call('factura_electronica.api.btn_activator', {
-                        electronic_doc: 'factura_exportacion_fel'
-                    }).then(r => {
-                        // console.log(r.message)
-                        if (r.message) btn_export_invoice(frm);
-                    });
-
-                    // NOTA: USAR EN CASO SE BASE EN DIRECCION DE CLIENTE
-                    // Si el pais en la direccion de cliente es diferente a Guatemala se mostrara
-                    // frappe.call({
-                    //     method: 'factura_electronica.api.validate_address',
-                    //     args: {
-                    //         address_name: frm.doc.customer_address,
-                    //     },
-                    //     callback: function (r) {
-                    //         if (r.message == true) {
-                    //             console.log('Si aplica a exportacion')
-                    //             btn_export_invoice(frm)
-                    //             // frm.reload_doc();
-                    //         }
-                    //         if (r.message == false) {
-                    //             console.log('No aplica a exportacion, pero si a fel normal')
-                    //         }
-                    //     },
-                    // });
-
-                }
-                // FIN FACTURA EXPORTACION FEL
-
-                // INICIO FACTURA EXENTA DE IMPUESTOS (ALPHA)!!!
-                // Para llevar un mejor registro, cargar una tabla de impuestos con rate
-                // Ya que se mostrara solo y solo el rate del iva es 0
-                // if (cur_frm.doc.is_it_an_international_invoice == 0 && frm.doc.docstatus == 1 && frm.doc.taxes.length > 0) {
-                //     if (frm.doc.taxes[0].rate == 0) {
-                //         btn_exempt_invoice(frm);
-                //     }
-                // }
-                // FIN FACTURA EXENTA DE IMPUESTOS
-            }
-        }
-    }
-    /* -------------------------------------------------------------------------------------- */
-}
-
+// Para mostrar otros impuestos especiales
 function generar_tabla_html(frm) {
-
     if (frm.doc.items.length > 0) {
         const mi_array = frm.doc.items;
         const mi_array_dos = Array.from(mi_array);
@@ -434,7 +344,7 @@ function generar_tabla_html(frm) {
         });
     }
 }
-/* 9 Eventos en Doctypes---------------------------------------------------------------------------------------------- */
+
 
 /* Factura de Ventas-------------------------------------------------------------------------------------------------- */
 frappe.ui.form.on("Sales Invoice", {
@@ -526,6 +436,7 @@ frappe.ui.form.on("Sales Invoice", {
         clean_fields(frm);
 
         if (frm.doc.docstatus != 0) {
+            // INICIO BOTONES GENERADORES DOCS ELECTRONICOS
             frappe.call({
                 method: 'factura_electronica.fel_api.is_valid_to_fel',
                 args: {
@@ -569,15 +480,22 @@ frappe.ui.form.on("Sales Invoice", {
                     }
                 },
             });
-        }
+            // FIN BOTONES GENERADORES DOCS ELECTRONICOS
 
+            // INICIO GENERACION POLIZA CON RETENCIONES
+            // TODO:AGREGAR VALIDACION EXISTENCIA EN JOURNA ENTRY
+            if (frm.doc.docstatus === 1 && frm.doc.status !== 'Paid') {
+                btn_journal_entry_retention(frm)
+            }
+            // FIN GENERACION POLIZA CON RETENCIONES
+        }
     },
     validate: function (frm) {
         generar_tabla_html(frm);
     },
     nit_face_customer: function (frm, cdt, cdn) {
-        // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
-        valNit(frm.doc.nit_face_customer, frm.doc.customer, frm);
+        // Para evitar retrasos la validacion se realiza desde customer dt
+        // valNit(frm.doc.nit_face_customer, frm.doc.customer, frm);
     },
     additional_discount_percentage: function (frm, cdt, cdn) {
         // Pensando en colocar un trigger aqui para cuando se actualice el campo de descuento adicional
@@ -608,8 +526,7 @@ frappe.ui.form.on("Sales Invoice", {
         // Trigger antes de guardar
     },
     on_submit: function (frm, cdt, cdn) {
-        // Ocurre cuando se presione el boton validar.
-        // Cuando se valida el documento, se hace la consulta al servidor por medio de frappe.call
+        // Ocurre cuando se presione el boton validar. para agregar al GL los impuestos especiales
 
         // Creacion objeto vacio para guardar nombre y valor de las cuentas que se encuentren
         let cuentas_registradas = {};
@@ -657,6 +574,7 @@ frappe.ui.form.on("Sales Invoice", {
     },
     naming_series: function (frm, cdt, cdn) {
         if (frm.doc.naming_series) {
+            // Aplica solo para FS
             frappe.call({
                 method: "factura_electronica.api.obtener_numero_resolucion",
                 args: {
@@ -668,77 +586,73 @@ frappe.ui.form.on("Sales Invoice", {
                     if (numero_resolucion.message === undefined) {
                         // cur_frm.set_value('shs_numero_resolucion', '');
                     } else {
-                        cur_frm.set_value('shs_numero_resolucion', numero_resolucion
-                            .message);
+                        cur_frm.set_value('shs_numero_resolucion', numero_resolucion.message);
                     }
                 }
             });
         }
     },
     es_nota_de_debito: function (frm) {
-        if (frm.doc.es_nota_de_debito) {
-            // console.log('Es nota de debito');
-            cur_frm.set_df_property("naming_series", "read_only", 1);
+        // !GFACE: YA NO APLICA
+        // if (frm.doc.es_nota_de_debito) {
+        //     // console.log('Es nota de debito');
+        //     cur_frm.set_df_property("naming_series", "read_only", 1);
 
-            frappe.call({
-                method: 'factura_electronica.api.obtener_serie_doc',
-                args: {
-                    opt: 'debit'
-                },
-                callback: function (r) {
-                    // console.log(r.message);
+        //     frappe.call({
+        //         method: 'factura_electronica.api.obtener_serie_doc',
+        //         args: {
+        //             opt: 'debit'
+        //         },
+        //         callback: function (r) {
+        //             // console.log(r.message);
 
-                    if (r.message) {
-                        // cur_frm.set_value('naming_series', '');
-                        cur_frm.set_value('naming_series', r.message);
-                    }
-                }
-            });
-        } else {
-            cur_frm.set_df_property("naming_series", "read_only", 0);
-        }
+        //             if (r.message) {
+        //                 // cur_frm.set_value('naming_series', '');
+        //                 cur_frm.set_value('naming_series', r.message);
+        //             }
+        //         }
+        //     });
+        // } else {
+        //     cur_frm.set_df_property("naming_series", "read_only", 0);
+        // }
     },
     is_return: function (frm) {
+        // !GFACE: YA NO APLICA
         // Asignacion serie configurada para notas de credito
-        if (frm.doc.is_return) {
-            // console.log('Es retorno');
-            cur_frm.set_df_property("naming_series", "read_only", 1);
+        // if (frm.doc.is_return) {
+        //     // console.log('Es retorno');
+        //     cur_frm.set_df_property("naming_series", "read_only", 1);
 
-            frappe.call({
-                method: 'factura_electronica.api.obtener_serie_doc',
-                args: {
-                    opt: 'credit'
-                },
-                callback: function (r) {
-                    // console.log(r.message);
-                    if (r.message) {
-                        cur_frm.set_value('naming_series', '');
-                        cur_frm.set_value('naming_series', r.message);
-                    }
+        //     frappe.call({
+        //         method: 'factura_electronica.api.obtener_serie_doc',
+        //         args: {
+        //             opt: 'credit'
+        //         },
+        //         callback: function (r) {
+        //             // console.log(r.message);
+        //             if (r.message) {
+        //                 cur_frm.set_value('naming_series', '');
+        //                 cur_frm.set_value('naming_series', r.message);
+        //             }
 
-                }
-            });
-        } else {
-            cur_frm.set_df_property("naming_series", "read_only", 0);
-            // cur_frm.set_value('naming_series', '');
-        }
+        //         }
+        //     });
+        // } else {
+        //     cur_frm.set_df_property("naming_series", "read_only", 0);
+        //     // cur_frm.set_value('naming_series', '');
+        // }
     }
 });
 
 frappe.ui.form.on("Sales Invoice Item", {
-    items_add: function (frm, cdt, cdn) { },
-    items_move: function (frm, cdt, cdn) { },
     before_items_remove: function (frm, cdt, cdn) {
+        // Recalcula el total IVA y otros impuestos (IDP)
         frm.doc.items.forEach((item_row_1, index_1) => {
             if (item_row_1.name == cdn) {
                 // console.log('La Fila a Eliminar es --------------> ' + item_row_1.item_code);
                 totalizar_valores(frm, cdn, item_row_1.facelec_tax_rate_per_uom_account, item_row_1.facelec_other_tax_amount);
             }
         });
-    },
-    items_remove: function (frm, cdt, cdn) {
-        // es-GT: Este disparador corre al momento de eliminar una nueva fila.
-        // en-US: This trigger runs when removing a row.
     },
     item_code: function (frm, cdt, cdn) {
         each_item(frm, cdt, cdn);
@@ -767,28 +681,13 @@ frappe.ui.form.on("Sales Invoice Item", {
         facelec_tax_calc_new(frm, cdt, cdn);
     },
     shs_amount_for_back_calc: function (frm, cdt, cdn) {
+        // Permite aplicar goalSeek
         frm.doc.items.forEach((row, index) => {
             var a = row.rate;
             var b = row.qty;
             var c = row.amount;
-
-            //let test = flt(row.shs_amount_for_back_calc) - flt(c);
-            //let testB = test / 2;
-
-            // Usando metodologia GoalSeek.js
-            // https://github.com/adam-hanna/goalSeek.js/blob/master/goalSeek.js
-            // console.log(goalSeek({
-            //     Func: calculo_redondeo_pi,
-            //     aFuncParams: [b, a],
-            //     oFuncArgTarget: {
-            //         Position: 0
-            //     },
-            //     Goal: row.shs_amount_for_back_calc,
-            //     Tol: 0.001,
-            //     maxIter: 10000
-            // }));
             let calcu = goalSeek({
-                Func: calculo_redondeo_pi,
+                Func: funct_eval,
                 aFuncParams: [b, a],
                 oFuncArgTarget: {
                     Position: 0
@@ -807,14 +706,10 @@ frappe.ui.form.on("Sales Invoice Item", {
     }
 });
 
-function calculo_redondeo_pi(a, b) {
+
+// Funcion necesaria para evaluar goalSeek
+function funct_eval(a, b) {
     return a * b;
-}
-
-/* ----------------------------------------------------------------------------------------------------------------- */
-
-function redondear(value, decimals) {
-    return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
 }
 
 
@@ -842,8 +737,6 @@ function clean_fields(frm) {
 }
 
 
-/* ----------------------------------------------------------------------------------------------------------------- */
-// BTN SECTION
 function btn_canceller(frm) {
     cur_frm.clear_custom_buttons();
     frm.add_custom_button(__("CANCEL DOCUMENT FEL"), function () {
@@ -885,6 +778,7 @@ function btn_canceller(frm) {
     }).addClass("btn-danger");
 }
 
+
 function generar_boton_factura(tipo_factura, frm) {
     frm.add_custom_button(__(tipo_factura), function () {
         // frm.reload(); permite hacer un refresh de todo el documento
@@ -913,6 +807,7 @@ function generar_boton_factura(tipo_factura, frm) {
         });
     }).addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
 }
+
 
 /**
  * Generador de boton para factura de exportacion, cuando se pulsa
@@ -949,6 +844,7 @@ function btn_export_invoice(frm) {
             });
         }).addClass("btn-primary");
 };
+
 
 function btn_credit_note(frm) {
     cur_frm.clear_custom_buttons();
@@ -1005,6 +901,7 @@ function btn_credit_note(frm) {
     }).addClass("btn-warning");
 }
 
+
 /**
  * Generador de boton para factura exenta de impuestos
  *
@@ -1042,6 +939,105 @@ function btn_exempt_invoice(frm) {
         }).addClass("btn-primary");
 };
 
+
+function btn_journal_entry_retention(frm) {
+    cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
+
+        let d = new frappe.ui.Dialog({
+            title: __('New Journal Entry with Withholding Tax'),
+            fields: [{
+                label: 'Cost Center',
+                fieldname: 'cost_center',
+                fieldtype: 'Link',
+                options: 'Cost Center',
+                "get_query": function () {
+                    return {
+                        filters: {
+                            'company': frm.doc.company
+                        }
+                    }
+                },
+                default: ""
+            },
+            {
+                label: 'Target account',
+                fieldname: 'debit_in_acc_currency',
+                fieldtype: 'Link',
+                options: 'Account',
+                "reqd": 1,
+                "get_query": function () {
+                    return {
+                        filters: {
+                            'company': frm.doc.company
+                        }
+                    }
+                }
+            },
+            {
+                fieldname: 'col_br_asdffg',
+                fieldtype: 'Column Break'
+            },
+            {
+                label: 'Is Multicurrency',
+                fieldname: 'is_multicurrency',
+                fieldtype: 'Check'
+            },
+            {
+                label: 'Applies for VAT withholding',
+                fieldname: 'is_iva_withholding',
+                fieldtype: 'Check'
+            },
+            {
+                label: 'Applies for ISR withholding',
+                fieldname: 'is_isr_withholding',
+                fieldtype: 'Check'
+            },
+            {
+                label: 'NOTE',
+                fieldname: 'note',
+                fieldtype: 'Data',
+                read_only: 1,
+                default: 'Los cálculos se realizaran correctamente si se encuentran configurados en company, y si el IVA va incluido en la factura'
+            },
+            {
+                label: 'Description',
+                fieldname: 'section_asdads',
+                fieldtype: 'Section Break',
+                "collapsible": 1
+            },
+            {
+                label: 'Description',
+                fieldname: 'description',
+                fieldtype: 'Long Text'
+            }
+            ],
+            primary_action_label: 'Create',
+            primary_action(values) {
+
+                frappe.call({
+                    method: 'factura_electronica.api_erp.journal_entry_isr',
+                    args: {
+                        invoice_name: frm.doc.name,
+                        debit_in_acc_currency: values.debit_in_acc_currency,
+                        cost_center: values.cost_center,
+                        is_isr_ret: parseInt(values.is_isr_withholding),
+                        is_iva_ret: parseInt(values.is_iva_withholding),
+                        is_multicurrency: parseInt(values.is_multicurrency),
+                        description: values.description
+                    },
+                    callback: function (r) {
+                        // console.log(r.message);
+                        d.hide();
+                        frm.refresh()
+                    },
+                });
+            }
+        });
+        d.show();
+    });
+}
+
+
 // GFACE
 function pdf_button(cae_documento, frm) {
     // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
@@ -1050,6 +1046,7 @@ function pdf_button(cae_documento, frm) {
             window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
         }).addClass("btn-primary");
 }
+
 
 // FEL
 function pdf_button_fel(cae_documento, frm) {
@@ -1061,6 +1058,7 @@ function pdf_button_fel(cae_documento, frm) {
                 cae_documento);
         }).addClass("btn-primary");
 }
+
 
 function pdf_credit_note(frm) {
     cur_frm.clear_custom_buttons();
