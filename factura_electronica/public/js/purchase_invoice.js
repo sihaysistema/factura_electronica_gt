@@ -310,6 +310,18 @@ frappe.ui.form.on("Purchase Invoice", {
     refresh: function (frm, cdt, cdn) {
         // Limpieza de campos cuando se duplique una factura de compra
         clean_fields(frm);
+
+        frappe.call({
+            method: 'factura_electronica.fel_api.is_valid_to_fel',
+            args: {
+                doctype: frm.doc.doctype,
+                docname: frm.doc.name,
+            },
+            callback: function (data) {
+                console.log(data.message);
+            },
+        });
+
         // Por ahora se mostrara solo si la factura de compra se encuentra validada
         if (frm.doc.docstatus === 1) {
 
