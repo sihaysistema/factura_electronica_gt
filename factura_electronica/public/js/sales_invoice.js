@@ -19,7 +19,7 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
     } else {
         // Muestra una notificacion para cargar una tabla de impuestos
         frappe.show_alert({
-            message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para generar calculos correctos'),
+            message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente'),
             indicator: 'red'
         }, 5);
 
@@ -226,8 +226,7 @@ function facelec_otros_impuestos_fila(frm, cdt, cdn) {
                     // var fila_nueva = cur_frm.add_child("shs_otros_impuestos");
                     // var fila_nueva = frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica", "shs_otros_impuestos");
                     // Crea una nueva fila vacia en la tabla hija shs_otros_impuestos
-                    frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica",
-                        "shs_otros_impuestos");
+                    frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica", "shs_otros_impuestos");
 
                     // Refresh datos de la tabla hija items
                     cur_frm.refresh_field('items');
@@ -377,6 +376,22 @@ frappe.ui.form.on("Sales Invoice", {
 
         frm.fields_dict.items.grid.wrapper.on('blur focusout',
             'input[data-fieldname="qty"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Blurring or focusing out from the Quantity Field");
+                each_item(frm, cdt, cdn);
+                facelec_tax_calc_new(frm, cdt, cdn);
+            });
+
+        frm.fields_dict.items.grid.wrapper.on('blur focusout',
+            'input[data-fieldname="shs_amount_for_back_calc"][data-doctype="Sales Invoice Item"]',
+            function (e) {
+                //console.log("Blurring or focusing out from the Quantity Field");
+                each_item(frm, cdt, cdn);
+                facelec_tax_calc_new(frm, cdt, cdn);
+            });
+
+        frm.fields_dict.items.grid.wrapper.on('blur focusout',
+            'input[data-fieldname="facelec_other_tax_amount"][data-doctype="Sales Invoice Item"]',
             function (e) {
                 //console.log("Blurring or focusing out from the Quantity Field");
                 each_item(frm, cdt, cdn);
@@ -703,6 +718,8 @@ frappe.ui.form.on("Sales Invoice Item", {
             frm.doc.items[index].amount = (calcu * frm.doc.items[index].rate);
             frm.refresh_field("items");
         });
+
+        facelec_tax_calc_new(frm, cdt, cdn);
     }
 });
 
