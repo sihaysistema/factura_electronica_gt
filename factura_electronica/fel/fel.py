@@ -481,7 +481,7 @@ class ElectronicInvoice:
 
                         # Precio unitario, (sin aplicarle descuento)
                         # Al precio unitario se le suma el descuento que genera ERP, ya que es neceario enviar precio sin descuentos, en las operaciones restantes es neceario
-                        # (Precio Unitario - Monto IDP) + Descuento
+                        # (Precio Unitario - Monto IDP) + Descuento --> se le resta el IDP ya que viene incluido en el precio
                         precio_uni = flt((self.__dat_items[i]['rate'] - self.__dat_items[i]['facelec_tax_rate_per_uom']) + desc_item_fila, self.__precision)
 
                         precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)

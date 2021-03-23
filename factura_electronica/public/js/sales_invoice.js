@@ -198,41 +198,31 @@ function shs_total_other_tax(frm) {
  * shs_otros_impuestos le sumara los valores encontrados.
  */
 function facelec_otros_impuestos_fila(frm, cdt, cdn) {
+    cur_frm.refresh_field("shs_otros_impuestos");
+
     var this_row_tax_amount = 0; // Valor IDP
-    var this_row_taxable_amount = 0; // Valor todavía con IVA
     var shs_otro_impuesto = 0;
-    var total_suma_impuesto = 0;
 
     frm.doc.items.forEach((item_row_i, indice) => {
         if (item_row_i.name === cdn) {
-            // Calculos Alain
-            this_row_tax_amount = (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom);
-            //this_row_taxable_amount = (item_row_i.amount - (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom));
-            shs_otro_impuesto = item_row_i.facelec_other_tax_amount;
-
-            // Guarda el nombre de la cuenta del item seleccionado
-            var cuenta = item_row_i.facelec_tax_rate_per_uom_account;
-            //console.log('Cuenta de item encontrada es : ' + cuenta);
-
             // Refresh data de la tabla hija items y conversion_factor
             frm.refresh_field('items');
             frm.refresh_field('conversion_factor');
 
+            // Guarda el nombre de la cuenta del item seleccionado
+            var cuenta = item_row_i.facelec_tax_rate_per_uom_account;
+
             if (cuenta) { // Si encuentra una cuenta con nombre procede
-                var otro_impuesto = this_row_tax_amount;
-                //valor_con_iva = this_row_taxable_amount;
+                // Calculos Alain
+                this_row_tax_amount = (item_row_i.stock_qty * item_row_i.facelec_tax_rate_per_uom);
+                shs_otro_impuesto = item_row_i.facelec_other_tax_amount;
 
                 if (!(buscar_account(frm, cuenta))) { // Si no encuentra una cuenta, procede.
-                    // var fila_nueva = cur_frm.add_child("shs_otros_impuestos");
-                    // var fila_nueva = frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica", "shs_otros_impuestos");
                     // Crea una nueva fila vacia en la tabla hija shs_otros_impuestos
                     frappe.model.add_child(cur_frm.doc, "Otros Impuestos Factura Electronica", "shs_otros_impuestos");
 
                     // Refresh datos de la tabla hija items
                     cur_frm.refresh_field('items');
-                    // otro_impuesto = this_row_tax_amount;
-                    // valor_con_iva = this_row_taxable_amount;
-
                     // Recorre la tabla hija 'taxes' en busca de la nueva fila que se agrego anteriormente donde account_head
                     // sea undefined
                     frm.doc.shs_otros_impuestos.forEach((tax_row, index) => {
@@ -241,8 +231,6 @@ function facelec_otros_impuestos_fila(frm, cdt, cdn) {
                             // Asigna valores en la fila recien creada
                             cur_frm.doc.shs_otros_impuestos[index].account_head = cuenta;
                             cur_frm.doc.shs_otros_impuestos[index].total = shs_otro_impuesto;
-                            // cur_frm.doc.shs_otros_impuestos[index].doctype_type = 'Sales Invoice';
-                            // cur_frm.doc.shs_otros_impuestos[index].doctype_no = cdn;
 
                             // Actualiza los datos de la tabla hija
                             cur_frm.refresh_field("shs_otros_impuestos");
@@ -270,34 +258,27 @@ function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
     /**
      * Se encarga de recalcular el total de otros impuestos cuando se elimina un item
      */
-    // console.log('Otro Impuesto recibido es : ' + otro_impuesto);
     // recorre items
     frm.doc.items.forEach((item_row, i1) => {
         if (item_row.facelec_tax_rate_per_uom_account === tax_account_n) {
             var total = (facelec_add_taxes(frm, tax_account_n) - otro_impuesto);
-            // recorre shs_otros_impuestos
-            //console.log('1. El nuevo total calculado es: ' + total);
-            //console.log('1. El valor de la fila que se borra es: ' + otro_impuesto);
-
-            if (frm.doc.shs_otros_impuestos !== undefined) {
+            if (frm.doc.shs_otros_impuestos.length != 0) {
                 frm.doc.shs_otros_impuestos.forEach((tax_row, i2) => {
                     if (tax_row.account_head === tax_account_n) {
                         cur_frm.doc.shs_otros_impuestos[i2].total = total;
                         cur_frm.refresh_field("shs_otros_impuestos");
                         shs_total_other_tax(frm);
                         cur_frm.refresh_field("shs_otros_impuestos");
-
+                        console.log('Total tax', tax_row.total);
                         if (!tax_row.total) {
                             // console.log('SE ELIMINARA LA FILA ---------------->');
                             // Elimina la fila con valor 0
-                            cur_frm.doc.shs_otros_impuestos.splice(cur_frm.doc
-                                .shs_otros_impuestos[i2], 1);
+                            cur_frm.doc.shs_otros_impuestos.splice(cur_frm.doc.shs_otros_impuestos[i2], 1);
                             cur_frm.refresh_field("shs_otros_impuestos");
                         }
                     }
                 });
             }
-
         }
     });
 
@@ -462,15 +443,31 @@ frappe.ui.form.on("Sales Invoice", {
                     console.log(r.message);
 
                     // Anulador docs electronicos para el DT Sales Invoice
-                    if (r.message[1] == 'anulador') {
-                        btn_canceller(frm);
-                        if (frm.doc.numero_autorizacion_fel) {
-                            cur_frm.clear_custom_buttons();
-                            pdf_button_fel(frm.doc.numero_autorizacion_fel, frm)
-                        }
+                    if (r.message[1] === 'anulador' && r.message[2]) {
+                        frappe.call('factura_electronica.api.btn_activator', {
+                            electronic_doc: 'anulador_de_facturas_ventas_fel'
+                        }).then(r => {
+                            // console.log(r.message)
+                            if (r.message) {
+                                // Si la anulacion electronica ya fue realizada, se mostrara boton para ver pdf doc anulado
+                                frappe.call('factura_electronica.api.invoice_exists', {
+                                    uuid: frm.doc.numero_autorizacion_fel
+                                }).then(r => {
+                                    // console.log(r.message)
+                                    if (r.message) {
+                                        cur_frm.clear_custom_buttons();
+                                        pdf_button_fel(frm.doc.numero_autorizacion_fel, frm)
+                                    } else {
+                                        // SI no aplica lo anterior se muestra btn para anular doc
+                                        btn_canceller(frm);
+                                        pdf_button_fel(frm.doc.numero_autorizacion_fel, frm)
+                                    }
+                                })
+                            }
+                        });
                     }
                     // Generación Facturas Electrónicas FEL - Normal Type
-                    if (r.message[0] == 'FACT' && r.message[2]) {
+                    if (r.message[0] === 'FACT' && r.message[2]) {
                         generar_boton_factura(__('Factura Electrónica FEL'), frm)
                         if (frm.doc.numero_autorizacion_fel) {
                             cur_frm.clear_custom_buttons();
@@ -478,7 +475,7 @@ frappe.ui.form.on("Sales Invoice", {
                         }
                     }
                     // Generación Facturas Electrónicas FEL - Export
-                    if (r.message[0] == 'FACT' && r.message[1] == 'export') {
+                    if (r.message[0] === 'FACT' && r.message[1] == 'export') {
                         btn_export_invoice(frm);
                         if (frm.doc.numero_autorizacion_fel) {
                             cur_frm.clear_custom_buttons();
@@ -486,7 +483,7 @@ frappe.ui.form.on("Sales Invoice", {
                         }
                     }
                     // Generación Nota Credito Electronica
-                    if (r.message[0] == 'NCRE' && r.message[2]) {
+                    if (r.message[0] === 'NCRE' && r.message[1] === 'valido' && r.message[2]) {
                         btn_credit_note(frm);
                         if (frm.doc.numero_autorizacion_fel) {
                             cur_frm.clear_custom_buttons();
@@ -661,13 +658,23 @@ frappe.ui.form.on("Sales Invoice", {
 
 frappe.ui.form.on("Sales Invoice Item", {
     before_items_remove: function (frm, cdt, cdn) {
+        // Se ejecuta antes de eliminar la fila
         // Recalcula el total IVA y otros impuestos (IDP)
-        frm.doc.items.forEach((item_row_1, index_1) => {
-            if (item_row_1.name == cdn) {
-                // console.log('La Fila a Eliminar es --------------> ' + item_row_1.item_code);
-                totalizar_valores(frm, cdn, item_row_1.facelec_tax_rate_per_uom_account, item_row_1.facelec_other_tax_amount);
-            }
-        });
+        let row = frappe.get_doc(cdt, cdn);
+        totalizar_valores(frm, cdn, row.facelec_tax_rate_per_uom_account, row.facelec_other_tax_amount);
+
+        // frm.doc.items.forEach((item_row_1, index_1) => {
+        //     if (item_row_1.name == cdn) {
+        //         // console.log('La Fila a Eliminar es --------------> ' + item_row_1.item_code);
+        //         totalizar_valores(frm, cdn, item_row_1.facelec_tax_rate_per_uom_account, item_row_1.facelec_other_tax_amount);
+        //     }
+        // });
+    },
+    items_add: function (frm, cdt, cdn) {
+        facelec_otros_impuestos_fila(frm, cdt, cdn);
+    },
+    items_move: function (frm, cdt, cdn) {
+        facelec_otros_impuestos_fila(frm, cdt, cdn);
     },
     item_code: function (frm, cdt, cdn) {
         each_item(frm, cdt, cdn);
@@ -1069,7 +1076,7 @@ function pdf_button(cae_documento, frm) {
 function pdf_button_fel(cae_documento, frm) {
     // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
     // aplica para fels, y anuladas
-    frm.add_custom_button(__("VER PDF FACTURA ELECTRÓNICA"),
+    frm.add_custom_button(__("VER PDF DOCUMENTO ELECTRÓNICO"),
         function () {
             window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
                 cae_documento);

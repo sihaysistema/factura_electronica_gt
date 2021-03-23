@@ -597,10 +597,12 @@ frappe.ui.form.on("Purchase Invoice", {
 
 frappe.ui.form.on("Purchase Invoice Item", {
     before_items_remove: function (frm, cdt, cdn) {
+        // let row = frappe.get_doc(cdt, cdn);
+        // pi_total_otros_impuestos_eliminacion(frm, row.facelec_p_tax_rate_per_uom_account, row.facelec_p_other_tax_amount);
+
         frm.doc.items.forEach((item_row_1, index_1) => {
             if (item_row_1.name == cdn) {
-                pi_total_otros_impuestos_eliminacion(frm, item_row_1.facelec_p_tax_rate_per_uom_account,
-                    item_row_1.facelec_p_other_tax_amount);
+                pi_total_otros_impuestos_eliminacion(frm, item_row_1.facelec_p_tax_rate_per_uom_account, item_row_1.facelec_p_other_tax_amount);
             }
         });
     },
