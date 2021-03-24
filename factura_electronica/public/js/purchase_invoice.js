@@ -384,6 +384,7 @@ frappe.ui.form.on("Purchase Invoice", {
             'input[data-fieldname="item_code"][data-doctype="Purchase Invoice Item"]',
             function (e) {
                 shs_purchase_invoice_calculation(frm, cdt, cdn);
+                pi_insertar_fila_otro_impuesto(frm, cdt, cdn);
                 pi_each_item(frm, cdt, cdn);
             });
 
