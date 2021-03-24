@@ -22,7 +22,7 @@ from factura_electronica.utils.utilities_facelec import get_currency_precision
 
 
 class ElectronicDebitNote:
-    def __init__(self, invoice_code, conf_name, naming_series, uuid_purch_inv, data_inv_origin, reason):
+    def __init__(self, invoice_code, conf_name, naming_series, uuid_purch_inv, date_inv_origin, reason):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
 
@@ -36,6 +36,9 @@ class ElectronicDebitNote:
         self.__log_error = []
         self.__precision = get_currency_precision()
         self.__default_address = False
+        self.__uuid_inv_origin = uuid_purch_inv
+        self.__date_inv_origin = date_inv_origin
+        self.__reason = reason
 
     def build_invoice(self):
         """
@@ -148,7 +151,7 @@ class ElectronicDebitNote:
             else:
                 date_invoice_inv = frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_date')
                 ok_time = str(frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_time'))
-                ok_datetime = str(date_invoice_inv)+'T'+str(ok_time) #.rpartition('.')[0]
+                ok_datetime = str(date_invoice_inv)+'T'+str(ok_time).split('.')[0]
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'currency'),
@@ -291,7 +294,6 @@ class ElectronicDebitNote:
                         "@CorreoReceptor": datos_default.get('email'),
                         "@IDReceptor": self.nit_proveedor_limpio,
                         "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
-                        "@TipoEspecial":"CUI",
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -307,7 +309,6 @@ class ElectronicDebitNote:
                         "@CorreoReceptor": datos_default.get('email'),
                         "@IDReceptor": self.nit_proveedor_limpio,
                         "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
-                        "@TipoEspecial":"CUI",
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -326,7 +327,6 @@ class ElectronicDebitNote:
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
                         "@IDReceptor": self.nit_proveedor_limpio, # (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
                         "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
-                        "@TipoEspecial":"CUI",
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
@@ -433,12 +433,12 @@ class ElectronicDebitNote:
                     description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
 
                     obj_item["@NumeroLinea"] = contador
-                    obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
+                    obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_p_purchase_three_digit']
                     obj_item["dte:Descripcion"] = description_to_item  # description
-                    obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
-                    obj_item["dte:Precio"] = flt(precio_item, self.__precision)
-                    obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
+                    obj_item["dte:PrecioUnitario"] = abs(flt(precio_uni, self.__precision))
+                    obj_item["dte:Precio"] = abs(flt(precio_item, self.__precision))
+                    obj_item["dte:Descuento"] = abs(flt(desc_fila, self.__precision))
 
                     # Agregamos los impuestos
                     obj_item["dte:Impuestos"] = {}
@@ -446,10 +446,10 @@ class ElectronicDebitNote:
 
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['facelec_tax_name']
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['facelec_taxable_unit_code']
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['net_amount'], self.__precision)
-                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['net_amount'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(flt(self.__dat_items[i]['net_amount'], self.__precision))
+                    obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(flt(self.__dat_items[i]['net_amount'] * (self.__taxes_fact[0]['rate']/100), self.__precision))
 
-                    obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
+                    obj_item["dte:Total"] = abs(flt(self.__dat_items[i]['amount'], self.__precision))
 
                     items_ok.append(obj_item)
 
@@ -480,11 +480,10 @@ class ElectronicDebitNote:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['facelec_tax_name'],  #"IVA",
-                        # "@TotalMontoImpuesto": float('{0:.3f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
-                        "@TotalMontoImpuesto": flt(gran_tot, self.__precision)
+                        "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
                     }
                 },
-                "dte:GranTotal": flt(self.dat_fac[0]['grand_total'], self.__precision)
+                "dte:GranTotal": abs(flt(self.dat_fac[0]['grand_total'], self.__precision))
             }
 
             return True, 'OK'
@@ -501,15 +500,15 @@ class ElectronicDebitNote:
         """
         try:
             self.__complemento = {
-                    "dte:Complemento": {
-                    "@IDComplemento": "text",
-                    "@NombreComplemento": "Complemento_Exportacion",
-                    "@URIComplemento": "uri_complemento",
+                "dte:Complemento": {
+                    "@IDComplemento": "ReferenciasNota",
+                    "@NombreComplemento": "Nota de Debito",
+                    "@URIComplemento": "text",
                     "cno:ReferenciasNota": {
                         "@xmlns:cno": "http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0",
-                        "@FechaEmisionDocumentoOrigen": "2019-05-02",
-                        "@MotivoAjuste": "Anulaci\u00c3\u00b3n",
-                        "@NumeroAutorizacionDocumentoOrigen": "C96A9169-BAF6-4946-ACC4-ACC9D606985B",
+                        "@FechaEmisionDocumentoOrigen": self.__date_inv_origin,
+                        "@MotivoAjuste": self.__reason,
+                        "@NumeroAutorizacionDocumentoOrigen": self.__uuid_inv_origin,
                         "@Version": "0.0"
                     }
                 }
@@ -518,7 +517,7 @@ class ElectronicDebitNote:
             return True, 'OK'
 
         except:
-            return False, 'No se pudo generar el complemento para factura exportacion {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
+            return False, 'No se pudo obtner toda la data para generar el complemento para nota de debito {}, Error: {}'.format(self.__invoice_code, str(frappe.get_traceback()))
 
     def sign_invoice(self):
         """
@@ -531,9 +530,6 @@ class ElectronicDebitNote:
         try:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
-            # Usar solo para debug
-            # with open('special_invoice.xml', 'w') as f:
-            #     f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -547,7 +543,7 @@ class ElectronicDebitNote:
             # with open('codificado.txt', 'w') as f:
             #         f.write(self.__encoded_str)
 
-            with open('FACTURA-ESPECIAL-FEL.xml', 'w') as f:
+            with open('NOTA-DEBITO.xml', 'w') as f:
                 f.write(self.__xml_string)
 
         except:
@@ -574,7 +570,6 @@ class ElectronicDebitNote:
             self.__data_a_firmar = {
                 "llave": self.__llave, # LLAVE
                 "archivo": str(self.__encoded_str),  # En base64
-                # "codigo": codigo, # Número interno de cada transacción
                 "alias":  alias, # USUARIO
                 "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
             }
@@ -586,8 +581,8 @@ class ElectronicDebitNote:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('firma_resp_special_invoice.json', 'w') as f:
-            #     f.write(json.dumps(self.__doc_firmado, indent=2))
+            with open('nota_debito_firmada.json', 'w') as f:
+                f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -637,13 +632,13 @@ class ElectronicDebitNote:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            # with open('resp_special_invoice.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('response_debit_note.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
         except:
-            return False, 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
+            return False, 'Ocurrio un problema al tratar de generar nota de debito electronica, mas detalles en el siguiente log: '+str(frappe.get_traceback())
 
     def response_validator(self):
         """
@@ -663,7 +658,6 @@ class ElectronicDebitNote:
                 # Al primer error encontrado retornara un detalle con el mismo
                 if status_saved == False:
                     return False, status_saved
-                    # return {'status': 'ERROR', 'detalles_errores': status_saved, 'numero_errores':1}
 
                 return True, {'status': 'OK', 'numero_autorizacion': self.__response_ok['uuid'],
                               'serie': self.__response_ok['serie'], 'numero': self.__response_ok['numero']}

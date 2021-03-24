@@ -310,7 +310,20 @@ def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
 
 
 @frappe.whitelist()
-def generate_debit_note(invoice_code, naming_series, uuid_purch_inv, data_inv_origin, reason):
+def generate_debit_note(invoice_code, naming_series, uuid_purch_inv, date_inv_origin, reason):
+    """
+    Endpoint para generar notas de debito desde Purchase Invoice Doctype
+
+    Args:
+        invoice_code (str): `name` purchase invoice
+        naming_series (str): serie utilizada en nota de debito
+        uuid_purch_inv (str): UUID factura electronica por proveedor
+        date_inv_origin (str): Fecha emision en factura
+        reason (str): Razón de la nota de debito (requerido por la SAT)
+
+    Returns:
+        tuple: [description]
+    """
     try:
         status_config = validate_configuration()
 
@@ -325,7 +338,7 @@ def generate_debit_note(invoice_code, naming_series, uuid_purch_inv, data_inv_or
             return False, 'No completed'
 
         # PASO 2: PARA UNA NOTA DEBITO ELEC, ES NECESARIO TENER EL UUID de la factura de venta dada por el proveedor
-        if not uuid_purch_inv and not data_inv_origin:
+        if not uuid_purch_inv and not date_inv_origin:
             frappe.msgprint(msg=_(f'Para poder generar correctamente la Nota de Credito Electrónica es necesario tener la serie de factura original \
                             se encuentre generada como electrónica por parte del proveedor'), title=_('Proceso no completado'), indicator='red')
 
@@ -342,7 +355,7 @@ def generate_debit_note(invoice_code, naming_series, uuid_purch_inv, data_inv_or
 
         # PASO 3: NOTA DE DEBITO ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
-        new_debit_note = ElectronicDebitNote(invoice_code, status_config[1], naming_series, uuid_purch_inv, data_inv_origin, reason)
+        new_debit_note = ElectronicDebitNote(invoice_code, status_config[1], naming_series, uuid_purch_inv, date_inv_origin, reason)
 
         # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
         status = new_debit_note.build_invoice()
@@ -352,29 +365,29 @@ def generate_debit_note(invoice_code, naming_series, uuid_purch_inv, data_inv_or
 
             return False, 'No completed'
 
-        # # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
-        # # En este paso se convierte de JSON a XML y se codifica en base64
-        # status_firma = new_debit_note.sign_invoice()
-        # if status_firma[0] == False:  # Si no se firma correctamente
-        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de firmar Nota de Credito electronica, mas detalles en: {status_firma[1]}'),
-        #                     title=_('Proceso no completado'), indicator='red')
-        #     return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
+        # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
+        # En este paso se convierte de JSON a XML y se codifica en base64
+        status_firma = new_debit_note.sign_invoice()
+        if status_firma[0] == False:  # Si no se firma correctamente
+            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de firmar Nota de Debito electronica, mas detalles en: {status_firma[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
+            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
-        # # # PASO 5: SOLICITAMOS FACTURA ELECTRONICA
-        # status_facelec = new_debit_note.request_electronic_invoice()
-        # if status_facelec[0] == False:
-        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'),
-        #                     title=_('Proceso no completado'), indicator='red')
-        #     return False, f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'
+        # PASO 5: SOLICITAMOS NOTA DE DEBITO ELECTRONICA
+        status_facelec = new_debit_note.request_electronic_invoice()
+        if status_facelec[0] == False:
+            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar Nota de Debito electronica, mas detalles en: {status_facelec[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
+            return False, f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'
 
-        # # # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
-        # # # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
-        # # # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
-        # status_res = new_debit_note.response_validator()
-        # if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
-        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar nota de credito electronica con INFILE, mas detalle en {status_res[1]}'),
-        #                     title=_('Proceso no completado'), indicator='red')
-        #     return status_res  # return tuple
+        # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
+        # Las respuestas en este paso no son de gran importancia solo las respuestas ok seran guardadas
+        # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
+        status_res = new_debit_note.response_validator()
+        if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
+            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar nota de debito electronica con INFILE, mas detalle en {status_res[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
+            return status_res  # return tuple
 
         # # # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
         # status_upgrade = new_debit_note.upgrade_records()

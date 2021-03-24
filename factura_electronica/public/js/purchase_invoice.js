@@ -802,7 +802,7 @@ function btn_debit_note(frm) {
                                 invoice_code: frm.doc.name,
                                 naming_series: frm.doc.naming_series,
                                 uuid_purch_inv: frm.doc.bill_no,
-                                data_inv_origin: frm.doc.bill_date,
+                                date_inv_origin: frm.doc.bill_date,
                                 reason: values.reason_adjust,
                             },
                             callback: function (r) {
