@@ -343,6 +343,7 @@ frappe.ui.form.on("Purchase Invoice", {
         // Limpieza de campos cuando se duplique una factura de compra
         clean_fields(frm);
 
+        // Validador para mostrar botones segun escenario invoice
         if (frm.doc.docstatus != 0) {
             frappe.call({
                 method: 'factura_electronica.fel_api.is_valid_to_fel',
@@ -352,91 +353,25 @@ frappe.ui.form.on("Purchase Invoice", {
                 },
                 callback: function (data) {
                     console.log(data.message);
+
+                    // FACTURA ESPECIAL
+                    if (data.message[0] == 'FESP' && data.message[1]) {
+                        btn_factura_especial(frm)
+                        if (frm.doc.numero_autorizacion_fel) {
+                            cur_frm.clear_custom_buttons();
+                            pdf_electronic_doc(frm);
+                            btn_poliza_factura_especial(frm);
+                        }
+                    }
+
+                    // NOTA DE DEBITO
                 },
             });
         }
 
-        // Por ahora se mostrara solo si la factura de compra se encuentra validada
-        if (frm.doc.docstatus === 1) {
-
-            // Se usara un bootn especifico para generar factura especial
-            // cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
-            //     frappe.msgprint("WORK IN PROGRESS");
-            // });
-
-            if (frm.doc.is_return === 1) {
-                // INICIO BOTON NOTA DE DEBITO
-                cur_frm.clear_custom_buttons();
-                frm.add_custom_button(__("DEBIT NOTE FEL"), function () {
-                    // Permite hacer confirmaciones
-                    frappe.confirm(
-                        __("Are you sure you want to proceed to generate a electronic debit note?"),
-                        () => {
-                            let d = new frappe.ui.Dialog({
-                                title: __("Generate Electronic Debit Note"),
-                                fields: [{
-                                    label: __("Reason Adjusment?"),
-                                    fieldname: "reason_adjust",
-                                    fieldtype: "Data",
-                                    reqd: 1,
-                                },],
-                                primary_action_label: "Submit",
-                                primary_action(values) {
-                                    frappe.call({
-                                        method: "factura_electronica.fel_api.generate_debit_note",
-                                        args: {
-                                            invoice_code: frm.doc.name,
-                                            naming_series: frm.doc.naming_series,
-                                            reason: values.reason_adjust,
-                                        },
-                                        callback: function (r) {
-                                            // console.log(r.message);
-                                        },
-                                    });
-                                    // console.log(values);
-                                    d.hide();
-                                },
-                            });
-
-                            d.show();
-                        },
-                        () => {
-                            // action to perform if No is selected
-                            // console.log("Selecciono NO");
-                        }
-                    );
-                }).addClass("btn-warning");
-                // FIN BOTON NOTA DE DEBITO
-            }
-
-            const tax_id_supplier = frm.doc.facelec_nit_fproveedor.replace("/", "");
-
-            if (frm.doc.numero_autorizacion_fel && frm.doc.serie_original_del_documento) {
-                // cur_frm.clear_custom_buttons();
-
-                frm.add_custom_button(__("VER PDF DOCUMENTO ELECTRONICO"),
-                    function () {
-                        window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
-                            frm.doc.numero_autorizacion_fel);
-                    }).addClass("btn-primary");
-
-            } else {
-                // boton para generar factura especial electronica
-                // tax_id_supplier.toUpperCase() === "CF" &&
-                validate_serie_purchase_invoice(frm);
-            }
-
-            // INICIO boton para generar poliza contable con calculos y registro de retenciones
-            // boton para generar factura especial electronica
-            // tax_id_supplier.toUpperCase() === "CF" &&
-            validate_serie_purchase_invoice(frm);
-
-            // FIN boton para generar poliza contable con calculos y registro de retenciones
-        }
     },
     onload_post_render: function (frm, cdt, cdn) {
 
-        validate_serie_purchase_invoice(frm);
         // Activa los listener cuando se carga el documento
         frm.fields_dict.items.grid.wrapper.on('focusout blur',
             'input[data-fieldname="item_code"][data-doctype="Purchase Invoice Item"]',
@@ -832,49 +767,6 @@ function btn_poliza_factura_especial(frm) {
 
 
 /**
- * Verifica si la serie utilizada en la factura aplica para generar facturas especiales,
- * Si es asi mostrara el boton para generar polizas contables para facturas especiales
- * y el boton para generar facturas especiales especiales
- *
- * @param {object} frm
- */
-function validate_serie_purchase_invoice(frm) {
-
-    frappe.call({
-        method: 'factura_electronica.utils.special_invoice.validate_serie_to_special_invoice',
-        args: {
-            naming_series: frm.doc.naming_series
-        },
-        freeze: false,
-        callback: (r) => {
-            // console.log(r.message);
-            if (r.message === true) {
-
-                // Si el generador de fesp esta activada en config facelec aparecera el btn
-                frappe.call('factura_electronica.api.btn_activator', {
-                    electronic_doc: 'factura_especial_fel'
-                }).then(r => {
-                    // console.log(r.message)
-                    if (r.message) btn_factura_especial(frm);
-                });
-
-                // Generador polizas para facturas especiales
-                btn_poliza_factura_especial(frm);
-            } else {
-                // Si no aplica limpiamos los custom buttons
-                // comentar esta porcion de codigo si tiene problemas con otros custom botones
-                // console.log('No aplica para facturas especiales')
-                // frm.clear_custom_buttons('Actions');
-                cur_frm.page.clear_actions_menu()
-                // frm.refresh();
-            }
-
-        }
-    })
-}
-
-
-/**
  * Render para boton nota de debito electronica
  *
  * @param {*} frm
@@ -932,6 +824,20 @@ function btn_debit_note(frm) {
         //         // console.log('Selecciono NO')
         //     })
     }).addClass("btn-warning");
+}
+
+
+/**
+ * Render para boton pdf doc electronico
+ *
+ * @param {*} frm
+ */
+function pdf_electronic_doc(frm) {
+    frm.add_custom_button(__("VER PDF DOCUMENTO ELECTRONICO"),
+        function () {
+            window.open("https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" +
+                frm.doc.numero_autorizacion_fel);
+        }).addClass("btn-primary");
 }
 
 

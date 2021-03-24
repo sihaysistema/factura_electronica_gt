@@ -18,8 +18,9 @@
   "factura_venta_fel",
   "nota_credito_fel",
   "anulador_de_facturas_ventas_fel",
-  "column_break_13",
   "factura_exportacion_fel",
+  "column_break_13",
+  "nota_de_debito_electronica",
   "factura_especial_fel",
   "factura_electronica_fel_pos",
   "datos_proveedor_factura_electronica",
@@ -528,11 +529,18 @@
    "fieldtype": "Select",
    "label": "Fecha y tiempo documento electronica",
    "options": "Fecha y tiempo de peticion a INFILE\nFecha y tiempo creacion documento"
+  },
+  {
+   "default": "0",
+   "description": "Proximamente",
+   "fieldname": "nota_de_debito_electronica",
+   "fieldtype": "Check",
+   "label": "Nota de Debito Electronica"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2021-03-23 12:49:23.740643",
+ "modified": "2021-03-24 10:24:59.450733",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
