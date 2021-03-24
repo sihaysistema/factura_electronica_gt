@@ -354,6 +354,32 @@ frappe.ui.form.on("Purchase Invoice", {
                 callback: function (data) {
                     console.log(data.message);
 
+                    // ANULADOR
+                    if (data.message[1] === 'anulador' && data.message[2]) {
+                        // validaor para mostrar u ocultar btn anulador tras generacion
+                        frappe.call('factura_electronica.api.btn_activator', {
+                            electronic_doc: 'anulador_de_facturas_ventas_fel'
+                        }).then(r => {
+
+                            if (r.message) {
+                                // Si la anulacion electronica ya fue realizada, se mostrara boton para ver pdf doc anulado
+                                frappe.call('factura_electronica.api.invoice_exists', {
+                                    uuid: frm.doc.numero_autorizacion_fel
+                                }).then(r => {
+
+                                    if (r.message) {
+                                        cur_frm.clear_custom_buttons();
+                                        pdf_electronic_doc(frm);
+                                    } else {
+                                        // SI no aplica lo anterior se muestra btn para anular doc
+                                        btn_pi_canceller(frm);
+                                        pdf_electronic_doc(frm);
+                                    }
+                                })
+                            }
+                        });
+                    }
+
                     // FACTURA ESPECIAL
                     if (data.message[0] == 'FESP' && data.message[1]) {
                         btn_factura_especial(frm);
@@ -797,6 +823,10 @@ function btn_debit_note(frm) {
                     },],
                     primary_action_label: __("Submit"),
                     primary_action(values) {
+                        let serie_de_factura = frm.doc.name;
+                        // Guarda la url actual
+                        let mi_url = window.location.href;
+
                         frappe.call({
                             method: "factura_electronica.fel_api.generate_debit_note",
                             args: {
@@ -808,17 +838,17 @@ function btn_debit_note(frm) {
                             },
                             callback: function (r) {
                                 console.log(r.message);
-
-                                // if (r.message[0] === true) {
-                                //     // Crea una nueva url con el nombre del documento actualizado
-                                //     let url_nueva = mi_url.replace(serie_de_factura, r.message[1]);
-                                //     // Asigna la nueva url a la ventana actual
-                                //     window.location.assign(url_nueva);
-                                //     // Recarga la pagina
-                                //     frm.reload_doc();
-                                // }
+                                if (r.message[0] === true) {
+                                    // Crea una nueva url con el nombre del documento actualizado
+                                    let url_nueva = mi_url.replace(serie_de_factura, r.message[1]);
+                                    // Asigna la nueva url a la ventana actual
+                                    window.location.assign(url_nueva);
+                                    // Recarga la pagina
+                                    frm.reload_doc();
+                                }
                             },
                         });
+
                         d.hide();
                     },
                 });
@@ -865,4 +895,51 @@ function clean_fields(frm) {
 
         frm.refresh_fields();
     }
+}
+
+
+/**
+ * Render boton para anular docs en SI
+ *
+ * @param {*} frm
+ */
+function btn_pi_canceller(frm) {
+    cur_frm.clear_custom_buttons();
+    frm.add_custom_button(__("CANCEL DOCUMENT FEL"), function () {
+        // Permite hacer confirmaciones
+        frappe.confirm(__('Are you sure to cancel the current electronic document?'),
+            () => {
+                let d = new frappe.ui.Dialog({
+                    title: __('Cancel electronic document'),
+                    fields: [{
+                        label: __('Reason for cancellation?'),
+                        fieldname: 'reason_cancelation',
+                        fieldtype: 'Data',
+                        reqd: 1
+                    }],
+                    primary_action_label: __('Submit'),
+                    primary_action(values) {
+                        frappe.call({
+                            method: 'factura_electronica.fel_api.invoice_canceller',
+                            args: {
+                                invoice_name: frm.doc.name,
+                                reason_cancelation: values.reason_cancelation || 'Anulación',
+                                document: 'Purchase Invoice',
+                            },
+                            callback: function (data) {
+                                console.log(data.message);
+                                frm.reload_doc();
+                            },
+                        });
+
+                        d.hide();
+                    }
+                });
+
+                d.show();
+            }, () => {
+                // action to perform if No is selected
+                // console.log('Selecciono NO')
+            })
+    }).addClass("btn-danger");
 }

@@ -61,6 +61,7 @@ class CancelDocument:
 
         try:
             self.tax_id_company = frappe.db.get_value('Company', {'name': self.info_invoice.company}, 'tax_id').replace('-', '').upper()
+            # Momento en que se esta anulando la factura
             issue_date = frappe.db.get_value('Envio FEL', {'name': self.info_invoice.numero_autorizacion_fel}, 'fecha')
 
             self.__base_peticion = {
@@ -92,7 +93,7 @@ class CancelDocument:
             # with open('cancelador.json', 'w') as f:
             #     f.write(json.dumps(self.__base_peticion, indent=2))
 
-            return True,'OK'
+            return True,'OK build'
 
         except:
             return False, str(frappe.get_traceback())
@@ -164,7 +165,7 @@ class CancelDocument:
                 self.__encrypted = self.__doc_firmado.get('archivo')
 
                 # Retornamos el status del proceso
-                return True, 'OK'
+                return True, ' sign'
 
             else:  # Si ocurre un error retornamos la descripcion del error por INFILE
                 return False, self.__doc_firmado.get('descripcion')
@@ -209,7 +210,7 @@ class CancelDocument:
             with open('response_cancelador.json', 'w') as f:
                 f.write(json.dumps(self.__response_ok, indent=2))
 
-            return True, 'OK'
+            return True, 'OK request'
 
         except:
             return False, 'Ocurrio un problema con la peticion para factura electronica, asegure de tener uan configuracion completa para Factura Electronica, mas detalles en: '+str(frappe.get_traceback())
@@ -228,7 +229,7 @@ class CancelDocument:
                 status_saved = self.save_answers()
 
                 # Al primer error encontrado retornara un detalle con el mismo
-                if status_saved == False:
+                if status_saved[0] == False:
                     return False, status_saved
 
                 return True, {'status': 'OK'}
@@ -254,7 +255,7 @@ class CancelDocument:
             doc.status = 'Cancelled'
             doc.save(ignore_permissions=True)
 
-            return True, 'OK'
+            return True, 'OK answers'
 
         except:
             return False, f'Ocurrio un problema al tratar de guardar la respuesta para la factura {self.__invoice_code}, \

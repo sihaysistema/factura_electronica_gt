@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Si Hay Sistema and contributors
+# Copyright (c) 2021, Si Hay Sistema and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
@@ -726,7 +726,7 @@ class ElectronicDebitNote:
     def upgrade_records(self):
         """
         Funcion encargada de actualizar todos los doctypes enlazados a la factura original, con
-        la serie generada para factura electronica
+        la serie generada para nota de debito electronica
 
         Returns:
             tuple: True/False, msj, msj

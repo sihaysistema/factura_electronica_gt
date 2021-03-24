@@ -390,21 +390,19 @@ def generate_debit_note(invoice_code, naming_series, uuid_purch_inv, date_inv_or
             return status_res  # return tuple
 
         # # # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
-        # status_upgrade = new_debit_note.upgrade_records()
-        # if status_upgrade[0] == False:
-        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de actualizar registros relacionados al documento, mas detalle en {status_upgrade[1]}'),
-        #                     title=_('Proceso no completado'), indicator='red')
-        #     return status_upgrade
+        status_upgrade = new_debit_note.upgrade_records()
+        if status_upgrade[0] == False:
+            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de actualizar registros relacionados al documento, mas detalle en {status_upgrade[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
+            return status_upgrade
 
         # # PASO 8: SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
-        # # # el UUID y la nueva serie para la factura
-        # new_serie = frappe.db.get_value('Envio FEL', {'name': status_upgrade[1]}, 'serie_para_factura')
-        # frappe.msgprint(msg=_(f'Electronic Credit Note generated with universal unique identifier <b>{status_upgrade[1]}</b>'),
-        #                 title=_('Process successfully completed'), indicator='green')
+        # # el UUID y la nueva serie para la nota de debito
+        new_serie = frappe.db.get_value('Envio FEL', {'name': status_upgrade[1]}, 'serie_para_factura')
+        frappe.msgprint(msg=_(f'{_("Electronic Debit Note generated with universal unique identifier")} <b>{status_upgrade[1]}</b>'),
+                        title=_('Process successfully completed'), indicator='green')
 
-        # return True, str(new_serie)
-
-        frappe.msgprint(msg=_(f'test'))
+        return True, str(new_serie)
 
     except:
         return False, str(frappe.get_traceback())
@@ -847,7 +845,7 @@ def generate_exempt_electronic_invoice(invoice_code, naming_series):
 # FIN FACTURAS EXENTAS DE IMPUESTOS
 
 
-# CANCELADOR DE FACTURAS ELECTRONICAS FEL
+# CANCELADOR DE DOCUMENTOS ELECTRONICOS FEL
 @frappe.whitelist()
 def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='Sales Invoice'):
     """[summary]
@@ -884,12 +882,11 @@ def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='S
 
         status_validador_res = cancel_invoice.response_validator()
         if not status_validador_res[0]:
-            frappe.msgprint(status_process[1])
+            frappe.msgprint(status_validador_res[1])
             return
         else:
-            frappe.msgprint('Factura Anulada con Exito, para ver el documento anulado, presione el boton ver PDF Factura Electronica')
+            frappe.msgprint('Factura Anulada con Exito, para ver el documento anulado, presione el boton ver PDF Documento Electronico')
             return
-
 
     else:
         frappe.msgprint(status_config[1])
@@ -977,11 +974,18 @@ def is_valid_to_fel(doctype, docname):
         active = frappe.db.exists('Configuracion Factura Electronica', {'name': config_name,
                                                                         'anulador_de_facturas_ventas_fel': 1})
 
-        if val_serie and active:
+        if val_serie and active:  # Sales Invoice
             values = frappe.db.get_values('Configuracion Series FEL',
                                           filters={'parent': config_name, 'serie': docinv.naming_series},
                                           fieldname=['tipo_documento'], as_dict=1)
             return values[0]['tipo_documento'], 'anulador', True
+
+        elif val_serie_pi and active:  # Purchase Invoice
+            values = frappe.db.get_values('Serial Configuration For Purchase Invoice',
+                                          filters={'parent': config_name, 'serie': docinv.naming_series},
+                                          fieldname=['tipo_documento'], as_dict=1)
+            return values[0]['tipo_documento'], 'anulador', True
+
         else:
             return _('Serie de documento para nota de credito electrónica no configurada, \
                      por favor agregarla y activarla en configuración Factura Electrónica para generar documento FEL'), False
