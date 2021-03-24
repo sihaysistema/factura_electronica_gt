@@ -22,23 +22,6 @@ from factura_electronica.utils.utilities_facelec import get_currency_precision
 # correspondientes, en esos casos el adquirente deberá emitir una factura especial
 # por cuenta del vendedor o prestador de servicios y retendrá los impuestos que correspondan.
 
-# NOTAS:
-# 1. CREACION INSTANCIA FACTURA ESPECIAL
-
-# 2. BUILD
-# 2.1 VALIDATOR DEPENDENCIAS
-# 2.2 APLICAMOS CALCULOS RETENCIONES
-# 2.3 CREACION RETENCIONES (Siempre y cuando este validada la factura de compra)
-
-# 3. FIRMAR FACTURA
-# 3.1 VALIDAR RESPUESTAS
-
-# 4. SOLICITAR FEL
-# 4.1 VALIDAR RESPUESTAS
-
-# 5 GUARDAR REGISTROS ENVIOS, LOG
-# 5.1 ACTUALIZAR REGISTROS
-
 class ElectronicSpecialInvoice:
     def __init__(self, invoice_code, conf_name, naming_series):
         """__init__

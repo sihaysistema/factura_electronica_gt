@@ -1,13 +1,16 @@
-import {
-    valNit
-} from './facelec.js';
-import {
-    goalSeek
-} from './goalSeek.js';
+import { valNit } from './facelec.js';
+import { goalSeek } from './goalSeek.js';
 
-//console.log("Hello world from Purchase Invoice");
 
 /* Purchase Invoice (Factura de Compra) ------------------------------------------------------------------------------------------------------- */
+/**
+ * Genera iteraciones extra sobre los items, y asegurar calculos mas
+ * precisos
+ *
+ * @param {Object} frm
+ * @param {String} cdt
+ * @param {String} cdn
+ */
 function pi_each_item(frm, cdt, cdn) {
     frm.doc.items.forEach((item) => {
         shs_purchase_invoice_calculation(frm, "Purchase Invoice Item", item.name);
@@ -15,15 +18,14 @@ function pi_each_item(frm, cdt, cdn) {
     });
 }
 
+
 /**
- * Parametros:
- * #1 frm = formulario que se esta trabajando
- * #2 tax_account = nombre de la cuenta
+ * Genera la suma total de impuestos especiales
+ * por cuenta
  *
- * Funcionamiento:
- * Recorre la tabla items, por cada item que encuentre con el nombre de
- * cuenta recibido, lo ira concatenando en una variable que al finalizar
- * el recorrido de la tabla lo retornara a quien haya invocado la fucnion
+ * @param {Object} frm
+ * @param {String} tax_account - Nombre cuenta impuesto especial
+ * @return {float}
  */
 function pi_sumatoria_por_cuenta_items(frm, tax_account) {
     var total_sumatoria = 0;
@@ -37,17 +39,15 @@ function pi_sumatoria_por_cuenta_items(frm, tax_account) {
     return total_sumatoria;
 }
 
+
 /**
- * Parametros:
- * #1 frm = formulario que se esta trabajando
- * #2 cdt = Doctype
- * #3 cdn = Docname
+ * Recorre items, en busca de impuestos especiales, para luego ser sumados
+ * con los que sean del mismo tipo, para luego ser agrega la cuenta y monto
+ * a la tabla hija de otros impuestos
  *
- * Funcionamiento:
- * Recorre la tabla items, por cada item encontrado, si tiene una cuenta asignada,
- * recorrera la tabla hija shs_pi_otros_impuestos en busca de items con el mismo nombre
- * de cuenta anteriormente encontrado, para totalizar el valor del impuestos, para todos
- * los items con la misma cuenta.
+ * @param {Object} frm
+ * @param {String} cdt
+ * @param {String} cdn
  */
 function pi_sumatoria_otros_impuestos_por_cuenta(frm, cdt, cdn) {
     frm.doc.items.forEach((item_row_1, index_1) => {
@@ -70,13 +70,11 @@ function pi_sumatoria_otros_impuestos_por_cuenta(frm, cdt, cdn) {
     });
 }
 
+
 /**
- * Parametros:
- * #1 frm = formulario que se esta trabajando
+ * Suma el total de montos que se encuentren en Otros Impuestos Especiales
  *
- * Funcionamiento:
- * Recorre la tabla hija shs_pi_otros_impuestos, realiza sumatoria de todos las filas
- * que tenga una cuenta, el valor totalizado se asigna al campo shs_total_otros_imp_incl
+ * @param {*} frm
  */
 function pi_total_de_otros_impuestos(frm) {
     var total_tax = 0;
@@ -91,18 +89,17 @@ function pi_total_de_otros_impuestos(frm) {
     frm.refresh_field("shs_pi_total_otros_imp_incl");
 }
 
+
 /**
- * Parametros:
- * #1 frm = formulario que se esta trabajando
- * #2 cdt = Doctype
- * #3 cdn = Docname
- *
- * Funcionamiento:
  * Recorre la tabla items, por cada fila con una cuenta asignada buscara en la tabla hija
  * shs_pi_otros_impuestos por una fila con el mismo nombre de la cuenta anteriormente encontrada,
  * si no la encuentra en shs_pi_otros_impuestos creara una nueva fila, y le asignara los valores
  * de nombre de cuenta y el total para esa cuenta. Si la cuenta ya se encuentra creada en
  * shs_pi_otros_impuestos le sumara los valores encontrados.
+ *
+ * @param {Object} frm
+ * @param {String} cdt
+ * @param {String} cdn
  */
 function pi_insertar_fila_otro_impuesto(frm, cdt, cdn) {
     var shs_otro_impuesto = 0;
@@ -154,8 +151,14 @@ function pi_insertar_fila_otro_impuesto(frm, cdt, cdn) {
 
 }
 
+
 /**
- * Se encarga de recalcular el total de otros impuestos cuando se elimina un item
+ * Recalculo los montos de impuestos especiales, cuando se eliminan n filas
+ *
+ * @param {*} frm
+ * @param {*} cdn
+ * @param {*} tax_account_n - Nombre cuenta impuestos especial
+ * @param {*} otro_impuesto - Monto impuesto que se esta eliminando
  */
 function pi_total_otros_impuestos_eliminacion(frm, tax_account_n, otro_impuesto) {
     // Recorre items
@@ -186,12 +189,13 @@ function pi_total_otros_impuestos_eliminacion(frm, tax_account_n, otro_impuesto)
 
 }
 
+
 /**
- * Funcionamiento: recibe como parametro frm, y cuenta_b, lo que hace es, buscar en todas las filas de taxes
- * si existe ya una cuenta con el nombre de la cuenta recibida por parametro, en caso ya exista esa cuenta en
- * la tabla no hace nada, pero si encuentra que no hay una cuenta igual a la recibida en el parametro, entonces
- * la funcion encargada agregara una nueva fila con los datos correspondientes, esta funcion retorna true
- * en caso si encuentre una cuenta existente
+ * Buscador de cuentas en tabla hija de otros impuestos
+ *
+ * @param {*} frm
+ * @param {*} cuenta_b
+ * @return {*}
  */
 function pi_buscar_cuenta(frm, cuenta_b) {
 
@@ -206,10 +210,32 @@ function pi_buscar_cuenta(frm, cuenta_b) {
     return estado;
 }
 
-// Calculos para Factura de Compra
+
+/**
+ * Funcion central encargada de los calculos realtime y para
+ * usar en generación de docs electrónicos
+ *
+ * @param {Object} frm
+ * @param {String} cdt
+ * @param {String} cdn
+ */
 function shs_purchase_invoice_calculation(frm, cdt, cdn) {
     cur_frm.refresh_fields();
-    var this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+    // INICIO validacion existencia tabla impuesto
+    var this_company_sales_tax_var = 0;
+
+    if ((cur_frm.doc.taxes.length > 0) && (cur_frm.doc.taxes[0].rate !== "undefined")) {
+        this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+    } else {
+        // Muestra una notificacion para cargar una tabla de impuestos
+        frappe.show_alert({
+            message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente'),
+            indicator: 'red'
+        }, 5);
+
+        this_company_sales_tax_var = 0
+    }
+    // FIN validacion existencia tabla impuesto
 
     var this_row_amount = 0;
     var this_row_stock_qty = 0;
@@ -286,7 +312,12 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
     });
 }
 
-// Funcion para generar tabla HTML + Jinja
+
+/**
+ * Renderiza tabla HTML con detalles de impuestos e impuestos especiales
+ *
+ * @param {*} frm
+ */
 function generar_tabla_html_factura_compra(frm) {
     // PURCHASE INVOICE
     if (frm.doc.items.length > 0) {
@@ -306,21 +337,24 @@ function generar_tabla_html_factura_compra(frm) {
     }
 }
 
+
 frappe.ui.form.on("Purchase Invoice", {
     refresh: function (frm, cdt, cdn) {
         // Limpieza de campos cuando se duplique una factura de compra
         clean_fields(frm);
 
-        frappe.call({
-            method: 'factura_electronica.fel_api.is_valid_to_fel',
-            args: {
-                doctype: frm.doc.doctype,
-                docname: frm.doc.name,
-            },
-            callback: function (data) {
-                console.log(data.message);
-            },
-        });
+        if (frm.doc.docstatus != 0) {
+            frappe.call({
+                method: 'factura_electronica.fel_api.is_valid_to_fel',
+                args: {
+                    doctype: frm.doc.doctype,
+                    docname: frm.doc.name,
+                },
+                callback: function (data) {
+                    console.log(data.message);
+                },
+            });
+        }
 
         // Por ahora se mostrara solo si la factura de compra se encuentra validada
         if (frm.doc.docstatus === 1) {
@@ -403,11 +437,7 @@ frappe.ui.form.on("Purchase Invoice", {
     onload_post_render: function (frm, cdt, cdn) {
 
         validate_serie_purchase_invoice(frm);
-        // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
-
-        // en-US: Enabling event listeners for child tables
-        // es-GT: Habilitando escuchadores de eventos en las tablas hijas del tipo de documento principal
-        // No corra KEY UP, KEY PRESS, KEY DOWN en este campo!   NO NO NO NO NONONO
+        // Activa los listener cuando se carga el documento
         frm.fields_dict.items.grid.wrapper.on('focusout blur',
             'input[data-fieldname="item_code"][data-doctype="Purchase Invoice Item"]',
             function (e) {
@@ -415,34 +445,11 @@ frappe.ui.form.on("Purchase Invoice", {
                 pi_each_item(frm, cdt, cdn);
             });
 
-        // frm.fields_dict.items.grid.wrapper.on('click focusout blur', 'input[data-fieldname="shs_amount_for_back_calc"][data-doctype="Purchase Invoice Item"]', function (e) {
-        //     shs_purchase_invoice_calculation(frm, cdt, cdn);
-        //     pi_each_item(frm, cdt, cdn);
-        // });
-
-        // FIXME NO FUNCIONA CON TAB, SOLO HACIENDO CLICK Y ENTER.  Si se presiona TAB, SE BORRA!
-        /*frm.fields_dict.items.grid.wrapper.on('blur', 'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]', function(e) {
-            console.log("Blurred away from the Item Code Field");
-            each_item(frm, cdt, cdn);
-            //facelec_tax_calc_new(frm, cdt, cdn);
-        });*/
-        frm.fields_dict.items.grid.wrapper.on('click',
-            'input[data-fieldname="uom"][data-doctype="Purchase Invoice Item"]',
-            function (e) {
-                pi_each_item(frm, cdt, cdn);
-            });
-
-        frm.fields_dict.items.grid.wrapper.on('blur focusout',
-            'input[data-fieldname="uom"][data-doctype="Purchase Invoice Item"]',
-            function (e) {
-                pi_each_item(frm, cdt, cdn);
-            });
-
-        // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('blur',
+        frm.fields_dict.items.grid.wrapper.on('blur focusout click',
             'input[data-fieldname="uom"][data-doctype="Purchase Invoice Item"]',
             function (e) {
                 shs_purchase_invoice_calculation(frm, cdt, cdn);
+                pi_each_item(frm, cdt, cdn);
             });
 
         // This part might seem counterintuitive, but it is the "next" field in tab order after item code, which helps for a "creative" strategy to update everything after pressing TAB out of the item code field.  FIXME
@@ -457,24 +464,7 @@ frappe.ui.form.on("Purchase Invoice", {
             'input[data-fieldname="qty"][data-doctype="Purchase Invoice Item"]',
             function (e) {
                 pi_each_item(frm, cdt, cdn);
-            });
-
-        // Do not refresh with each_item in Mouse leave! just recalculate
-        frm.fields_dict.items.grid.wrapper.on('blur',
-            'input[data-fieldname="qty"][data-doctype="Purchase Invoice Item"]',
-            function (e) {
-                pi_each_item(frm, cdt, cdn);
                 shs_purchase_invoice_calculation(frm, cdt, cdn);
-            });
-
-        // DO NOT USE Keyup, ??  FIXME FIXME FIXME FIXME FIXME  este hace calculos bien
-        frm.fields_dict.items.grid.wrapper.on('blur focusout',
-            'input[data-fieldname="conversion_factor"][data-doctype="Purchase Invoice Item"]',
-            function (e) {
-                //  IMPORTANT! IMPORTANT!  This is the one that gets the calculations correct!
-                // Trying to calc first, then refresh, or no refresh at all...
-                pi_each_item(frm, cdt, cdn);
-                cur_frm.refresh_field("conversion_factor");
             });
 
         // This specific one is only for keyup events, to recalculate all. Only on blur will it refresh everything!
@@ -488,25 +478,34 @@ frappe.ui.form.on("Purchase Invoice", {
                 cur_frm.refresh_field("conversion_factor");
             });
 
-        // When mouse leaves the field
-        cur_frm.fields_dict.supplier.$input.on("blur focusout", function (evt) {
-            shs_purchase_invoice_calculation(frm, cdt, cdn);
-        });
+        frm.fields_dict.items.grid.wrapper.on('blur focusout',
+            'input[data-fieldname="shs_amount_for_back_calc"][data-doctype="Purchase Invoice Item"]',
+            function (e) {
+                //console.log("Blurring or focusing out from the Quantity Field");
+                pi_each_item(frm, cdt, cdn);
+                shs_purchase_invoice_calculation(frm, cdt, cdn);
+            });
 
-        // Mouse clicks over the items field
-        cur_frm.fields_dict.items.$wrapper.on("blur", function (evt) {
-            pi_each_item(frm, cdt, cdn);
-        });
+        frm.fields_dict.items.grid.wrapper.on('blur focusout',
+            'input[data-fieldname="facelec_p_other_tax_amount"][data-doctype="Purchase Invoice Item"]',
+            function (e) {
+                //console.log("Blurring or focusing out from the Quantity Field");
+                pi_each_item(frm, cdt, cdn);
+                shs_purchase_invoice_calculation(frm, cdt, cdn);
+            });
 
         // Focusout from the field
-        cur_frm.fields_dict.taxes_and_charges.$input.on("focusout", function (evt) {
-            shs_purchase_invoice_calculation(frm, cdt, cdn);
-            pi_insertar_fila_otro_impuesto(frm, cdt, cdn);
-        });
+        if (cur_frm.fields_dict.taxes_and_charges.$input) {  // Asegura no mostrar errores innecesarios
+            cur_frm.fields_dict.taxes_and_charges.$input.on("blur focusout click", function (evt) {
+                pi_each_item(frm, cdt, cdn);
+                shs_purchase_invoice_calculation(frm, cdt, cdn);
+                pi_insertar_fila_otro_impuesto(frm, cdt, cdn);
+            });
+        }
     },
     facelec_nit_fproveedor: function (frm, cdt, cdn) {
-        // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
-        valNit(frm.doc.facelec_nit_fproveedor, frm.doc.supplier, frm);
+        // Para evitar muchos mensajes de error, la validacion se hace desde el cliente
+        // valNit(frm.doc.facelec_nit_fproveedor, frm.doc.supplier, frm);
     },
     discount_amount: function (frm, cdt, cdn) {
         // Trigger Monto de descuento
@@ -548,7 +547,6 @@ frappe.ui.form.on("Purchase Invoice", {
         // console.log(cuentas_registradas);
         // console.log(Object.keys(cuentas_registradas).length);
 
-        // TODO: EN QUE QUEDO ESTO?
         // Si existe por lo menos una cuenta, se ejecuta frappe.call
         if (Object.keys(cuentas_registradas).length > 0) {
             frappe.call({
@@ -600,11 +598,14 @@ frappe.ui.form.on("Purchase Invoice Item", {
         // let row = frappe.get_doc(cdt, cdn);
         // pi_total_otros_impuestos_eliminacion(frm, row.facelec_p_tax_rate_per_uom_account, row.facelec_p_other_tax_amount);
 
-        frm.doc.items.forEach((item_row_1, index_1) => {
-            if (item_row_1.name == cdn) {
-                pi_total_otros_impuestos_eliminacion(frm, item_row_1.facelec_p_tax_rate_per_uom_account, item_row_1.facelec_p_other_tax_amount);
-            }
-        });
+        let row = frappe.get_doc(cdt, cdn);  // Asegura mas precisio de que data se debe trabajar
+        pi_total_otros_impuestos_eliminacion(frm, row.facelec_p_tax_rate_per_uom_account, row.facelec_p_other_tax_amount);
+
+        // frm.doc.items.forEach((item_row_1, index_1) => {
+        //     if (item_row_1.name == cdn) {
+        //         pi_total_otros_impuestos_eliminacion(frm, item_row_1.facelec_p_tax_rate_per_uom_account, item_row_1.facelec_p_other_tax_amount);
+        //     }
+        // });
     },
     items_remove: function (frm, cdt, cdn) {
         // es-GT: Este disparador corre al momento de eliminar una nueva fila.
@@ -630,9 +631,10 @@ frappe.ui.form.on("Purchase Invoice Item", {
     },
     item_code: function (frm, cdt, cdn) {
         // Trigger codigo de producto
-        var this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+        // var this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         // console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
+        pi_each_item(frm, cdt, cdn);
     },
     qty: function (frm, cdt, cdn) {
         // Trigger cantidad
@@ -654,28 +656,10 @@ frappe.ui.form.on("Purchase Invoice Item", {
     },
     shs_amount_for_back_calc: function (frm, cdt, cdn) {
         frm.doc.items.forEach((row, index) => {
-            // console.log(row.rate);
-            // console.log(row.qty);
-            // console.log(row.amount);
             var a = row.rate;
             var b = row.qty;
             var c = row.amount;
 
-            //let test = flt(row.shs_amount_for_back_calc) - flt(c);
-            //let testB = test / 2;
-
-            // Usando metodologia GoalSeek.js
-            // https://github.com/adam-hanna/goalSeek.js/blob/master/goalSeek.js
-            // console.log(goalSeek({
-            //     Func: calculo_prueba,
-            //     aFuncParams: [b, a],
-            //     oFuncArgTarget: {
-            //         Position: 0
-            //     },
-            //     Goal: row.shs_amount_for_back_calc,
-            //     Tol: 0.001,
-            //     maxIter: 10000
-            // }));
             let calcu = goalSeek({
                 Func: redondeo_sales_invoice,
                 aFuncParams: [b, a],
@@ -703,11 +687,16 @@ frappe.ui.form.on("Purchase Invoice Item", {
 });
 
 
-// Funcion para evaluar los redondeos, important
+/**
+ * Funcion a evaluar por goalseek
+ *
+ * @param {*} a
+ * @param {*} b
+ * @return {*}
+ */
 function redondeo_sales_invoice(a, b) {
     return a * b;
 }
-/* ----------------------------------------------------------------------------------------------------------------- */
 
 
 /**
@@ -884,6 +873,73 @@ function validate_serie_purchase_invoice(frm) {
     })
 }
 
+
+/**
+ * Render para boton nota de debito electronica
+ *
+ * @param {*} frm
+ */
+function btn_debit_note(frm) {
+    cur_frm.clear_custom_buttons();
+    frm.add_custom_button(__("DEBIT NOTE FEL"), function () {
+        // Permite hacer confirmaciones
+        // frappe.confirm(__('Are you sure you want to proceed to generate a credit note?'),
+        //     () => {
+        //         let d = new frappe.ui.Dialog({
+        //             title: __('Generate Credit Note'),
+        //             fields: [{
+        //                 label: __('Reason Adjusment?'),
+        //                 fieldname: 'reason_adjust',
+        //                 fieldtype: 'Data',
+        //                 reqd: 1
+        //             }],
+        //             primary_action_label: __('Submit'),
+        //             primary_action(values) {
+        //                 let serie_de_factura = frm.doc.name;
+        //                 // Guarda la url actual
+        //                 let mi_url = window.location.href;
+
+        //                 frappe.call({
+        //                     method: 'factura_electronica.fel_api.generate_credit_note',
+        //                     args: {
+        //                         invoice_code: frm.doc.name,
+        //                         naming_series: frm.doc.naming_series,
+        //                         reference_inv: frm.doc.return_against,
+        //                         reason: values.reason_adjust
+        //                     },
+        //                     callback: function (data) {
+        //                         console.log(data.message);
+        //                         if (data.message[0] === true) {
+        //                             // Crea una nueva url con el nombre del documento actualizado
+        //                             let url_nueva = mi_url.replace(
+        //                                 serie_de_factura, data
+        //                                     .message[1]);
+        //                             // Asigna la nueva url a la ventana actual
+        //                             window.location.assign(url_nueva);
+        //                             // Recarga la pagina
+        //                             frm.reload_doc();
+        //                         }
+        //                     },
+        //                 });
+
+        //                 d.hide();
+        //             }
+        //         });
+
+        //         d.show();
+        //     }, () => {
+        //         // action to perform if No is selected
+        //         // console.log('Selecciono NO')
+        //     })
+    }).addClass("btn-warning");
+}
+
+
+/**
+ * LLimpia campos con data no necesaria al momento de duplicar
+ *
+ * @param {*} frm
+ */
 function clean_fields(frm) {
     // Funcionalidad evita copiar CAE cuando se duplica una factura
     // LIMPIA/CLEAN, permite limpiar los campos cuando se duplica una factura

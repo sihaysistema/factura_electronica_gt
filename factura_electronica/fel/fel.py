@@ -151,7 +151,7 @@ class ElectronicInvoice:
                 "@FechaHoraEmision": ok_datetime,  # Se usa la data al momento de crear a infile
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
-                }
+            }
 
             return True, 'OK'
 

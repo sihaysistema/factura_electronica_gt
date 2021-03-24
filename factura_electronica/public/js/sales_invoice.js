@@ -7,8 +7,6 @@ import { valNit } from './facelec.js';
 import { goalSeek } from './goalSeek.js';
 
 
-/* 1 Funcion calculadora para Sales Invoice ------------------------------------------------------------------------ */
-
 /**
  * Funcion central encargada de los calculos realtime y para
  * usar en generación de docs electrónicos
@@ -119,10 +117,11 @@ function each_item(frm, cdt, cdn) {
 }
 
 
-/* 3 Funciones para otros impuestos IDP ... ------------------------------------------------------------------------ */
+/* Funciones para otros impuestos IDP ... ------------------------------------------------------------------------ */
 
 /**
  * Genera la suma total de impuestos especiales
+ * por cuenta
  *
  * @param {Object} frm
  * @param {String} tax_account - Nombre cuenta impuesto especial
@@ -143,7 +142,8 @@ function facelec_add_taxes(frm, tax_account) {
 
 /**
  * Recorre items, en busca de impuestos especiales, para luego ser sumados
- * con los que sean del mismo tipo
+ * con los que sean del mismo tipo, para luego ser agrega la cuenta y monto
+ * a la tabla hija de otros impuestos
  *
  * @param {Object} frm
  * @param {String} cdt
@@ -156,8 +156,7 @@ function sumar_otros_impuestos_shs(frm, cdt, cdn) {
             if (item_row_1.facelec_tax_rate_per_uom_account) {
                 if (frm.doc.shs_otros_impuestos !== undefined) {
                     frm.doc.shs_otros_impuestos.forEach((tax_row_2, index_2) => {
-                        if (tax_row_2.account_head === item_row_1
-                            .facelec_tax_rate_per_uom_account) {
+                        if (tax_row_2.account_head === item_row_1.facelec_tax_rate_per_uom_account) {
                             var totalizador = 0;
                             totalizador = facelec_add_taxes(frm, tax_row_2.account_head)
                             cur_frm.doc.shs_otros_impuestos[index_2].total = totalizador;
@@ -290,7 +289,7 @@ function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
     });
 }
 
-/* 4 --------------------------------------------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------------------------------------------- */
 
 /**
  * Buscador de cuentas en tabla hija de otros impuestos
@@ -430,6 +429,7 @@ frappe.ui.form.on("Sales Invoice", {
             cur_frm.fields_dict.taxes_and_charges.$input.on("blur focusout", function (e) {
                 //console.log("Campo taxes and charges perdió el enfoque via focusout");
                 facelec_tax_calc_new(frm, cdt, cdn);
+                each_item(frm, cdt, cdn);
                 facelec_otros_impuestos_fila(frm, cdt, cdn);
             });
         }
@@ -588,19 +588,13 @@ frappe.ui.form.on("Sales Invoice", {
                     // Esto para mostrar u ocultar los botones para la geneneracion de factura
                     // electronica
                     frm.reload_doc();
-                    frappe.call({
-                        method: "factura_electronica.api.obtenerConfiguracionManualAutomatica",
-                        callback: function (data) {
-                            //console.log(data.message);
-                        }
-                    });
                 }
             });
         }
     },
     naming_series: function (frm, cdt, cdn) {
+        // Aplica solo para FS
         if (frm.doc.naming_series) {
-            // Aplica solo para FS
             frappe.call({
                 method: "factura_electronica.api.obtener_numero_resolucion",
                 args: {
@@ -745,12 +739,23 @@ frappe.ui.form.on("Sales Invoice Item", {
 });
 
 
-// Funcion necesaria para evaluar goalSeek
+/**
+ * Funcion para evaluar goalseek
+ *
+ * @param {*} a
+ * @param {*} b
+ * @return {*} monto
+ */
 function funct_eval(a, b) {
     return a * b;
 }
 
 
+/**
+ * Limpia los campos con data no necesaria, al momento de duplicar
+ *
+ * @param {*} frm
+ */
 function clean_fields(frm) {
     // Funcionalidad evita copiar CAE cuando se duplica una factura
     // LIMPIA/CLEAN, permite limpiar los campos cuando se duplica una factura
@@ -775,6 +780,11 @@ function clean_fields(frm) {
 }
 
 
+/**
+ * Render boton para anular docs en SI
+ *
+ * @param {*} frm
+ */
 function btn_canceller(frm) {
     cur_frm.clear_custom_buttons();
     frm.add_custom_button(__("CANCEL DOCUMENT FEL"), function () {
@@ -817,6 +827,12 @@ function btn_canceller(frm) {
 }
 
 
+/**
+ * Render boton para FEL normal
+ *
+ * @param {*} tipo_factura
+ * @param {*} frm
+ */
 function generar_boton_factura(tipo_factura, frm) {
     frm.add_custom_button(__(tipo_factura), function () {
         // frm.reload(); permite hacer un refresh de todo el documento
@@ -884,6 +900,11 @@ function btn_export_invoice(frm) {
 };
 
 
+/**
+ * Render para boton notas de credito electronicas
+ *
+ * @param {*} frm
+ */
 function btn_credit_note(frm) {
     cur_frm.clear_custom_buttons();
     frm.add_custom_button(__("CREDIT NOTE FEL"), function () {
@@ -978,6 +999,11 @@ function btn_exempt_invoice(frm) {
 };
 
 
+/**
+ * Render para boton retenciones de impuestos IVA/ISR
+ *
+ * @param {*} frm
+ */
 function btn_journal_entry_retention(frm) {
     cur_frm.page.add_action_item(__("AUTOMATED RETENTION"), function () {
 
@@ -1076,7 +1102,12 @@ function btn_journal_entry_retention(frm) {
 }
 
 
-// GFACE
+/**
+ * Render para visualizar PDF GFACE
+ *
+ * @param {*} cae_documento
+ * @param {*} frm
+ */
 function pdf_button(cae_documento, frm) {
     // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
     frm.add_custom_button(__("VER PDF FACTURA ELECTRONICA"),
@@ -1086,7 +1117,12 @@ function pdf_button(cae_documento, frm) {
 }
 
 
-// FEL
+/**
+ * Render para boton que visualiza PDF doc electronico
+ *
+ * @param {*} cae_documento
+ * @param {*} frm
+ */
 function pdf_button_fel(cae_documento, frm) {
     // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
     // aplica para fels, y anuladas
@@ -1098,6 +1134,11 @@ function pdf_button_fel(cae_documento, frm) {
 }
 
 
+/**
+ * Render boton para visualizar pdf nota credito electronica
+ *
+ * @param {*} frm
+ */
 function pdf_credit_note(frm) {
     cur_frm.clear_custom_buttons();
     frm.add_custom_button(__("VER PDF NOTA CREDITO ELECTRONICA"),
