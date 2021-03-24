@@ -356,7 +356,7 @@ frappe.ui.form.on("Purchase Invoice", {
 
                     // FACTURA ESPECIAL
                     if (data.message[0] == 'FESP' && data.message[1]) {
-                        btn_factura_especial(frm)
+                        btn_factura_especial(frm);
                         if (frm.doc.numero_autorizacion_fel) {
                             cur_frm.clear_custom_buttons();
                             pdf_electronic_doc(frm);
@@ -365,6 +365,13 @@ frappe.ui.form.on("Purchase Invoice", {
                     }
 
                     // NOTA DE DEBITO
+                    if (data.message[0] == 'NDEB' && data.message[1]) {
+                        btn_debit_note(frm);
+                        if (frm.doc.numero_autorizacion_fel) {
+                            cur_frm.clear_custom_buttons();
+                            pdf_electronic_doc(frm);
+                        }
+                    }
                 },
             });
         }
@@ -643,7 +650,7 @@ function redondeo_sales_invoice(a, b) {
  */
 function btn_factura_especial(frm) {
     cur_frm.clear_custom_buttons();
-    frm.add_custom_button(__("FACTURA ESPECIAL ELECTRONICA FEL"), function () {
+    frm.add_custom_button(__("GENERAR FACTURA ESPECIAL ELECTRONICA FEL"), function () {
         frappe.confirm(__('Are you sure you want to proceed to generate a Electronic Special Invoice?'),
             () => {
                 let serie_de_factura = frm.doc.name;
@@ -772,58 +779,58 @@ function btn_poliza_factura_especial(frm) {
  * @param {*} frm
  */
 function btn_debit_note(frm) {
+    // INICIO BOTON NOTA DE DEBITO
     cur_frm.clear_custom_buttons();
-    frm.add_custom_button(__("DEBIT NOTE FEL"), function () {
+    frm.add_custom_button(__("GENERAR NOTA DE DEBITO ELECTRONICA FEL"), function () {
         // Permite hacer confirmaciones
-        // frappe.confirm(__('Are you sure you want to proceed to generate a credit note?'),
-        //     () => {
-        //         let d = new frappe.ui.Dialog({
-        //             title: __('Generate Credit Note'),
-        //             fields: [{
-        //                 label: __('Reason Adjusment?'),
-        //                 fieldname: 'reason_adjust',
-        //                 fieldtype: 'Data',
-        //                 reqd: 1
-        //             }],
-        //             primary_action_label: __('Submit'),
-        //             primary_action(values) {
-        //                 let serie_de_factura = frm.doc.name;
-        //                 // Guarda la url actual
-        //                 let mi_url = window.location.href;
+        frappe.confirm(
+            __("Are you sure you want to proceed to generate a electronic debit note?"),
+            () => {
+                let d = new frappe.ui.Dialog({
+                    title: __("Generate Electronic Debit Note"),
+                    fields: [{
+                        label: __("Reason Adjusment?"),
+                        fieldname: "reason_adjust",
+                        fieldtype: "Data",
+                        reqd: 1,
+                    },],
+                    primary_action_label: __("Submit"),
+                    primary_action(values) {
+                        frappe.call({
+                            method: "factura_electronica.fel_api.generate_debit_note",
+                            args: {
+                                invoice_code: frm.doc.name,
+                                naming_series: frm.doc.naming_series,
+                                uuid_purch_inv: frm.doc.bill_no,
+                                data_inv_origin: frm.doc.bill_date,
+                                reason: values.reason_adjust,
+                            },
+                            callback: function (r) {
+                                console.log(r.message);
 
-        //                 frappe.call({
-        //                     method: 'factura_electronica.fel_api.generate_credit_note',
-        //                     args: {
-        //                         invoice_code: frm.doc.name,
-        //                         naming_series: frm.doc.naming_series,
-        //                         reference_inv: frm.doc.return_against,
-        //                         reason: values.reason_adjust
-        //                     },
-        //                     callback: function (data) {
-        //                         console.log(data.message);
-        //                         if (data.message[0] === true) {
-        //                             // Crea una nueva url con el nombre del documento actualizado
-        //                             let url_nueva = mi_url.replace(
-        //                                 serie_de_factura, data
-        //                                     .message[1]);
-        //                             // Asigna la nueva url a la ventana actual
-        //                             window.location.assign(url_nueva);
-        //                             // Recarga la pagina
-        //                             frm.reload_doc();
-        //                         }
-        //                     },
-        //                 });
+                                // if (r.message[0] === true) {
+                                //     // Crea una nueva url con el nombre del documento actualizado
+                                //     let url_nueva = mi_url.replace(serie_de_factura, r.message[1]);
+                                //     // Asigna la nueva url a la ventana actual
+                                //     window.location.assign(url_nueva);
+                                //     // Recarga la pagina
+                                //     frm.reload_doc();
+                                // }
+                            },
+                        });
+                        d.hide();
+                    },
+                });
 
-        //                 d.hide();
-        //             }
-        //         });
-
-        //         d.show();
-        //     }, () => {
-        //         // action to perform if No is selected
-        //         // console.log('Selecciono NO')
-        //     })
+                d.show();
+            },
+            () => {
+                // action to perform if No is selected
+                // console.log("Selecciono NO");
+            }
+        );
     }).addClass("btn-warning");
+    // FIN BOTON NOTA DE DEBITO
 }
 
 

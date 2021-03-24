@@ -245,7 +245,7 @@ class ElectronicSpecialInvoice:
             return True, 'OK'
 
         except:
-            return False, 'Proceso no completado, no se pudieron obtener todos los datos necesarios, verifica tener todos\
+            return False, 'Proceso no completado, no se pudieron obtener todos los datos necesarios de Emisor (compania), verifica tener todos \
                            los campos necesario en Configuracion Factura Electronica. Mas detalles en: \n'+str(frappe.get_traceback())
 
     def receiver(self):
@@ -256,7 +256,7 @@ class ElectronicSpecialInvoice:
             tuple: True/False, msj, msj
         """
 
-        # Intentara obtener data de direccion cliente
+        # Intentara obtener data de direccion proveedor
         try:
             dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['supplier_address']},
                                                  fieldname=['address_line1', 'email_id', 'pincode', 'county',
@@ -390,7 +390,7 @@ class ElectronicSpecialInvoice:
             return True, 'OK'
 
         except:
-            return False, 'Error no se puede completar la operacion por: '+str(frappe.get_traceback())
+            return False, 'Proceso no completado, no se puedo obtener toda la data para el receptor del documento electronico: '+str(frappe.get_traceback())
 
     def phrases(self):
         """
