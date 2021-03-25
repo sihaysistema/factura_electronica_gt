@@ -368,7 +368,8 @@ function validate_pi_items_acc(frm, cdt, cdn) {
 function pi_clean_other_tax(frm) {
     // cur_frm.refresh_field("shs_otros_impuestos");
     // Recorre las tablas hijas descritar en los for, para limpiar cuentas no usadas
-    frm.doc.shs_pi_otros_impuestos.forEach((tax_row, index) => {
+    var to_iter = frm.doc.shs_pi_otros_impuestos || [];
+    to_iter.forEach((tax_row, index) => {
         let status = [];
         frm.doc.items.forEach((item_row, index_i) => {
             if (tax_row.account_head == item_row.facelec_p_tax_rate_per_uom_account) {
@@ -383,8 +384,13 @@ function pi_clean_other_tax(frm) {
     });
 }
 
+
 frappe.ui.form.on("Purchase Invoice", {
     refresh: function (frm, cdt, cdn) {
+
+        frm.set_df_property("bill_no", "description", __("<b>FEL: UUID de factura original</b>, dato necesario para Nota de Debito Electronica"));
+        frm.set_df_property("bill_date", "description", __("<b>FEL: Fecha de factura original</b>, dato necesario para Nota de Debito Electronica"));
+
         // Limpieza de campos cuando se duplique una factura de compra
         clean_fields(frm);
 

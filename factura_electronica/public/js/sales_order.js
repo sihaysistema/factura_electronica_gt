@@ -152,7 +152,7 @@ frappe.ui.form.on("Sales Order", {
     },
     shs_so_nit: function (frm) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
-        valNit(frm.doc.shs_so_nit, frm.doc.customer, frm);
+        // valNit(frm.doc.shs_so_nit, frm.doc.customer, frm);
     },
     discount_amount: function (frm) {
         // Trigger Monto de descuento

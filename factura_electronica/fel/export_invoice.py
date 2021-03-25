@@ -816,7 +816,7 @@ class ExportInvoice:
 
                 decodedBytes = base64.b64decode(self.__response_ok['xml_certificado'])
                 decodedStr = str(decodedBytes, "utf-8")
-                resp_fel.xml_certificado = decodedStr
+                resp_fel.xml_certificado = str(self.__xml_string)  # decodedStr
 
                 resp_fel.save(ignore_permissions=True)
 

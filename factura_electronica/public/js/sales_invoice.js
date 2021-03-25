@@ -321,7 +321,8 @@ function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
 function clean_other_tax(frm) {
     // cur_frm.refresh_field("shs_otros_impuestos");
     // Recorre las tablas hijas descritar en los for, para limpiar cuentas no usadas
-    frm.doc.shs_otros_impuestos.forEach((tax_row, index) => {
+    var to_iter = frm.doc.shs_otros_impuestos || [];
+    to_iter.forEach((tax_row, index) => {
         let status = [];
         frm.doc.items.forEach((item_row, index_i) => {
             if (tax_row.account_head == item_row.facelec_tax_rate_per_uom_account) {
@@ -565,8 +566,12 @@ frappe.ui.form.on("Sales Invoice", {
             // FIN GENERACION POLIZA CON RETENCIONES
         }
     },
-    validate: function (frm) {
+    validate: function (frm, cdt, cdn) {
         generar_tabla_html(frm);
+        facelec_tax_calc_new(frm, cdt, cdn);
+        each_item(frm, cdt, cdn);
+        facelec_otros_impuestos_fila(frm, cdt, cdn);
+        // Trigger antes de guardar
         clean_other_tax(frm);
     },
     nit_face_customer: function (frm, cdt, cdn) {
@@ -597,6 +602,7 @@ frappe.ui.form.on("Sales Invoice", {
         }
     },
     before_save: function (frm, cdt, cdn) {
+        facelec_tax_calc_new(frm, cdt, cdn);
         each_item(frm, cdt, cdn);
         facelec_otros_impuestos_fila(frm, cdt, cdn);
         // Trigger antes de guardar

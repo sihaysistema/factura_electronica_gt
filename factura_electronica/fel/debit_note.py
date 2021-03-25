@@ -151,7 +151,7 @@ class ElectronicDebitNote:
             else:
                 date_invoice_inv = frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_date')
                 ok_time = str(frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_time'))
-                ok_datetime = str(date_invoice_inv)+'T'+str(ok_time).split('.')[0]
+                ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'currency'),
@@ -682,7 +682,7 @@ class ElectronicDebitNote:
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
                 resp_fel.status = 'Valid'
-                resp_fel.tipo_documento = 'Factura Especial'
+                resp_fel.tipo_documento = 'Nota de Debito'
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
@@ -711,7 +711,7 @@ class ElectronicDebitNote:
                 # decodedBytes = base64.b64decode(self.__response_ok['xml_certificado'])
                 # decodedStr = str(decodedBytes, "utf-8")
                 # resp_fel.xml_certificado = decodedStr
-                resp_fel.xml_certificado = json.dumps(self.__doc_firmado, indent=2) # decodedStr
+                resp_fel.xml_certificado = str(self.__xml_string)  # json.dumps(self.__doc_firmado, indent=2) # decodedStr
                 resp_fel.enviado = str(self.__start_datetime)
                 resp_fel.recibido = str(self.__end_datetime)
 
