@@ -167,8 +167,8 @@
   {
    "fieldname": "xml_certificado",
    "fieldtype": "Code",
-   "label": "XML Firmado",
-   "options": "Json",
+   "label": "XML Enviado",
+   "options": "XML",
    "read_only": 1
   },
   {
@@ -237,10 +237,10 @@
    "collapsible": 1,
    "fieldname": "xml_firmado_para_generar_doc_electronico_section",
    "fieldtype": "Section Break",
-   "label": "XML FIRMADO PARA GENERAR DOC ELECTRONICO"
+   "label": "XML ENVIADO EN PETICION"
   }
  ],
- "modified": "2021-02-08 16:25:31.992194",
+ "modified": "2021-03-25 01:32:35.523417",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Envio FEL",
