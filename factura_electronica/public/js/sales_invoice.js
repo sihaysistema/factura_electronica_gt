@@ -752,6 +752,9 @@ frappe.ui.form.on("Sales Invoice Item", {
         //console.log("cdt contains: " + cdt);
         //console.log("cdn contains: " + cdn);
     },
+    facelec_is_discount: function (frm, cdt, cdn) {
+        facelec_tax_calc_new(frm, cdt, cdn);
+    },
     uom: function (frm, cdt, cdn) {
         // Trigger UOM
         //console.log("The unit of measure field was changed and the code from the trigger was run");

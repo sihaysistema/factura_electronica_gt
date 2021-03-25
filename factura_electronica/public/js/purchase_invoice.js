@@ -338,6 +338,51 @@ function generar_tabla_html_factura_compra(frm) {
 }
 
 
+/**
+ * Recorre items, si no hay filas con cuentas de impuesto especiales
+ * limpia y recalcula la tabla de otros impuestos
+ *
+ * @param {*} frm
+ * @param {*} cdt
+ * @param {*} cdn
+ */
+function validate_pi_items_acc(frm, cdt, cdn) {
+    var items_acc = [];
+    frm.doc.items.forEach((item_row_i, indice) => {
+        if (item_row_i.facelec_p_tax_rate_per_uom_account) {
+            items_acc.push(true);
+        }
+    });
+
+    if (!items_acc.length) {
+        // console.log('No hay items con impuestos especiales');
+        frm.doc.shs_pi_otros_impuestos = [];
+        pi_total_de_otros_impuestos(frm)
+        cur_frm.refresh_field("shs_pi_otros_impuestos");
+    } else {
+        // console.log('Si hay items con impuestos especiales');
+    }
+}
+
+
+function pi_clean_other_tax(frm) {
+    // cur_frm.refresh_field("shs_otros_impuestos");
+    // Recorre las tablas hijas descritar en los for, para limpiar cuentas no usadas
+    frm.doc.shs_pi_otros_impuestos.forEach((tax_row, index) => {
+        let status = [];
+        frm.doc.items.forEach((item_row, index_i) => {
+            if (tax_row.account_head == item_row.facelec_p_tax_rate_per_uom_account) {
+                status.push(true);
+            }
+        });
+
+        // delete here
+        if (!status.length) {
+            cur_frm.get_field("shs_pi_otros_impuestos").grid.grid_rows[index].remove();
+        }
+    });
+}
+
 frappe.ui.form.on("Purchase Invoice", {
     refresh: function (frm, cdt, cdn) {
         // Limpieza de campos cuando se duplique una factura de compra
@@ -412,6 +457,7 @@ frappe.ui.form.on("Purchase Invoice", {
                 shs_purchase_invoice_calculation(frm, cdt, cdn);
                 pi_insertar_fila_otro_impuesto(frm, cdt, cdn);
                 pi_each_item(frm, cdt, cdn);
+                validate_pi_items_acc(frm, cdt, cdn);
             });
 
         frm.fields_dict.items.grid.wrapper.on('blur focusout click',
@@ -494,9 +540,11 @@ frappe.ui.form.on("Purchase Invoice", {
         pi_each_item(frm, cdt, cdn);
         pi_insertar_fila_otro_impuesto(frm, cdt, cdn);
         // Trigger antes de guardar
+        pi_clean_other_tax(frm);
     },
     validate: function (frm) {
         generar_tabla_html_factura_compra(frm);
+        pi_clean_other_tax(frm);
     },
     on_submit: function (frm, cdt, cdn) {
         // Ocurre cuando se presione el boton validar.
@@ -564,6 +612,7 @@ frappe.ui.form.on("Purchase Invoice", {
 
 frappe.ui.form.on("Purchase Invoice Item", {
     before_items_remove: function (frm, cdt, cdn) {
+        pi_clean_other_tax(frm);
         // let row = frappe.get_doc(cdt, cdn);
         // pi_total_otros_impuestos_eliminacion(frm, row.facelec_p_tax_rate_per_uom_account, row.facelec_p_other_tax_amount);
 
@@ -604,6 +653,9 @@ frappe.ui.form.on("Purchase Invoice Item", {
         // console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
         refresh_field('qty');
         pi_each_item(frm, cdt, cdn);
+
+        validate_pi_items_acc(frm, cdt, cdn);
+        pi_clean_other_tax(frm);
     },
     qty: function (frm, cdt, cdn) {
         // Trigger cantidad
@@ -652,7 +704,10 @@ frappe.ui.form.on("Purchase Invoice Item", {
             pi_each_item(frm, cdt, cdn);
             pi_insertar_fila_otro_impuesto(frm, cdt, cdn);
         });
-    }
+    },
+    facelec_is_discount: function (frm, cdt, cdn) {
+        shs_purchase_invoice_calculation(frm, cdt, cdn);
+    },
 });
 
 
