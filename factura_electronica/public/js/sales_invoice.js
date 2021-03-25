@@ -255,6 +255,34 @@ function facelec_otros_impuestos_fila(frm, cdt, cdn) {
 }
 
 
+
+/**
+ * Recorre items, si no hay filas con cuentas de impuesto especiales
+ * limpia y recalcula la tabla de otros impuestos
+ *
+ * @param {*} frm
+ * @param {*} cdt
+ * @param {*} cdn
+ */
+function validate_items_acc(frm, cdt, cdn) {
+    var items_acc = [];
+    frm.doc.items.forEach((item_row_i, indice) => {
+        if (item_row_i.facelec_tax_rate_per_uom_account) {
+            items_acc.push(true);
+        }
+    });
+
+    if (!items_acc.length) {
+        // console.log('No hay items con impuestos especiales');
+        frm.doc.shs_otros_impuestos = [];
+        shs_total_other_tax(frm)
+        cur_frm.refresh_field("shs_otros_impuestos");
+    } else {
+        // console.log('Si hay items con impuestos especiales');
+    }
+}
+
+
 /**
  * Recalculo los montos de impuestos especiales, cuando se eliminan n filas
  *
@@ -289,6 +317,24 @@ function totalizar_valores(frm, cdn, tax_account_n, otro_impuesto) {
     });
 }
 
+
+function clean_other_tax(frm) {
+    // cur_frm.refresh_field("shs_otros_impuestos");
+    // Recorre las tablas hijas descritar en los for, para limpiar cuentas no usadas
+    frm.doc.shs_otros_impuestos.forEach((tax_row, index) => {
+        let status = [];
+        frm.doc.items.forEach((item_row, index_i) => {
+            if (tax_row.account_head == item_row.facelec_tax_rate_per_uom_account) {
+                status.push(true);
+            }
+        });
+
+        // delete here
+        if (!status.length) {
+            cur_frm.get_field("shs_otros_impuestos").grid.grid_rows[index].remove();
+        }
+    });
+}
 /* --------------------------------------------------------------------------------------------------------------- */
 
 /**
@@ -346,6 +392,7 @@ frappe.ui.form.on("Sales Invoice", {
                 //console.log("Clicked on the field Item Code");
                 each_item(frm, cdt, cdn);
                 facelec_tax_calc_new(frm, cdt, cdn);
+                validate_items_acc(frm, cdt, cdn);
             });
 
         frm.fields_dict.items.grid.wrapper.on('click blur focusout',
@@ -353,7 +400,7 @@ frappe.ui.form.on("Sales Invoice", {
             function (e) {
                 //console.log("Blur or focusout from the UOM field");
                 each_item(frm, cdt, cdn);
-                facelec_tax_calc_new
+                facelec_tax_calc_new(frm, cdt, cdn);
             });
 
         // This part might seem counterintuitive, but it is the "next" field in tab order after item code, which helps for a "creative" strategy to update everything after pressing TAB out of the item code field.  FIXME
@@ -401,11 +448,13 @@ frappe.ui.form.on("Sales Invoice", {
                 cur_frm.refresh_field("conversion_factor");
             });
 
-        // frm.fields_dict.items.grid.wrapper.on('blur',
-        //     'input[data-fieldname="rate"][data-doctype="Sales Invoice Item"]',
+        // !NOTE: Generar una pequena sensacion de retardo en calculos, esto porque se ejecuta varias veces
+        // frm.fields_dict.items.grid.wrapper.on('blur', '[data-doctype="Sales Invoice Item"]',
         //     function (e) {
-        //         //console.log("Blurring from the Rate Field");
-        //         // each_item(frm, cdt, cdn);
+        //         // facelec_tax_calc_new(frm, cdt, cdn);
+        //         console.log('Ejecutando')
+        //         each_item(frm, cdt, cdn);
+        //         validate_items_acc(frm, cdt, cdn);
         //     });
 
         // en-US: Enabling event listeners in the main doctype
@@ -518,6 +567,7 @@ frappe.ui.form.on("Sales Invoice", {
     },
     validate: function (frm) {
         generar_tabla_html(frm);
+        clean_other_tax(frm);
     },
     nit_face_customer: function (frm, cdt, cdn) {
         // Para evitar retrasos la validacion se realiza desde customer dt
@@ -550,6 +600,7 @@ frappe.ui.form.on("Sales Invoice", {
         each_item(frm, cdt, cdn);
         facelec_otros_impuestos_fila(frm, cdt, cdn);
         // Trigger antes de guardar
+        clean_other_tax(frm);
     },
     on_submit: function (frm, cdt, cdn) {
         // Ocurre cuando se presione el boton validar. para agregar al GL los impuestos especiales
@@ -668,6 +719,8 @@ frappe.ui.form.on("Sales Invoice Item", {
     before_items_remove: function (frm, cdt, cdn) {
         // Se ejecuta antes de eliminar la fila
         // Recalcula el total IVA y otros impuestos (IDP)
+        clean_other_tax(frm);
+
         let row = frappe.get_doc(cdt, cdn);
         totalizar_valores(frm, cdn, row.facelec_tax_rate_per_uom_account, row.facelec_other_tax_amount);
 
@@ -677,6 +730,7 @@ frappe.ui.form.on("Sales Invoice Item", {
         //         totalizar_valores(frm, cdn, item_row_1.facelec_tax_rate_per_uom_account, item_row_1.facelec_other_tax_amount);
         //     }
         // });
+        // cur_frm.refresh_field("shs_otros_impuestos");
     },
     items_add: function (frm, cdt, cdn) {
         facelec_otros_impuestos_fila(frm, cdt, cdn);
@@ -686,7 +740,11 @@ frappe.ui.form.on("Sales Invoice Item", {
     },
     item_code: function (frm, cdt, cdn) {
         each_item(frm, cdt, cdn);
-        //facelec_tax_calc_new(frm, cdt, cdn);
+        validate_items_acc(frm, cdt, cdn);
+
+        let row = frappe.get_doc(cdt, cdn);
+
+        clean_other_tax(frm);
     },
     qty: function (frm, cdt, cdn) {
         //facelec_tax_calculation(frm, cdt, cdn);
@@ -1099,21 +1157,6 @@ function btn_journal_entry_retention(frm) {
         });
         d.show();
     });
-}
-
-
-/**
- * Render para visualizar PDF GFACE
- *
- * @param {*} cae_documento
- * @param {*} frm
- */
-function pdf_button(cae_documento, frm) {
-    // Esta funcion se encarga de mostrar el boton para obtener el pdf de la factura electronica generada
-    frm.add_custom_button(__("VER PDF FACTURA ELECTRONICA"),
-        function () {
-            window.open("https://www.ingface.net/Ingfacereport/dtefactura.jsp?cae=" + cae_documento);
-        }).addClass("btn-primary");
 }
 
 

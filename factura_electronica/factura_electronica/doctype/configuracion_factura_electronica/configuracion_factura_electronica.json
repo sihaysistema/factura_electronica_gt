@@ -333,7 +333,8 @@
    "description": "<b>FEL:</b> Envia copia de factura electronica generada para el escenario <b>Cliente/Proveedor no provee su correo electronico</b>",
    "fieldname": "correo_copia",
    "fieldtype": "Data",
-   "label": "Correo Copia"
+   "label": "Correo Copia",
+   "options": "Email"
   },
   {
    "collapsible": 1,
@@ -540,7 +541,7 @@
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2021-03-24 10:24:59.450733",
+ "modified": "2021-03-24 21:53:44.240987",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

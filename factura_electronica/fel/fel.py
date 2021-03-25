@@ -143,7 +143,7 @@ class ElectronicInvoice:
             else:
                 date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date')
                 ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
-                ok_datetime = str(date_invoice_inv)+'T'+str(ok_time) #.rpartition('.')[0]
+                ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
@@ -738,8 +738,8 @@ class ElectronicInvoice:
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
-            # with open('RESPONSE_factura.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('RESPONSE-FACTURA-FEL.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 

@@ -882,8 +882,8 @@ def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='S
 
         status_validador_res = cancel_invoice.response_validator()
         if not status_validador_res[0]:
-            frappe.msgprint(status_validador_res[1])
-            return
+            frappe.msgprint(f'Anulacion de documento electronico no se pudo completar, encontrara mas detalle en el siguiente log {str(status_validador_res[1])}')
+            return str(status_validador_res[1])
         else:
             frappe.msgprint('Factura Anulada con Exito, para ver el documento anulado, presione el boton ver PDF Documento Electronico')
             return

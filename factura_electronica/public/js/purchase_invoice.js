@@ -365,9 +365,9 @@ frappe.ui.form.on("Purchase Invoice", {
                                 // Si la anulacion electronica ya fue realizada, se mostrara boton para ver pdf doc anulado
                                 frappe.call('factura_electronica.api.invoice_exists', {
                                     uuid: frm.doc.numero_autorizacion_fel
-                                }).then(r => {
+                                }).then(r2 => {
 
-                                    if (r.message) {
+                                    if (r2.message) {
                                         cur_frm.clear_custom_buttons();
                                         pdf_electronic_doc(frm);
                                     } else {
@@ -928,7 +928,7 @@ function btn_pi_canceller(frm) {
                             },
                             callback: function (data) {
                                 console.log(data.message);
-                                frm.reload_doc();
+                                // frm.reload_doc();
                             },
                         });
 
