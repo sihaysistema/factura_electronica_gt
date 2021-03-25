@@ -41,7 +41,8 @@ class ElectronicSpecialInvoice:
     def build_special_invoice(self):
         """
         Valida las dependencias necesarias, para construir XML desde un JSON
-        para ser firmado certificado por la SAT y finalmente generar factura electronica
+        para ser firmado certificado por la SAT y finalmente generar factura
+        especial electronica
 
         Returns:
             tuple: True/False, msj, msj
@@ -147,16 +148,20 @@ class ElectronicSpecialInvoice:
         """
 
         try:
-            self.date_invoice = str(frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_date'))
-            self.time_invoice = str(frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_time'))
+            # Configurado por usuario
+            opt_config = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
 
-            if '.' in self.time_invoice:
-                # la ultima porcion elimina los milisegundos manualmente, las nuevas validaciones de INFILE no soportan miliseconds
-                self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time')).rpartition('.')[0]
+            if opt_config == 'Fecha y tiempo de peticion a INFILE':
+                ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
+
+            else:
+                date_invoice_inv = frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_date')
+                ok_time = str(frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_time'))
+                ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'currency'),
-                "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",  Se usa lafecha y hora en que se realiza la emision de la factura electronicas
+                "@FechaHoraEmision": ok_datetime, ##  str(datetime.datetime.now().replace(microsecond=0).isoformat()),
                 "@Tipo": frappe.db.get_value('Serial Configuration For Purchase Invoice', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')  # 'FACT'
             }
@@ -250,7 +255,7 @@ class ElectronicSpecialInvoice:
 
     def receiver(self):
         """
-        Validacion y generacion datos de Receptor (cliente)
+        Validacion y generacion datos de Receptor (proveedor especial)
 
         Returns:
             tuple: True/False, msj, msj
@@ -265,18 +270,6 @@ class ElectronicSpecialInvoice:
             contact_per = frappe.db.get_values('Contact Identification', filters={'parent': self.dat_fac[0]['contact_person'],
                                                                                   'id_prefix': 'DPI'},
                                                fieldname=['id_number'], as_dict=1)
-            # NOTE: se quitara esta validacion para permitir usar valores default en caso no exista una direccion
-            # o campos especificacion de direccion
-            # if len(dat_direccion) == 0:
-            #     return False, f'''No se encontro ninguna direccion para el cliente {self.dat_fac[0]["supplier_name"]}.\
-            #                       Por favor asigna un direccion y vuelve a intentarlo'''
-
-            # # Validacion data direccion cliente
-            # for dire in dat_direccion[0]:
-            #     if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
-            #         return False, '''No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no\
-            #                          tiene data, por favor asignarle un valor e intentar de nuevo \
-            #                       '''.format(str(dire), self.dat_fac[0]["supplier_name"])
 
             datos_default = {
                 'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
@@ -307,7 +300,7 @@ class ElectronicSpecialInvoice:
                     try:
                         ok_dpi = contact_per[0]['id_number']
                     except:
-                        frappe.msgprint(msg=_('No se encontro un DPI para cliente, por favor agregarlo en contacto e intentar de nuevo'),
+                        frappe.msgprint(msg=_('No se encontro un DPI para el proveedor especial, por favor agregarlo en contacto del proveedor e intentar de nuevo'),
                                         title=_('Tarea no completada'), indicator='red', raise_exception=1)
 
                     self.__d_receptor = {
@@ -330,7 +323,7 @@ class ElectronicSpecialInvoice:
                     try:
                         ok_dpi = contact_per[0]['id_number']
                     except:
-                        frappe.msgprint(msg=_('No se encontro un DPI para cliente, por favor agregarlo en contacto e intentar de nuevo'),
+                        frappe.msgprint(msg=_('No se encontro un DPI para el proveedor especial, por favor agregarlo en contacto del proveedor e intentar de nuevo'),
                                         title=_('Tarea no completada'), indicator='red', raise_exception=1)
 
                     self.__d_receptor = {
@@ -355,7 +348,7 @@ class ElectronicSpecialInvoice:
                 try:
                     ok_dpi = contact_per[0]['id_number']
                 except:
-                    frappe.msgprint(msg=_('No se encontro un DPI para cliente, por favor agregarlo en contacto e intentar de nuevo'),
+                    frappe.msgprint(msg=_('No se encontro un DPI para el proveedor especial, por favor agregarlo en contacto del proveedor e intentar de nuevo'),
                                     title=_('Tarea no completada'), indicator='red', raise_exception=1)
 
                 if str(self.dat_fac[0]['facelec_nit_fproveedor']).upper() == 'C/F':
@@ -390,7 +383,7 @@ class ElectronicSpecialInvoice:
             return True, 'OK'
 
         except:
-            return False, 'Proceso no completado, no se puedo obtener toda la data para el receptor del documento electronico: '+str(frappe.get_traceback())
+            return False, 'Proceso no completado, no se pudo obtener toda la data para el receptor del documento electronico: '+str(frappe.get_traceback())
 
     def phrases(self):
         """
@@ -437,6 +430,8 @@ class ElectronicSpecialInvoice:
             tuple: True/False, msj, msj
         """
 
+        # !NOTE: POR AHORA NO APLICA LOS IMPUESTOS ESPECIALES
+
         try:
             i_fel = {}  # Guardara la seccion de items ok
             items_ok = []  # Guardara todos los items OK
@@ -474,14 +469,6 @@ class ElectronicSpecialInvoice:
                 for i in range(0, longitems):
                     obj_item = {}  # por fila
 
-                    # detalle_stock = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'is_stock_item')
-                    # # Validacion de Bien o Servicio, en base a detalle de stock
-                    # if (int(detalle_stock) == 0):
-                    #     obj_item["@BienOServicio"] = 'S'
-
-                    # if (int(detalle_stock) == 1):
-                    #     obj_item["@BienOServicio"] = 'B'
-
                     if cint(self.__dat_items[i]['facelec_p_is_service']) == 1:
                         obj_item["@BienOServicio"] = 'S'
 
@@ -501,12 +488,10 @@ class ElectronicSpecialInvoice:
 
                     # Calculo precio unitario
                     precio_uni = 0
-                    # precio_uni = float('{0:.2f}'.format(self.__dat_items[i]['rate'] + float(self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate'])))
                     precio_uni = flt(self.__dat_items[i]['rate'] + desc_item_fila, self.__precision)
 
                     # Calculo precio item
                     precio_item = 0
-                    # precio_item = float('{0:.2f}'.format((self.__dat_items[i]['qty']) * float(self.__dat_items[i]['price_list_rate'])))
                     precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
 
                     # Calculo descuento item: Segun esquema XML se obtiene los montos descuento
@@ -534,7 +519,6 @@ class ElectronicSpecialInvoice:
                     obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['net_amount'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
 
                     obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
-                    # obj_item["dte:Total"] = '{0:.2f}'.format((float(self.__dat_items[i]['price_list_rate']) - float((self.__dat_items[i]['price_list_rate'] - self.__dat_items[i]['rate']) * self.__dat_items[i]['qty'])))
 
                     items_ok.append(obj_item)
 
@@ -564,7 +548,6 @@ class ElectronicSpecialInvoice:
                 "dte:TotalImpuestos": {
                     "dte:TotalImpuesto": {
                         "@NombreCorto": self.__taxes_fact[0]['facelec_tax_name'],  #"IVA",
-                        # "@TotalMontoImpuesto": float('{0:.3f}'.format(float(self.dat_fac[0]['total_taxes_and_charges'])))
                         "@TotalMontoImpuesto": flt(gran_tot, self.__precision)
                     }
                 },
@@ -577,8 +560,13 @@ class ElectronicSpecialInvoice:
             return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.__invoice_code, str(frappe.get_traceback()))
 
     def complements(self):
-        try:
+        """
+        Generador complemento para facturas especiales, desglosa los impuestos ISR, IVA
 
+        Returns:
+            tuple: [description]
+        """
+        try:
             self.net_total = self.dat_fac[0]['net_total']
             self.company = self.dat_fac[0]['company']
             self.grand_total_invoice = self.dat_fac[0]['grand_total']
@@ -634,8 +622,8 @@ class ElectronicSpecialInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('special_invoice.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('FACTURA-ESPECIAL.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -649,8 +637,8 @@ class ElectronicSpecialInvoice:
             # with open('codificado.txt', 'w') as f:
             #         f.write(self.__encoded_str)
 
-            with open('FACTURA-ESPECIAL-FEL.xml', 'w') as f:
-                f.write(self.__xml_string)
+            # with open('FACTURA-ESPECIAL-FEL.xml', 'w') as f:
+            #     f.write(self.__xml_string)
 
         except:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
@@ -739,8 +727,8 @@ class ElectronicSpecialInvoice:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            # with open('resp_special_invoice.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('response_fact_especial.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
@@ -819,7 +807,7 @@ class ElectronicSpecialInvoice:
                 # decodedBytes = base64.b64decode(self.__response_ok['xml_certificado'])
                 # decodedStr = str(decodedBytes, "utf-8")
                 # resp_fel.xml_certificado = decodedStr
-                resp_fel.xml_certificado = json.dumps(self.__doc_firmado, indent=2) # decodedStr
+                resp_fel.xml_certificado = str(self.__xml_string)  # json.dumps(self.__doc_firmado, indent=2) # decodedStr
                 resp_fel.enviado = str(self.__start_datetime)
                 resp_fel.recibido = str(self.__end_datetime)
 

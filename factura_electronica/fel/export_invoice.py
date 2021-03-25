@@ -152,10 +152,11 @@ class ExportInvoice:
 
             if opt_config == 'Fecha y tiempo de peticion a INFILE':
                 ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
+
             else:
                 date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date')
                 ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
-                ok_datetime = str(date_invoice_inv)+'T'+str(ok_time)
+                ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
