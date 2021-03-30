@@ -48,12 +48,10 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
     try:
         # Actualizacion sobre la tabla `tabGL Entry`
         if invoice_type == 'Sales Invoice':
-            si_items = frappe.db.get_values('Sales Invoice Item', filters={'parent': invoice_name},
-                                            fieldname=['income_account', 'facelec_other_tax_amount',
-                                                       'facelec_tax_rate_per_uom_account'], as_dict=1)
             # Total Tasable
             # es-GT: Monto total de la factura menos el total del monto del impuesto especial
-            frappe.db.sql('''UPDATE `tabGL Entry` SET debit=%(nuevo_monto)s, debit_in_account_currency=%(nuevo_monto)s
+            frappe.db.sql('''
+                UPDATE `tabGL Entry` SET debit=%(nuevo_monto)s, debit_in_account_currency=%(nuevo_monto)s
                 WHERE voucher_no=%(serie_original)s AND party_type=%(tipo)s AND party=%(customer_n)s
             ''', {'nuevo_monto': total, 'serie_original': invoice_name, 'tipo': 'Customer',
                   'customer_n': str(data_gl_entry[0]['customer_name'])})
@@ -74,9 +72,6 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                     GROUP BY income_account
                 ''', {'origin_serie': invoice_name, 'acc': tax_acc}, as_dict=1)
 
-                with open('cuentas-test.json', 'w') as f:
-                    f.write(json.dumps(to_update))
-
                 # Por cada cuenta ingreso relacionada con una de impuestos especial
                 for update_this in to_update:
                     frappe.db.sql('''
@@ -88,30 +83,56 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                           'serie_original': invoice_name, 'acc_to_update': update_this.get('income_account')})
 
             # Valor Iva
-            frappe.db.sql('''UPDATE `tabGL Entry` SET credit=%(nuevo_monto)s, credit_in_account_currency=%(nuevo_monto)s
-                            WHERE account=%(tax_c)s AND voucher_no=%(serie_original)s
-                            ''', {'nuevo_monto': str(valor_iva), 'tax_c': str(tax_rate[0]['account_head']),
-                                'serie_original': invoice_name})
+            frappe.db.sql('''
+                UPDATE `tabGL Entry` SET credit=%(nuevo_monto)s, credit_in_account_currency=%(nuevo_monto)s
+                WHERE account=%(tax_c)s AND voucher_no=%(serie_original)s
+            ''', {'nuevo_monto': str(valor_iva), 'tax_c': str(tax_rate[0]['account_head']),
+                  'serie_original': invoice_name})
 
         if invoice_type == 'Purchase Invoice':
             # Total Tasable
             # es-GT: Monto total de la factura menos el total del monto del impuesto especial
-            frappe.db.sql('''UPDATE `tabGL Entry` SET credit=%(nuevo_monto)s, credit_in_account_currency=%(nuevo_monto)s
-                            WHERE voucher_no=%(serie_original)s AND party_type=%(tipo)s AND party=%(supplier_n)s
-                            ''', {'nuevo_monto': str(total), 'serie_original': invoice_name, 'tipo': 'Supplier',
-                                'supplier_n': str(data_gl_entry[0]['supplier_name'])})
+            frappe.db.sql('''
+                UPDATE `tabGL Entry` SET credit=%(nuevo_monto)s, credit_in_account_currency=%(nuevo_monto)s
+                WHERE voucher_no=%(serie_original)s AND party_type=%(tipo)s AND party=%(supplier_n)s
+            ''', {'nuevo_monto': total, 'serie_original': invoice_name, 'tipo': 'Supplier',
+                  'supplier_n': str(data_gl_entry[0]['supplier_name'])})
+
             # Valor Neto Iva
-            frappe.db.sql('''UPDATE `tabGL Entry` SET debit=%(nuevo_monto)s, debit_in_account_currency=%(nuevo_monto)s
-                            WHERE voucher_no=%(serie_original)s AND against=%(supplier_n)s AND cost_center IS NULL
-                            ''', {'nuevo_monto': str(valor_neto_iva), 'supplier_n': str(data_gl_entry[0]['supplier_name']),
-                                'serie_original': invoice_name})
+            # NOTE: SOLO SE DEBEN ACTUALIZAR LAS CUENTAS DE IMPUESTO ESPECIAL NET
+            for tax_acc in tax_accounts:
+                # Net Fuel: suma de `facelec_p_gt_tax_net_fuel` de todos los items de la factura compra
+                net_fuel = frappe.db.sql('''
+                    SELECT SUM(facelec_p_gt_tax_net_fuel_amt) as net_fuel FROM `tabPurchase Invoice Item`
+                    WHERE parent=%(origin_serie)s AND facelec_p_tax_rate_per_uom_account=%(acc)s
+                ''', {'origin_serie': invoice_name, 'acc': tax_acc}, as_dict=1)[0]
+
+                # Obtiene Todas las cuentas de ingreso que tengan una cuenta de impuestos especial
+                to_update = frappe.db.sql('''
+                    SELECT expense_account FROM `tabPurchase Invoice Item`
+                    WHERE parent=%(origin_serie)s AND facelec_p_tax_rate_per_uom_account=%(acc)s
+                    GROUP BY expense_account
+                ''', {'origin_serie': invoice_name, 'acc': tax_acc}, as_dict=1)
+
+                # Por cada cuenta gasto relacionada con una de impuestos especial
+                for update_this in to_update:
+                    frappe.db.sql('''
+                        UPDATE `tabGL Entry` SET debit=%(nuevo_monto)s, debit_in_account_currency=%(nuevo_monto)s
+                        WHERE voucher_no=%(serie_original)s AND against=%(supplier_n)s AND cost_center IS NOT NULL
+                        AND account=%(acc_to_update)s
+                    ''', {'nuevo_monto': flt(net_fuel.get('net_fuel'), precision_calc),
+                          'supplier_n': str(data_gl_entry[0]['supplier_name']),
+                          'serie_original': invoice_name, 'acc_to_update': update_this.get('expense_account')})
+
             # Valor Iva
-            frappe.db.sql('''UPDATE `tabGL Entry` SET debit=%(nuevo_monto)s, debit_in_account_currency=%(nuevo_monto)s
-                            WHERE account=%(tax_c)s AND voucher_no=%(serie_original)s
-                            ''', {'nuevo_monto': str(valor_iva), 'tax_c': str(tax_rate[0]['account_head']),
-                                'serie_original': invoice_name})
+            frappe.db.sql('''
+                UPDATE `tabGL Entry` SET debit=%(nuevo_monto)s, debit_in_account_currency=%(nuevo_monto)s
+                WHERE account=%(tax_c)s AND voucher_no=%(serie_original)s
+            ''', {'nuevo_monto': str(valor_iva), 'tax_c': str(tax_rate[0]['account_head']),
+                  'serie_original': invoice_name})
+
     except:
-        frappe.msgprint(_(f'Error al actualizar los montos en GL Entry {frappe.get_traceback()}'))
+        frappe.msgprint(_(f'Ocurrio un problema al tratar de actualizar los montos en GL Entry {frappe.get_traceback()}'))
 
     else:
         if invoice_type == 'Sales Invoice':
@@ -213,4 +234,4 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
             # con los monton correctos
             calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, invoice_name, account_names)
     else:
-        frappe.msgprint(_('Error, se recibio un valor diferente de Sales Invoice o Purchase Invoice'))
+        frappe.msgprint(_('No procesado, se recibio un valor diferente de Sales Invoice o Purchase Invoice'))
