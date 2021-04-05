@@ -21,6 +21,7 @@
   "factura_exportacion_fel",
   "column_break_13",
   "nota_de_debito_electronica",
+  "factura_cambiaria_fel",
   "factura_especial_fel",
   "factura_electronica_fel_pos",
   "datos_proveedor_factura_electronica",
@@ -500,7 +501,7 @@
    "default": "0",
    "fieldname": "anulador_de_facturas_ventas_fel",
    "fieldtype": "Check",
-   "label": "Anulador de Facturas Ventas FEL"
+   "label": "Anulador de documentos FEL"
   },
   {
    "fieldname": "column_break_13",
@@ -520,6 +521,7 @@
   },
   {
    "default": "0",
+   "description": "Disponible para Bienes y Servicios (No Combustibles)",
    "fieldname": "factura_electronica_fel_pos",
    "fieldtype": "Check",
    "label": "Factura Electronica FEL (POS)"
@@ -533,15 +535,22 @@
   },
   {
    "default": "0",
-   "description": "Proximamente",
    "fieldname": "nota_de_debito_electronica",
    "fieldtype": "Check",
-   "label": "Nota de Debito Electronica"
+   "label": "Nota de Debito FEL"
+  },
+  {
+   "default": "0",
+   "description": "Coming soon",
+   "fieldname": "factura_cambiaria_fel",
+   "fieldtype": "Check",
+   "label": "Factura Cambiaria FEL",
+   "read_only": 1
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
- "modified": "2021-03-24 21:53:44.240987",
+ "modified": "2021-04-05 00:06:21.576340",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

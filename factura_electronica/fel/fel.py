@@ -440,7 +440,6 @@ class ElectronicInvoice:
                     if apply_oil_tax == True:
                         precio_uni = 0
                         precio_item = 0
-                        desc_fila = 0
 
                         # Logica para validacion si aplica Descuento
                         desc_item_fila = 0
