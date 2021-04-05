@@ -338,6 +338,7 @@ function clean_other_tax(frm) {
 }
 /* --------------------------------------------------------------------------------------------------------------- */
 
+
 /**
  * Buscador de cuentas en tabla hija de otros impuestos
  *
@@ -501,7 +502,7 @@ frappe.ui.form.on("Sales Invoice", {
                     docname: frm.doc.name,
                 },
                 callback: function (r) {
-                    console.log(r.message);
+                    // console.log(r.message);
 
                     // Anulador docs electronicos para el DT Sales Invoice
                     if (r.message[1] === 'anulador' && r.message[2]) {
