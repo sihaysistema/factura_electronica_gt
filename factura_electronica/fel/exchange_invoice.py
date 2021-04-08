@@ -7,6 +7,7 @@ import base64
 import datetime
 import json
 
+import datetime
 import frappe
 import requests
 import xmltodict
@@ -15,14 +16,13 @@ from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 
-# Una nota de débito o memorando de débito es un documento comercial emitido por
-# un comprador a un vendedor para solicitar formalmente una nota de crédito.
-# La nota de débito actúa como el documento fuente del diario de devoluciones
-# de compras. Wikipedia (Inglés)
+# La factura cambiaria es el título de crédito que en la compraventa de mercaderías
+# el vendedor podrá librar y entregar o remitir al comprador y que incorpora un
+# derecho de crédito sobre la totalidad o la parte insoluta de la compraventa.
 
 
-class ElectronicDebitNote:
-    def __init__(self, invoice_code, conf_name, naming_series, uuid_purch_inv, date_inv_origin, reason):
+class ExchangeInvoice:
+    def __init__(self, invoice_code, conf_name, naming_series):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
 
@@ -36,13 +36,10 @@ class ElectronicDebitNote:
         self.__log_error = []
         self.__precision = get_currency_precision()
         self.__default_address = False
-        self.__uuid_inv_origin = uuid_purch_inv
-        self.__date_inv_origin = date_inv_origin
-        self.__reason = reason
 
     def build_invoice(self):
         """
-        Valida las dependencias necesarias, para construir XML apartir de un JSON
+        Valida las dependencias necesarias, para construir XML desde un JSON
         para ser firmado certificado por la SAT y finalmente generar factura electronica
 
         Returns:
@@ -70,18 +67,22 @@ class ElectronicDebitNote:
                                     "dte:DatosGenerales": self.__d_general,
                                     "dte:Emisor": self.__d_emisor,
                                     "dte:Receptor": self.__d_receptor,
+                                    "dte:Frases": self.__d_frases,
                                     "dte:Items": self.__d_items,
                                     "dte:Totales": self.__d_totales,
-                                    "dte:Complementos": self.__complemento,
+                                    "dte:Complementos": 'self.__d_totales,'
                                 }
                             }
+                        },
+                        "dte:Adenda": {
+                            "auto-generated_for_wildcard": 'null'
                         }
                     }
                 }
 
                 # USAR SOLO PARA DEBUG:
-                with open('nota_debito_electronica.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion, indent=2))
+                # with open('mi_factura.json', 'w') as f:
+                #     f.write(json.dumps(self.__base_peticion))
 
                 return True,'OK'
             else:
@@ -115,6 +116,11 @@ class ElectronicDebitNote:
         if status_receiver[0] == False:
             return status_receiver
 
+        # Validacion y generacion seccion frases
+        status_phrases = self.phrases()
+        if status_phrases[0] == False:
+            return status_phrases
+
         # Validacion y generacion seccion items
         status_items = self.items()
         if status_items[0] == False:
@@ -124,11 +130,6 @@ class ElectronicDebitNote:
         status_totals = self.totals()
         if status_totals[0] == False:
             return status_totals
-
-        # Validacion generacion complemento
-        status_comp = self.deb_note_complement()
-        if status_comp[0] == False:
-            return status_comp
 
         # Si todo va bien, retorna True
         return True, 'OK'
@@ -149,16 +150,18 @@ class ElectronicDebitNote:
                 ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
 
             else:
-                date_invoice_inv = frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_date')
-                ok_time = str(frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_time'))
-                ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
+                date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date')
+                ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
+                ok_datetime = str(date_invoice_inv)+'T'+str(ok_time) #.rpartition('.')[0]
 
             self.__d_general = {
-                "@CodigoMoneda": frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'currency'),
-                "@FechaHoraEmision": ok_datetime,  # Se usa la data al momento de hace petcion a infile
-                "@Tipo": frappe.db.get_value('Serial Configuration For Purchase Invoice', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
+                # "@FechaHoraEmision": str(self.date_invoice)+'T'+str(self.time_invoice),  #f'{self.date_invoice}T{str(self.time_invoice)}',  #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
+                "@NumeroAcceso": "1111111111",  # TODO: HAY QUE TENER CREDENCIALES PARA PROBAR
+                "@FechaHoraEmision": ok_datetime,  # Se usa la data al momento de crear a infile
+                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
-            }
+                }
 
             return True, 'OK'
 
@@ -176,11 +179,10 @@ class ElectronicDebitNote:
 
         try:
             # De la factura obtenemos la compañia y direccion compañia emisora
-            self.dat_fac = frappe.db.get_values('Purchase Invoice', filters={'name': self.__invoice_code},
-                                                fieldname=['company', 'shipping_address', 'facelec_nit_fproveedor',
-                                                           'supplier_address', 'supplier_name', 'total_taxes_and_charges',
-                                                           'grand_total', 'net_total', 'currency', 'credit_to',
-                                                           'conversion_rate', 'contact_person'], as_dict=1)
+            self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__invoice_code},
+                                                fieldname=['company', 'company_address', 'nit_face_customer',
+                                                           'customer_address', 'customer_name', 'total_taxes_and_charges',
+                                                           'grand_total'], as_dict=1)
             if len(self.dat_fac) == 0:
                 return False, f'''No se encontro ninguna factura con serie: {self.__invoice_code}.\
                                   Por favor valida los datos de la factura que deseas procesar'''
@@ -188,15 +190,15 @@ class ElectronicDebitNote:
 
             # Obtenemos datos necesario de company: Nombre de compañia, nit
             dat_compania = frappe.db.get_values('Company', filters={'name': self.dat_fac[0]['company']},
-                                                fieldname=['company_name', 'nit_face_company', 'tax_id'],
-                                                as_dict=1)
+                                                fieldname=['company_name', 'nit_face_company', 'tax_id',
+                                                           'facelec_trade_name'], as_dict=1)
             if len(dat_compania) == 0:
                 return False, f'''No se encontraron datos para la compañia {self.dat_fac[0]["company_name"]}.
                                   Verifica que la factura que deseas procesar tenga una compañia valida'''
 
 
             # De la compañia, obtenemos direccion 1, email, codigo postal, departamento, municipio, pais
-            dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['shipping_address']},
+            dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['company_address']},
                                                  fieldname=['address_line1', 'email_id', 'pincode', 'county',
                                                             'state', 'city', 'country', 'facelec_establishment'],
                                                  as_dict=1)
@@ -215,13 +217,12 @@ class ElectronicDebitNote:
                                      tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire))
 
             # Si en configuracion de factura electronica esta seleccionada la opcion de usar datos de prueba
-            # APLICA PARA SANDBOX
             if frappe.db.get_value('Configuracion Factura Electronica',
                                   {'name': self.__config_name}, 'usar_datos_prueba') == 1:
                 nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
                                                    {'name': self.__config_name}, 'nombre_empresa_prueba')
             else:
-                nom_comercial = dat_compania[0]['company_name']
+                nom_comercial = dat_compania[0]['company_name']  # must be company_name, do not use trade name
 
             # Asignacion data
             self.__d_emisor = {
@@ -229,7 +230,7 @@ class ElectronicDebitNote:
                                                      {'name': self.__config_name}, 'afiliacion_iva'),
                 "@CodigoEstablecimiento": dat_direccion[0]['facelec_establishment'],
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
-                "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', '').upper(),
+                "@NITEmisor": str((dat_compania[0]['nit_face_company']).replace('-', '')).upper(),
                 "@NombreComercial": nom_comercial,
                 "@NombreEmisor": nom_comercial,
                 "dte:DireccionEmisor": {
@@ -244,41 +245,38 @@ class ElectronicDebitNote:
             return True, 'OK'
 
         except:
-            return False, 'Proceso no completado, no se pudieron obtener todos los datos necesarios de emisor, verifica tener todos\
+            return False, 'Proceso no completado, no se pudieron obtener todos los datos necesarios, verifica tener todos\
                            los campos necesario en Configuracion Factura Electronica. Mas detalles en: \n'+str(frappe.get_traceback())
 
     def receiver(self):
         """
-        Validacion y generacion datos de Receptor (proveedor)
+        Validacion y generacion datos de Receptor (cliente)
 
         Returns:
             tuple: True/False, msj, msj
         """
 
-        # Intentara obtener data de direccion proveedor
+        # Intentara obtener data de direccion cliente
         try:
-            dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['supplier_address']},
+            dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['customer_address']},
                                                  fieldname=['address_line1', 'email_id', 'pincode', 'county',
                                                             'state', 'city', 'country'], as_dict=1)
 
-            contact_per = frappe.db.get_values('Contact Identification', filters={'parent': self.dat_fac[0]['contact_person'],
-                                                                                  'id_prefix': 'DPI'},
-                                               fieldname=['id_number'], as_dict=1)
-
             datos_default = {
                 'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
-                'supplier_name': 'Consumidor Final',
+                'customer_name': 'Consumidor Final',
                 'address': 'Guatemala',
-                'pincode': '0',  # Segun esquema XML, si no hay codigo postal se puede usar 0
+                'pincode': '0',
                 'municipio': 'Guatemala',
                 'departamento': 'Guatemala',
                 'pais': 'GT'
             }
 
             if len(dat_direccion) == 0:  # Si no hay direccion registrada
+                self.__default_address = True
                 datos_default = {
                     'email': frappe.db.get_value('Configuracion Factura Electronica',  {'name': self.__config_name}, 'correo_copia'),
-                    'supplier_name': 'Consumidor Final',
+                    'customer_name': 'Consumidor Final',
                     'address': 'Guatemala',
                     'pincode': '0',
                     'municipio': 'Guatemala',
@@ -288,12 +286,11 @@ class ElectronicDebitNote:
 
                 # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
                 # electronico, los demas campos se pueden dejar como defualt para ciudad
-                if str(self.dat_fac[0]['facelec_nit_fproveedor']).upper() == 'C/F':
-                    self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', '')).upper()
+                if str(self.dat_fac[0]['nit_face_customer']).upper() == 'C/F':
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
-                        "@IDReceptor": self.nit_proveedor_limpio,
-                        "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
+                        "@IDReceptor": str((self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper(),  # NIT => CF
+                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -303,12 +300,10 @@ class ElectronicDebitNote:
                         }
                     }
                 else:
-                    # Si si hay un NIT
-                    self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')).upper()
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
-                        "@IDReceptor": self.nit_proveedor_limpio,
-                        "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
+                        "@IDReceptor": str((self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper(),  # NIT
+                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -319,14 +314,14 @@ class ElectronicDebitNote:
                     }
 
             else:
+                self.__default_address = False
                 # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
                 # electronico, los demas campos se pueden dejar como defualt para ciudad
-                self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', '')).upper()
-                if str(self.dat_fac[0]['facelec_nit_fproveedor']).upper() == 'C/F':
+                if str(self.dat_fac[0]['nit_face_customer']).upper() == 'C/F':
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
-                        "@IDReceptor": self.nit_proveedor_limpio, # (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
-                        "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
+                        "@IDReceptor": str((self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper(),  # NIT => CF
+                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
@@ -335,12 +330,11 @@ class ElectronicDebitNote:
                             "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
                         }
                     }
-                else:  # Si hay NIT
-                    self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')).upper()
+                else:
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
-                        "@IDReceptor": self.nit_proveedor_limpio,  # NIT
-                        "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
+                        "@IDReceptor": str((self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper(),  # NIT
+                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
@@ -353,7 +347,44 @@ class ElectronicDebitNote:
             return True, 'OK'
 
         except:
-            return False, 'Proceso no completado, no se puedo obtener toda la data del receptor del documento electronico: '+str(frappe.get_traceback())
+            return False, 'Error no se puede completar la operacion por: '+str(frappe.get_traceback())
+
+    def phrases(self):
+        """
+        debe indicarse los regímenes y textos especiales que son requeridos en los DTE,
+        de acuerdo a la afiliación del contribuyente y tipo de operación.
+
+        Returns:
+            boolean: True/False
+        """
+
+        try:
+            codigo_escenario = frappe.db.get_value('Configuracion Series FEL',
+                                                   {'parent': self.__config_name,
+                                                    'serie': self.__naming_serie},'codigo_escenario')
+            tipo_frase = frappe.db.get_value('Configuracion Series FEL',
+                                             {'parent': self.__config_name, 'serie': self.__naming_serie},
+                                              'tipo_frase')[:1]
+
+            if not codigo_escenario:
+                return False, 'Ocurrio un problema, no se encontro el codigo de frase configurada para la serie, por favor \
+                               configurala en Series Fel e intenta de nuevo'
+
+            if not tipo_frase:
+                return False, 'Ocurrio un problema, no se encontro el tipo de frase configurada para la serie utilizada, por favor \
+                               configurala en Series Fel e intenta de nuevo'
+
+            self.__d_frases = {
+                "dte:Frase": {
+                    "@CodigoEscenario": codigo_escenario,
+                    "@TipoFrase": tipo_frase
+                }
+            }
+
+            return True, 'OK'
+
+        except:
+            return False, 'Error, no se puedo obtener valor de Codigo Escenario y Tipo Frase'
 
     def items(self):
         """
@@ -368,27 +399,25 @@ class ElectronicDebitNote:
             items_ok = []  # Guardara todos los items OK
 
             # Obtenemos los items de la factura
-            self.__dat_items = frappe.db.get_values('Purchase Invoice Item', filters={'parent': str(self.__invoice_code)},
+            self.__dat_items = frappe.db.get_values('Sales Invoice Item', filters={'parent': str(self.__invoice_code)},
                                              fieldname=['item_name', 'qty', 'item_code', 'description',
                                                         'net_amount', 'base_net_amount', 'discount_percentage',
                                                         'discount_amount', 'price_list_rate', 'net_rate',
-                                                        'stock_uom', 'item_group', 'rate', 'amount',
-                                                        'facelec_p_sales_tax_for_this_row', 'facelec_p_tax_rate_per_uom',
-                                                        'facelec_p_amount_minus_excise_tax', 'facelec_p_is_fuel',
-                                                        'facelec_p_is_good', 'facelec_p_is_service', 'facelec_pr_is_exempt',
-                                                        'facelec_p_other_tax_amount', 'facelec_p_purchase_three_digit',
-                                                        'facelec_p_gt_tax_net_fuel_amt', 'facelec_p_gt_tax_net_goods_amt',
-                                                        'facelec_p_gt_tax_net_services_amt', 'facelec_is_discount'], as_dict=True)
+                                                        'stock_uom', 'serial_no', 'item_group', 'rate',
+                                                        'amount', 'facelec_sales_tax_for_this_row',
+                                                        'facelec_amount_minus_excise_tax', 'facelec_is_service',
+                                                        'facelec_is_good', 'factelecis_fuel', 'facelec_si_is_exempt',
+                                                        'facelec_other_tax_amount', 'facelec_three_digit_uom_code',
+                                                        'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
+                                                        'facelec_gt_tax_net_services_amt', 'facelec_is_discount',
+                                                        'facelec_tax_rate_per_uom'], as_dict=True)
 
+            # Configuracion para obtener descripcion de item de Item Name o de Descripcion (segun user)
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
-            # segun los esquemas XML, solo mostramos el impuesto de IVA, algunos de los impuestos que pueden ir son
-            # (depende del emisor y el tipo de documento electronico a generar):
-            # Petroleo, Turismo Hospedaje, Timbre de prensa, Bomberos, Tasa Municipal
-            # Obtenemos los impuesto cofigurados para x compañia en la factura
-            self.__taxes_fact = frappe.db.get_values('Purchase Taxes and Charges', filters={'parent': self.__invoice_code},
-                                                     fieldname=['facelec_tax_name', 'facelec_taxable_unit_code', 'rate'], as_dict=True)
-            self.iva_rate = self.__taxes_fact[0]['rate']
+            # Obtenemos los impuesto cofigurados para x compañia en la factura (IVA)
+            self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__invoice_code},
+                                                     fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
 
             # Verificamos la cantidad de items
             longitems = len(self.__dat_items)
@@ -401,39 +430,40 @@ class ElectronicDebitNote:
                 for i in range(0, longitems):
                     obj_item = {}  # por fila
 
-                    if cint(self.__dat_items[i]['facelec_p_is_service']) == 1:
+                    # Is Service, Is Good.  Si Is Fuel = Is Good. Si Is Exempt = Is Good.
+                    if cint(self.__dat_items[i]['facelec_is_service']) == 1:
                         obj_item["@BienOServicio"] = 'S'
 
-                    elif cint(self.__dat_items[i]['facelec_p_is_good']) == 1:
+                    elif cint(self.__dat_items[i]['facelec_is_good']) == 1:
                         obj_item["@BienOServicio"] = 'B'
 
-                    elif cint(self.__dat_items[i]['facelec_p_is_fuel']) == 1:
+                    elif cint(self.__dat_items[i]['factelecis_fuel']) == 1:
                         obj_item["@BienOServicio"] = 'B'
                         apply_oil_tax = True
 
-                    elif cint(self.__dat_items[i]['facelec_pr_is_exempt']) == 1:
+                    elif cint(self.__dat_items[i]['facelec_si_is_exempt']) == 1:
                         obj_item["@BienOServicio"] = 'B'
-
 
                     # NOTE: TODO: REFACTORIZAR CODIGO PARA FUTUROS IMPUESTOS, SE HACE ASI PARA NO COMPLICAR EL CODIGO
 
                     # PETROLEO
                     if apply_oil_tax == True:
+                        precio_uni = 0
+                        precio_item = 0
+                        desc_fila = 0
+
+                        # Logica para validacion si aplica Descuento
                         desc_item_fila = 0
                         if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
                             desc_item_fila = self.__dat_items[i]['discount_amount']
 
                         # Precio unitario, (sin aplicarle descuento)
-                        # Al precio unitario se le suma el descuento que genera ERP, ya que es neceario enviar precio antes de aplicarle descuentos, en las operaciones restantes es neceario
+                        # Al precio unitario se le suma el descuento que genera ERP, ya que es neceario enviar precio sin descuentos, en las operaciones restantes es neceario
                         # (Precio Unitario - Monto IDP) + Descuento --> se le resta el IDP ya que viene incluido en el precio
-                        precio_uni = 0
-                        precio_uni = flt((self.__dat_items[i]['rate'] - self.__dat_items[i]['facelec_p_tax_rate_per_uom']) + desc_item_fila, self.__precision)
+                        precio_uni = flt((self.__dat_items[i]['rate'] - self.__dat_items[i]['facelec_tax_rate_per_uom']) + desc_item_fila, self.__precision)
 
-                        # Calculo precio item
-                        precio_item = 0
                         precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
 
-                        # Calculo descuento item: Segun esquema XML se obtiene los montos descuento
                         desc_fila = 0
                         desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
 
@@ -441,12 +471,12 @@ class ElectronicDebitNote:
                         description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
 
                         obj_item["@NumeroLinea"] = contador
-                        obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
-                        obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_p_purchase_three_digit']
+                        obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
+                        obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                         obj_item["dte:Descripcion"] = description_to_item  # description
-                        obj_item["dte:PrecioUnitario"] = abs(flt(precio_uni, self.__precision))
-                        obj_item["dte:Precio"] = abs(flt(precio_item, self.__precision))
-                        obj_item["dte:Descuento"] = abs(flt(desc_fila, self.__precision))
+                        obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
+                        obj_item["dte:Precio"] = flt(precio_item, self.__precision) # Correcto según el esquema XML
+                        obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
 
                         # Agregamos los impuestos
                         # IVA e IDP
@@ -456,38 +486,38 @@ class ElectronicDebitNote:
                         obj_item["dte:Impuestos"] = {}
                         obj_item["dte:Impuestos"]["dte:Impuesto"] = [
                             {
-                                "dte:NombreCorto": self.__taxes_fact[0]['facelec_tax_name'],
-                                "dte:CodigoUnidadGravable": self.__taxes_fact[0]['facelec_taxable_unit_code'],
-                                "dte:MontoGravable": abs(flt(self.__dat_items[i]['facelec_p_gt_tax_net_fuel_amt'], self.__precision)),  # net_amount
-                                "dte:MontoImpuesto": abs(flt(self.__dat_items[i]['facelec_p_gt_tax_net_fuel_amt'] * (self.__taxes_fact[0]['rate']/100), self.__precision))
+                                "dte:NombreCorto": self.__taxes_fact[0]['tax_name'],
+                                "dte:CodigoUnidadGravable": self.__taxes_fact[0]['taxable_unit_code'],
+                                "dte:MontoGravable": flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'], self.__precision),  # net_amount
+                                "dte:MontoImpuesto": flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
                             },
                             {
                                 # IDP
                                 "dte:NombreCorto": nombre_corto,
                                 "dte:CodigoUnidadGravable": codigo_uni_gravable,
-                                "dte:CantidadUnidadesGravables": abs(float(self.__dat_items[i]['qty'])),  # net_amount
-                                "dte:MontoImpuesto": abs(flt(self.__dat_items[i]['facelec_p_other_tax_amount'], self.__precision))
+                                "dte:CantidadUnidadesGravables": float(self.__dat_items[i]['qty']),  # net_amount
+                                "dte:MontoImpuesto": flt(self.__dat_items[i]['facelec_other_tax_amount'], self.__precision)
                             }
                         ]
 
-                        obj_item["dte:Total"] = abs(flt(self.__dat_items[i]['amount'], self.__precision))
+                        obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
 
                     else:
+                        precio_uni = 0
+                        precio_item = 0
+                        desc_fila = 0
+
+                        # Logica para validacion si aplica Descuento
                         desc_item_fila = 0
                         if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
                             desc_item_fila = self.__dat_items[i]['discount_amount']
 
                         # Precio unitario, (sin aplicarle descuento)
-                        # Al precio unitario se le suma el descuento que genera ERP, ya que es neceario enviar precio antes de aplicarle descuentos, en las operaciones restantes es neceario
-                        # (Precio Unitario - Monto IDP) + Descuento --> se le resta el IDP ya que viene incluido en el precio
-                        precio_uni = 0
-                        precio_uni = flt((self.__dat_items[i]['rate'] - self.__dat_items[i]['facelec_p_tax_rate_per_uom']) + desc_item_fila, self.__precision)
+                        # Al precio unitario se le suma el descuento que genera ERP, ya que es neceario enviar precio sin descuentos, en las operaciones restantes es neceario
+                        precio_uni = flt(self.__dat_items[i]['rate'] + desc_item_fila, self.__precision)
 
-                        # Calculo precio item
-                        precio_item = 0
                         precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
 
-                        # Calculo descuento item: Segun esquema XML se obtiene los montos descuento
                         desc_fila = 0
                         desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
 
@@ -495,29 +525,50 @@ class ElectronicDebitNote:
                         description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
 
                         obj_item["@NumeroLinea"] = contador
-                        obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
-                        obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_p_purchase_three_digit']
+                        obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
+                        obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
                         obj_item["dte:Descripcion"] = description_to_item  # description
-                        obj_item["dte:PrecioUnitario"] = abs(flt(precio_uni, self.__precision))
-                        obj_item["dte:Precio"] = abs(flt(precio_item, self.__precision))
-                        obj_item["dte:Descuento"] = abs(flt(desc_fila, self.__precision))
+                        obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
+                        obj_item["dte:Precio"] = flt(precio_item, self.__precision) # Correcto según el esquema XML
+                        obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
 
                         # Agregamos los impuestos
+                        # IVA
                         obj_item["dte:Impuestos"] = {}
                         obj_item["dte:Impuestos"]["dte:Impuesto"] = {}
 
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['facelec_tax_name']
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['facelec_taxable_unit_code']
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = abs(flt(self.__dat_items[i]['net_amount'], self.__precision))
-                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = abs(flt(self.__dat_items[i]['net_amount'] * (self.__taxes_fact[0]['rate']/100), self.__precision))
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:NombreCorto"] = self.__taxes_fact[0]['tax_name']
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:CodigoUnidadGravable"] = self.__taxes_fact[0]['taxable_unit_code']
 
-                        obj_item["dte:Total"] = abs(flt(self.__dat_items[i]['amount'], self.__precision))
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoGravable"] = flt(self.__dat_items[i]['net_amount'], self.__precision)  # net_amount
+                        obj_item["dte:Impuestos"]["dte:Impuesto"]["dte:MontoImpuesto"] = flt(self.__dat_items[i]['net_amount'] * (self.__taxes_fact[0]['rate']/100), self.__precision)
+
+                        obj_item["dte:Total"] = flt(self.__dat_items[i]['amount'], self.__precision)
 
                     # Reseteamos el status
                     apply_oil_tax = False
 
-                    items_ok.append(obj_item)
+                    # TURISMO HOSPEDAJE
 
+                    # TURISMO PASAJES
+
+                    # TIMBRE DE PRENSA
+
+                    # BOMBEROS
+
+                    # TASA MUNICIPAL
+
+                    # BEBIDAS ALCOHOLICAS
+
+                    # TABACO
+
+                    # CEMENTO
+
+                    # BEBIDAS NO ALCOHOLICAS
+
+                    # TARIFA PORTUARIA
+
+                    items_ok.append(obj_item)
 
             i_fel = {"dte:Item": items_ok}
             self.__d_items = i_fel
@@ -525,7 +576,7 @@ class ElectronicDebitNote:
             return True, 'OK'
 
         except:
-            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.__invoice_code, str(frappe.get_traceback()))
+            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
     def totals(self):
         """
@@ -542,17 +593,17 @@ class ElectronicDebitNote:
             total_idp = 0
 
             for i in self.__dat_items:
-                gran_tot += abs(flt(i['facelec_p_sales_tax_for_this_row'], self.__precision))
-                if cint(i['facelec_p_is_fuel']) == 1:
+                gran_tot += flt(i['facelec_sales_tax_for_this_row'], self.__precision)
+                if cint(i['factelecis_fuel']) == 1:
                     is_idp = True
-                    total_idp += abs(flt(i['facelec_p_other_tax_amount'], self.__precision))
+                    total_idp += flt(i['facelec_other_tax_amount'], self.__precision)
 
             # Escenario PETROLEO
             if is_idp == True:
                 self.__d_totales = {
                     "dte:TotalImpuestos": {
                         "dte:TotalImpuesto": [{
-                            "@NombreCorto": self.__taxes_fact[0]['facelec_tax_name'],  #"IVA",
+                            "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
                             "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
                         },
                         {
@@ -560,7 +611,7 @@ class ElectronicDebitNote:
                             "@TotalMontoImpuesto": abs(flt(total_idp, self.__precision))
                         }]
                     },
-                    "dte:GranTotal": abs(flt(self.dat_fac[0]['grand_total'], self.__precision))
+                    "dte:GranTotal": flt(self.dat_fac[0]['grand_total'], self.__precision)
                 }
 
             # ESCENARIO IVA
@@ -568,46 +619,35 @@ class ElectronicDebitNote:
                 self.__d_totales = {
                     "dte:TotalImpuestos": {
                         "dte:TotalImpuesto": {
-                            "@NombreCorto": self.__taxes_fact[0]['facelec_tax_name'],  #"IVA",
+                            "@NombreCorto": self.__taxes_fact[0]['tax_name'],  #"IVA",
                             "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
                         }
                     },
-                    "dte:GranTotal": abs(flt(self.dat_fac[0]['grand_total'], self.__precision))
+                    "dte:GranTotal": flt(self.dat_fac[0]['grand_total'], self.__precision)
                 }
-
-
             return True, 'OK'
 
         except:
-            return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.__invoice_code, str(frappe.get_traceback()))
+            return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
-    def deb_note_complement(self):
-        """
-        Metodo para construccion la seccion complemento para la nota de debito
-
-        Returns:
-            tuple: True/False, msj, msj
-        """
-        try:
-            self.__complemento = {
-                "dte:Complemento": {
-                    "@IDComplemento": "ReferenciasNota",
-                    "@NombreComplemento": "Nota de Debito",
-                    "@URIComplemento": "text",
-                    "cno:ReferenciasNota": {
-                        "@xmlns:cno": "http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0",
-                        "@FechaEmisionDocumentoOrigen": self.__date_inv_origin,
-                        "@MotivoAjuste": self.__reason,
-                        "@NumeroAutorizacionDocumentoOrigen": self.__uuid_inv_origin,
-                        "@Version": "0.0"
+    def exch_complement(self):
+        compl = {
+            "dte:Complemento": {
+                "@IDComplemento": "FCAM",
+                "@NombreComplemento": "AbonosFacturaCambiaria",
+                "@URIComplemento": "#AbonosFacturaCambiaria",
+                "cfc:AbonosFacturaCambiaria": {
+                    "@xmlns:cfc": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
+                    "@Version": "1",
+                    "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
+                    "cfc:Abono": {
+                        "cfc:NumeroAbono": "1",
+                        "cfc:FechaVencimiento": "2019-02-07",
+                        "cfc:MontoAbono": "448.00"
                     }
                 }
             }
-
-            return True, 'OK'
-
-        except:
-            return False, 'No se pudo obtner toda la data para generar el complemento para nota de debito {}, Error: {}'.format(self.__invoice_code, str(frappe.get_traceback()))
+        }
 
     def sign_invoice(self):
         """
@@ -618,51 +658,55 @@ class ElectronicDebitNote:
         """
 
         try:
+            self.__start_datetime = get_datetime()
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
+            # Usar solo para debug
+            with open('FACTURA-FEL.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
 
         try:
-            self.__start_datetime = get_datetime()
             # To base64: Convierte a base64, para enviarlo en la peticion
             self.__encoded_bytes = base64.b64encode(self.__xml_string.encode("utf-8"))
             self.__encoded_str = str(self.__encoded_bytes, "utf-8")
             # Usar solo para debug
             # with open('codificado.txt', 'w') as f:
             #         f.write(self.__encoded_str)
-
-            with open('NOTA-DEBITO.xml', 'w') as f:
-                f.write(self.__xml_string)
-
         except:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
 
 
         # Generamos la peticion para firmar
         try:
-            url = frappe.db.get_value('Configuracion Factura Electronica',
-                                     {'name': self.__config_name}, 'url_firma')
+            url = str(frappe.db.get_value('Configuracion Factura Electronica',
+                                     {'name': self.__config_name}, 'url_firma')).strip()
 
             # codigo = frappe.db.get_value('Configuracion Factura Electronica',
             #                             {'name': self.__config_name}, 'codigo')
 
-            alias = frappe.db.get_value('Configuracion Factura Electronica',
-                                       {'name': self.__config_name}, 'alias')
+            alias = str(frappe.db.get_value('Configuracion Factura Electronica',
+                                       {'name': self.__config_name}, 'alias')).strip()
 
-            anulacion = frappe.db.get_value('Configuracion Factura Electronica',
-                                           {'name': self.__config_name}, 'es_anulacion')
+            anulacion = str(frappe.db.get_value('Configuracion Factura Electronica',
+                                           {'name': self.__config_name}, 'es_anulacion')).strip()
 
-            self.__llave = frappe.db.get_value('Configuracion Factura Electronica',
-                                              {'name': self.__config_name}, 'llave_pfx')
+            self.__llave = str(frappe.db.get_value('Configuracion Factura Electronica',
+                                              {'name': self.__config_name}, 'llave_pfx')).strip()
 
             self.__data_a_firmar = {
                 "llave": self.__llave, # LLAVE
                 "archivo": str(self.__encoded_str),  # En base64
-                "alias":  alias, # USUARIO
+                # "codigo": codigo, # Número interno de cada transacción
+                "alias": alias, # USUARIO
                 "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
             }
+
+            # DEBUGGING WRITE JSON PETITION TO SITES FOLDER
+            # with open('peticion.json', 'w') as f:
+            #      f.write(json.dumps(self.__data_a_firmar, indent=2))
 
             headers = {"content-type": "application/json"}
             response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
@@ -671,8 +715,8 @@ class ElectronicDebitNote:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            with open('nota_debito_firmada.json', 'w') as f:
-                f.write(json.dumps(self.__doc_firmado, indent=2))
+            # with open('recibido_firmado.json', 'w') as f:
+            #      f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -697,8 +741,8 @@ class ElectronicDebitNote:
         """
 
         try:
-            data_fac = frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'company')
-            nit_company = (str(frappe.db.get_value('Company', {'name': self.dat_fac[0]['company']}, 'nit_face_company')).replace('-', '')).upper()
+            data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
+            nit_company = str(frappe.db.get_value('Company', {'name': self.dat_fac[0]['company']}, 'nit_face_company').replace('-', '')).upper()
 
             url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
             user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
@@ -722,13 +766,14 @@ class ElectronicDebitNote:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            with open('response_debit_note.json', 'w') as f:
-                f.write(json.dumps(self.__response_ok, indent=2))
+            # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
+            # with open('RESPONSE_factura.json', 'w') as f:
+            #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
         except:
-            return False, 'Ocurrio un problema al tratar de generar nota de debito electronica, mas detalles en el siguiente log: '+str(frappe.get_traceback())
+            return False, 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
 
     def response_validator(self):
         """
@@ -748,6 +793,7 @@ class ElectronicDebitNote:
                 # Al primer error encontrado retornara un detalle con el mismo
                 if status_saved == False:
                     return False, status_saved
+                    # return {'status': 'ERROR', 'detalles_errores': status_saved, 'numero_errores':1}
 
                 return True, {'status': 'OK', 'numero_autorizacion': self.__response_ok['uuid'],
                               'serie': self.__response_ok['serie'], 'numero': self.__response_ok['numero']}
@@ -772,7 +818,7 @@ class ElectronicDebitNote:
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
                 resp_fel.status = 'Valid'
-                resp_fel.tipo_documento = 'Nota de Debito'
+                resp_fel.tipo_documento = 'Factura Electronica'
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
@@ -798,10 +844,10 @@ class ElectronicDebitNote:
                 resp_fel.serie = self.__response_ok['serie']
                 resp_fel.numero = self.__response_ok['numero']
 
-                # decodedBytes = base64.b64decode(self.__response_ok['xml_certificado'])
+                # Guarda el documento firmado encriptado en base64
+                # decodedBytes = str(self.__response_ok['xml_certificado']) # base64.b64decode(self.__response_ok['xml_certificado'])
                 # decodedStr = str(decodedBytes, "utf-8")
-                # resp_fel.xml_certificado = decodedStr
-                resp_fel.xml_certificado = str(self.__xml_string)  # json.dumps(self.__doc_firmado, indent=2) # decodedStr
+                resp_fel.xml_certificado = json.dumps(self.__doc_firmado, indent=2) # decodedStr
                 resp_fel.enviado = str(self.__start_datetime)
                 resp_fel.recibido = str(self.__end_datetime)
 
@@ -816,7 +862,7 @@ class ElectronicDebitNote:
     def upgrade_records(self):
         """
         Funcion encargada de actualizar todos los doctypes enlazados a la factura original, con
-        la serie generada para nota de debito electronica
+        la serie generada para factura electronica
 
         Returns:
             tuple: True/False, msj, msj
@@ -840,8 +886,8 @@ class ElectronicDebitNote:
                 serie_fac_original = self.__invoice_code
 
                 # Actualizacion de tablas que son modificadas directamente.
-                # 01 - tabPurchase Invoice: actualizacion con datos correctos
-                frappe.db.sql('''UPDATE `tabPurchase Invoice`
+                # 01 - tabSales Invoice: actualizacion con datos correctos
+                frappe.db.sql('''UPDATE `tabSales Invoice`
                                  SET name=%(name)s,
                                     numero_autorizacion_fel=%(no_correcto)s,
                                     serie_original_del_documento=%(serie_orig_correcta)s
@@ -849,8 +895,8 @@ class ElectronicDebitNote:
                               ''', {'name':serieFEL, 'no_correcto': factura_guardada[0]['uuid'],
                                     'serie_orig_correcta': serie_fac_original, 'serieFa':serie_fac_original})
 
-                # 02 - tabPurchase Invoice Item: actualizacion items de la factura
-                frappe.db.sql('''UPDATE `tabPurchase Invoice Item` SET parent=%(name)s
+                # 02 - tabSales Invoice Item: actualizacion items de la factura
+                frappe.db.sql('''UPDATE `tabSales Invoice Item` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
                 # 03 - tabGL Entry
@@ -860,12 +906,12 @@ class ElectronicDebitNote:
                 frappe.db.sql('''UPDATE `tabGL Entry` SET voucher_no=%(name)s, docstatus=1
                                 WHERE voucher_no=%(serieFa)s AND against_voucher IS NULL''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
-                # Actualizacion de tablas que pueden ser modificadas desde Purchase Invoice
+                # Actualizacion de tablas que pueden ser modificadas desde Sales Invoice
                 # Verificara tabla por tabla en busca de un valor existe, en caso sea verdadero actualizara,
                 # en caso no encuentra nada y no hara nada
                 # 04 - tabSales Taxes and Charges, actualizacion tablas de impuestos si existe
-                if frappe.db.exists('Purchase Taxes and Charges', {'parent': serie_fac_original}):
-                    frappe.db.sql('''UPDATE `tabPurchase Taxes and Charges` SET parent=%(name)s
+                if frappe.db.exists('Sales Taxes and Charges', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSales Taxes and Charges` SET parent=%(name)s
                                     WHERE parent=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
                 if frappe.db.exists('Otros Impuestos Factura Electronica', {'parent': serie_fac_original}):
@@ -895,9 +941,9 @@ class ElectronicDebitNote:
 
 
                 # Hoja de tiempo de factura de ventas, si existe
-                # 08 - tabPurchase Invoice Timesheet
-                if frappe.db.exists('Purchase Invoice Timesheet', {'parent': serie_fac_original}):
-                    frappe.db.sql('''UPDATE `tabPurchase Invoice Timesheet` SET parent=%(name)s
+                # 08 - tabSales Invoice Timesheet
+                if frappe.db.exists('Sales Invoice Timesheet', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSales Invoice Timesheet` SET parent=%(name)s
                                     WHERE parent=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
 
@@ -913,24 +959,24 @@ class ElectronicDebitNote:
                     frappe.db.sql('''UPDATE `tabPacked Item` SET parent=%(name)s
                                     WHERE parent=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
-                # Purchase Invoice Advance - Anticipos a facturas, si existe
-                # 11 - tabPurchase Invoice Advance
-                if frappe.db.exists('Purchase Invoice Advance', {'parent': serie_fac_original}):
-                    frappe.db.sql('''UPDATE `tabPurchase Invoice Advance` SET parent=%(name)s
+                # Sales Invoice Advance - Anticipos a facturas, si existe
+                # 11 - tabSales Invoice Advance
+                if frappe.db.exists('Sales Invoice Advance', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSales Invoice Advance` SET parent=%(name)s
                                     WHERE parent=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
 
-                # Purchase Invoice Payment - Pagos sobre a facturas, si existe
-                # 12 - tabPurchase Invoice Payment
-                if frappe.db.exists('Purchase Invoice Payment', {'parent': serie_fac_original}):
-                    frappe.db.sql('''UPDATE `tabPurchase Invoice Payment` SET parent=%(name)s
+                # Sales Invoice Payment - Pagos sobre a facturas, si existe
+                # 12 - tabSales Invoice Payment
+                if frappe.db.exists('Sales Invoice Payment', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabSales Invoice Payment` SET parent=%(name)s
                                     WHERE parent=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
 
                 # Payment Entry Reference -, si existe
                 # 13 - tabPayment Entry Reference
                 if frappe.db.exists('Payment Entry Reference', {'parent': serie_fac_original}):
-                    frappe.db.sql('''UPDATE `tabPurchase Invoice Payment` SET parent=%(name)s
+                    frappe.db.sql('''UPDATE `tabSales Invoice Payment` SET parent=%(name)s
                                     WHERE parent=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
                 # Sales Order, si existe
@@ -962,7 +1008,7 @@ class ElectronicDebitNote:
                                      WHERE sales_invoice=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
 
                 # UPDATE DECLARATIONS
-                if frappe.db.exists('Invoice Declaration', {'link_name': serie_fac_original, 'link_doctype': 'Purchase Invoice'}):
+                if frappe.db.exists('Invoice Declaration', {'link_name': serie_fac_original, 'link_doctype': 'Sales Invoice'}):
                     frappe.db.sql('''UPDATE `tabInvoice Declaration` SET link_name=%(name)s
                                      WHERE link_name=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
 
@@ -976,6 +1022,8 @@ class ElectronicDebitNote:
             else:
                 # Si los datos se Guardan correctamente, se retornara la serie, que sera capturado por api.py
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
-
+                if self.__default_address:
+                    frappe.msgprint(_(f'Factura generada exitosamente, sin embargo se sugiere configurar correctamente la dirección del cliente, \
+                        porque se usaron datos default. Haga clic <a href="#List/Address/List"><b>Aquí</b></a> para configurarlo de una vez.'))
                 # Se utilizara el UUID como clave para orquestar el resto de las apps que lo necesiten
                 return True, factura_guardada[0]['uuid']

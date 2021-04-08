@@ -22,20 +22,6 @@ from factura_electronica.utils.utilities_facelec import get_currency_precision
 
 # EN RESUMEN, ES DEVOLUCION
 
-# NOTAS:
-# 1. INSTANCIA FACT
-
-# 2. BUILD
-# 2.1 VALIDATOR
-
-# 3. FIRMAR FACTURA
-# 3.1 VALIDAR RESPUESTAS
-
-# 4. SOLICITAR FEL
-# 4.1 VALIDAR RESPUESTAS
-
-# 5 GUARDAR REGISTROS ENVIOS, LOG
-# 5.1 ACTUALIZAR REGISTROS
 
 class ElectronicCreditNote:
     def __init__(self, actual_inv_name, invoice_code, conf_name, naming_series, reason):
@@ -159,16 +145,13 @@ class ElectronicCreditNote:
         try:
             # NOTA: LA FECHA Y HORA DE EMISION A USAR ES DE LA FACTURA ELECTRONICA FEL ORIGINAL, SOBRE LA CUAL
             # SE ESTA HACIENDO LA NOTA DE CREDITO
-            self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_date'))
-            self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_time'))  # self.__inv_credit_note
-
-            if '.' in self.time_invoice:
-                # la ultima porcion elimina los milisegundos manualmente, las nuevas validaciones de INFILE no soportan miliseconds
-                self.time_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_time')).rpartition('.')[0]
+            date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_date')
+            ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_time'))
+            ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'currency'),
-                "@FechaHoraEmision": f'{self.date_invoice}T{self.time_invoice}',  # "2018-11-01T16:33:47Z",   #
+                "@FechaHoraEmision": ok_datetime,  # f'{self.date_invoice}T{self.time_invoice}',  # "2018-11-01T16:33:47Z",   #
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')  # 'FACT'
             }
@@ -636,8 +619,8 @@ class ElectronicCreditNote:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('NOTA-CREDITO-FEL.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('NOTA-CREDITO-FEL.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -736,8 +719,8 @@ class ElectronicCreditNote:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            # with open('response_credit_note.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('response_credit_note.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
@@ -816,7 +799,7 @@ class ElectronicCreditNote:
                 # Guarda el resultado firmado en encriptado base64
                 # decodedBytes = str(self.__response_ok['xml_certificado']) # base64.b64decode(self.__response_ok['xml_certificado'])
                 # decodedStr = str(decodedBytes, "utf-8")
-                resp_fel.xml_certificado = json.dumps(self.__doc_firmado, indent=2) # decodedStr
+                resp_fel.xml_certificado = str(self.__xml_string)  # json.dumps(self.__doc_firmado, indent=2) # decodedStr
                 resp_fel.enviado = str(self.__start_datetime)
                 resp_fel.recibido = str(self.__end_datetime)
 

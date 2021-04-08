@@ -161,7 +161,8 @@ frappe.ui.form.on("Delivery Note", {
     },
     shs_dn_nit: function (frm) {
         // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
-        valNit(frm.doc.shs_dn_nit, frm.doc.customer, frm);
+        // Para expriencia mas agradable se valida desde el cliente
+        // valNit(frm.doc.shs_dn_nit, frm.doc.customer, frm);
     },
     discount_amount: function (frm) {
         // Trigger Monto de descuento
