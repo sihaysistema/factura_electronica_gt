@@ -491,7 +491,7 @@ frappe.ui.form.on("Sales Invoice", {
         // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
         cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
 
-        clean_fields(frm);
+        // clean_fields(frm);
 
         if (frm.doc.docstatus != 0) {
             // INICIO BOTONES GENERADORES DOCS ELECTRONICOS
@@ -611,6 +611,7 @@ frappe.ui.form.on("Sales Invoice", {
     },
     on_submit: function (frm, cdt, cdn) {
         // Ocurre cuando se presione el boton validar. para agregar al GL los impuestos especiales
+        console.log('on submit')
 
         // Creacion objeto vacio para guardar nombre y valor de las cuentas que se encuentren
         let cuentas_registradas = {};

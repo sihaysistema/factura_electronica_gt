@@ -392,7 +392,7 @@ frappe.ui.form.on("Purchase Invoice", {
         frm.set_df_property("bill_date", "description", __("<b>FEL: Fecha de factura original</b>, dato necesario para Nota de Debito Electronica"));
 
         // Limpieza de campos cuando se duplique una factura de compra
-        clean_fields(frm);
+        // clean_fields(frm);
 
         // Validador para mostrar botones segun escenario invoice
         if (frm.doc.docstatus != 0) {
