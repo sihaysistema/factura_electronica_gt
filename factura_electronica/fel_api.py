@@ -13,11 +13,11 @@ from factura_electronica.controllers.journal_entry_special import JournalEntrySp
 from factura_electronica.fel.canceller import CancelDocument
 from factura_electronica.fel.credit_note import ElectronicCreditNote
 from factura_electronica.fel.debit_note import ElectronicDebitNote
+from factura_electronica.fel.exchange_invoice import PurchaseExchangeInvoice, SalesExchangeInvoice
 from factura_electronica.fel.export_invoice import ExportInvoice
 from factura_electronica.fel.fel import ElectronicInvoice
 from factura_electronica.fel.fel_exempt import ExemptElectronicInvoice
 from factura_electronica.fel.special_invoice import ElectronicSpecialInvoice
-
 
 # !USAR SOLO PARA COSAS RELACIONADAS CON FEL :)
 
@@ -990,6 +990,22 @@ def is_valid_to_fel(doctype, docname):
             return _('Serie de documento para nota de credito electrónica no configurada, \
                      por favor agregarla y activarla en configuración Factura Electrónica para generar documento FEL'), False
 
+    elif (docinv.doctype == 'Sales Invoice') and (docinv.docstatus == 1) and (docinv.status not in status_list) and \
+        (not docinv.is_it_an_international_invoice):
+        # Validacion de serie
+        val_serie_fel = frappe.db.exists('Configuracion Series FEL', {'parent': config_name, 'serie': docinv.naming_series,
+                                                                      'codigo_incoterm': ['==', '']})
+        active = frappe.db.exists('Configuracion Factura Electronica', {'name': config_name, 'factura_cambiaria_fel': 1})
+
+        if val_serie_fel and active:
+            values = frappe.db.get_values('Configuracion Series FEL',
+                                          filters={'parent': config_name, 'serie': docinv.naming_series},
+                                          fieldname=['tipo_documento'], as_dict=1)
+            return values[0]['tipo_documento'], 'valido', True
+        else:
+            return _('Serie de factura no configurada, por favor agregarla y \
+                activarla en configuración Factura Electrónica para generar documento FEL'), False, False
+
 
     # DOCTYPE PURCHASE INVOICES
     # Condiciones para FEL Purchase Invoice - Factura Especial
@@ -1024,3 +1040,93 @@ def is_valid_to_fel(doctype, docname):
                      en configuración Factura Electrónica para generar documento FEL'), False, False
 
     return False, False, False,
+
+
+@frappe.whitelist()
+def generate_exchange_invoice_si(invoice_code: str, naming_series: str) -> tuple:
+    """
+    Funcion intermediaria para generar factura cambiaria
+
+    Args:
+        invoice_code (str): name, factura retorno
+        naming_series (str): serie usada en la factura
+        reference_inv (str): name factura original
+        reason (str): Razón por la que se esta generando la nota de credito, esto es
+        solicitado por el XML (SAT)
+
+    Returns:
+        tuple: (bool, desc)
+    """
+    try:
+        # Validacion configuracion serie para doc electronico
+        status_config = validate_configuration()
+        if status_config[0] == False:
+            return status_config
+
+        if not frappe.db.exists('Configuracion Series FEL', {'parent': status_config[1], 'serie': naming_series}):
+            frappe.msgprint(msg=_('La serie utilizada en la factura no se encuentra configurada para Factura Cambiaria Electronica \
+                                   Por favor agreguela en Series Fel de Configuracion Factura Electronica, y vuelva a intentar'),
+                            title=_('Proceso no completado'), indicator='red')
+            return False, 'No completed'
+
+        # validacion existencias, para evitar duplicados
+        status_inv = check_invoice_records(invoice_code)
+        if status_inv[0] == True:  # Si ya existe en DB
+            new_serie_cre = frappe.db.get_value('Envio FEL', {'serie_para_factura': invoice_code}, 'name')
+            frappe.msgprint(msg=_(f'El documento electronico que solicitas generar, ya se encuentra registrada como generada en ENVIOS FEL, con UUID {new_serie_cre}'),
+                            title=_('Proceso no completado'), indicator='yellow')
+
+            return False, 'No completed'
+
+        # Generacion peticion
+        new_exch_inv = SalesExchangeInvoice(invoice_code, status_config[1], naming_series)
+
+        status = new_exch_inv.build_invoice()
+        if status[0] == False:
+            frappe.msgprint(msg=_(f'No se pudo construir la peticion XML para factura cambiaria, mas detalle en: {status[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
+
+            return False, 'No completed'
+
+        # # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
+        # # En este paso se convierte de JSON a XML y se codifica en base64
+        # status_firma = new_credit_note.sign_invoice()
+        # if status_firma[0] == False:  # Si no se firma correctamente
+        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de firmar Nota de Credito electronica, mas detalles en: {status_firma[1]}'),
+        #                     title=_('Proceso no completado'), indicator='red')
+        #     return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
+
+        # # # PASO 5: SOLICITAMOS FACTURA ELECTRONICA
+        # status_facelec = new_credit_note.request_electronic_invoice()
+        # if status_facelec[0] == False:
+        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'),
+        #                     title=_('Proceso no completado'), indicator='red')
+        #     return False, f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'
+
+        # # # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
+        # # # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
+        # # # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
+        # status_res = new_credit_note.response_validator()
+        # if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
+        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar nota de credito electronica con INFILE, mas detalle en {status_res[1]}'),
+        #                     title=_('Proceso no completado'), indicator='red')
+        #     return status_res  # return tuple
+
+        # # # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
+        # status_upgrade = new_credit_note.upgrade_records()
+        # if status_upgrade[0] == False:
+        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de actualizar registros relacionados al documento, mas detalle en {status_upgrade[1]}'),
+        #                     title=_('Proceso no completado'), indicator='red')
+        #     return status_upgrade
+
+        # # PASO 8: SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
+        # # # el UUID y la nueva serie para la factura
+        # new_serie = frappe.db.get_value('Envio FEL', {'name': status_upgrade[1]}, 'serie_para_factura')
+        # frappe.msgprint(msg=_(f'Electronic Credit Note generated with universal unique identifier <b>{status_upgrade[1]}</b>'),
+        #                 title=_('Process successfully completed'), indicator='green')
+
+        # return True, str(new_serie)
+        frappe.msgprint('Test Factura Cambiaria')
+    except:
+        return False, str(frappe.get_traceback())
+

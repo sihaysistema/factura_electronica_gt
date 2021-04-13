@@ -74,8 +74,8 @@ class SalesExchangeInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                # with open('mi_factura.json', 'w') as f:
-                #     f.write(json.dumps(self.__base_peticion))
+                with open('factura_cambiaria.json', 'w') as f:
+                    f.write(json.dumps(self.__base_peticion, indent=2))
 
                 return True,'OK'
             else:
@@ -142,7 +142,8 @@ class SalesExchangeInvoice:
         """
 
         try:
-            opt_config = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
+            opt_config = frappe.db.get_value('Configuracion Factura Electronica',
+                                             {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
 
             if opt_config == 'Fecha y tiempo de peticion a INFILE':
                 ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
@@ -154,7 +155,7 @@ class SalesExchangeInvoice:
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                # "@FechaHoraEmision": str(self.date_invoice)+'T'+str(self.time_invoice),  #f'{self.date_invoice}T{str(self.time_invoice)}',  #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
+                "@NumeroAcceso": "",
                 "@FechaHoraEmision": ok_datetime,  # Se usa la data al momento de crear a infile
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
@@ -598,8 +599,10 @@ class SalesExchangeInvoice:
                 }
             }
 
+            return True, 'OK'
+
         except:
-            pass
+            return False, frappe.get_traceback()
 
     def totals(self):
         """
@@ -1033,5 +1036,6 @@ class SalesExchangeInvoice:
                 return True, factura_guardada[0]['uuid']
 
 
-class PurchaseExchangeInvoice:
+# Clase heredada de `SalesExchangeInvoice`
+class PurchaseExchangeInvoice(SalesExchangeInvoice):
     pass

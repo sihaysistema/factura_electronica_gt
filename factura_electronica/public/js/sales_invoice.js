@@ -502,7 +502,7 @@ frappe.ui.form.on("Sales Invoice", {
                     docname: frm.doc.name,
                 },
                 callback: function (r) {
-                    // console.log(r.message);
+                    console.log(r.message);
 
                     // Anulador docs electronicos para el DT Sales Invoice
                     if (r.message[1] === 'anulador' && r.message[2]) {
@@ -543,7 +543,7 @@ frappe.ui.form.on("Sales Invoice", {
                         btn_export_invoice(frm);
                         if (frm.doc.numero_autorizacion_fel) {
                             cur_frm.clear_custom_buttons();
-                            pdf_button_fel(frm.doc.numero_autorizacion_fel, frm)
+                            pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
                         }
                     }
 
@@ -553,6 +553,15 @@ frappe.ui.form.on("Sales Invoice", {
                         if (frm.doc.numero_autorizacion_fel) {
                             cur_frm.clear_custom_buttons();
                             pdf_credit_note(frm);
+                        }
+                    }
+
+                    // Generación Factura Cambiaria
+                    if (r.message[0] === 'FCAM' && r.message[1] === 'valido' && r.message[2]) {
+                        btn_exchange_invoice(frm);
+                        if (frm.doc.numero_autorizacion_fel) {
+                            cur_frm.clear_custom_buttons();
+                            pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
                         }
                     }
                 },
@@ -1168,6 +1177,41 @@ function btn_journal_entry_retention(frm) {
         });
         d.show();
     });
+}
+
+
+/**
+ * Render para boton facturas cambiarias
+ *
+ * @param {*} frm
+ */
+function btn_exchange_invoice(frm) {
+    cur_frm.clear_custom_buttons(); // Limpia otros customs buttons para generar uno nuevo
+    frm.add_custom_button(__("EXCHANGE INVOICE FEL"),
+        function () {
+            frappe.call({
+                method: 'factura_electronica.fel_api.generate_exchange_invoice_si',
+                args: {
+                    invoice_code: frm.doc.name,
+                    naming_series: frm.doc.naming_series,
+                },
+                callback: function (data) {
+                    console.log(data.message);
+                    // let serie_de_factura = frm.doc.name;
+                    // // Guarda la url actual
+                    // let mi_url = window.location.href;
+
+                    // if (data.message[0] === true) {
+                    //     // Crea una nueva url con el nombre del documento actualizado
+                    //     let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
+                    //     // Asigna la nueva url a la ventana actual
+                    //     window.location.assign(url_nueva);
+                    //     // Recarga la pagina
+                    //     frm.reload_doc();
+                    // };
+                },
+            });
+        }).addClass("btn-primary");
 }
 
 
