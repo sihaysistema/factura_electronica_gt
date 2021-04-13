@@ -672,6 +672,7 @@ frappe.ui.form.on("Sales Invoice", {
     },
     es_nota_de_debito: function (frm) {
         // !GFACE: YA NO APLICA
+        // buscar en la rama FS si es necesario
         // if (frm.doc.es_nota_de_debito) {
         //     // console.log('Es nota de debito');
         //     cur_frm.set_df_property("naming_series", "read_only", 1);
