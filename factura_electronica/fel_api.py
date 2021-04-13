@@ -1088,25 +1088,25 @@ def generate_exchange_invoice_si(invoice_code: str, naming_series: str) -> tuple
 
             return False, 'No completed'
 
-        # # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
+        # Firma certificacion
         # # En este paso se convierte de JSON a XML y se codifica en base64
-        # status_firma = new_credit_note.sign_invoice()
-        # if status_firma[0] == False:  # Si no se firma correctamente
-        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de firmar Nota de Credito electronica, mas detalles en: {status_firma[1]}'),
-        #                     title=_('Proceso no completado'), indicator='red')
-        #     return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
+        status_firma = new_exch_inv.sign_invoice()
+        if status_firma[0] == False:  # Si no se firma correctamente
+            frappe.msgprint(msg=_(f'No se pudo generar la certificacion de la peticion para generar documento electronico, mas detalles en: {status_firma[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
+            return False, f'Ocurrio un problema en el proceso, mas detalle en: {status_firma[1]}'
 
-        # # # PASO 5: SOLICITAMOS FACTURA ELECTRONICA
-        # status_facelec = new_credit_note.request_electronic_invoice()
-        # if status_facelec[0] == False:
-        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'),
-        #                     title=_('Proceso no completado'), indicator='red')
-        #     return False, f'Ocurrio un problema al tratar de generar Nota de Credito electronica, mas detalles en: {status_facelec[1]}'
+        # Solicitud generacion Doc Electronico
+        status_facelec = new_exch_inv.request_electronic_invoice()
+        if status_facelec[0] == False:
+            frappe.msgprint(msg=_(f'No se pudo generar el documento electronico solicitado, mas detalles en el siguiente log: {status_facelec[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
+            return False, f'Ocurrio un problema al tratar de generar Factura Cambiaria Electronica, mas detalles en: {status_facelec[1]}'
 
-        # # # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
-        # # # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
-        # # # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
-        # status_res = new_credit_note.response_validator()
+        # # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
+        # # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
+        # # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
+        # status_res = new_exch_inv.response_validator()
         # if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
         #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar nota de credito electronica con INFILE, mas detalle en {status_res[1]}'),
         #                     title=_('Proceso no completado'), indicator='red')

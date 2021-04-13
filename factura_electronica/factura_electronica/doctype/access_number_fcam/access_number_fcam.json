@@ -1,0 +1,62 @@
+{
+ "autoname": "naming_series",
+ "creation": "2021-04-13 17:40:06.843565",
+ "description": "Tabla para guardar numeros de acceso para Facturas Cambiarias Venta y Compra",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "reference",
+  "type",
+  "numero_acceso"
+ ],
+ "fields": [
+  {
+   "fieldname": "reference",
+   "fieldtype": "Data",
+   "label": "Reference",
+   "read_only": 1
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "SI\nPI",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "numero_acceso",
+   "fieldtype": "Data",
+   "label": "Numero Acceso"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Data",
+   "label": "naming_series"
+  }
+ ],
+ "modified": "2021-04-13 17:44:59.740807",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Access Number FCAM",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administrator",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

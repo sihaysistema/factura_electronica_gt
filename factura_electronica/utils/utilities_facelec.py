@@ -12,6 +12,7 @@ from xml.sax.saxutils import escape
 import frappe
 import pandas as pd
 from frappe import _
+from frappe.model.naming import make_autoname
 from frappe.utils import cint, flt
 
 
@@ -177,3 +178,8 @@ def get_currency_precision():
 
     except:
         return 2
+
+
+@frappe.whitelist()
+def autoname_exchange_inv():
+    make_autoname(cstr(self.address_title).strip() + "-" + cstr(self.address_type).strip() + "-.#")

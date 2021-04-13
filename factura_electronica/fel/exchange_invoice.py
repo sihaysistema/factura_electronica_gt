@@ -69,13 +69,16 @@ class SalesExchangeInvoice:
                                     "dte:Complementos": self.__d_complement
                                 }
                             }
-                        }
+                        },
+                        # "dte:Adenda": {
+                        #     "auto-generated_for_wildcard": None
+                        # }
                     }
                 }
 
                 # USAR SOLO PARA DEBUG:
                 with open('factura_cambiaria.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion, indent=2))
+                    f.write(json.dumps(self.__base_peticion, indent=2, default=str))
 
                 return True,'OK'
             else:
@@ -155,7 +158,7 @@ class SalesExchangeInvoice:
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                "@NumeroAcceso": "",
+                "@NumeroAcceso": "100000000",  # self.__invoice_code,  # se usa como rastreo a la factura original requerido por la SAT
                 "@FechaHoraEmision": ok_datetime,  # Se usa la data al momento de crear a infile
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
@@ -180,7 +183,7 @@ class SalesExchangeInvoice:
             self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__invoice_code},
                                                 fieldname=['company', 'company_address', 'nit_face_customer',
                                                            'customer_address', 'customer_name', 'total_taxes_and_charges',
-                                                           'grand_total'], as_dict=1)
+                                                           'grand_total', 'due_date'], as_dict=1)
             if len(self.dat_fac) == 0:
                 return False, f'''No se encontro ninguna factura con serie: {self.__invoice_code}.\
                                   Por favor valida los datos de la factura que deseas procesar'''
@@ -579,25 +582,36 @@ class SalesExchangeInvoice:
         """Generador seccion complemento
         """
         try:
+            payment_schedule = frappe.db.get_values('Payment Schedule', filters={'parent': self.__invoice_code},
+                                                    fieldname=['idx', 'due_date', 'payment_amount'], as_dict=1)
+
+            abonos = []
+            for payment in payment_schedule:
+                abonos.append({
+                    "cfc:NumeroAbono": payment.get('idx'),
+                    "cfc:FechaVencimiento": payment.get('due_date'),
+                    "cfc:MontoAbono": payment.get('payment_amount'),
+                })
+
             self.__d_complement = {
-                "dte:Complementos": {
-                    "dte:Complemento": {
-                        "@IDComplemento": "FCAM",
-                        "@NombreComplemento": "AbonosFacturaCambiaria",
-                        "@URIComplemento": "#AbonosFacturaCambiaria",
-                        "cfc:AbonosFacturaCambiaria": {
-                            "@xmlns:cfc": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
-                            "@Version": "1",
-                            "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
-                            "cfc:Abono": {
-                                "cfc:NumeroAbono": "1",
-                                "cfc:FechaVencimiento": "2019-02-07",
-                                "cfc:MontoAbono": "448.00"
-                            }
-                        }
+                "dte:Complemento": {
+                    "@IDComplemento": "FCAM",
+                    "@NombreComplemento": "AbonosFacturaCambiaria",
+                    "@URIComplemento": "#AbonosFacturaCambiaria",
+                    "cfc:AbonosFacturaCambiaria": {
+                        "@xmlns:cfc": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
+                        "@Version": "1",
+                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
+                        "cfc:Abono": abonos
+                        # {
+                        #     "cfc:NumeroAbono": "1",
+                        #     "cfc:FechaVencimiento": str(self.dat_fac[0].get('due_date')),
+                        #     "cfc:MontoAbono": flt(self.dat_fac[0].get('grand_total'), self.__precision)
+                        # }
                     }
                 }
             }
+
 
             return True, 'OK'
 
@@ -669,7 +683,7 @@ class SalesExchangeInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            with open('FACTURA-FEL.xml', 'w') as f:
+            with open('FACTURA-CAMBIARIA-FEL.xml', 'w') as f:
                 f.write(self.__xml_string)
 
         except:
@@ -679,9 +693,6 @@ class SalesExchangeInvoice:
             # To base64: Convierte a base64, para enviarlo en la peticion
             self.__encoded_bytes = base64.b64encode(self.__xml_string.encode("utf-8"))
             self.__encoded_str = str(self.__encoded_bytes, "utf-8")
-            # Usar solo para debug
-            # with open('codificado.txt', 'w') as f:
-            #         f.write(self.__encoded_str)
         except:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
 
@@ -722,8 +733,8 @@ class SalesExchangeInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('recibido_firmado.json', 'w') as f:
-            #      f.write(json.dumps(self.__doc_firmado, indent=2))
+            with open('factura_cambiaria_firmada.json', 'w') as f:
+                 f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -774,7 +785,7 @@ class SalesExchangeInvoice:
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
-            with open('RESPONSE-FACTURA-FEL.json', 'w') as f:
+            with open('RESPONSE-FACTCAMB-FEL.json', 'w') as f:
                 f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
