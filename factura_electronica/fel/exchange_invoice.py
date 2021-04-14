@@ -77,8 +77,8 @@ class SalesExchangeInvoice:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                with open('factura_cambiaria.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion, indent=2, default=str))
+                # with open('factura_cambiaria.json', 'w') as f:
+                #     f.write(json.dumps(self.__base_peticion, indent=2, default=str))
 
                 return True,'OK'
             else:
@@ -612,7 +612,6 @@ class SalesExchangeInvoice:
                 }
             }
 
-
             return True, 'OK'
 
         except:
@@ -683,8 +682,8 @@ class SalesExchangeInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            with open('FACTURA-CAMBIARIA-FEL.xml', 'w') as f:
-                f.write(self.__xml_string)
+            # with open('FACTURA-CAMBIARIA-FEL.xml', 'w') as f:
+            #     f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -733,8 +732,8 @@ class SalesExchangeInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            with open('factura_cambiaria_firmada.json', 'w') as f:
-                 f.write(json.dumps(self.__doc_firmado, indent=2))
+            # with open('factura_cambiaria_firmada.json', 'w') as f:
+            #      f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -785,13 +784,13 @@ class SalesExchangeInvoice:
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
-            with open('RESPONSE-FACTCAMB-FEL.json', 'w') as f:
-                f.write(json.dumps(self.__response_ok, indent=2))
+            # with open('RESPONSE-FACTCAMB-FEL.json', 'w') as f:
+            #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
         except:
-            return False, 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
+            return False, 'Error al tratar de generar factura electronica cambiaria: '+str(frappe.get_traceback())
 
     def response_validator(self):
         """

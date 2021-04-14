@@ -502,7 +502,8 @@ frappe.ui.form.on("Sales Invoice", {
                     docname: frm.doc.name,
                 },
                 callback: function (r) {
-                    console.log(r.message);
+                    // DEBUG: usar para ver si aplica
+                    // console.log(r.message);
 
                     // Anulador docs electronicos para el DT Sales Invoice
                     if (r.message[1] === 'anulador' && r.message[2]) {
@@ -1188,7 +1189,7 @@ function btn_journal_entry_retention(frm) {
  */
 function btn_exchange_invoice(frm) {
     cur_frm.clear_custom_buttons(); // Limpia otros customs buttons para generar uno nuevo
-    frm.add_custom_button(__("EXCHANGE INVOICE FEL"),
+    frm.add_custom_button(__("FACTURA CAMBIARIA FEL"),
         function () {
             frappe.call({
                 method: 'factura_electronica.fel_api.generate_exchange_invoice_si',

@@ -27,9 +27,9 @@ def encuentra_errores(cadena):
         diccionarioError = eval(diccionario)
 
         # Guarda en un archiv json el registro de los ultimos errores ocurridos
-        with open('registro_errores.json', 'w') as registro_error:
-            registro_error.write(diccionario)
-            registro_error.close()
+        # with open('registro_errores.json', 'w') as registro_error:
+        #     registro_error.write(diccionario)
+        #     registro_error.close()
     except:
         diccionarioError = {'Mensaje': str(cadena)}
 

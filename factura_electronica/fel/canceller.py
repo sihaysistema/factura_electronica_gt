@@ -207,8 +207,8 @@ class CancelDocument:
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
-            with open('response_cancelador.json', 'w') as f:
-                f.write(json.dumps(self.__response_ok, indent=2))
+            # with open('response_cancelador.json', 'w') as f:
+            #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK request'
 
