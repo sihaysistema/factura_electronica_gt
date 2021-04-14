@@ -1104,30 +1104,30 @@ def generate_exchange_invoice_si(invoice_code: str, naming_series: str) -> tuple
                             title=_('Proceso no completado'), indicator='red')
             return False, f'Ocurrio un problema al tratar de generar Factura Cambiaria Electronica, mas detalles en: {status_facelec[1]}'
 
-        # # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
-        # # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
-        # # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
-        # status_res = new_exch_inv.response_validator()
-        # if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
-        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar nota de credito electronica con INFILE, mas detalle en {status_res[1]}'),
-        #                     title=_('Proceso no completado'), indicator='red')
-        #     return status_res  # return tuple
+        # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
+        # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
+        # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
+        status_res = new_exch_inv.response_validator()
+        if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
+            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de generar nota de credito electronica con INFILE, mas detalle en {status_res[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
+            return status_res  # return tuple
 
-        # # # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
-        # status_upgrade = new_credit_note.upgrade_records()
-        # if status_upgrade[0] == False:
-        #     frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de actualizar registros relacionados al documento, mas detalle en {status_upgrade[1]}'),
-        #                     title=_('Proceso no completado'), indicator='red')
-        #     return status_upgrade
+        # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
+        status_upgrade = new_exch_inv.upgrade_records()
+        if status_upgrade[0] == False:
+            frappe.msgprint(msg=_(f'Ocurrio un problema al tratar de actualizar registros relacionados al documento, mas detalle en {status_upgrade[1]}'),
+                            title=_('Proceso no completado'), indicator='red')
+            return status_upgrade
 
-        # # PASO 8: SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
-        # # # el UUID y la nueva serie para la factura
-        # new_serie = frappe.db.get_value('Envio FEL', {'name': status_upgrade[1]}, 'serie_para_factura')
-        # frappe.msgprint(msg=_(f'Electronic Credit Note generated with universal unique identifier <b>{status_upgrade[1]}</b>'),
-        #                 title=_('Process successfully completed'), indicator='green')
+        # PASO 8: SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
+        # el UUID y la nueva serie para la factura
+        new_serie = frappe.db.get_value('Envio FEL', {'name': status_upgrade[1]}, 'serie_para_factura')
+        frappe.msgprint(msg=_(f'Electronic Credit Note generated with universal unique identifier <b>{status_upgrade[1]}</b>'),
+                        title=_('Process successfully completed'), indicator='green')
 
-        # return True, str(new_serie)
-        frappe.msgprint('Test Factura Cambiaria')
+        return True, str(new_serie)
+
     except:
         return False, str(frappe.get_traceback())
 

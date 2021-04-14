@@ -1198,18 +1198,18 @@ function btn_exchange_invoice(frm) {
                 },
                 callback: function (data) {
                     console.log(data.message);
-                    // let serie_de_factura = frm.doc.name;
-                    // // Guarda la url actual
-                    // let mi_url = window.location.href;
+                    let serie_de_factura = frm.doc.name;
+                    // Guarda la url actual
+                    let mi_url = window.location.href;
 
-                    // if (data.message[0] === true) {
-                    //     // Crea una nueva url con el nombre del documento actualizado
-                    //     let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
-                    //     // Asigna la nueva url a la ventana actual
-                    //     window.location.assign(url_nueva);
-                    //     // Recarga la pagina
-                    //     frm.reload_doc();
-                    // };
+                    if (data.message[0] === true) {
+                        // Crea una nueva url con el nombre del documento actualizado
+                        let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
+                        // Asigna la nueva url a la ventana actual
+                        window.location.assign(url_nueva);
+                        // Recarga la pagina
+                        frm.reload_doc();
+                    };
                 },
             });
         }).addClass("btn-primary");

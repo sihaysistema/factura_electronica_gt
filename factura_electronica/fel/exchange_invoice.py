@@ -158,7 +158,7 @@ class SalesExchangeInvoice:
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                "@NumeroAcceso": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'access_number_fel'), # se usa como rastreo a la factura original requerido por la SAT
+                "@NumeroAcceso": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'access_number_fel').split('-')[1], # se usa como rastreo a la factura original requerido por la SAT
                 "@FechaHoraEmision": ok_datetime,  # Se usa la data al momento de crear a infile
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
@@ -167,7 +167,7 @@ class SalesExchangeInvoice:
             return True, 'OK'
 
         except:
-            return False, f'Error en obtener data para datos generales :\n {str(frappe.get_traceback())}'
+            return False, f'No se pudo generar la seccion xml datos generales para generar la peticion a INFILE :\n {str(frappe.get_traceback())}'
 
     def sender(self):
         """
@@ -836,7 +836,7 @@ class SalesExchangeInvoice:
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
                 resp_fel.status = 'Valid'
-                resp_fel.tipo_documento = 'Factura Electronica'
+                resp_fel.tipo_documento = 'Factura Venta Cambiaria Electronica'
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
