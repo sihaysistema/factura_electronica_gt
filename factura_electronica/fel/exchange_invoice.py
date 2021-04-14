@@ -1,4 +1,4 @@
-# Copyright (c) 2021, Si Hay Sistema and contributors
+# Copyright (c) 2020, Si Hay Sistema and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
@@ -16,12 +16,8 @@ from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 
-# La factura cambiaria es el título de crédito que en la compraventa de mercaderías
-# el vendedor podrá librar y entregar o remitir al comprador y que incorpora un
-# derecho de crédito sobre la totalidad o la parte insoluta de la compraventa.
 
-
-class ExchangeInvoice:
+class SalesExchangeInvoice:
     def __init__(self, invoice_code, conf_name, naming_series):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
@@ -70,19 +66,19 @@ class ExchangeInvoice:
                                     "dte:Frases": self.__d_frases,
                                     "dte:Items": self.__d_items,
                                     "dte:Totales": self.__d_totales,
-                                    "dte:Complementos": 'self.__d_totales,'
+                                    "dte:Complementos": self.__d_complement
                                 }
                             }
                         },
-                        "dte:Adenda": {
-                            "auto-generated_for_wildcard": 'null'
-                        }
+                        # "dte:Adenda": {
+                        #     "auto-generated_for_wildcard": None
+                        # }
                     }
                 }
 
                 # USAR SOLO PARA DEBUG:
-                # with open('mi_factura.json', 'w') as f:
-                #     f.write(json.dumps(self.__base_peticion))
+                # with open('factura_cambiaria.json', 'w') as f:
+                #     f.write(json.dumps(self.__base_peticion, indent=2, default=str))
 
                 return True,'OK'
             else:
@@ -126,6 +122,11 @@ class ExchangeInvoice:
         if status_items[0] == False:
             return status_items
 
+        # Validacion y generacion seccion complemento
+        status_complement = self.complement()
+        if status_complement[0] == False:
+            return status_complement
+
         # Validacion y generacion seccion totales
         status_totals = self.totals()
         if status_totals[0] == False:
@@ -144,7 +145,8 @@ class ExchangeInvoice:
         """
 
         try:
-            opt_config = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
+            opt_config = frappe.db.get_value('Configuracion Factura Electronica',
+                                             {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
 
             if opt_config == 'Fecha y tiempo de peticion a INFILE':
                 ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
@@ -152,21 +154,20 @@ class ExchangeInvoice:
             else:
                 date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date')
                 ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
-                ok_datetime = str(date_invoice_inv)+'T'+str(ok_time) #.rpartition('.')[0]
+                ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                # "@FechaHoraEmision": str(self.date_invoice)+'T'+str(self.time_invoice),  #f'{self.date_invoice}T{str(self.time_invoice)}',  #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@NumeroAcceso": "1111111111",  # TODO: HAY QUE TENER CREDENCIALES PARA PROBAR
+                "@NumeroAcceso": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'access_number_fel').split('-')[1], # se usa como rastreo a la factura original requerido por la SAT
                 "@FechaHoraEmision": ok_datetime,  # Se usa la data al momento de crear a infile
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
-                }
+            }
 
             return True, 'OK'
 
         except:
-            return False, f'Error en obtener data para datos generales :\n {str(frappe.get_traceback())}'
+            return False, f'No se pudo generar la seccion xml datos generales para generar la peticion a INFILE :\n {str(frappe.get_traceback())}'
 
     def sender(self):
         """
@@ -182,7 +183,7 @@ class ExchangeInvoice:
             self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__invoice_code},
                                                 fieldname=['company', 'company_address', 'nit_face_customer',
                                                            'customer_address', 'customer_name', 'total_taxes_and_charges',
-                                                           'grand_total'], as_dict=1)
+                                                           'grand_total', 'due_date'], as_dict=1)
             if len(self.dat_fac) == 0:
                 return False, f'''No se encontro ninguna factura con serie: {self.__invoice_code}.\
                                   Por favor valida los datos de la factura que deseas procesar'''
@@ -450,7 +451,6 @@ class ExchangeInvoice:
                     if apply_oil_tax == True:
                         precio_uni = 0
                         precio_item = 0
-                        desc_fila = 0
 
                         # Logica para validacion si aplica Descuento
                         desc_item_fila = 0
@@ -578,6 +578,45 @@ class ExchangeInvoice:
         except:
             return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
+    def complement(self):
+        """Generador seccion complemento
+        """
+        try:
+            payment_schedule = frappe.db.get_values('Payment Schedule', filters={'parent': self.__invoice_code},
+                                                    fieldname=['idx', 'due_date', 'payment_amount'], as_dict=1)
+
+            abonos = []
+            for payment in payment_schedule:
+                abonos.append({
+                    "cfc:NumeroAbono": payment.get('idx'),
+                    "cfc:FechaVencimiento": payment.get('due_date'),
+                    "cfc:MontoAbono": payment.get('payment_amount'),
+                })
+
+            self.__d_complement = {
+                "dte:Complemento": {
+                    "@IDComplemento": "FCAM",
+                    "@NombreComplemento": "AbonosFacturaCambiaria",
+                    "@URIComplemento": "#AbonosFacturaCambiaria",
+                    "cfc:AbonosFacturaCambiaria": {
+                        "@xmlns:cfc": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
+                        "@Version": "1",
+                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
+                        "cfc:Abono": abonos
+                        # {
+                        #     "cfc:NumeroAbono": "1",
+                        #     "cfc:FechaVencimiento": str(self.dat_fac[0].get('due_date')),
+                        #     "cfc:MontoAbono": flt(self.dat_fac[0].get('grand_total'), self.__precision)
+                        # }
+                    }
+                }
+            }
+
+            return True, 'OK'
+
+        except:
+            return False, frappe.get_traceback()
+
     def totals(self):
         """
         Funcion encargada de realizar totales de los impuestos sobre la factura
@@ -630,25 +669,6 @@ class ExchangeInvoice:
         except:
             return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
-    def exch_complement(self):
-        compl = {
-            "dte:Complemento": {
-                "@IDComplemento": "FCAM",
-                "@NombreComplemento": "AbonosFacturaCambiaria",
-                "@URIComplemento": "#AbonosFacturaCambiaria",
-                "cfc:AbonosFacturaCambiaria": {
-                    "@xmlns:cfc": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
-                    "@Version": "1",
-                    "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
-                    "cfc:Abono": {
-                        "cfc:NumeroAbono": "1",
-                        "cfc:FechaVencimiento": "2019-02-07",
-                        "cfc:MontoAbono": "448.00"
-                    }
-                }
-            }
-        }
-
     def sign_invoice(self):
         """
         Funcion encargada de solicitar firma para archivo XML
@@ -662,8 +682,8 @@ class ExchangeInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            with open('FACTURA-FEL.xml', 'w') as f:
-                f.write(self.__xml_string)
+            # with open('FACTURA-CAMBIARIA-FEL.xml', 'w') as f:
+            #     f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -672,9 +692,6 @@ class ExchangeInvoice:
             # To base64: Convierte a base64, para enviarlo en la peticion
             self.__encoded_bytes = base64.b64encode(self.__xml_string.encode("utf-8"))
             self.__encoded_str = str(self.__encoded_bytes, "utf-8")
-            # Usar solo para debug
-            # with open('codificado.txt', 'w') as f:
-            #         f.write(self.__encoded_str)
         except:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
 
@@ -715,7 +732,7 @@ class ExchangeInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('recibido_firmado.json', 'w') as f:
+            # with open('factura_cambiaria_firmada.json', 'w') as f:
             #      f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
@@ -767,13 +784,13 @@ class ExchangeInvoice:
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
-            # with open('RESPONSE_factura.json', 'w') as f:
+            # with open('RESPONSE-FACTCAMB-FEL.json', 'w') as f:
             #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
         except:
-            return False, 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
+            return False, 'Error al tratar de generar factura electronica cambiaria: '+str(frappe.get_traceback())
 
     def response_validator(self):
         """
@@ -818,7 +835,7 @@ class ExchangeInvoice:
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
                 resp_fel.status = 'Valid'
-                resp_fel.tipo_documento = 'Factura Electronica'
+                resp_fel.tipo_documento = 'Factura Venta Cambiaria Electronica'
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
@@ -847,7 +864,7 @@ class ExchangeInvoice:
                 # Guarda el documento firmado encriptado en base64
                 # decodedBytes = str(self.__response_ok['xml_certificado']) # base64.b64decode(self.__response_ok['xml_certificado'])
                 # decodedStr = str(decodedBytes, "utf-8")
-                resp_fel.xml_certificado = json.dumps(self.__doc_firmado, indent=2) # decodedStr
+                resp_fel.xml_certificado = str(self.__xml_string)  # json.dumps(self.__doc_firmado, indent=2) # decodedStr
                 resp_fel.enviado = str(self.__start_datetime)
                 resp_fel.recibido = str(self.__end_datetime)
 
@@ -1027,3 +1044,8 @@ class ExchangeInvoice:
                         porque se usaron datos default. Haga clic <a href="#List/Address/List"><b>Aquí</b></a> para configurarlo de una vez.'))
                 # Se utilizara el UUID como clave para orquestar el resto de las apps que lo necesiten
                 return True, factura_guardada[0]['uuid']
+
+
+# Clase heredada de `SalesExchangeInvoice`
+class PurchaseExchangeInvoice(SalesExchangeInvoice):
+    pass

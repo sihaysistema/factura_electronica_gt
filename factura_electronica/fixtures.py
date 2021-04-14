@@ -321,6 +321,7 @@ def fill_fixtures():
                     "Expense Claim Detail-column_break_26", "Expense Claim Detail-column_break_28",
                     "Expense Claim Detail-section_break_30", "Expense Claim Detail-from_invoice_reference",
                     "Customer-facelec_trade_name", "Supplier-facelec_trade_name", "Company-facelec_trade_name",
+                    "Sales Invoice-access_number_fel"
                 ]
             ]
         ]

@@ -223,7 +223,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Tipo Documento",
-   "options": "\nFactura Electronica\nFactura Especial\nFactura Exportacion\nFactura Exenta\nNota de Credito\nNota de Debito\nAnulacion",
+   "options": "\nFactura Electronica\nFactura Especial\nFactura Exportacion\nFactura Exenta\nNota de Credito\nNota de Debito\nAnulacion\nFactura Venta Cambiaria Electronica",
    "read_only": 1
   },
   {
@@ -240,7 +240,7 @@
    "label": "XML ENVIADO EN PETICION"
   }
  ],
- "modified": "2021-03-25 01:32:35.523417",
+ "modified": "2021-04-14 09:26:22.345405",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Envio FEL",

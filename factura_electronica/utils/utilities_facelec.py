@@ -12,6 +12,7 @@ from xml.sax.saxutils import escape
 import frappe
 import pandas as pd
 from frappe import _
+# from frappe.model.naming import make_autoname
 from frappe.utils import cint, flt
 
 
@@ -26,9 +27,9 @@ def encuentra_errores(cadena):
         diccionarioError = eval(diccionario)
 
         # Guarda en un archiv json el registro de los ultimos errores ocurridos
-        with open('registro_errores.json', 'w') as registro_error:
-            registro_error.write(diccionario)
-            registro_error.close()
+        # with open('registro_errores.json', 'w') as registro_error:
+        #     registro_error.write(diccionario)
+        #     registro_error.close()
     except:
         diccionarioError = {'Mensaje': str(cadena)}
 
@@ -177,3 +178,9 @@ def get_currency_precision():
 
     except:
         return 2
+
+
+# @frappe.whitelist()
+# def autoname_exchange_inv():
+
+#     make_autoname(cstr(self.address_title).strip() + "-" + cstr(self.address_type).strip() + "-.#")
