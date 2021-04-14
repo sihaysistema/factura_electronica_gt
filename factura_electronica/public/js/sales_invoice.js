@@ -851,6 +851,7 @@ function clean_fields(frm) {
         frm.set_value("facelec_consumable_record_type", '');
         frm.set_value("facelec_record_number", '');
         frm.set_value("facelec_record_value", '');
+        frm.set_value("access_number_fel", '');
         frm.refresh_fields();
 
         // console.log('Hay que limpiar')

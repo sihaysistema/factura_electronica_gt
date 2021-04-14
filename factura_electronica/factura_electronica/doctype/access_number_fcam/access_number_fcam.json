@@ -1,5 +1,5 @@
 {
- "autoname": "naming_series",
+ "autoname": "naming_series:",
  "creation": "2021-04-13 17:40:06.843565",
  "description": "Tabla para guardar numeros de acceso para Facturas Cambiarias Venta y Compra",
  "doctype": "DocType",
@@ -22,7 +22,7 @@
    "fieldname": "type",
    "fieldtype": "Select",
    "label": "Type",
-   "options": "SI\nPI",
+   "options": "Sales Invoice\nPurchase Invoice",
    "read_only": 1,
    "search_index": 1
   },
@@ -33,11 +33,14 @@
   },
   {
    "fieldname": "naming_series",
-   "fieldtype": "Data",
-   "label": "naming_series"
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "naming_series",
+   "options": "FCAM.#########",
+   "reqd": 1
   }
  ],
- "modified": "2021-04-13 17:44:59.740807",
+ "modified": "2021-04-13 18:40:28.311077",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Access Number FCAM",

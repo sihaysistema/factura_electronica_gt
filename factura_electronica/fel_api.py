@@ -990,6 +990,7 @@ def is_valid_to_fel(doctype, docname):
             return _('Serie de documento para nota de credito electrónica no configurada, \
                      por favor agregarla y activarla en configuración Factura Electrónica para generar documento FEL'), False
 
+    # FACTURA CAMBIARIA
     elif (docinv.doctype == 'Sales Invoice') and (docinv.docstatus == 1) and (docinv.status not in status_list) and \
         (not docinv.is_it_an_international_invoice):
         # Validacion de serie

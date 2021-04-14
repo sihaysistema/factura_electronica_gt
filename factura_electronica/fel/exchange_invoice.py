@@ -158,7 +158,7 @@ class SalesExchangeInvoice:
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
-                "@NumeroAcceso": "100000000",  # self.__invoice_code,  # se usa como rastreo a la factura original requerido por la SAT
+                "@NumeroAcceso": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'access_number_fel'), # se usa como rastreo a la factura original requerido por la SAT
                 "@FechaHoraEmision": ok_datetime,  # Se usa la data al momento de crear a infile
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
