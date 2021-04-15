@@ -2042,5 +2042,47 @@
   "source_name": "Enter the grand total amount that you want calculated for this line.",
   "status": "Saved",
   "target_name": "Introduzca el importe total que desea calcular para esta l\u00ednea."
+ },
+ {
+  "contributed_translation_doctype_name": null,
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2021-04-15 15:12:26.499516",
+  "name": "9756907a35",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "FEL: Check if the item applies to discount to show in electronic invoice generation.",
+  "status": "Saved",
+  "target_name": "FEL: Marque si el art\u00edculo aplica a descuento para mostrarlo en la generaci\u00f3n de la factura electr\u00f3nica."
+ },
+ {
+  "contributed_translation_doctype_name": null,
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2021-04-15 15:29:56.714152",
+  "name": "4466a2e277",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "Are you sure to cancel the current electronic document?",
+  "status": "Saved",
+  "target_name": "\u00bfEst\u00e1 seguro de cancelar el documento electr\u00f3nico actual?"
+ },
+ {
+  "contributed_translation_doctype_name": null,
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2021-04-15 15:34:56.236492",
+  "name": "32758adf6a",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "Electronic Document Canceller",
+  "status": "Saved",
+  "target_name": "Anulador Documento Electr\u00f3nico"
  }
 ]

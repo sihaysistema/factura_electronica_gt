@@ -867,19 +867,19 @@ function clean_fields(frm) {
  */
 function btn_canceller(frm) {
     cur_frm.clear_custom_buttons();
-    frm.add_custom_button(__("CANCEL DOCUMENT FEL"), function () {
+    frm.add_custom_button(__("Electronic Document Canceller"), function () {
         // Permite hacer confirmaciones
         frappe.confirm(__('Are you sure to cancel the current electronic document?'),
             () => {
                 let d = new frappe.ui.Dialog({
-                    title: __('Cancel electronic document'),
+                    title: __('Electronic Document Canceller'),
                     fields: [{
                         label: __('Reason for cancellation?'),
                         fieldname: 'reason_cancelation',
                         fieldtype: 'Data',
                         reqd: 1
                     }],
-                    primary_action_label: 'Submit',
+                    primary_action_label: _('Submit'),
                     primary_action(values) {
                         frappe.call({
                             method: 'factura_electronica.fel_api.invoice_canceller',

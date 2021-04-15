@@ -426,7 +426,8 @@ def fill_fixtures():
                     "Cancell Sales Invoice FEL", "Reason for cancellation?", "DEBIT NOTE FEL", "Are you sure you want to proceed to generate a electronic debit note?",
                     "Generate Electronic Debit Note", "Are you sure you want to proceed to generate a Electronic Special Invoice?",
                     "Access Number FEL", "FEL: for exchange invoice reference only", "Withholding Tax References", "Withholding Tax Reference",
-                    "Enter the grand total amount that you want calculated for this line."
+                    "Enter the grand total amount that you want calculated for this line.", "FEL: Check if the item applies to discount to show in electronic invoice generation.",
+                    "Are you sure to cancel the current electronic document?", "Electronic Document Canceller"
                 ]
             ]
         ]
