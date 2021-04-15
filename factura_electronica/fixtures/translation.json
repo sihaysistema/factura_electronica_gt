@@ -2014,5 +2014,33 @@
   "source_name": "FEL: for exchange invoice reference only",
   "status": "Saved",
   "target_name": "FEL: solo para referencia de facturas cambiarias"
+ },
+ {
+  "contributed_translation_doctype_name": null,
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2021-04-15 14:24:53.080893",
+  "name": "b353d96dcb",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "Withholding Tax References",
+  "status": "Saved",
+  "target_name": "Referencias de retenciones fiscales"
+ },
+ {
+  "contributed_translation_doctype_name": null,
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2021-04-15 14:27:05.907035",
+  "name": "2700d14e92",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_name": "Enter the grand total amount that you want calculated for this line.",
+  "status": "Saved",
+  "target_name": "Introduzca el importe total que desea calcular para esta l\u00ednea."
  }
 ]
