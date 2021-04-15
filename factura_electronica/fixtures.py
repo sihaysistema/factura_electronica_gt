@@ -424,7 +424,8 @@ def fill_fixtures():
                     "Account for Excise Tax", "CREDIT NOTE FEL", "Are you sure you want to proceed to generate a credit note?",
                     "Generate Credit Note", "Reason Adjusment?", "CANCEL DOCUMENT FEL", "Are you sure you want to proceed to cancell a Sales Invoice FEL?",
                     "Cancell Sales Invoice FEL", "Reason for cancellation?", "DEBIT NOTE FEL", "Are you sure you want to proceed to generate a electronic debit note?",
-                    "Generate Electronic Debit Note", "Are you sure you want to proceed to generate a Electronic Special Invoice?"
+                    "Generate Electronic Debit Note", "Are you sure you want to proceed to generate a Electronic Special Invoice?",
+                    "Access Number FEL", "FEL: for exchange invoice reference only",
                 ]
             ]
         ]
