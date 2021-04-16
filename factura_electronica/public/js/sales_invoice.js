@@ -502,6 +502,7 @@ frappe.ui.form.on("Sales Invoice", {
                     docname: frm.doc.name,
                 },
                 callback: function (r) {
+                    // DEBUG: usar para ver si aplica
                     // console.log(r.message);
 
                     // Anulador docs electronicos para el DT Sales Invoice
@@ -543,7 +544,7 @@ frappe.ui.form.on("Sales Invoice", {
                         btn_export_invoice(frm);
                         if (frm.doc.numero_autorizacion_fel) {
                             cur_frm.clear_custom_buttons();
-                            pdf_button_fel(frm.doc.numero_autorizacion_fel, frm)
+                            pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
                         }
                     }
 
@@ -553,6 +554,15 @@ frappe.ui.form.on("Sales Invoice", {
                         if (frm.doc.numero_autorizacion_fel) {
                             cur_frm.clear_custom_buttons();
                             pdf_credit_note(frm);
+                        }
+                    }
+
+                    // Generación Factura Cambiaria
+                    if (r.message[0] === 'FCAM' && r.message[1] === 'valido' && r.message[2]) {
+                        btn_exchange_invoice(frm);
+                        if (frm.doc.numero_autorizacion_fel) {
+                            cur_frm.clear_custom_buttons();
+                            pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
                         }
                     }
                 },
@@ -673,6 +683,7 @@ frappe.ui.form.on("Sales Invoice", {
     },
     es_nota_de_debito: function (frm) {
         // !GFACE: YA NO APLICA
+        // buscar en la rama FS si es necesario
         // if (frm.doc.es_nota_de_debito) {
         //     // console.log('Es nota de debito');
         //     cur_frm.set_df_property("naming_series", "read_only", 1);
@@ -842,6 +853,7 @@ function clean_fields(frm) {
         frm.set_value("facelec_consumable_record_type", '');
         frm.set_value("facelec_record_number", '');
         frm.set_value("facelec_record_value", '');
+        frm.set_value("access_number_fel", '');
         frm.refresh_fields();
 
         // console.log('Hay que limpiar')
@@ -856,19 +868,19 @@ function clean_fields(frm) {
  */
 function btn_canceller(frm) {
     cur_frm.clear_custom_buttons();
-    frm.add_custom_button(__("CANCEL DOCUMENT FEL"), function () {
+    frm.add_custom_button(__("Electronic Document Canceller"), function () {
         // Permite hacer confirmaciones
         frappe.confirm(__('Are you sure to cancel the current electronic document?'),
             () => {
                 let d = new frappe.ui.Dialog({
-                    title: __('Cancel electronic document'),
+                    title: __('Electronic Document Canceller'),
                     fields: [{
                         label: __('Reason for cancellation?'),
                         fieldname: 'reason_cancelation',
                         fieldtype: 'Data',
                         reqd: 1
                     }],
-                    primary_action_label: 'Submit',
+                    primary_action_label: _('Submit'),
                     primary_action(values) {
                         frappe.call({
                             method: 'factura_electronica.fel_api.invoice_canceller',
@@ -1168,6 +1180,41 @@ function btn_journal_entry_retention(frm) {
         });
         d.show();
     });
+}
+
+
+/**
+ * Render para boton facturas cambiarias
+ *
+ * @param {*} frm
+ */
+function btn_exchange_invoice(frm) {
+    cur_frm.clear_custom_buttons(); // Limpia otros customs buttons para generar uno nuevo
+    frm.add_custom_button(__("FACTURA CAMBIARIA FEL"),
+        function () {
+            frappe.call({
+                method: 'factura_electronica.fel_api.generate_exchange_invoice_si',
+                args: {
+                    invoice_code: frm.doc.name,
+                    naming_series: frm.doc.naming_series,
+                },
+                callback: function (data) {
+                    console.log(data.message);
+                    let serie_de_factura = frm.doc.name;
+                    // Guarda la url actual
+                    let mi_url = window.location.href;
+
+                    if (data.message[0] === true) {
+                        // Crea una nueva url con el nombre del documento actualizado
+                        let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
+                        // Asigna la nueva url a la ventana actual
+                        window.location.assign(url_nueva);
+                        // Recarga la pagina
+                        frm.reload_doc();
+                    };
+                },
+            });
+        }).addClass("btn-primary");
 }
 
 
