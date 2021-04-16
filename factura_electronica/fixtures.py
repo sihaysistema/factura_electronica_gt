@@ -330,7 +330,7 @@ def fill_fixtures():
     translation = {
         "dt": "Translation", "filters": [
             [
-                "source_name", "in", [
+                "source_text", "in", [
                     "Value Added Tax Exempt",
                     "Excise Taxes Categories and Exemptions",
                     "Is Exchange Invoice",
