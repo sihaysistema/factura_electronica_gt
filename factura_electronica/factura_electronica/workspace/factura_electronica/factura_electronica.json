@@ -219,13 +219,13 @@
    "type": "Link"
   }
  ],
- "modified": "2021-04-08 17:50:45.802070",
+ "modified": "2021-04-12 09:45:45.628051",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Factura Electronica",
  "owner": "Administrator",
- "pin_to_bottom": 0,
- "pin_to_top": 1,
+ "pin_to_bottom": 1,
+ "pin_to_top": 0,
  "shortcuts": [
   {
    "doc_view": "List",
