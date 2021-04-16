@@ -26,15 +26,16 @@ export function valNit(nit, cus_supp, frm) {
             frappe.show_alert({
                 indicator: 'orange',
                 message: __(`
-                NIT de <a href= '#Form/Customer/${cus_supp}'><b>${cus_supp}</b></a> no es correcto. Si no tiene disponible el NIT modifiquelo a C/F.
+                NIT de <a href= '#Form/Customer/${cus_supp}'><b>${cus_supp}</b></a> no es valido en el pais de Guatemala,
+                si no tiene disponible el NIT modifiquelo a C/F. Omita esta notificación si el identificador es de otro pais.
                 `)
-            });
+            }, 25);
 
-            frm.disable_save(); // Desactiva y Oculta el boton de guardar en Sales Invoice
+            // frm.disable_save(); // Desactiva y Oculta el boton de guardar en Sales Invoice
         }
-        if (nit_validado === true) {
-            frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
-        }
+        // if (nit_validado === true) {
+        //     frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
+        // }
     }
 }
 
@@ -70,12 +71,12 @@ frappe.ui.form.on("Customer", {
         frm.set_df_property("nit_face_customer", "reqd", 1);
     },
     nit_face_customer: function (frm) {
-        valNit(frm.doc.nit_face_customer, frm.doc.name, frm);
         frm.set_value('tax_id', frm.doc.nit_face_customer);
+        valNit(frm.doc.nit_face_customer, frm.doc.name, frm);
     },
     tax_id: function (frm) {
-        valNit(frm.doc.tax_id, frm.doc.name, frm);
         frm.set_value('nit_face_customer', frm.doc.tax_id);
+        // valNit(frm.doc.tax_id, frm.doc.name, frm);
     },
     refresh: function (frm) {
         var cust_name_desc = __("Legal Name, for tax, government or contract use. For Example: Apple, Inc. Amazon.com, Inc., The Home Depot, Inc.");
@@ -93,12 +94,12 @@ frappe.ui.form.on("Supplier", {
         frm.set_df_property("facelec_nit_proveedor", "reqd", 1);
     },
     facelec_nit_proveedor: function (frm) {
-        valNit(frm.doc.facelec_nit_proveedor, frm.doc.name, frm);
         frm.set_value('tax_id', frm.doc.facelec_nit_proveedor);
+        valNit(frm.doc.facelec_nit_proveedor, frm.doc.name, frm);
     },
     tax_id: function (frm) {
-        valNit(frm.doc.tax_id, frm.doc.name, frm);
         frm.set_value('facelec_nit_proveedor', frm.doc.tax_id);
+        // valNit(frm.doc.tax_id, frm.doc.name, frm);
     },
     refresh: function (frm) {
         var supp_name_desc = __("Legal Name, for tax, government or contract use. For Example: Apple, Inc. Amazon.com, Inc., The Home Depot, Inc.");
@@ -109,12 +110,12 @@ frappe.ui.form.on("Supplier", {
 
 frappe.ui.form.on("Company", {
     nit_face_company: function (frm) {
-        // valNit(frm.doc.nit_face_company, frm.doc.name, frm);
         frm.set_value('tax_id', frm.doc.nit_face_company);
+        valNit(frm.doc.nit_face_company, frm.doc.name, frm);
     },
     tax_id: function (frm) {
-        // valNit(frm.doc.tax_id, frm.doc.name, frm);
         frm.set_value('nit_face_company', frm.doc.tax_id);
+        // valNit(frm.doc.tax_id, frm.doc.name, frm);
     },
     setup: function (frm) {
         frm.set_query('isr_account_payable', 'tax_witholding_ranges', () => {
