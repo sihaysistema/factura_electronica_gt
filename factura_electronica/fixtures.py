@@ -488,6 +488,37 @@ def fill_fixtures():
         "dt": "Catalog Of Taxable Units"
     }
 
+    uom = {
+        "dt": "UOM", "filters": [
+            [
+                "name", "in", [
+                    "Abampere","Meter","Box","Centimeter","Unit","Marketing element","Jar","Inch","Kilogram","Kilovolts",
+                    "Kilowatt","Liter","Square Meter","Cubic Meter","Milimeters","Milliliter","Milimeter","Linear Meter",
+                    "Megawatts","Square Foot","Pair","Quart","Roll","Spanish tonnes","Metric Tonnes","Up","Yard",
+                    "Half hundred","Half dozen","12 Grams","1/2 Liter","1/2 Meter","1/2 Quintal","55 Lb. roll",
+                    "80 Grams","85 Grams","Adapter","Needle","Ampoule","Headphone","50 Lb. Barrel","55LB. Gallons","Bags",
+                    "Barrel","Battery","Liquid Measure Barrel","Wide Mouth","Bag","Bolsa","Bundle","Horn","Bottle",
+                    "Bracket","Canister","Unit C/U = Cada Uno = For Each","Box of 10","Box of 5","Box of 6","Boxes",
+                    "Camare","Can","Case","Cellular","Hundred","Cylindre","Tape","Circles","Caja","Truckload","Connector",
+                    "Cup","Spool","Quarter Gallon","Two Pack Box","Bucket","Ten count","Day","Dieciseis","Disc","Dozens",
+                    "DVD","Electrode","Multiple Marketing Element","Equipment","Desk","EST","Sticker","Bales","Four Pack",
+                    "Frasco","Fardo","Foot","Cubic Foot","Fountain","Gallon","Galón","Glove","Gram","Gross","Giga Watts",
+                    "Thread","Sheet","Hour","Hora","Printer","Incubator","Syringe","Set","Kilograms","Kit",
+                    "Square Kilometer","Kilometers Travelled","Kilovolt Amps","Kilowatt-Hour","Lancet","Laptop","Pound",
+                    "Spanish Pound","Pounds","Reader","Canvas","Literature","Liquid Metric Tons","Liters","Labor",
+                    "Half Kit","Megawatt-hour","Memory","Month","Mes","Thousand count","Mini mause","Backpack","Mouse",
+                    "Meters","Mega Volt Amps","Not Applicable","Eigt","Ounce","Patch Panel","Package","Pairs","Pack",
+                    "PET","Feet","Pipette","Plate","Portion","Par","Period","Processor","Test","Inches","Piece",
+                    "HundredWeight","R87","Bunches or Racemes","Spare part","Reams","Rolls","Ream","Sack",
+                    "Envelope, Sachet or Packet","Lite","Service","Units","Switch","Drum","Tarea (Land area unit)","Keyboard",
+                    "Thousands","Strip","Ton","CTWO Pack","Stiff","Pipe or Tube","Ninguno","Sin Empaque","Paquete","Unidad",
+                    "Ups","USB","Class or Vessel","Vehicle","Square Yard","Yards"
+                    ]
+
+            ]
+        ]
+    }
+
     # NEW FUNCTIONALITY FOR EXPORTING
     fixtures_fillup.append(custom_field)
     fixtures_fillup.append(translation)
@@ -495,6 +526,7 @@ def fill_fixtures():
     fixtures_fillup.append(id_doctype)
     fixtures_fillup.append(frases_fel)
     fixtures_fillup.append(tax_cat)
+    fixtures_fillup.append(uom)
     fixtures_fillup.append(cat_taxable_units)
 
     return fixtures_fillup
