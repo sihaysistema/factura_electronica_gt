@@ -64,6 +64,11 @@ frappe.ui.form.on("Item", {
 // Validador NIT para customer
 // Descripcion de Nombre legal
 frappe.ui.form.on("Customer", {
+    setup: function (frm) {
+        frm.set_df_property("tax_id", "reqd", 1);
+        frm.set_value('tax_id', frm.doc.nit_face_customer);
+        frm.set_df_property("nit_face_customer", "reqd", 1);
+    },
     nit_face_customer: function (frm) {
         valNit(frm.doc.nit_face_customer, frm.doc.name, frm);
         frm.set_value('tax_id', frm.doc.nit_face_customer);
@@ -82,6 +87,11 @@ frappe.ui.form.on("Customer", {
 // Validador NIT para Supplier
 // descripcion de nombre legal
 frappe.ui.form.on("Supplier", {
+    setup: function (frm) {
+        frm.set_df_property("tax_id", "reqd", 1);
+        frm.set_value('tax_id', frm.doc.facelec_nit_proveedor);
+        frm.set_df_property("facelec_nit_proveedor", "reqd", 1);
+    },
     facelec_nit_proveedor: function (frm) {
         valNit(frm.doc.facelec_nit_proveedor, frm.doc.name, frm);
         frm.set_value('tax_id', frm.doc.facelec_nit_proveedor);

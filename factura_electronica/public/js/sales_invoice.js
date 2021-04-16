@@ -21,14 +21,14 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
     // INICIO validacion existencia tabla impuesto
     var this_company_sales_tax_var = 0;
 
-    if ((cur_frm.doc.taxes.length > 0) && (cur_frm.doc.taxes[0].rate !== "undefined")) {
+    if (cur_frm.doc.taxes) {
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
     } else {
         // Muestra una notificacion para cargar una tabla de impuestos
         frappe.show_alert({
             message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente'),
             indicator: 'red'
-        }, 5);
+        }, 10);
 
         this_company_sales_tax_var = 0
     }
