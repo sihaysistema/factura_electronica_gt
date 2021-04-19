@@ -70,6 +70,10 @@ function facelec_tax_calc_new(frm, cdt, cdn) {
             frm.refresh_field("items");
             frm.refresh_field("conversion_factor");
 
+            frm.doc.items[index].facelec_gt_tax_net_fuel_amt = 0;
+            frm.doc.items[index].facelec_gt_tax_net_goods_amt = 0;
+            frm.doc.items[index].facelec_gt_tax_net_services_amt = 0;
+
             // Verificacion Individual para verificar si es Fuel, Good o Service
             if (item_row.factelecis_fuel) {
                 frm.doc.items[index].facelec_gt_tax_net_fuel_amt = (item_row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
