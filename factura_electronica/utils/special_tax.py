@@ -228,7 +228,9 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
 
                         new_gl_entry_tax.insert(ignore_permissions=True)
                     except:
-                        frappe.msgprint(_(f'Error al insertar las cuentas de impuestos especiales en GL Entry, por favor verifique que el año fiscal sea el actual, mas detalles en: <code>{frappe.get_traceback()}</code>'))
+                        frappe.msgprint(_(f'Error al insertar las cuentas de impuestos especiales en GL Entry, \
+                            por favor verifique que el año fiscal sea el actual, cancele esta factura y vuelvala \
+                            a generarla con los datos corregidos, mas detalles en: <code>{frappe.get_traceback()}</code>'))
 
             # Funcion encargada de realizar calculos con los impuestos especiales, y actualizar la factura
             # con los monton correctos

@@ -321,6 +321,7 @@ def fill_fixtures():
                     "Expense Claim Detail-column_break_26", "Expense Claim Detail-column_break_28",
                     "Expense Claim Detail-section_break_30", "Expense Claim Detail-from_invoice_reference",
                     "Customer-facelec_trade_name", "Supplier-facelec_trade_name", "Company-facelec_trade_name",
+                    "Sales Invoice-access_number_fel"
                 ]
             ]
         ]
@@ -329,7 +330,7 @@ def fill_fixtures():
     translation = {
         "dt": "Translation", "filters": [
             [
-                "source_name", "in", [
+                "source_text", "in", [
                     "Value Added Tax Exempt",
                     "Excise Taxes Categories and Exemptions",
                     "Is Exchange Invoice",
@@ -423,7 +424,10 @@ def fill_fixtures():
                     "Account for Excise Tax", "CREDIT NOTE FEL", "Are you sure you want to proceed to generate a credit note?",
                     "Generate Credit Note", "Reason Adjusment?", "CANCEL DOCUMENT FEL", "Are you sure you want to proceed to cancell a Sales Invoice FEL?",
                     "Cancell Sales Invoice FEL", "Reason for cancellation?", "DEBIT NOTE FEL", "Are you sure you want to proceed to generate a electronic debit note?",
-                    "Generate Electronic Debit Note", "Are you sure you want to proceed to generate a Electronic Special Invoice?"
+                    "Generate Electronic Debit Note", "Are you sure you want to proceed to generate a Electronic Special Invoice?",
+                    "Access Number FEL", "FEL: for exchange invoice reference only", "Withholding Tax References", "Withholding Tax Reference",
+                    "Enter the grand total amount that you want calculated for this line.", "FEL: Check if the item applies to discount to show in electronic invoice generation.",
+                    "Are you sure to cancel the current electronic document?", "Electronic Document Canceller"
                 ]
             ]
         ]

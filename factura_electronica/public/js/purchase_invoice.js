@@ -224,14 +224,15 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
     // INICIO validacion existencia tabla impuesto
     var this_company_sales_tax_var = 0;
 
-    if ((cur_frm.doc.taxes.length > 0) && (cur_frm.doc.taxes[0].rate !== "undefined")) {
+    // if ((cur_frm.doc.taxes.length > 0) && (cur_frm.doc.taxes[0].rate !== "undefined")) {
+    if (cur_frm.doc.taxes) {
         this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
     } else {
         // Muestra una notificacion para cargar una tabla de impuestos
         frappe.show_alert({
             message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente'),
             indicator: 'red'
-        }, 5);
+        }, 10);
 
         this_company_sales_tax_var = 0
     }
@@ -257,6 +258,10 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
             //OJO!  No s epuede utilizar stock_qty en los calculos, debe de ser qty a puro tubo!
             frm.doc.items[index].facelec_p_amount_minus_excise_tax = ((item_row.qty * item_row.rate) - ((item_row.qty *
                 item_row.conversion_factor) * item_row.facelec_p_tax_rate_per_uom));
+
+            frm.doc.items[index].facelec_p_gt_tax_net_fuel_amt = 0;
+            frm.doc.items[index].facelec_p_gt_tax_net_goods_amt = 0;
+            frm.doc.items[index].facelec_p_gt_tax_net_services_amt = 0;
 
             if (item_row.facelec_p_is_fuel) {
                 frm.doc.items[index].facelec_p_gt_tax_net_fuel_amt = (item_row.facelec_p_amount_minus_excise_tax / (1 + (
@@ -392,7 +397,7 @@ frappe.ui.form.on("Purchase Invoice", {
         frm.set_df_property("bill_date", "description", __("<b>FEL: Fecha de factura original</b>, dato necesario para Nota de Debito Electronica"));
 
         // Limpieza de campos cuando se duplique una factura de compra
-        clean_fields(frm);
+        // clean_fields(frm);
 
         // Validador para mostrar botones segun escenario invoice
         if (frm.doc.docstatus != 0) {
@@ -460,17 +465,17 @@ frappe.ui.form.on("Purchase Invoice", {
         frm.fields_dict.items.grid.wrapper.on('focusout blur',
             'input[data-fieldname="item_code"][data-doctype="Purchase Invoice Item"]',
             function (e) {
+                pi_each_item(frm, cdt, cdn);
                 shs_purchase_invoice_calculation(frm, cdt, cdn);
                 pi_insertar_fila_otro_impuesto(frm, cdt, cdn);
-                pi_each_item(frm, cdt, cdn);
                 validate_pi_items_acc(frm, cdt, cdn);
             });
 
         frm.fields_dict.items.grid.wrapper.on('blur focusout click',
             'input[data-fieldname="uom"][data-doctype="Purchase Invoice Item"]',
             function (e) {
-                shs_purchase_invoice_calculation(frm, cdt, cdn);
                 pi_each_item(frm, cdt, cdn);
+                shs_purchase_invoice_calculation(frm, cdt, cdn);
             });
 
         // This part might seem counterintuitive, but it is the "next" field in tab order after item code, which helps for a "creative" strategy to update everything after pressing TAB out of the item code field.  FIXME
@@ -494,8 +499,8 @@ frappe.ui.form.on("Purchase Invoice", {
             'input[data-fieldname="conversion_factor"][data-doctype="Purchase Invoice Item"]',
             function (e) {
                 // Trying to calc first, then refresh, or no refresh at all...
-                shs_purchase_invoice_calculation(frm, cdt, cdn);
                 pi_each_item(frm, cdt, cdn);
+                shs_purchase_invoice_calculation(frm, cdt, cdn);
                 cur_frm.refresh_field("conversion_factor");
             });
 
@@ -657,10 +662,12 @@ frappe.ui.form.on("Purchase Invoice Item", {
         // Trigger codigo de producto
         // var this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
         // console.log("If you can see this, tax rate variable now exists, and its set to: " + this_company_sales_tax_var);
-        refresh_field('qty');
+        // refresh_field('qty');
         pi_each_item(frm, cdt, cdn);
-
         validate_pi_items_acc(frm, cdt, cdn);
+
+        let row = frappe.get_doc(cdt, cdn);
+
         pi_clean_other_tax(frm);
     },
     qty: function (frm, cdt, cdn) {

@@ -80,8 +80,8 @@ class ElectronicDebitNote:
                 }
 
                 # USAR SOLO PARA DEBUG:
-                with open('nota_debito_electronica.json', 'w') as f:
-                    f.write(json.dumps(self.__base_peticion, indent=2))
+                # with open('nota_debito_electronica.json', 'w') as f:
+                #     f.write(json.dumps(self.__base_peticion, indent=2))
 
                 return True,'OK'
             else:
@@ -633,8 +633,8 @@ class ElectronicDebitNote:
             # with open('codificado.txt', 'w') as f:
             #         f.write(self.__encoded_str)
 
-            with open('NOTA-DEBITO.xml', 'w') as f:
-                f.write(self.__xml_string)
+            # with open('NOTA-DEBITO.xml', 'w') as f:
+            #     f.write(self.__xml_string)
 
         except:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
@@ -671,8 +671,8 @@ class ElectronicDebitNote:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            with open('nota_debito_firmada.json', 'w') as f:
-                f.write(json.dumps(self.__doc_firmado, indent=2))
+            # with open('nota_debito_firmada.json', 'w') as f:
+            #     f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -722,8 +722,8 @@ class ElectronicDebitNote:
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
-            with open('response_debit_note.json', 'w') as f:
-                f.write(json.dumps(self.__response_ok, indent=2))
+            # with open('response_debit_note.json', 'w') as f:
+            #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 

@@ -12,7 +12,22 @@ function delivery_note_each_item(frm, cdt, cdn) {
 // Calculos para Nota de Entrega
 function shs_delivery_note_calculation(frm, cdt, cdn) {
     cur_frm.refresh_fields();
-    var this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+
+    var this_company_sales_tax_var = 0;
+
+    if (cur_frm.doc.taxes) {
+        this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+    } else {
+        // Muestra una notificacion para cargar una tabla de impuestos
+        frappe.show_alert({
+            message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente'),
+            indicator: 'red'
+        }, 10);
+
+        this_company_sales_tax_var = 0
+    }
+
+    // var this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
 
     var this_row_amount = 0;
     var this_row_stock_qty = 0;
@@ -145,9 +160,9 @@ frappe.ui.form.on("Delivery Note", {
         // });
 
         // When mouse leaves the field
-        cur_frm.fields_dict.customer.$input.on("blur focusout", function (evt) {
-            shs_delivery_note_calculation(frm, cdt, cdn);
-        });
+        // cur_frm.fields_dict.customer.$input.on("blur focusout", function (evt) {
+        //     shs_delivery_note_calculation(frm, cdt, cdn);
+        // });
 
         // Mouse clicks over the items field
         cur_frm.fields_dict.items.$wrapper.on("blur focusout", function (evt) {
