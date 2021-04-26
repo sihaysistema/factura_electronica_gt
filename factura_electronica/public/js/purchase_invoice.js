@@ -396,9 +396,6 @@ frappe.ui.form.on("Purchase Invoice", {
         frm.set_df_property("bill_no", "description", __("<b>FEL: UUID de factura original</b>, dato necesario para Nota de Debito Electronica"));
         frm.set_df_property("bill_date", "description", __("<b>FEL: Fecha de factura original</b>, dato necesario para Nota de Debito Electronica"));
 
-        // Limpieza de campos cuando se duplique una factura de compra
-        // clean_fields(frm);
-
         // Validador para mostrar botones segun escenario invoice
         if (frm.doc.docstatus != 0) {
             frappe.call({
@@ -460,6 +457,9 @@ frappe.ui.form.on("Purchase Invoice", {
 
     },
     onload_post_render: function (frm, cdt, cdn) {
+
+        // Limpieza de campos cuando se duplique una factura de compra
+        clean_fields(frm);
 
         // Activa los listener cuando se carga el documento
         frm.fields_dict.items.grid.wrapper.on('focusout blur',
@@ -961,7 +961,7 @@ function clean_fields(frm) {
         frm.set_value("numero_autorizacion_fel", '');
         frm.set_value("serie_original_del_documento", '');
 
-        frm.refresh_fields();
+        // frm.refresh_fields();
     }
 }
 

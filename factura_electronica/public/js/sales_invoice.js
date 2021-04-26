@@ -391,6 +391,7 @@ function generar_tabla_html(frm) {
 /* Factura de Ventas-------------------------------------------------------------------------------------------------- */
 frappe.ui.form.on("Sales Invoice", {
     onload_post_render: function (frm, cdt, cdn) {
+        clean_fields(frm);
 
         frm.fields_dict.items.grid.wrapper.on('focusout blur',
             'input[data-fieldname="item_code"][data-doctype="Sales Invoice Item"]',
@@ -494,8 +495,6 @@ frappe.ui.form.on("Sales Invoice", {
         // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
         // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
         cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
-
-        // clean_fields(frm);
 
         if (frm.doc.docstatus != 0) {
             // INICIO BOTONES GENERADORES DOCS ELECTRONICOS
@@ -858,7 +857,7 @@ function clean_fields(frm) {
         frm.set_value("facelec_record_number", '');
         frm.set_value("facelec_record_value", '');
         frm.set_value("access_number_fel", '');
-        frm.refresh_fields();
+        // frm.refresh_fields();
 
         // console.log('Hay que limpiar')
     }
