@@ -879,7 +879,7 @@ function btn_canceller(frm) {
                         fieldtype: 'Data',
                         reqd: 1
                     }],
-                    primary_action_label: _('Submit'),
+                    primary_action_label: ('Submit'),
                     primary_action(values) {
                         frappe.call({
                             method: 'factura_electronica.fel_api.invoice_canceller',
