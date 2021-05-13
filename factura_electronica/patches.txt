@@ -1,1 +1,1 @@
-factura_electronica.patches.v7_0_9.update_properties_fields
+factura_electronica.patches.v7_0_9.update_props_address

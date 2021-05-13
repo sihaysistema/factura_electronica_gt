@@ -189,7 +189,7 @@ frappe.ui.form.on("Address", {
         frm.set_df_property("address_line1", "description", __("<b>* FEL: Direccion Comercial 1</b>"));
         frm.set_df_property("city", "description", __("<b>FEL: Ciudad</b>  p. ej.: Antigua Guatemala"));
         frm.set_df_property("state", "description", __("<b>FEL: Departamento</b>  p. ej.: Sacatepéquez"));
-        frm.set_df_property("county", "description", __("<b>Municipio</b>  p. ej.: Antigua Guatemala"));
+        frm.set_df_property("county", "description", __("<b>FEL: Municipio</b>  p. ej.: Antigua Guatemala"));
 
         frm.set_df_property("country", "description", __("<b>FEL: Pais</b>  p. ej: Guatemala"));
         frm.set_df_property("email_id", "description", __("<b>FEL: Correo Electronico</b>  p. ej: micorreo@hola.com"));
@@ -224,13 +224,13 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
     },
 
     render_dialog: function () {
-        console.log('Ejecutando prueba')
+        // console.log('Ejecutando prueba')
         this.mandatory = this.get_field();
         this._super();
     },
 
     get_field: function () {
-        var variant_fields = [
+        const variant_fields = [
             {
                 label: __('Full Name'),
                 fieldname: 'customer_name',
@@ -251,6 +251,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 label: __('NIT FEL'),
                 fieldname: 'nit_face_customer',
                 fieldtype: 'Data',
+                description: '<b>FEL:</b> Si no tiene disponible el NIT escriba C/F'
             },
             {
                 fieldtype: "Column Break"
@@ -260,7 +261,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 fieldname: 'tax_id',
                 fieldtype: 'Data',
                 reqd: true,
-                description: 'FEL'
+                description: '<b>FEL:</b> Si no tiene disponible el NIT escriba C/F'
             },
             {
                 fieldtype: "Section Break",
@@ -288,7 +289,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 fieldname: "email_id",
                 fieldtype: "Data",
                 options: 'Email',
-                reqd: 0
+                reqd: 1
             },
             {
                 fieldtype: "Column Break"
@@ -298,6 +299,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 fieldname: "mobile_no",
                 fieldtype: "Data"
             },
+
             {
                 fieldtype: "Section Break",
                 label: __("Primary Address Details"),
@@ -328,8 +330,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 fieldname: "county",
                 fieldtype: "Data",
                 reqd: 1,
-                description: '<b>FEL Municipio</b> ej.: Antigua Guatemala',
-                allow_in_quick_entry: 1
+                description: '<b>FEL: Municipio</b> p. ej.: Antigua Guatemala'
             },
             {
                 label: __("State"),
@@ -350,6 +351,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 label: __("ZIP Code"),
                 fieldname: "pincode",
                 default: '0',
+                reqd: 1,
                 fieldtype: "Data",
                 description: '<b>FEL Código Postal</b> ej.: 03001'
             },
@@ -368,7 +370,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 fieldtype: "Data",
                 reqd: 1,
                 allow_in_quick_entry: 1,
-                options: 'Email',
+                // options: 'Email',
                 description: '<b>FEL Correo Electronico</b> ej: micorreo@hola.com',
             },
             {
@@ -377,7 +379,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 fieldtype: "Check",
                 description: '<b>FEL Dirección para facturar</b>',
                 allow_in_quick_entry: 1
-            },];
+            }];
 
         return variant_fields;
     },

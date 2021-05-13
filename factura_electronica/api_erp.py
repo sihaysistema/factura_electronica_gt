@@ -6,10 +6,12 @@ from __future__ import unicode_literals
 import json
 
 import frappe
+from frappe import _
+from frappe.utils import cstr
+
 from factura_electronica.controllers.journal_entry import JournalEntrySaleInvoice
 from factura_electronica.controllers.journal_entry_special import JournalEntrySpecialISR
 from factura_electronica.factura_electronica.doctype.batch_electronic_invoice.batch_electronic_invoice import batch_generator
-from frappe import _
 
 # USAR ESTE SCRIPT COMO API PARA COMUNICAR APPS DEL ECOSISTEMA FRAPPE/ERPNEXT :)
 
@@ -133,3 +135,27 @@ def download_asl_files():
         filedata = fileobj.read()
     frappe.local.response.filecontent = filedata
     frappe.local.response.type = "download"
+
+
+def custom_customer_info(doc, method):
+    # Runs on event update - Customer
+    # this function will get call `on_update` as we define in hook.py
+    add_address_info(doc)
+
+
+def add_address_info(doc):
+    if doc.flags.is_new_doc and doc.get('address_line1'):
+        # this name construct should work
+        # because we just create this customer
+        # Billing is default type
+        # there shouldn't be any more address of this customer
+        address_name = (
+            cstr(doc.name).strip() + '-' + cstr(_('Billing')).strip()
+        )
+        address_doc = frappe.get_doc('Address', address_name)
+        # adding custom data to address
+        address_doc.email_id = doc.get('email_id')
+        address_doc.county = doc.get('county')
+        address_doc.phone = doc.get('phone')
+        address_doc.is_primary_address = doc.get('is_primary_address')
+        address_doc.save()
