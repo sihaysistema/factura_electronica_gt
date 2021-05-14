@@ -145,25 +145,29 @@ def custom_customer_info(doc, method):
 
 
 def add_address_info(doc):
-    if doc.flags.is_new_doc and doc.get('address_line1'):
-        # this name construct should work
-        # because we just create this customer
-        # Billing is default type
-        # there shouldn't be any more address of this customer
-        address_name = (
-            cstr(doc.name).strip() + '-' + cstr(_('Billing')).strip()
-        )
-        address_doc = frappe.get_doc('Address', address_name)
+    try:
+        if doc.flags.is_new_doc and doc.get('address_line1'):
+            # this name construct should work
+            # because we just create this customer
+            # Billing is default type
+            # there shouldn't be any more address of this customer
+            address_name = (
+                cstr(doc.name).strip() + '-' + cstr(_('Billing')).strip()
+            )
+            address_doc = frappe.get_doc('Address', address_name)
 
-        email_facelec = ""
-        if not doc.get('email_id'):
-            status_config = validate_configuration()
-            if status_config[1]:
-                email_facelec = frappe.db.get_value('Configuracion Factura Electronica', {'name': status_config[1]}, 'correo_copia')
+            email_facelec = doc.get('email_id')
+            if not doc.get('email_id'):
+                status_config = validate_configuration()
+                if status_config[0] and status_config[1]:
+                    email_facelec = frappe.db.get_value('Configuracion Factura Electronica', {'name': status_config[1]}, 'correo_copia')
 
-        # adding custom data to address
-        address_doc.email_id = email_facelec
-        address_doc.county = doc.get('county')
-        address_doc.phone = doc.get('phone')
-        address_doc.is_primary_address = doc.get('is_primary_address')
-        address_doc.save()
+            # adding custom data to address
+            address_doc.email_id = email_facelec
+            address_doc.county = doc.get('county')
+            address_doc.phone = doc.get('phone')
+            # En la creacion de direccion se definira como default
+            address_doc.is_primary_address = doc.get('is_primary_address') if doc.get('is_primary_address') else 1
+            address_doc.save()
+    except:
+        pass
