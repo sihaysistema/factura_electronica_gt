@@ -108,7 +108,10 @@ doc_events = {
     #     # "on_save": "factura_electronica.api.get_tax_html",
     #     "on_cancel": "method",
     #     "on_trash": "method"
-    # }
+    # },
+    'Customer': {
+        'on_update': 'factura_electronica.api_erp.custom_customer_info'
+    }
 }
 
 # Scheduled Tasks
