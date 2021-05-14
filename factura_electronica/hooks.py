@@ -109,6 +109,9 @@ doc_events = {
     #     "on_cancel": "method",
     #     "on_trash": "method"
     # }
+    'Customer': {
+        'on_update': 'factura_electronica.api_erp.custom_customer_info'
+    }
 }
 
 # Scheduled Tasks
