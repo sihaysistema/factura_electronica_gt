@@ -6,10 +6,13 @@ from __future__ import unicode_literals
 import json
 
 import frappe
+from frappe import _
+from frappe.utils import cstr
+
 from factura_electronica.controllers.journal_entry import JournalEntrySaleInvoice
 from factura_electronica.controllers.journal_entry_special import JournalEntrySpecialISR
 from factura_electronica.factura_electronica.doctype.batch_electronic_invoice.batch_electronic_invoice import batch_generator
-from frappe import _
+from factura_electronica.fel_api import validate_configuration
 
 # USAR ESTE SCRIPT COMO API PARA COMUNICAR APPS DEL ECOSISTEMA FRAPPE/ERPNEXT :)
 
@@ -133,3 +136,38 @@ def download_asl_files():
         filedata = fileobj.read()
     frappe.local.response.filecontent = filedata
     frappe.local.response.type = "download"
+
+
+def custom_customer_info(doc, method):
+    # Runs on event update - Customer
+    # this function will get call `on_update` as we define in hook.py
+    add_address_info(doc)
+
+
+def add_address_info(doc):
+    try:
+        if doc.flags.is_new_doc and doc.get('address_line1'):
+            # this name construct should work
+            # because we just create this customer
+            # Billing is default type
+            # there shouldn't be any more address of this customer
+            address_name = (
+                cstr(doc.name).strip() + '-' + cstr(_('Billing')).strip()
+            )
+            address_doc = frappe.get_doc('Address', address_name)
+
+            email_facelec = doc.get('email_id')
+            if not doc.get('email_id'):
+                status_config = validate_configuration()
+                if status_config[0] and status_config[1]:
+                    email_facelec = frappe.db.get_value('Configuracion Factura Electronica', {'name': status_config[1]}, 'correo_copia')
+
+            # adding custom data to address
+            address_doc.email_id = email_facelec
+            address_doc.county = doc.get('county')
+            address_doc.phone = doc.get('phone')
+            # En la creacion de direccion se definira como default
+            address_doc.is_primary_address = doc.get('is_primary_address') if doc.get('is_primary_address') else 1
+            address_doc.save()
+    except:
+        pass
