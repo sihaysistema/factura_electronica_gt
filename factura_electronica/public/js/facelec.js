@@ -251,6 +251,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 label: __('NIT FEL'),
                 fieldname: 'nit_face_customer',
                 fieldtype: 'Data',
+                default: 'C/F',
                 description: '<b>FEL:</b> Si no tiene disponible el NIT escriba C/F'
             },
             {
@@ -260,6 +261,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 label: __('NIT'),
                 fieldname: 'tax_id',
                 fieldtype: 'Data',
+                default: 'C/F',
                 reqd: true,
                 description: '<b>FEL:</b> Si no tiene disponible el NIT escriba C/F'
             },
@@ -322,6 +324,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 label: __("City/Town"),
                 fieldname: "city",
                 fieldtype: "Data",
+                default: 'Guatemala',
                 reqd: 1,
                 description: '<b>FEL Ciudad</b> ej.: Antigua Guatemala'
             },
@@ -329,6 +332,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 label: __("County"),
                 fieldname: "county",
                 fieldtype: "Data",
+                default: 'Guatemala',
                 reqd: 1,
                 description: '<b>FEL: Municipio</b> p. ej.: Antigua Guatemala'
             },
@@ -336,6 +340,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 label: __("State"),
                 fieldname: "state",
                 fieldtype: "Data",
+                default: 'Guatemala',
                 reqd: 1,
                 description: '<b>FEL Departamento</b> ej.: Sacatepéquez'
             },
@@ -343,6 +348,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
                 label: __("Country"),
                 fieldname: "country",
                 fieldtype: "Link",
+                default: 'Guatemala',
                 reqd: 1,
                 options: 'Country',
                 description: '<b>FEL Pais</b> ej: Guatemala'

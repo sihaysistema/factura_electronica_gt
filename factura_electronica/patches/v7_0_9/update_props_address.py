@@ -17,7 +17,7 @@ def execute():
         frappe.make_property_setter({
             "doctype": "Address",
             "fieldname": "pincode",
-            # "default": "0",
+            "default": "0",
             "property": "reqd",
             "value": 1,
             "property_type": "Int"
@@ -36,7 +36,7 @@ def execute():
             "doctype": "Address",
             "fieldname": "email_id",
             "property": "reqd",
-            "value": 1,
+            "value": 0,
             "property_type": "Int"
         })
 
@@ -69,12 +69,30 @@ def execute():
         frappe.make_property_setter({
             "doctype": "Address",
             "fieldname": "tax_id",
+            "default": "C/F",
             "property": "allow_in_quick_entry",
             "value": 1,
             "property_type": "Int"
         })
 
-        for ffield in ["city", "county", "state", "country"]:
+        frappe.make_property_setter({
+            "doctype": "Customer",
+            "fieldname": "county",
+            "property": "reqd",
+            "value": 0,
+            "property_type": "Int"
+        })
+
+        frappe.make_property_setter({
+            "doctype": "Address",
+            "fieldname": "county",
+            "default": "Guatemala",
+            "property": "allow_in_quick_entry",
+            "value": 1,
+            "property_type": "Int"
+        })
+
+        for ffield in ["city", "state", "country"]:
             frappe.make_property_setter({
                 "doctype": "Address",
                 "fieldname": ffield,

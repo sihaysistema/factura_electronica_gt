@@ -12,6 +12,7 @@ from frappe.utils import cstr
 from factura_electronica.controllers.journal_entry import JournalEntrySaleInvoice
 from factura_electronica.controllers.journal_entry_special import JournalEntrySpecialISR
 from factura_electronica.factura_electronica.doctype.batch_electronic_invoice.batch_electronic_invoice import batch_generator
+from factura_electronica.fel_api import validate_configuration
 
 # USAR ESTE SCRIPT COMO API PARA COMUNICAR APPS DEL ECOSISTEMA FRAPPE/ERPNEXT :)
 
@@ -153,8 +154,15 @@ def add_address_info(doc):
             cstr(doc.name).strip() + '-' + cstr(_('Billing')).strip()
         )
         address_doc = frappe.get_doc('Address', address_name)
+
+        email_facelec = ""
+        if not doc.get('email_id'):
+            status_config = validate_configuration()
+            if status_config[1]:
+                email_facelec = frappe.db.get_value('Configuracion Factura Electronica', {'name': status_config[1]}, 'correo_copia')
+
         # adding custom data to address
-        address_doc.email_id = doc.get('email_id')
+        address_doc.email_id = email_facelec
         address_doc.county = doc.get('county')
         address_doc.phone = doc.get('phone')
         address_doc.is_primary_address = doc.get('is_primary_address')
