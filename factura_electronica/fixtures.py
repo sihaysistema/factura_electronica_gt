@@ -427,7 +427,8 @@ def fill_fixtures():
                     "Generate Electronic Debit Note", "Are you sure you want to proceed to generate a Electronic Special Invoice?",
                     "Access Number FEL", "FEL: for exchange invoice reference only", "Withholding Tax References", "Withholding Tax Reference",
                     "Enter the grand total amount that you want calculated for this line.", "FEL: Check if the item applies to discount to show in electronic invoice generation.",
-                    "Are you sure to cancel the current electronic document?", "Electronic Document Canceller"
+                    "Are you sure to cancel the current electronic document?", "Electronic Document Canceller", "Requested By:",
+                    "Authorized By:", "Code and Item Image", "Name, Quantity, Price, Destination Warehouse", "Name, Quantity, Price, Source Warehouse",
                 ]
             ]
         ]
