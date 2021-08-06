@@ -4,96 +4,103 @@ import { valNit } from './facelec.js';
 
 /* Sales Order (Orden de Venta) ------------------------------------------------------------------------------------------------------- */
 function sales_order_each_item(frm, cdt, cdn) {
-    frm.doc.items.forEach((item) => {
-        shs_sales_order_calculation(frm, "Sales Order Item", item.name);
-    });
+    if (frm.doc.docstatus == 0) {
+        frm.doc.items.forEach((item) => {
+            shs_sales_order_calculation(frm, "Sales Order Item", item.name);
+        });
+    }
 }
 
 // Calculos para Orden de Venta
 function shs_sales_order_calculation(frm, cdt, cdn) {
     cur_frm.refresh_fields();
 
-    var this_company_sales_tax_var = 0;
+    // Si el doc esta validado o cancelado no se haran los calculos
+    if (frm.doc.docstatus == 0) {
 
-    if (cur_frm.doc.taxes) {
-        this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
-    } else {
-        // Muestra una notificacion para cargar una tabla de impuestos
-        frappe.show_alert({
-            message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente'),
-            indicator: 'red'
-        }, 10);
+        var this_company_sales_tax_var = 0;
 
-        this_company_sales_tax_var = 0
+        if (cur_frm.doc.taxes) {
+            this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+        } else {
+            // Muestra una notificacion para cargar una tabla de impuestos
+            frappe.show_alert({
+                message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente'),
+                indicator: 'red'
+            }, 10);
+
+            this_company_sales_tax_var = 0
+        }
+
+        // var this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+
+        var this_row_amount = 0;
+        var this_row_stock_qty = 0;
+        var this_row_tax_rate = 0;
+        var this_row_tax_amount = 0;
+        var this_row_taxable_amount = 0;
+
+        frm.doc.items.forEach((item_row, index) => {
+
+            if (item_row.name == cdn) {
+                this_row_amount = (item_row.qty * item_row.rate);
+                this_row_stock_qty = (item_row.qty * item_row.conversion_factor);
+                this_row_tax_rate = (item_row.shs_so_tax_rate_per_uom);
+                this_row_tax_amount = (this_row_stock_qty * this_row_tax_rate);
+                this_row_taxable_amount = (this_row_amount - this_row_tax_amount);
+
+                frm.doc.items[index].shs_so_other_tax_amount = ((item_row.shs_so_tax_rate_per_uom * (item_row.qty * item_row.conversion_factor)));
+                //OJO!  No s epuede utilizar stock_qty en los calculos, debe de ser qty a puro tubo!
+                frm.doc.items[index].shs_so_amount_minus_excise_tax = ((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.shs_so_tax_rate_per_uom));
+
+                if (item_row.shs_so_is_fuel) {
+                    frm.doc.items[index].shs_so_gt_tax_net_fuel_amt = (item_row.shs_so_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                    frm.doc.items[index].shs_so_sales_tax_for_this_row = (item_row.shs_so_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
+                    // Sumatoria de todos los que tengan el check combustibles
+                    let total_fuel = 0;
+                    $.each(frm.doc.items || [], function (i, d) {
+                        if (d.shs_so_is_fuel == true) {
+                            total_fuel += flt(d.shs_so_gt_tax_net_fuel_amt);
+                        };
+                    });
+                    frm.doc.shs_gt_tax_fuel = total_fuel;
+                };
+
+                if (item_row.shs_so_is_good) {
+                    frm.doc.items[index].shs_so_gt_tax_net_goods_amt = (item_row.shs_so_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                    frm.doc.items[index].shs_so_sales_tax_for_this_row = (item_row.shs_so_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
+                    // Sumatoria de todos los que tengan el check bienes
+                    let total_goods = 0;
+                    $.each(frm.doc.items || [], function (i, d) {
+                        if (d.shs_so_is_good == true) {
+                            total_goods += flt(d.shs_so_gt_tax_net_goods_amt);
+                        };
+                    });
+                    frm.doc.shs_so_gt_tax_goods = total_goods;
+                };
+
+                if (item_row.shs_so_is_service) {
+                    frm.doc.items[index].shs_so_gt_tax_net_services_amt = (item_row.shs_so_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+                    frm.doc.items[index].shs_so_sales_tax_for_this_row = (item_row.shs_so_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
+                    // Sumatoria de todos los que tengan el check servicios
+                    let total_servi = 0;
+                    $.each(frm.doc.items || [], function (i, d) {
+                        if (d.shs_so_is_service == true) {
+                            total_servi += flt(d.shs_so_gt_tax_net_services_amt);
+                        };
+                    });
+                    frm.doc.shs_so_gt_tax_services = total_servi;
+                };
+
+                let full_tax_iva = 0;
+                $.each(frm.doc.items || [], function (i, d) {
+                    full_tax_iva += flt(d.shs_so_sales_tax_for_this_row);
+                });
+                frm.doc.shs_so_total_iva = full_tax_iva;
+            };
+        });
+
     }
-
-    // var this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
-
-    var this_row_amount = 0;
-    var this_row_stock_qty = 0;
-    var this_row_tax_rate = 0;
-    var this_row_tax_amount = 0;
-    var this_row_taxable_amount = 0;
-
-    frm.doc.items.forEach((item_row, index) => {
-
-        if (item_row.name == cdn) {
-            this_row_amount = (item_row.qty * item_row.rate);
-            this_row_stock_qty = (item_row.qty * item_row.conversion_factor);
-            this_row_tax_rate = (item_row.shs_so_tax_rate_per_uom);
-            this_row_tax_amount = (this_row_stock_qty * this_row_tax_rate);
-            this_row_taxable_amount = (this_row_amount - this_row_tax_amount);
-
-            frm.doc.items[index].shs_so_other_tax_amount = ((item_row.shs_so_tax_rate_per_uom * (item_row.qty * item_row.conversion_factor)));
-            //OJO!  No s epuede utilizar stock_qty en los calculos, debe de ser qty a puro tubo!
-            frm.doc.items[index].shs_so_amount_minus_excise_tax = ((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.shs_so_tax_rate_per_uom));
-
-            if (item_row.shs_so_is_fuel) {
-                frm.doc.items[index].shs_so_gt_tax_net_fuel_amt = (item_row.shs_so_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-                frm.doc.items[index].shs_so_sales_tax_for_this_row = (item_row.shs_so_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
-                // Sumatoria de todos los que tengan el check combustibles
-                let total_fuel = 0;
-                $.each(frm.doc.items || [], function (i, d) {
-                    if (d.shs_so_is_fuel == true) {
-                        total_fuel += flt(d.shs_so_gt_tax_net_fuel_amt);
-                    };
-                });
-                frm.doc.shs_gt_tax_fuel = total_fuel;
-            };
-
-            if (item_row.shs_so_is_good) {
-                frm.doc.items[index].shs_so_gt_tax_net_goods_amt = (item_row.shs_so_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-                frm.doc.items[index].shs_so_sales_tax_for_this_row = (item_row.shs_so_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
-                // Sumatoria de todos los que tengan el check bienes
-                let total_goods = 0;
-                $.each(frm.doc.items || [], function (i, d) {
-                    if (d.shs_so_is_good == true) {
-                        total_goods += flt(d.shs_so_gt_tax_net_goods_amt);
-                    };
-                });
-                frm.doc.shs_so_gt_tax_goods = total_goods;
-            };
-
-            if (item_row.shs_so_is_service) {
-                frm.doc.items[index].shs_so_gt_tax_net_services_amt = (item_row.shs_so_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-                frm.doc.items[index].shs_so_sales_tax_for_this_row = (item_row.shs_so_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
-                // Sumatoria de todos los que tengan el check servicios
-                let total_servi = 0;
-                $.each(frm.doc.items || [], function (i, d) {
-                    if (d.shs_so_is_service == true) {
-                        total_servi += flt(d.shs_so_gt_tax_net_services_amt);
-                    };
-                });
-                frm.doc.shs_so_gt_tax_services = total_servi;
-            };
-
-            let full_tax_iva = 0;
-            $.each(frm.doc.items || [], function (i, d) {
-                full_tax_iva += flt(d.shs_so_sales_tax_for_this_row);
-            });
-            frm.doc.shs_so_total_iva = full_tax_iva;
-        };
-    });
 }
 
 frappe.ui.form.on("Sales Order", {

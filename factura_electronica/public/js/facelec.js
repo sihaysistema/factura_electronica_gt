@@ -196,10 +196,11 @@ frappe.ui.form.on("Address", {
         frm.set_df_property("address_line1", "description", __("<b>* FEL: Direccion Comercial 1</b>"));
         frm.set_df_property("city", "description", __("<b>FEL: Ciudad</b>  p. ej.: Antigua Guatemala"));
         frm.set_df_property("state", "description", __("<b>FEL: Departamento</b>  p. ej.: Sacatepéquez"));
-        frm.set_df_property("county", "description", __("<b>Municipio</b>  p. ej.: Antigua Guatemala"));
-
+        frm.set_df_property("county", "description", __("<b>FEL: Municipio</b>  p. ej.: Antigua Guatemala"));
+        frm.set_df_property("county", "reqd", 1);
         frm.set_df_property("country", "description", __("<b>FEL: Pais</b>  p. ej: Guatemala"));
         frm.set_df_property("email_id", "description", __("<b>FEL: Correo Electronico</b>  p. ej: micorreo@hola.com"));
+        frm.set_df_property("email_id", "reqd", 1);
         frm.set_df_property("phone", "description", __("<b>Teléfono:</b>  p. ej: +502 2333-2516"));
         frm.set_df_property("pincode", "description", __("<b>FEL: Código Postal</b>  p. ej.: 03001"));
         frm.set_df_property("is_primary_address", "description", __("<b>FEL: Dirección para facturar</b>"));
@@ -220,3 +221,181 @@ frappe.ui.form.on("Expense Claim Detail", {
         }
     },
 });
+
+
+// Personalizador de quick entry en customer
+frappe.provide('frappe.ui.form');
+
+frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
+    init: function (doctype, after_insert) {
+        this.skip_redirect_on_error = true;
+        this._super(doctype, after_insert);
+    },
+
+    render_dialog: function () {
+        // console.log('Ejecutando prueba')
+        this.mandatory = this.get_field();
+        this._super();
+    },
+
+    get_field: function () {
+        const variant_fields = [
+            {
+                label: __('Full Name'),
+                fieldname: 'customer_name',
+                fieldtype: 'Data',
+            },
+            {
+                label: __('Type'),
+                fieldname: 'customer_type',
+                fieldtype: 'Select',
+                options: ['', 'Company', 'Individual']
+            },
+            {
+                fieldtype: "Section Break",
+                label: __(""),
+                collapsible: 0
+            },
+            {
+                label: __('NIT FEL'),
+                fieldname: 'nit_face_customer',
+                fieldtype: 'Data',
+                default: 'C/F',
+                description: '<b>FEL:</b> Si no tiene disponible el NIT escriba C/F'
+            },
+            {
+                fieldtype: "Column Break"
+            },
+            {
+                label: __('NIT'),
+                fieldname: 'tax_id',
+                fieldtype: 'Data',
+                default: 'C/F',
+                reqd: true,
+                description: '<b>FEL:</b> Si no tiene disponible el NIT escriba C/F'
+            },
+            {
+                fieldtype: "Section Break",
+                label: __(""),
+                collapsible: 0
+            },
+            {
+                label: __('Customer Group'),
+                fieldname: 'customer_group',
+                fieldtype: 'Link',
+            },
+            {
+                label: __('Territory'),
+                fieldname: 'territory',
+                fieldtype: 'Link',
+            },
+
+            {
+                fieldtype: "Section Break",
+                label: __("Primary Contact Details"),
+                collapsible: 1
+            },
+            {
+                label: __("Email ID"),
+                fieldname: "email_id",
+                fieldtype: "Data",
+                options: 'Email',
+                reqd: 1
+            },
+            {
+                fieldtype: "Column Break"
+            },
+            {
+                label: __("Mobile Number"),
+                fieldname: "mobile_no",
+                fieldtype: "Data"
+            },
+
+            {
+                fieldtype: "Section Break",
+                label: __("Primary Address Details"),
+                collapsible: 1
+            },
+            {
+                label: __("Address Line 1"),
+                fieldname: "address_line1",
+                fieldtype: "Data",
+                default: 'Guatemala',
+                reqd: 1,
+                options: '<b>FEL</b>'
+            },
+            {
+                label: __("Address Line 2"),
+                fieldname: "address_line2",
+                fieldtype: "Data"
+            },
+            {
+                label: __("City/Town"),
+                fieldname: "city",
+                fieldtype: "Data",
+                default: 'Guatemala',
+                reqd: 1,
+                description: '<b>FEL Ciudad</b> ej.: Antigua Guatemala'
+            },
+            {
+                label: __("County"),
+                fieldname: "county",
+                fieldtype: "Data",
+                default: 'Guatemala',
+                reqd: 1,
+                description: '<b>FEL: Municipio</b> p. ej.: Antigua Guatemala'
+            },
+            {
+                label: __("State"),
+                fieldname: "state",
+                fieldtype: "Data",
+                default: 'Guatemala',
+                reqd: 1,
+                description: '<b>FEL Departamento</b> ej.: Sacatepéquez'
+            },
+            {
+                label: __("Country"),
+                fieldname: "country",
+                fieldtype: "Link",
+                default: 'Guatemala',
+                reqd: 1,
+                options: 'Country',
+                description: '<b>FEL Pais</b> ej: Guatemala'
+            },
+            {
+                label: __("ZIP Code"),
+                fieldname: "pincode",
+                default: '0',
+                reqd: 1,
+                fieldtype: "Data",
+                description: '<b>FEL Código Postal</b> ej.: 03001'
+            },
+            {
+                fieldtype: "Column Break"
+            },
+            {
+                label: __("Phone"),
+                fieldname: "phone",
+                fieldtype: "Data",
+                allow_in_quick_entry: 1
+            },
+            {
+                label: __("Email Address"),
+                fieldname: "email_id",
+                fieldtype: "Data",
+                reqd: 1,
+                allow_in_quick_entry: 1,
+                // options: 'Email',
+                description: '<b>FEL Correo Electronico</b> ej: micorreo@hola.com',
+            },
+            {
+                label: __("Preferred Billing Address"),
+                fieldname: "is_primary_address",
+                fieldtype: "Check",
+                description: '<b>FEL Dirección para facturar</b>',
+                allow_in_quick_entry: 1
+            }];
+
+        return variant_fields;
+    },
+})
