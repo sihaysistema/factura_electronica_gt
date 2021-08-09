@@ -1,0 +1,16 @@
+{
+  "name": "facelec_docs",
+  "version": "1.0.0",
+  "description": "Documentación Factura Electrónica",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docs:dev": "vuepress dev docs --host 10.155.1.105 --port 8086",
+    "docs:build": "vuepress build docs"
+  },
+  "author": "Mario Monroy",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "vuepress": "^2.0.0-beta.23"
+  }
+}
