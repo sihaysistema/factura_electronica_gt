@@ -72,26 +72,70 @@ module.exports = {
         children: [
           // SidebarItem
           {
-            text: 'Configuración de compañía',
+            text: 'Compañía',
             link: '/configuraciones/compania.md',
           },
           {
-            text: 'Configuración de series',
+            text: 'Series',
             link: '/configuraciones/series.md',
           },
           {
-            text: 'Configuración tablas de impuestos',
+            text: 'Tablas de impuestos',
             link: '/configuraciones/impuestos.md',
           },
           {
-            text: 'Configuración de productos',
+            text: 'Productos',
             link: '/configuraciones/productos.md',
           },
           {
-            text: 'Configuración de clientes y proveedores',
+            text: 'Clientes y proveedores',
             link: '/configuraciones/clientes_proveedores.md',
           },
         ],
+      },
+      {
+        text: 'Configurar App Factura Electrónica',
+        link: '/configurar_app/',
+        children: [
+          {
+            text: 'Credenciales y escenarios',
+            link: '/configurar_app/configurar_credenciales.md',
+          }
+        ],
+      },
+      {
+        text: 'Generación documentos electrónicos',
+        link: '/generacion_docs_electronicos/',
+        children: [
+          {
+            text: 'Factura Electrónica',
+            link: '/generacion_docs_electronicos/factura_electronica.md',
+          },
+          {
+            text: 'Nota Crédito Electrónica',
+            link: '/generacion_docs_electronicos/nota_credito.md',
+          },
+          {
+            text: 'Factura Cambiaria Electrónica',
+            link: '/generacion_docs_electronicos/factura_cambiaria.md',
+          },
+          {
+            text: 'Nota Débito Electrónica',
+            link: '/generacion_docs_electronicos/nota_debito.md',
+          },
+          {
+            text: 'Factura Especial Electrónica',
+            link: '/generacion_docs_electronicos/factura_especial.md',
+          },
+          {
+            text: 'Anulación Documentos Electrónicos',
+            link: '/generacion_docs_electronicos/anulacion_documentos.md',
+          },
+        ],
+      },
+      {
+        text: 'Como contribuir',
+        link: '/contribuir/'
       }
     ],
   },

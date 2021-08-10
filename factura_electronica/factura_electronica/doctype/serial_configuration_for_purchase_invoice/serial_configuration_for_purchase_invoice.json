@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "creation": "2020-07-04 19:54:32.010699",
  "description": "Tabla para configurar series, que permite asignar tipo de documentos segun SAT ASL, Factura Electronica FEL. Aplica para Facturas de compra",
  "doctype": "DocType",
@@ -47,19 +48,19 @@
   {
    "fieldname": "frases_factura_especial_section",
    "fieldtype": "Section Break",
-   "label": "Frases Factura Especial"
+   "label": "Frases Factura Especial y Nota Debito"
   },
   {
    "fieldname": "tipo_frase_factura_especial",
    "fieldtype": "Link",
-   "label": "Tipo Frase Factura Especial",
+   "label": "Tipo Frase Factura Especial o Nota de debito",
    "options": "FEL Catalogo Frases"
   },
   {
    "fetch_from": "tipo_frase_factura_especial.descripcion",
    "fieldname": "descripci\u00f3n_frase_factura_especial",
    "fieldtype": "Text",
-   "label": "Descripci\u00f3n Frase Factura Especial",
+   "label": "Descripci\u00f3n Frase Factura Especial/Nota debito",
    "read_only": 1
   },
   {
@@ -69,24 +70,25 @@
   {
    "fieldname": "codigo_escenario_factura_especial",
    "fieldtype": "Select",
-   "label": "Codigo Escenario Factura Especial",
+   "label": "Codigo Escenario Factura Especial o Nota Debito",
    "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
   },
   {
    "fieldname": "descripcion_codigo_escenario_factura_especial",
    "fieldtype": "Text",
-   "label": "Descripcion Codigo Escenario Factura Especial",
+   "label": "Descripcion Codigo Escenario Factura Especial/Nota Debito",
    "read_only": 1
   },
   {
    "fieldname": "descripcion_especifica_factura_especial",
    "fieldtype": "Text",
-   "label": "Descripcion Especifica Factura Especial",
+   "label": "Descripcion Especifica Factura Especial/Nota Debito",
    "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2020-12-03 15:50:31.966606",
+ "links": [],
+ "modified": "2021-08-10 16:26:07.216000",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Serial Configuration For Purchase Invoice",

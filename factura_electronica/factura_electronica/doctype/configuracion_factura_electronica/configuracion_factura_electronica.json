@@ -291,7 +291,6 @@
    "label": "Alias (Prefijo WS)"
   },
   {
-   "collapsible": 1,
    "depends_on": "eval:doc.regimen === 'FEL';",
    "fieldname": "configuracion_series_fel_section",
    "fieldtype": "Section Break",
@@ -391,7 +390,6 @@
    "label": "Codigo Escenario"
   },
   {
-   "collapsible": 1,
    "fieldname": "series_configuration_for_purchase_invoices_section",
    "fieldtype": "Section Break",
    "label": "Series Configuration For Purchase Invoices"
@@ -551,7 +549,7 @@
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2021-04-16 16:09:59.174578",
+ "modified": "2021-08-10 15:34:07.501408",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

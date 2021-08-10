@@ -22,7 +22,7 @@ Cada `#` en la serie significa hasta que numero se incrementara, ejemplo; la ser
 
 - FEL-.###### -> la puedes usar para Factura electrónicas normales
 - FEL-EXPORT-.######  -> para factura electrónica de exportación
-- FEL-NOTA-CRED=.######  -> para notas de crédito electrónicas
-- FEL-FAC-CAMB=.######  -> para facturas cambiarias electrónicas
+- FEL-NOTA-CRED-.######  -> para notas de crédito electrónicas
+- FEL-FAC-CAMB-.######  -> para facturas cambiarias electrónicas
 
 <img src="../.vuepress/public/images/naming_series2.png" alt="naming_series2" style="zoom:100%;" />
