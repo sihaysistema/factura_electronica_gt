@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkfacelec_docs=self.webpackChunkfacelec_docs||[]).push([[88],{9748:(e,t,a)=>{a.r(t),a.d(t,{data:()=>l});const l={key:"v-3706649a",path:"/404.html",title:"",lang:"es-GT",frontmatter:{layout:"404"},excerpt:"",headers:[],filePathRelative:null,git:{}}},3951:(e,t,a)=>{a.r(t),a.d(t,{default:()=>l});const l={render:function(e,t){return null}}}}]);
