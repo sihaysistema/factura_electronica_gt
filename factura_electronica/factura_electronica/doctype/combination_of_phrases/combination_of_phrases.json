@@ -1,0 +1,127 @@
+{
+ "actions": [],
+ "autoname": "format:{tipo_documento}-{###}",
+ "creation": "2021-08-10 21:45:01.653786",
+ "description": "Tabla para configurar series, que permite asignar tipo de documentos segun SAT ASL, Factura Electronica FEL. Aplica para Facturas de venta",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "es_para_la_compra",
+  "es_exportacion",
+  "frase_para_exportacion_section",
+  "codigo_incoterm",
+  "combinacion_de_frase_section",
+  "tipo_frase",
+  "descripcion_de_codigo_de_frase",
+  "column_break_7",
+  "codigo_de_escenario",
+  "descripcion_codigo_de_escenario",
+  "descripcion_especifica"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "description": "Marca si la frase aplica para facturas de compra",
+   "fieldname": "es_para_la_compra",
+   "fieldtype": "Check",
+   "label": "Es Para La Compra?"
+  },
+  {
+   "fieldname": "frase_para_exportacion_section",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Frase Para Exportaci\u00f3n"
+  },
+  {
+   "fieldname": "combinacion_de_frase_section",
+   "fieldtype": "Section Break",
+   "label": "Combinaci\u00f3n De Frase"
+  },
+  {
+   "fieldname": "tipo_frase",
+   "fieldtype": "Link",
+   "label": "Tipo Frase",
+   "options": "FEL Catalogo Frases",
+   "search_index": 1
+  },
+  {
+   "fetch_from": "tipo_frase.descripcion",
+   "fieldname": "descripcion_de_codigo_de_frase",
+   "fieldtype": "Text",
+   "label": "Descripci\u00f3n De C\u00f3digo De Frase",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_7",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "codigo_de_escenario",
+   "fieldtype": "Select",
+   "label": "C\u00f3digo De Escenario",
+   "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+  },
+  {
+   "fieldname": "descripcion_codigo_de_escenario",
+   "fieldtype": "Text",
+   "label": "Descripci\u00f3n C\u00f3digo De Escenario",
+   "read_only": 1
+  },
+  {
+   "fieldname": "descripcion_especifica",
+   "fieldtype": "Text",
+   "label": "Descripci\u00f3n Especifica",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "* Aplica solo para facturas de venta",
+   "fieldname": "es_exportacion",
+   "fieldtype": "Check",
+   "label": "Es Exportaci\u00f3n?"
+  },
+  {
+   "description": "<b>Seleccione un c\u00f3digo si la serie ser\u00e1 utilizada para facturas exportaci\u00f3n</b>",
+   "fieldname": "codigo_incoterm",
+   "fieldtype": "Select",
+   "label": "C\u00f3digo INCOTERM",
+   "options": "\nEXW\nFCA\nFAS\nFOB\nCFR\nCIF\nCPT\nCIP\nDDP\nDAP\nDAT\nZZZ"
+  }
+ ],
+ "links": [],
+ "modified": "2021-08-11 00:38:27.990936",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Combination Of Phrases",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administrator",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
