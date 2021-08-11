@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "creation": "2019-09-25 18:43:07.643617",
  "description": "Tabla para configurar series, que permite asignar tipo de documentos segun SAT ASL, Factura Electronica FEL. Aplica para Facturas de venta",
  "doctype": "DocType",
@@ -43,10 +44,12 @@
  ],
  "fields": [
   {
+   "allow_in_quick_entry": 1,
    "fieldname": "serie",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Serie"
+   "label": "Serie",
+   "search_index": 1
   },
   {
    "description": "Seleccione el tipo documento <b>FEL</b>",
@@ -62,7 +65,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Tipo documento para AsisteLibro SAT, asegurese de que este relacionado con el campo Tipo Documento",
+   "description": "EN DESARROLLO: Tipo documento para AsisteLibro SAT, aseg\u00farese de que este relacionado con el campo Tipo Documento. NO influye en la generaci\u00f3n de documentos electr\u00f3nicos.",
    "fieldname": "serie_sat",
    "fieldtype": "Select",
    "label": "Serie SAT",
@@ -193,11 +196,13 @@
    "read_only": 1
   },
   {
+   "description": "NOTA: ESTE TIPO DE DOCUMENTO AUN ESTA EN DESARROLLO",
    "fieldname": "frases_factura_exenta_section",
    "fieldtype": "Section Break",
    "label": "Frases Factura Exenta"
   },
   {
+   "description": "En desarrollo",
    "fieldname": "tipo_frase_factura_exenta",
    "fieldtype": "Link",
    "label": "Tipo Frase Factura Exenta",
@@ -215,6 +220,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "En desarrollo",
    "fieldname": "codigo_escenario_factura_exenta",
    "fieldtype": "Select",
    "label": "Codigo Escenario Factura Exenta",
@@ -251,7 +257,8 @@
   }
  ],
  "istable": 1,
- "modified": "2020-12-03 15:48:42.607166",
+ "links": [],
+ "modified": "2021-08-10 15:49:04.935071",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Series FEL",

@@ -1,10 +1,11 @@
 // Copyright (c) 2017, Frappe and contributors
 // For license information, please see license.txt
 
+// SECCION SERIES FEL
 frappe.ui.form.on('Configuracion Factura Electronica', {
     // en-US # Upon form refresh
     // es-GT # Al refrescar el formulario
-    refresh: function (frm) {
+    setup: function (frm) {
         // en-US # Call the python method indicated
         // es-GT # Llame al modulo python indicado
         // Aplica para Sales Invoice
@@ -27,6 +28,7 @@ frappe.ui.form.on('Configuracion Factura Electronica', {
             method: "factura_electronica.factura_electronica.doctype.configuracion_factura_electronica.configuracion_factura_electronica.series_sales_invoice",
             callback: function (r) {
                 frappe.meta.get_docfield('Configuracion Series FEL', 'serie', cur_frm.doc.name).options = r.message
+                // console.log("esto se asigno", r.message)
                 cur_frm.refresh_field('serie');
             }
         });

@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "autoname": "field:uuid",
  "creation": "2019-11-04 20:25:41.140517",
  "doctype": "DocType",
@@ -240,7 +241,8 @@
    "label": "XML ENVIADO EN PETICION"
   }
  ],
- "modified": "2021-04-14 09:26:22.345405",
+ "links": [],
+ "modified": "2021-08-10 17:07:51.197702",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Envio FEL",
@@ -265,18 +267,6 @@
    "read": 1,
    "report": 1,
    "role": "Sales User",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Accounts User",
    "share": 1,
    "write": 1
   },
@@ -337,18 +327,6 @@
    "read": 1,
    "report": 1,
    "role": "Projects Manager",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Customer",
    "share": 1,
    "write": 1
   },
