@@ -472,7 +472,7 @@
    "label": "Otras Configuraciones"
   },
   {
-   "description": "Seleccione el campo que desea para el nombre del producto a mostrarse en la factura de la Emitida por la SAT.",
+   "description": "Seleccione el campo que desee mostrar en el campo descripci\u00f3n de producto para el documento electr\u00f3nico a generar.",
    "fieldname": "descripcion_item",
    "fieldtype": "Select",
    "label": "Descripcion Item",
@@ -526,7 +526,7 @@
    "label": "Factura Electronica FEL (POS)"
   },
   {
-   "description": "Seleccione la opci\u00f3n de fecha y tiempo para enviar en el XML para generaci\u00f3n de documentos electr\u00f3nicos",
+   "description": "Seleccione el valor de fecha/tiempo que desee mostrar en los documentos electr\u00f3nicos a generar.\n",
    "fieldname": "fecha_y_tiempo_documento_electronica",
    "fieldtype": "Select",
    "label": "Fecha y tiempo documento electronica",
@@ -549,7 +549,7 @@
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2021-08-10 17:06:59.344794",
+ "modified": "2021-08-16 14:02:29.402918",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

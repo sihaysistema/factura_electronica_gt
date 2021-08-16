@@ -4,7 +4,7 @@
 // SECCION SERIES FEL
 frappe.ui.form.on('Configuracion Factura Electronica', {
     // en-US # Upon form refresh
-    // es-GT # Al refrescar el formulario
+    // es-GT # Al crear el formulario
     setup: function (frm) {
         // en-US # Call the python method indicated
         // es-GT # Llame al modulo python indicado

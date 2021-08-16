@@ -42,22 +42,80 @@ export function valNit(nit, cus_supp, frm) {
 /* ----------------------------------------------------------------------------------------------------------------- */
 /** Verificacion para que exista un solo check */
 frappe.ui.form.on("Item", {
+    // Si se marca el check Es Combustible
     facelec_is_fuel: function (frm, cdt, cdn) {
         if (frm.doc.facelec_is_fuel) {
             cur_frm.set_value("facelec_is_good", 0);
             cur_frm.set_value("facelec_is_service", 0);
+
+            //     // Se oculta
+            // cur_frm.toggle_display("frase_para_exportacion_section", false);
+            // se muestra, la los campos para ingresas datos de impuestos sobre combustible
+            // IMPORTANTE: ACTUALEMENTE SOLO CALCULAMOS EL ESCENARIO IDP
+            cur_frm.toggle_display("facelec_tax_rate_per_uom", true);
+            cur_frm.toggle_display("taxable_unit_name", true);
+            cur_frm.toggle_display("facelec_uom_tax_included_in_price", true);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_selling_account", true);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_purchase_account", true);
+        } else {
+            // Se ocultan los campos: para no confundir al usuario
+            cur_frm.toggle_display("facelec_tax_rate_per_uom", false);
+            cur_frm.toggle_display("taxable_unit_name", false);
+            cur_frm.toggle_display("facelec_uom_tax_included_in_price", false);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_selling_account", false);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_purchase_account", false);
+
+            // Se resetean los valores de los campos de impuestos para no generar inconvenientes
+            cur_frm.set_value("facelec_tax_rate_per_uom", "");
+            cur_frm.set_value("taxable_unit_name", "");
+            cur_frm.set_value("facelec_uom_tax_included_in_price", "");
+            cur_frm.set_value("facelec_tax_rate_per_uom", "");
+            cur_frm.set_value("facelec_tax_rate_per_uom_selling_account", "");
+            cur_frm.set_value("facelec_tax_rate_per_uom_purchase_account", "");
         }
     },
+    // Si se marca el check Es Bien
     facelec_is_good: function (frm, cdt, cdn) {
         if (frm.doc.facelec_is_good) {
             cur_frm.set_value("facelec_is_fuel", 0);
             cur_frm.set_value("facelec_is_service", 0);
+
+            // Se ocultan los campos de impuestos para combustible: para no confundir al usuario
+            cur_frm.toggle_display("facelec_tax_rate_per_uom", false);
+            cur_frm.toggle_display("taxable_unit_name", false);
+            cur_frm.toggle_display("facelec_uom_tax_included_in_price", false);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_selling_account", false);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_purchase_account", false);
+
+            // Se resetean los valores de los campos de impuestos para no generar inconvenientes
+            cur_frm.set_value("facelec_tax_rate_per_uom", "");
+            cur_frm.set_value("taxable_unit_name", "");
+            cur_frm.set_value("facelec_uom_tax_included_in_price", "");
+            cur_frm.set_value("facelec_tax_rate_per_uom", "");
+            cur_frm.set_value("facelec_tax_rate_per_uom_selling_account", "");
+            cur_frm.set_value("facelec_tax_rate_per_uom_purchase_account", "");
         }
     },
+    // Si se marca el check Es Servicio
     facelec_is_service: function (frm, cdt, cdn) {
         if (frm.doc.facelec_is_service) {
             cur_frm.set_value("facelec_is_fuel", 0);
             cur_frm.set_value("facelec_is_good", 0);
+
+            // Se ocultan los campos de impuestos para combustible: para no confundir al usuario
+            cur_frm.toggle_display("facelec_tax_rate_per_uom", false);
+            cur_frm.toggle_display("taxable_unit_name", false);
+            cur_frm.toggle_display("facelec_uom_tax_included_in_price", false);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_selling_account", false);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_purchase_account", false);
+
+            // Se resetean los valores de los campos de impuestos para no generar inconvenientes
+            cur_frm.set_value("facelec_tax_rate_per_uom", "");
+            cur_frm.set_value("taxable_unit_name", "");
+            cur_frm.set_value("facelec_uom_tax_included_in_price", "");
+            cur_frm.set_value("facelec_tax_rate_per_uom", "");
+            cur_frm.set_value("facelec_tax_rate_per_uom_selling_account", "");
+            cur_frm.set_value("facelec_tax_rate_per_uom_purchase_account", "");
         }
     }
 });
@@ -223,7 +281,8 @@ frappe.ui.form.on("Expense Claim Detail", {
 });
 
 
-// Personalizador de quick entry en customer
+// ================================================================================================================ //
+// Personalizador de quick entry en customer, para crear Dirección de una forma mas accesible
 frappe.provide('frappe.ui.form');
 
 frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
