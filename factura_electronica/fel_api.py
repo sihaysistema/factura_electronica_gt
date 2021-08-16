@@ -200,6 +200,7 @@ def generate_electronic_invoice(invoice_code, naming_series):
         # el UUID y la nueva serie para la factura
         return True, status_upgrade[1]
 
+
     except:
         return False, str(frappe.get_traceback())
 # FIN FEL NORMAL

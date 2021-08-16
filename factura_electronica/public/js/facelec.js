@@ -285,6 +285,7 @@ frappe.ui.form.on("Expense Claim Detail", {
 // Personalizador de quick entry en customer, para crear Dirección de una forma mas accesible
 frappe.provide('frappe.ui.form');
 
+// Sobre escribe el codigo de quick entry de customer para crear la direccion de una forma mas accesible y rapida
 frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
     init: function (doctype, after_insert) {
         this.skip_redirect_on_error = true;

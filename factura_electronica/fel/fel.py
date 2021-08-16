@@ -349,27 +349,38 @@ class ElectronicInvoice:
         """
 
         try:
-            codigo_escenario = frappe.db.get_value('Configuracion Series FEL',
+            # Obtiene el nombre de la combinacion configurada para la serie
+            combination_name = frappe.db.get_value('Configuracion Series FEL',
                                                    {'parent': self.__config_name,
-                                                    'serie': self.__naming_serie},'codigo_escenario')
-            tipo_frase = frappe.db.get_value('Configuracion Series FEL',
-                                             {'parent': self.__config_name, 'serie': self.__naming_serie},
-                                              'tipo_frase')[:1]
+                                                    'serie': self.__naming_serie}, 'combination_of_phrases')
 
-            if not codigo_escenario:
-                return False, 'Ocurrio un problema, no se encontro el codigo de frase configurada para la serie, por favor \
-                               configurala en Series Fel e intenta de nuevo'
+            # Obtiene las combinaciones de frases a usar en la factura
+            phrases_to_doc = frappe.db.get_values('FEL Combinations', filters={'parent': combination_name},
+                                                  fieldname=['tipo_frase', 'codigo_de_escenario'], as_dict=1)
 
-            if not tipo_frase:
-                return False, 'Ocurrio un problema, no se encontro el tipo de frase configurada para la serie utilizada, por favor \
-                               configurala en Series Fel e intenta de nuevo'
+            if not phrases_to_doc:
+                return False, 'Ocurrio un problema, no se encontro ninguna combinación de frases para generar la factura \
+                              por favor cree una y configurela en Configuración Factura Electrónica'
 
-            self.__d_frases = {
-                "dte:Frase": {
-                    "@CodigoEscenario": codigo_escenario,
-                    "@TipoFrase": tipo_frase
+            # Si hay mas de una frase
+            if len(phrases_to_doc) > 1:
+                self.__d_frases = {
+                    "dte:Frase": []
                 }
-            }
+
+                for f in phrases_to_doc:
+                    self.__d_frases["dte:Frase"].append({
+                        "@CodigoEscenario": f.get("codigo_de_escenario"),
+                        "@TipoFrase": f.get("tipo_frase")[:1]
+                    })
+            # Si solo hay una frase
+            else:
+                self.__d_frases = {
+                    "dte:Frase": {
+                        "@CodigoEscenario": phrases_to_doc[0].get("codigo_de_escenario"),
+                        "@TipoFrase": phrases_to_doc[0].get("tipo_frase")[:1]
+                    }
+                }
 
             return True, 'OK'
 
@@ -632,8 +643,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('FACTURA-FEL.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('FACTURA-FEL.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -675,8 +686,8 @@ class ElectronicInvoice:
             }
 
             # DEBUGGING WRITE JSON PETITION TO SITES FOLDER
-            # with open('peticion.json', 'w') as f:
-            #      f.write(json.dumps(self.__data_a_firmar, indent=2))
+            with open('peticion.json', 'w') as f:
+                 f.write(json.dumps(self.__data_a_firmar, indent=2))
 
             headers = {"content-type": "application/json"}
             response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
@@ -685,8 +696,8 @@ class ElectronicInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('recibido_firmado.json', 'w') as f:
-            #      f.write(json.dumps(self.__doc_firmado, indent=2))
+            with open('recibido_firmado.json', 'w') as f:
+                 f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -737,8 +748,8 @@ class ElectronicInvoice:
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
-            # with open('RESPONSE-FACTURA-FEL.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('RESPONSE-FACTURA-FEL.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
