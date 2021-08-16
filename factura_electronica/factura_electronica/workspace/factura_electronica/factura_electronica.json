@@ -217,9 +217,18 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Combination Of Phrases",
+   "link_to": "Combination Of Phrases",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
   }
  ],
- "modified": "2021-04-12 09:45:45.628051",
+ "modified": "2021-08-16 11:11:12.292032",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Factura Electronica",
