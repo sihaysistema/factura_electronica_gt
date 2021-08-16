@@ -14371,7 +14371,7 @@
   "columns": 0,
   "default": null,
   "depends_on": null,
-  "description": null,
+  "description": "Seleccione a que categor\u00eda impuesto pertenece el producto, ejemplo: Si es <b>SUPER escoja <code>Gasolina superior</code></b>, si es <b>DIESEL escoja <code>Di\u00e9sel</code></b>, si es <b>REGULAR escoja <code>Gasolina regular</code></b>",
   "docstatus": 0,
   "doctype": "Custom Field",
   "dt": "Item",

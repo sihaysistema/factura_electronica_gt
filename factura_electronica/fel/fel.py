@@ -643,8 +643,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            with open('FACTURA-FEL.xml', 'w') as f:
-                f.write(self.__xml_string)
+            # with open('FACTURA-FEL.xml', 'w') as f:
+            #     f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
@@ -686,8 +686,8 @@ class ElectronicInvoice:
             }
 
             # DEBUGGING WRITE JSON PETITION TO SITES FOLDER
-            with open('peticion.json', 'w') as f:
-                 f.write(json.dumps(self.__data_a_firmar, indent=2))
+            # with open('peticion.json', 'w') as f:
+            #      f.write(json.dumps(self.__data_a_firmar, indent=2))
 
             headers = {"content-type": "application/json"}
             response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
@@ -696,8 +696,8 @@ class ElectronicInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            with open('recibido_firmado.json', 'w') as f:
-                 f.write(json.dumps(self.__doc_firmado, indent=2))
+            # with open('recibido_firmado.json', 'w') as f:
+            #      f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -744,12 +744,16 @@ class ElectronicInvoice:
                 "identificador": ident
             }
 
+            # DEBUG: Para ver que datos se estan enviando al Web Service
+            # with open("peticion-fel.json", "w") as file:
+            #     file.write(json.dumps(req_dte, indent=2))
+
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
-            with open('RESPONSE-FACTURA-FEL.json', 'w') as f:
-                f.write(json.dumps(self.__response_ok, indent=2))
+            # with open('RESPONSE-FACTURA-FEL.json', 'w') as f:
+            #     f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
