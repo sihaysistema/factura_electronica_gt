@@ -60,11 +60,7 @@ frappe.ui.form.on('Configuracion Series FEL', {
         // Obtiene los detalles de la fila seleccionada
         let row = frappe.get_doc(cdt, cdn);
 
-        if (row.es_exportacion == 1) {
-            // Se limpia el valor del campo
-            row.combination_of_phrases = "";
-            refresh_field("series_fel");
-        } else {
+        if (row.es_exportacion == 0) {
             // Se limpia el valor del campo
             row.codigo_incoterm = "";
             refresh_field("series_fel");
