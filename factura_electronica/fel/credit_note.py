@@ -20,8 +20,7 @@ from factura_electronica.utils.utilities_facelec import get_currency_precision
 # fuente para el diario de devolución de ventas. En otras palabras, la nota
 # de crédito es evidencia de la reducción en las ventas. Wikipedia (Inglés)
 
-# EN RESUMEN, ES DEVOLUCION
-
+# EN RESUMEN, ES DEVOLUCION DESDE SALES INVOICE
 
 class ElectronicCreditNote:
     def __init__(self, actual_inv_name, invoice_code, conf_name, naming_series, reason):

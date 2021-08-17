@@ -609,13 +609,16 @@ def pos_calculations(doc, event):
 
 
 @frappe.whitelist()
-def generate_access_number(doc: object, event: str) -> str:
-    """Genera numero de acceso para facturas cambiarias, si y solo si
+def generate_access_number(doc, event):
+    """
+    Genera numero de acceso para facturas cambiarias, si y solo si
     el documento esta usando una serie valida
     """
     try:
         is_valid = is_valid_to_fel(doc.doctype, doc.name)
         if is_valid[0] == 'FCAM' and is_valid[1] == 'valido' and is_valid[2] == True:
+            # Crea un nuevo registro en 'Access Number FCAM' con ref a la factura
+            # desde donde se esta generando
             doc_access = frappe.new_doc('Access Number FCAM')
             doc_access.reference = doc.name
             doc_access.type = doc.doctype
@@ -624,7 +627,9 @@ def generate_access_number(doc: object, event: str) -> str:
             invoice = frappe.get_doc(doc.doctype, doc.name)
             invoice.access_number_fel = doc_access.name
             invoice.save(ignore_permissions=True)  # .reload()
+            invoice.reload()
 
             return doc_access.name
     except:
-        pass
+        with open("error-camb.txt", "w") as f:
+            f.write(str(frappe.get_traceback()))

@@ -96,7 +96,7 @@ app_include_js = ["/assets/factura_electronica/js/facelec.min.js", "/assets/fact
 doc_events = {
     "Sales Invoice": {
         "on_submit": "factura_electronica.api.pos_calculations",
-        # "after_insert": "factura_electronica.api.generate_access_number"
+        "after_insert": "factura_electronica.api.generate_access_number",
         "on_submit": "factura_electronica.api.generate_access_number"
     },
     "Purchase Invoice": {

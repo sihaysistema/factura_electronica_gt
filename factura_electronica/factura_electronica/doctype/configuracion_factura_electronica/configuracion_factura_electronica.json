@@ -291,7 +291,6 @@
    "label": "Alias (Prefijo WS)"
   },
   {
-   "depends_on": "eval:doc.regimen === 'FEL';",
    "fieldname": "configuracion_series_fel_section",
    "fieldtype": "Section Break",
    "label": "Configuracion Series FEL"
@@ -549,7 +548,7 @@
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2021-08-16 14:02:29.402918",
+ "modified": "2021-08-16 18:51:01.655375",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

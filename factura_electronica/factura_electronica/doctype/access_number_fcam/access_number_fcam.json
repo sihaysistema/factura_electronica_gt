@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "autoname": "naming_series:",
  "creation": "2021-04-13 17:40:06.843565",
  "description": "Tabla para guardar numeros de acceso para Facturas Cambiarias Venta y Compra",
@@ -15,8 +16,10 @@
   {
    "fieldname": "reference",
    "fieldtype": "Data",
+   "in_standard_filter": 1,
    "label": "Reference",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "type",
@@ -36,11 +39,12 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "naming_series",
-   "options": "FCAM.#########",
+   "options": "FCAM-.#########",
    "reqd": 1
   }
  ],
- "modified": "2021-04-13 18:40:28.311077",
+ "links": [],
+ "modified": "2021-08-16 21:40:10.362185",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Access Number FCAM",

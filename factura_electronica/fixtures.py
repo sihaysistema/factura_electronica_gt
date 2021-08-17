@@ -292,7 +292,7 @@ def fill_fixtures():
                     "Journal Entry-facelec_withholding_tax_references",
                     "Purchase Invoice-facelec_p_vat_declaration",
                     "Sales Invoice-facelec_s_vat_declaration",
-                    "Sales Invoice-is_exchange_invoice",
+                    # "Sales Invoice-is_exchange_invoice", SOLO SE UTILIZO EN LAS PRIMERAS VERSIONES DE FACELEC
                     "Purchase Invoice-is_exchange_invoice",
                     "Purchase Invoice Item-facelec_pr_is_exempt",
                     "Sales Invoice Item-facelec_si_is_exempt",

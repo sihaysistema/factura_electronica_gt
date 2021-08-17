@@ -663,6 +663,9 @@ frappe.ui.form.on("Sales Invoice", {
                 }
             });
         }
+
+        frm.refresh_field('access_number_fel');
+        frm.reload_doc();
     },
     naming_series: function (frm, cdt, cdn) {
         // Aplica solo para FS
@@ -1041,7 +1044,7 @@ function btn_credit_note(frm) {
                 // action to perform if No is selected
                 // console.log('Selecciono NO')
             })
-    }).addClass("btn-warning");
+    }).addClass("btn-primary");
 }
 
 
