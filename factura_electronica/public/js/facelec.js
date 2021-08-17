@@ -43,6 +43,28 @@ export function valNit(nit, cus_supp, frm) {
 /** Verificacion para que exista un solo check */
 frappe.ui.form.on("Item", {
     // Si se marca el check Es Combustible
+    setup: function (frm) {
+        // Si cuando se carga el item (pagina) el check esta activo
+        if (frm.doc.facelec_is_fuel) {
+
+            // se muestra, la los campos para ingresas datos de impuestos sobre combustible
+            // IMPORTANTE: ACTUALEMENTE SOLO CALCULAMOS EL ESCENARIO IDP
+            cur_frm.toggle_display("facelec_tax_rate_per_uom", true);
+            cur_frm.toggle_display("taxable_unit_name", true);
+            cur_frm.toggle_display("facelec_uom_tax_included_in_price", true);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_selling_account", true);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_purchase_account", true);
+
+            // Si no es combustible se ocultan sus campos relacionados
+        } else {
+            // Se ocultan los campos: para no confundir al usuario
+            cur_frm.toggle_display("facelec_tax_rate_per_uom", false);
+            cur_frm.toggle_display("taxable_unit_name", false);
+            cur_frm.toggle_display("facelec_uom_tax_included_in_price", false);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_selling_account", false);
+            cur_frm.toggle_display("facelec_tax_rate_per_uom_purchase_account", false);
+        }
+    },
     facelec_is_fuel: function (frm, cdt, cdn) {
         if (frm.doc.facelec_is_fuel) {
             cur_frm.set_value("facelec_is_good", 0);
