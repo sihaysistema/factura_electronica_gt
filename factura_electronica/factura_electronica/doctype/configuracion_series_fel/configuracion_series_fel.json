@@ -77,7 +77,7 @@
    "fieldtype": "Section Break"
   },
   {
-   "default": "- Las notas de cr\u00e9dito no usan Frases",
+   "default": "- Las notas de cr\u00e9dito no usa Frases\n- La anulaci\u00f3n de documentos electr\u00f3nicos no usa Frases",
    "fieldname": "notes",
    "fieldtype": "Text",
    "label": "Notes",
@@ -86,7 +86,7 @@
  ],
  "istable": 1,
  "links": [],
- "modified": "2021-08-16 18:49:39.199010",
+ "modified": "2021-08-16 22:28:27.578665",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Series FEL",

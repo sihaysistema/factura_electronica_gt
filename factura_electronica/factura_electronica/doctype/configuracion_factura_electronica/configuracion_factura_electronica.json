@@ -293,7 +293,7 @@
   {
    "fieldname": "configuracion_series_fel_section",
    "fieldtype": "Section Break",
-   "label": "Configuracion Series FEL"
+   "label": "Series Configuration For Sales Invoices"
   },
   {
    "fieldname": "series_fel",
@@ -468,7 +468,7 @@
   {
    "fieldname": "otras_configuraciones_section",
    "fieldtype": "Section Break",
-   "label": "Otras Configuraciones"
+   "label": "Other Configurations"
   },
   {
    "description": "Seleccione el campo que desee mostrar en el campo descripci\u00f3n de producto para el documento electr\u00f3nico a generar.",
@@ -548,7 +548,7 @@
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2021-08-16 18:51:01.655375",
+ "modified": "2021-08-16 22:48:27.188221",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

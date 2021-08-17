@@ -226,9 +226,18 @@
    "link_type": "DocType",
    "onboard": 1,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Access Number FCAM",
+   "link_to": "Access Number FCAM",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2021-08-16 11:11:12.292032",
+ "modified": "2021-08-16 22:15:25.993173",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Factura Electronica",

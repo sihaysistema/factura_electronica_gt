@@ -7,6 +7,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "description",
   "section_break_12",
   "fel_combinations"
  ],
@@ -21,10 +22,16 @@
    "fieldtype": "Table",
    "label": "FEL Combinations",
    "options": "FEL Combinations"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text",
+   "in_preview": 1,
+   "label": "Description"
   }
  ],
  "links": [],
- "modified": "2021-08-16 12:20:39.193148",
+ "modified": "2021-08-16 22:49:45.817268",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Combination Of Phrases",

@@ -18,6 +18,9 @@ from frappe.utils import cint, flt
 
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 
+# NOTA IMPORTANTE: NO DESARRADA POR COMPLETO, SE NECESITAN CREDENCIALES DE PRUEBAS
+# DE UNA COMPAÑIA QUE GENERE ESTE TIPO DE DOCUMENTOS
+
 # NOTAS:
 # 1. INSTANCIA FACT
 
