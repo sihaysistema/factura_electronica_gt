@@ -1,0 +1,86 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Website Sidebar",
+  "modified": "2021-08-19 19:10:46.155991",
+  "name": "Wiki Sidebar",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "sidebar_items": [
+   {
+    "group": "Pages",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/wiki/home",
+    "title": "Home"
+   },
+   {
+    "group": "Manage Wiki",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/desk#Form/Website Sidebar/Wiki Sidebar",
+    "title": "Edit Sidebar"
+   },
+   {
+    "group": "Manage Wiki",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/desk#Form/Wiki Settings",
+    "title": "Settings"
+   },
+   {
+    "group": "Factura Electr\u00f3nica",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/wiki/factura-electronica/disclaimer",
+    "title": "Disclaimer"
+   },
+   {
+    "group": "Factura Electr\u00f3nica",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/wiki/factura-electronica/install",
+    "title": "Instalar"
+   },
+   {
+    "group": "Factura Electr\u00f3nica",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/wiki/factura-electronica/update",
+    "title": "Actualizar"
+   },
+   {
+    "group": "Factura Electr\u00f3nica",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/wiki/factura-electronica/uninstall",
+    "title": "Desinstalar"
+   },
+   {
+    "group": "Factura Electr\u00f3nica",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/wiki/factura-electronica/config",
+    "title": "Configuraciones"
+   },
+   {
+    "group": "Factura Electr\u00f3nica",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/wiki/factura-electronica/facelec",
+    "title": "Configurar app factura electr\u00f3nica"
+   }
+  ],
+  "title": "Wiki Sidebar"
+ }
+]
