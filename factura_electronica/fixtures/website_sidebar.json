@@ -2,20 +2,12 @@
  {
   "docstatus": 0,
   "doctype": "Website Sidebar",
-  "modified": "2021-08-19 19:10:46.155991",
+  "modified": "2021-08-23 13:36:47.366861",
   "name": "Wiki Sidebar",
   "parent": null,
   "parentfield": null,
   "parenttype": null,
   "sidebar_items": [
-   {
-    "group": "Pages",
-    "parent": "Wiki Sidebar",
-    "parentfield": "sidebar_items",
-    "parenttype": "Website Sidebar",
-    "route": "/wiki/home",
-    "title": "Home"
-   },
    {
     "group": "Manage Wiki",
     "parent": "Wiki Sidebar",
@@ -79,6 +71,22 @@
     "parenttype": "Website Sidebar",
     "route": "/wiki/factura-electronica/facelec",
     "title": "Configurar app factura electr\u00f3nica"
+   },
+   {
+    "group": "Generar Documentos Electr\u00f3nicos FEL",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/wiki/factura-electronica/sales_invoice_fel",
+    "title": "Generar facturas de venta"
+   },
+   {
+    "group": "Generar Documentos Electr\u00f3nicos FEL",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/wiki/factura-electronica/credit_note_fel",
+    "title": "Nota de cr\u00e9dito"
    }
   ],
   "title": "Wiki Sidebar"

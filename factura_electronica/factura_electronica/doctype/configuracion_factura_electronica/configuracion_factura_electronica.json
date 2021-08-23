@@ -539,7 +539,6 @@
   },
   {
    "default": "0",
-   "description": "Coming soon",
    "fieldname": "factura_cambiaria_fel",
    "fieldtype": "Check",
    "label": "Factura Cambiaria FEL"
@@ -548,7 +547,7 @@
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2021-08-22 21:09:27.717728",
+ "modified": "2021-08-23 11:39:47.471099",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
