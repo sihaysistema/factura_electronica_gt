@@ -431,7 +431,7 @@ def fill_fixtures():
                     "Authorized By:", "Code and Item Image", "Name, Quantity, Price, Destination Warehouse", "Name, Quantity, Price, Source Warehouse",
                     "Codigo Unidad de Medida", "Codigo de 3 caracteres para unidad de medida a enviar con Factura Electronica. Previamente validado con INFILE.",
                     "Series Configuration For Purchase Invoices", "Purchase Invoice Series", "Combination Of Phrases", "FEL Combinations", "Access Number FCAM",
-                    "Series Configuration For Sales Invoices", "Tax per category", "TAX FACELEC",
+                    "Series Configuration For Sales Invoices", "Tax per category", "TAX FACELEC", "Is Discount?"
                 ]
             ]
         ]

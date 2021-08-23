@@ -2622,5 +2622,21 @@
   "parenttype": null,
   "source_text": "TAX FACELEC",
   "translated_text": "Descripci\u00f3n Impuestos Factura Electr\u00f3nica"
+ },
+ {
+  "context": null,
+  "contributed": 0,
+  "contribution_docname": null,
+  "contribution_status": "",
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2021-08-23 14:34:55.646752",
+  "name": "98028e82a1",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_text": "Is Discount?",
+  "translated_text": "Es descuento?"
  }
 ]

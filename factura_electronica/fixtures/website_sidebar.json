@@ -2,7 +2,7 @@
  {
   "docstatus": 0,
   "doctype": "Website Sidebar",
-  "modified": "2021-08-23 13:36:47.366861",
+  "modified": "2021-08-23 14:30:44.244080",
   "name": "Wiki Sidebar",
   "parent": null,
   "parentfield": null,
@@ -78,7 +78,15 @@
     "parentfield": "sidebar_items",
     "parenttype": "Website Sidebar",
     "route": "/wiki/factura-electronica/sales_invoice_fel",
-    "title": "Generar facturas de venta"
+    "title": "Factura de venta"
+   },
+   {
+    "group": "Generar Documentos Electr\u00f3nicos FEL",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/wiki/factura-electronica/export_invoice",
+    "title": "Factura de venta exportaci\u00f3n"
    },
    {
     "group": "Generar Documentos Electr\u00f3nicos FEL",
@@ -87,6 +95,14 @@
     "parenttype": "Website Sidebar",
     "route": "/wiki/factura-electronica/credit_note_fel",
     "title": "Nota de cr\u00e9dito"
+   },
+   {
+    "group": "Generar Documentos Electr\u00f3nicos FEL",
+    "parent": "Wiki Sidebar",
+    "parentfield": "sidebar_items",
+    "parenttype": "Website Sidebar",
+    "route": "/wiki/factura-electronica/exchange_invoice",
+    "title": "Factura Cambiaria"
    }
   ],
   "title": "Wiki Sidebar"
