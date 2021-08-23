@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "autoname": "naming_series",
  "creation": "2020-07-06 17:01:47.895625",
  "doctype": "DocType",
@@ -145,7 +146,8 @@
    "read_only": 1
   }
  ],
- "modified": "2020-07-28 22:06:55.027032",
+ "links": [],
+ "modified": "2021-08-22 20:45:23.053887",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Consumable Acquisition Record",
@@ -167,7 +169,7 @@
    "email": 1,
    "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "role": "Accounts Manager",
    "share": 1,
    "write": 1
   },
@@ -175,9 +177,23 @@
    "create": 1,
    "delete": 1,
    "email": 1,
+   "export": 1,
    "print": 1,
    "read": 1,
-   "role": "Accounts Manager",
+   "report": 1,
+   "role": "Admin Facelec",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Usuario Facelec",
    "share": 1,
    "write": 1
   }

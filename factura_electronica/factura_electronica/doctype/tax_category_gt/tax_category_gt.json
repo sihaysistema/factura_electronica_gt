@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:tax_name",
@@ -17,24 +18,13 @@
    "unique": 1
   }
  ],
- "modified": "2021-02-02 12:13:04.844941",
+ "links": [],
+ "modified": "2021-08-22 20:48:36.590150",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Tax Category GT",
  "owner": "Administrator",
  "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  },
   {
    "create": 1,
    "delete": 1,
@@ -55,7 +45,17 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Accounts Manager",
+   "role": "Admin Facelec",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Usuario Facelec",
    "share": 1,
    "write": 1
   }

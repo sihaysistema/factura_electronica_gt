@@ -44,7 +44,7 @@
   }
  ],
  "links": [],
- "modified": "2021-08-16 21:40:10.362185",
+ "modified": "2021-08-22 20:49:17.955899",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Access Number FCAM",
@@ -59,6 +59,29 @@
    "read": 1,
    "report": 1,
    "role": "Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Admin Facelec",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Usuario Facelec",
    "share": 1,
    "write": 1
   }
