@@ -504,6 +504,10 @@ def fill_fixtures():
         "dt": "Website Sidebar"
     }
 
+    wiki_revision = {
+        "dt": "Wiki Page Revision"
+    }
+
     # NEW FUNCTIONALITY FOR EXPORTING
     fixtures_fillup.append(custom_field)
     fixtures_fillup.append(translation)
@@ -516,6 +520,7 @@ def fill_fixtures():
     fixtures_fillup.append(wiki_page)
     fixtures_fillup.append(wiki_settings)
     fixtures_fillup.append(wiki_sidebar)
+    fixtures_fillup.append(wiki_revision)
 
     return fixtures_fillup
 
