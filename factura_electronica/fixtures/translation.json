@@ -2359,13 +2359,13 @@
   "docstatus": 0,
   "doctype": "Translation",
   "language": "es",
-  "modified": "2021-04-15 15:29:56.714152",
+  "modified": "2021-08-23 18:24:58.214016",
   "name": "4466a2e277",
   "parent": null,
   "parentfield": null,
   "parenttype": null,
   "source_text": "Are you sure to cancel the current electronic document?",
-  "translated_text": "\u00bfEst\u00e1 seguro de cancelar el documento electr\u00f3nico actual?"
+  "translated_text": "\u00bfEst\u00e1 seguro de anular el documento electr\u00f3nico actual?"
  },
  {
   "context": null,
