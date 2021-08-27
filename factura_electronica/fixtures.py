@@ -492,22 +492,6 @@ def fill_fixtures():
         "dt": "Catalog Of Taxable Units"
     }
 
-    wiki_page = {
-        "dt": "Wiki Page"
-    }
-
-    wiki_settings = {
-        "dt": "Wiki Settings"
-    }
-
-    wiki_sidebar = {
-        "dt": "Website Sidebar"
-    }
-
-    wiki_revision = {
-        "dt": "Wiki Page Revision"
-    }
-
     # NEW FUNCTIONALITY FOR EXPORTING
     fixtures_fillup.append(custom_field)
     fixtures_fillup.append(translation)
@@ -517,10 +501,4 @@ def fill_fixtures():
     fixtures_fillup.append(tax_cat)
     fixtures_fillup.append(cat_taxable_units)
 
-    fixtures_fillup.append(wiki_page)
-    fixtures_fillup.append(wiki_settings)
-    fixtures_fillup.append(wiki_sidebar)
-    fixtures_fillup.append(wiki_revision)
-
     return fixtures_fillup
-
