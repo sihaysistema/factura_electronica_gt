@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "creation": "2020-05-21 11:49:44.680412",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -13,7 +14,8 @@
    "label": "status"
   }
  ],
- "modified": "2020-05-21 11:49:44.680412",
+ "links": [],
+ "modified": "2021-08-22 20:44:07.681758",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Batch Status",
@@ -27,7 +29,7 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "System Manager",
+   "role": "Administrator",
    "share": 1,
    "write": 1
   },
@@ -39,7 +41,19 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Administrator",
+   "role": "Admin Facelec",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Usuario Facelec",
    "share": 1,
    "write": 1
   }

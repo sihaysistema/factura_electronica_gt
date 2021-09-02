@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:taxable_unit_name",
@@ -59,24 +60,13 @@
    "label": "Factor"
   }
  ],
- "modified": "2021-02-02 14:58:04.050221",
+ "links": [],
+ "modified": "2021-08-22 20:53:27.312637",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Catalog Of Taxable Units",
  "owner": "Administrator",
  "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  },
   {
    "create": 1,
    "delete": 1,
@@ -97,7 +87,18 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Accounts Manager",
+   "role": "Admin Facelec",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Usuario Facelec",
    "share": 1,
    "write": 1
   }

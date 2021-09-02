@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "creation": "2020-07-04 19:54:32.010699",
  "description": "Tabla para configurar series, que permite asignar tipo de documentos segun SAT ASL, Factura Electronica FEL. Aplica para Facturas de compra",
  "doctype": "DocType",
@@ -9,20 +10,16 @@
   "tipo_documento",
   "column_break_3",
   "serie_sat",
-  "frases_factura_especial_section",
-  "tipo_frase_factura_especial",
-  "descripci\u00f3n_frase_factura_especial",
-  "column_break_8",
-  "codigo_escenario_factura_especial",
-  "descripcion_codigo_escenario_factura_especial",
-  "descripcion_especifica_factura_especial"
+  "section_break_5",
+  "combination_of_phrases"
  ],
  "fields": [
   {
    "fieldname": "serie",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Serie"
+   "label": "Serie",
+   "reqd": 1
   },
   {
    "description": "Seleccione el tipo documento <b>FEL</b>",
@@ -45,48 +42,19 @@
    "options": "\nFC\nFE\nFCE\nNC\nND\nFPC\nFPE\nFAPE\nFACA\nFAAE\nDA\nFA\nFO\nEP\nFDU"
   },
   {
-   "fieldname": "frases_factura_especial_section",
-   "fieldtype": "Section Break",
-   "label": "Frases Factura Especial"
+   "fieldname": "section_break_5",
+   "fieldtype": "Section Break"
   },
   {
-   "fieldname": "tipo_frase_factura_especial",
+   "fieldname": "combination_of_phrases",
    "fieldtype": "Link",
-   "label": "Tipo Frase Factura Especial",
-   "options": "FEL Catalogo Frases"
-  },
-  {
-   "fetch_from": "tipo_frase_factura_especial.descripcion",
-   "fieldname": "descripci\u00f3n_frase_factura_especial",
-   "fieldtype": "Text",
-   "label": "Descripci\u00f3n Frase Factura Especial",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_8",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "codigo_escenario_factura_especial",
-   "fieldtype": "Select",
-   "label": "Codigo Escenario Factura Especial",
-   "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
-  },
-  {
-   "fieldname": "descripcion_codigo_escenario_factura_especial",
-   "fieldtype": "Text",
-   "label": "Descripcion Codigo Escenario Factura Especial",
-   "read_only": 1
-  },
-  {
-   "fieldname": "descripcion_especifica_factura_especial",
-   "fieldtype": "Text",
-   "label": "Descripcion Especifica Factura Especial",
-   "read_only": 1
+   "label": "Combination Of Phrases",
+   "options": "Combination Of Phrases"
   }
  ],
  "istable": 1,
- "modified": "2020-12-03 15:50:31.966606",
+ "links": [],
+ "modified": "2021-08-16 13:14:35.314892",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Serial Configuration For Purchase Invoice",

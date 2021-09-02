@@ -8,3 +8,6 @@ factura_electronica/public/js/facelec.min.js.map
 factura_electronica/docs/current
 .vscode/
 .vs/
+node_modules
+.temp
+.cache

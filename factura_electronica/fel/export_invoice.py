@@ -369,46 +369,41 @@ class ExportInvoice:
         """
         # NOTA: La primer frase es la normal que se utilizaria en un factura
         # La segunda frase hace referencia a que realizara una expotracion, y esta se encuentra exenta de impuesto
+        # funcionara solo si la compañia esta registrada para dichos tramites de lo contrario FEL no se procesara
 
         try:
-            codigo_escenario = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
-                                                   'codigo_escenario')
-            tipo_frase = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
-                                             'tipo_frase')[:1]
+            # Obtiene el nombre de la combinacion configurada para la serie
+            combination_name = frappe.db.get_value('Configuracion Series FEL',
+                                                   {'parent': self.__config_name,
+                                                    'serie': self.__naming_serie}, 'combination_of_phrases')
 
-            if not codigo_escenario:
-                return False, 'Ocurrio un problema, no se encontro ningun codigo escenario para la serie, por favor configurarla en \
-                               Series Fel e intentar de nuevo'
+            # Obtiene las combinaciones de frases a usar en la factura
+            phrases_to_doc = frappe.db.get_values('FEL Combinations', filters={'parent': combination_name},
+                                                  fieldname=['tipo_frase', 'codigo_de_escenario'], as_dict=1)
 
-            if not tipo_frase:
-                return False, 'Ocurrio un problema, no se encontro ningun tipo de frase para la serie, por favor configurarla en \
-                               Series Fel e intentar de nuevo'
+            if not phrases_to_doc:
+                return False, 'Ocurrio un problema, no se encontro ninguna combinación de frases para generar la factura \
+                              por favor cree una y configurela en Configuración Factura Electrónica'
 
-            codigo_escenario_fact_exportacion = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
-                                                                    'codigo_escenario_factura_exportacion')
-            tipo_frase_fact_exportacion = frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
-                                                              'tipo_frase_factura_exportacion')[:1]
+            # Si hay mas de una frase
+            if len(phrases_to_doc) > 1:
+                self.__d_frases = {
+                    "dte:Frase": []
+                }
 
-            if not codigo_escenario_fact_exportacion:
-                return False, 'Ocurrio un problema, no se encontro ningun codigo escenario factura exportacion para la serie, por favor configurarla en \
-                               Series Fel e intentar de nuevo'
-
-            if not tipo_frase_fact_exportacion:
-                return False, 'Ocurrio un problema, no se encontro ningun tipo de frase exportacion para la serie, por favor configurarla en \
-                               Series Fel e intentar de nuevo'
-
-            self.__d_frases = {
-                "dte:Frase": [
-                    {
-                        "@CodigoEscenario": codigo_escenario,  # "1",
-                        "@TipoFrase": tipo_frase  # "1"
-                    },
-                    {
-                        "@CodigoEscenario": codigo_escenario_fact_exportacion,  # "1",
-                        "@TipoFrase": tipo_frase_fact_exportacion  # "1"
+                for f in phrases_to_doc:
+                    self.__d_frases["dte:Frase"].append({
+                        "@CodigoEscenario": f.get("codigo_de_escenario"),
+                        "@TipoFrase": f.get("tipo_frase")[:1]
+                    })
+            # Si solo hay una frase
+            else:
+                self.__d_frases = {
+                    "dte:Frase": {
+                        "@CodigoEscenario": phrases_to_doc[0].get("codigo_de_escenario"),
+                        "@TipoFrase": phrases_to_doc[0].get("tipo_frase")[:1]
                     }
-                ]
-            }
+                }
 
             return True, 'OK'
 
@@ -636,8 +631,7 @@ class ExportInvoice:
 
         try:
             # To XML: Convierte de JSON a XML indentado
-            self.__xml_string = xmltodict.unparse(
-                self.__base_peticion, pretty=True)
+            self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
             # with open('factura_exportacion.xml', 'w') as f:
             #     f.write(self.__xml_string)
@@ -647,8 +641,7 @@ class ExportInvoice:
 
         try:
             # To base64: Convierte a base64, para enviarlo en la peticion
-            self.__encoded_bytes = base64.b64encode(
-                self.__xml_string.encode("utf-8"))
+            self.__encoded_bytes = base64.b64encode(self.__xml_string.encode("utf-8"))
             self.__encoded_str = str(self.__encoded_bytes, "utf-8")
             # Usar solo para debug
             # with open('codificado.txt', 'w') as f:
@@ -688,7 +681,7 @@ class ExportInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('firmado_exportacion.json', 'w') as f:
+            # with open('resp_firmado_exportacion.json', 'w') as f:
             #     f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
@@ -735,6 +728,9 @@ class ExportInvoice:
                 "llave": llave,
                 "identificador": ident
             }
+
+            # with open('peticion_fact_export.json', 'w') as f:
+            #     f.write(json.dumps(req_dte, indent=2))
 
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))

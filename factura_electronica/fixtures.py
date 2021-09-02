@@ -292,8 +292,8 @@ def fill_fixtures():
                     "Journal Entry-facelec_withholding_tax_references",
                     "Purchase Invoice-facelec_p_vat_declaration",
                     "Sales Invoice-facelec_s_vat_declaration",
-                    "Sales Invoice-is_exchange_invoice",
-                    "Purchase Invoice-is_exchange_invoice",
+                    # "Sales Invoice-is_exchange_invoice", SOLO SE UTILIZO EN LAS PRIMERAS VERSIONES DE FACELEC
+                    # "Purchase Invoice-is_exchange_invoice", SOLO SE UTILIZO EN LAS PRIMERAS VERSIONES DE FACELEC
                     "Purchase Invoice Item-facelec_pr_is_exempt",
                     "Sales Invoice Item-facelec_si_is_exempt",
                     "Purchase Invoice-facelec_tax_retention_guatemala",
@@ -429,6 +429,9 @@ def fill_fixtures():
                     "Enter the grand total amount that you want calculated for this line.", "FEL: Check if the item applies to discount to show in electronic invoice generation.",
                     "Are you sure to cancel the current electronic document?", "Electronic Document Canceller", "Requested By:",
                     "Authorized By:", "Code and Item Image", "Name, Quantity, Price, Destination Warehouse", "Name, Quantity, Price, Source Warehouse",
+                    "Codigo Unidad de Medida", "Codigo de 3 caracteres para unidad de medida a enviar con Factura Electronica. Previamente validado con INFILE.",
+                    "Series Configuration For Purchase Invoices", "Purchase Invoice Series", "Combination Of Phrases", "FEL Combinations", "Access Number FCAM",
+                    "Series Configuration For Sales Invoices", "Tax per category", "TAX FACELEC", "Is Discount?"
                 ]
             ]
         ]
@@ -499,4 +502,3 @@ def fill_fixtures():
     fixtures_fillup.append(cat_taxable_units)
 
     return fixtures_fillup
-

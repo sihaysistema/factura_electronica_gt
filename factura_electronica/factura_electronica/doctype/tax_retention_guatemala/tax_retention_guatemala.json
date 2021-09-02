@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "autoname": "TAX-RETENTION.########",
  "creation": "2020-07-14 00:47:33.090840",
  "doctype": "DocType",
@@ -147,7 +148,8 @@
    "fieldtype": "Column Break"
   }
  ],
- "modified": "2020-08-05 15:18:09.347436",
+ "links": [],
+ "modified": "2021-08-22 20:44:56.125453",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Tax Retention Guatemala",
@@ -167,9 +169,11 @@
    "create": 1,
    "delete": 1,
    "email": 1,
+   "export": 1,
    "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Admin Facelec",
    "share": 1,
    "write": 1
   },
@@ -177,9 +181,11 @@
    "create": 1,
    "delete": 1,
    "email": 1,
+   "export": 1,
    "print": 1,
    "read": 1,
-   "role": "Accounts Manager",
+   "report": 1,
+   "role": "Usuario Facelec",
    "share": 1,
    "write": 1
   }

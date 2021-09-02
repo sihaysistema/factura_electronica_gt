@@ -395,27 +395,38 @@ class ElectronicSpecialInvoice:
         """
 
         try:
-            codigo_escenario_fact_especial = frappe.db.get_value('Serial Configuration For Purchase Invoice',
-                                                                {'parent': self.__config_name,
-                                                                 'serie': self.__naming_serie},'codigo_escenario_factura_especial')
-            tipo_frase_fact_especial = frappe.db.get_value('Serial Configuration For Purchase Invoice',
-                                                          {'parent': self.__config_name, 'serie': self.__naming_serie},
-                                                           'tipo_frase_factura_especial')[:1]
+            # Obtiene el nombre de la combinacion configurada para la serie
+            combination_name = frappe.db.get_value('Serial Configuration For Purchase Invoice',
+                                                   {'parent': self.__config_name,
+                                                    'serie': self.__naming_serie}, 'combination_of_phrases')
 
-            if not codigo_escenario_fact_especial:
-                return False, 'Ocurrio un problema, no se encontro el codigo de frase configurada para la serie Factura Especial, por favor \
-                               configurala en Series para Facturas de compras en Configuracion Factura Electronica e intenta de nuevo'
+            # Obtiene las combinaciones de frases a usar en la factura
+            phrases_to_doc = frappe.db.get_values('FEL Combinations', filters={'parent': combination_name},
+                                                  fieldname=['tipo_frase', 'codigo_de_escenario'], as_dict=1)
 
-            if not tipo_frase_fact_especial:
-                return False, 'Ocurrio un problema, no se encontro el tipo de frase configurada para la serie Factura Especial, por favor \
-                               configurala en Series para Facturas de compras en Configuracion Factura Electronica e intenta de nuevo'
+            if not phrases_to_doc:
+                return False, 'Ocurrio un problema, no se encontro ninguna combinación de frases para generar la factura \
+                              por favor cree una y configurela en Configuración Factura Electrónica'
 
-            self.__d_frases = {
-                "dte:Frase": {
-                    "@CodigoEscenario": codigo_escenario_fact_especial, #"1",
-                    "@TipoFrase": tipo_frase_fact_especial  # "1"
+            # Si hay mas de una frase
+            if len(phrases_to_doc) > 1:
+                self.__d_frases = {
+                    "dte:Frase": []
                 }
-            }
+
+                for f in phrases_to_doc:
+                    self.__d_frases["dte:Frase"].append({
+                        "@CodigoEscenario": f.get("codigo_de_escenario"),
+                        "@TipoFrase": f.get("tipo_frase")[:1]
+                    })
+            # Si solo hay una frase
+            else:
+                self.__d_frases = {
+                    "dte:Frase": {
+                        "@CodigoEscenario": phrases_to_doc[0].get("codigo_de_escenario"),
+                        "@TipoFrase": phrases_to_doc[0].get("tipo_frase")[:1]
+                    }
+                }
 
             return True, 'OK'
 
@@ -637,9 +648,6 @@ class ElectronicSpecialInvoice:
             # with open('codificado.txt', 'w') as f:
             #         f.write(self.__encoded_str)
 
-            # with open('FACTURA-ESPECIAL-FEL.xml', 'w') as f:
-            #     f.write(self.__xml_string)
-
         except:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
 
@@ -724,9 +732,14 @@ class ElectronicSpecialInvoice:
                 "identificador": ident
             }
 
+            # solo para debug
+            # with open('peticion_fact_especial.json', 'w') as f:
+            #     f.write(json.dumps(req_dte, indent=2))
+
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
+            # solo para debug
             # with open('response_fact_especial.json', 'w') as f:
             #     f.write(json.dumps(self.__response_ok, indent=2))
 

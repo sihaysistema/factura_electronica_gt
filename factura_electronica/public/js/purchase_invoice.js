@@ -928,7 +928,7 @@ function btn_debit_note(frm) {
                 // console.log("Selecciono NO");
             }
         );
-    }).addClass("btn-warning");
+    }).addClass("btn-primary");
     // FIN BOTON NOTA DE DEBITO
 }
 

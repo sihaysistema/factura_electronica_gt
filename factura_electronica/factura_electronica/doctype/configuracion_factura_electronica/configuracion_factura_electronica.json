@@ -291,11 +291,9 @@
    "label": "Alias (Prefijo WS)"
   },
   {
-   "collapsible": 1,
-   "depends_on": "eval:doc.regimen === 'FEL';",
    "fieldname": "configuracion_series_fel_section",
    "fieldtype": "Section Break",
-   "label": "Configuracion Series FEL"
+   "label": "Series Configuration For Sales Invoices"
   },
   {
    "fieldname": "series_fel",
@@ -391,7 +389,6 @@
    "label": "Codigo Escenario"
   },
   {
-   "collapsible": 1,
    "fieldname": "series_configuration_for_purchase_invoices_section",
    "fieldtype": "Section Break",
    "label": "Series Configuration For Purchase Invoices"
@@ -471,10 +468,10 @@
   {
    "fieldname": "otras_configuraciones_section",
    "fieldtype": "Section Break",
-   "label": "Otras Configuraciones"
+   "label": "Other Configurations"
   },
   {
-   "description": "Seleccione el campo que desea para el nombre del producto a mostrarse en la factura de la Emitida por la SAT.",
+   "description": "Seleccione el campo que desee mostrar en el campo descripci\u00f3n de producto para el documento electr\u00f3nico a generar.",
    "fieldname": "descripcion_item",
    "fieldtype": "Select",
    "label": "Descripcion Item",
@@ -528,7 +525,7 @@
    "label": "Factura Electronica FEL (POS)"
   },
   {
-   "description": "Seleccione la opci\u00f3n de fecha y tiempo para enviar en el XML para generaci\u00f3n de documentos electr\u00f3nicos",
+   "description": "Seleccione el valor de fecha/tiempo que desee mostrar en los documentos electr\u00f3nicos a generar.\n",
    "fieldname": "fecha_y_tiempo_documento_electronica",
    "fieldtype": "Select",
    "label": "Fecha y tiempo documento electronica",
@@ -542,7 +539,6 @@
   },
   {
    "default": "0",
-   "description": "Coming soon",
    "fieldname": "factura_cambiaria_fel",
    "fieldtype": "Check",
    "label": "Factura Cambiaria FEL"
@@ -551,35 +547,33 @@
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2021-04-16 16:09:59.174578",
+ "modified": "2021-08-23 11:39:47.471099",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
  "owner": "Administrator",
  "permissions": [
   {
-   "amend": 1,
-   "cancel": 1,
    "create": 1,
+   "delete": 1,
    "email": 1,
    "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "System Manager",
+   "role": "Admin Facelec",
    "share": 1,
    "submit": 1,
    "write": 1
   },
   {
    "create": 1,
-   "delete": 1,
    "email": 1,
    "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sales User",
+   "role": "Usuario Facelec",
    "share": 1,
    "write": 1
   },
@@ -591,92 +585,9 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Accounts User",
+   "role": "Administrator",
    "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Sales Master Manager",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Accounts Manager",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Sales Manager",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Projects User",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Projects Manager",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Customer",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Fulfillment User",
-   "share": 1,
+   "submit": 1,
    "write": 1
   }
  ],

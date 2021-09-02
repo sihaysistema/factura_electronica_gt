@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "autoname": "format:{codigo_tipo_frase} {nombre}",
  "creation": "2020-09-11 14:47:41.286834",
  "doctype": "DocType",
@@ -49,7 +50,8 @@
    "fieldtype": "Column Break"
   }
  ],
- "modified": "2020-09-11 15:49:22.793159",
+ "links": [],
+ "modified": "2021-08-22 20:48:11.282682",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "FEL Catalogo Frases",
@@ -63,7 +65,7 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "System Manager",
+   "role": "Administrator",
    "share": 1,
    "write": 1
   },
@@ -75,7 +77,17 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Administrator",
+   "role": "Admin Facelec",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Usuario Facelec",
    "share": 1,
    "write": 1
   }

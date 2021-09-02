@@ -719,9 +719,14 @@ class ElectronicDebitNote:
                 "identificador": ident
             }
 
+            # DEBUG
+            # with open('request_debit_note.json', 'w') as f:
+            #     f.write(json.dumps(req_dte, indent=2))
+
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
+            # DEBUG
             # with open('response_debit_note.json', 'w') as f:
             #     f.write(json.dumps(self.__response_ok, indent=2))
 
