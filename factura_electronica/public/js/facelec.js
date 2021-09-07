@@ -64,6 +64,24 @@ frappe.ui.form.on("Item", {
             cur_frm.toggle_display("facelec_tax_rate_per_uom_selling_account", false);
             cur_frm.toggle_display("facelec_tax_rate_per_uom_purchase_account", false);
         }
+
+        // Filtro para seleccionar solamente cuentas relacionadas con impuestos
+        frm.set_query('facelec_tax_rate_per_uom_purchase_account', () => {
+            return {
+                filters: {
+                    root_type: "Asset",
+                }
+            };
+        });
+        frm.set_query('facelec_tax_rate_per_uom_selling_account', () => {
+            return {
+                filters: {
+                    root_type: "Asset",
+                }
+            };
+        });
+        cur_frm.refresh_field('facelec_tax_rate_per_uom_purchase_account');
+        cur_frm.refresh_field('facelec_tax_rate_per_uom_selling_account');
     },
     facelec_is_fuel: function (frm, cdt, cdn) {
         if (frm.doc.facelec_is_fuel) {
