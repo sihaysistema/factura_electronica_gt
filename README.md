@@ -1,4 +1,7 @@
 **es-GT:**
+
+**Disponible para `version-13` de Frappe/ERPNext**
+
 ## App Factura Electronica
 
 Aplicacion para la generacion de facturas electronicas en Guatemala, basado en el modulo de Cuentas y Almacén de ERPNext y el DocType de Factura de Ventas.
