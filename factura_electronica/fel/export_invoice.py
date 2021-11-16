@@ -16,7 +16,7 @@ import frappe
 from frappe import _, _dict
 from frappe.utils import cint, flt
 
-from factura_electronica.utils.utilities_facelec import get_currency_precision
+from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 
 class ExportInvoice:
@@ -496,7 +496,7 @@ class ExportInvoice:
                     obj_item["@NumeroLinea"] = contador
                     obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                     obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
-                    obj_item["dte:Descripcion"] = description_to_item  #  self.__dat_items[i]['item_name']  # descrition
+                    obj_item["dte:Descripcion"] = remove_html_tags(description_to_item)  #  self.__dat_items[i]['item_name']  # descrition
                     obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
                     obj_item["dte:Precio"] = flt(precio_item, self.__precision)
                     obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)

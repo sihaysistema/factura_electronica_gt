@@ -184,3 +184,13 @@ def get_currency_precision():
 # def autoname_exchange_inv():
 
 #     make_autoname(cstr(self.address_title).strip() + "-" + cstr(self.address_type).strip() + "-.#")
+
+def remove_html_tags(text):
+    """Elimina html tags de string"""
+    try:
+        import re
+        clean = re.compile('<.*?>')
+        return re.sub(clean, '', text)
+    except:
+        # Si no se puede procesar se retorna lo que se recibe
+        return str(text)
