@@ -13,7 +13,7 @@ import xmltodict
 from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
-from factura_electronica.utils.utilities_facelec import get_currency_precision
+from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 # Una nota de débito o memorando de débito es un documento comercial emitido por
 # un comprador a un vendedor para solicitar formalmente una nota de crédito.
@@ -443,7 +443,7 @@ class ElectronicDebitNote:
                         obj_item["@NumeroLinea"] = contador
                         obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
                         obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_p_purchase_three_digit']
-                        obj_item["dte:Descripcion"] = description_to_item  # description
+                        obj_item["dte:Descripcion"] = remove_html_tags(description_to_item)  # description
                         obj_item["dte:PrecioUnitario"] = abs(flt(precio_uni, self.__precision))
                         obj_item["dte:Precio"] = abs(flt(precio_item, self.__precision))
                         obj_item["dte:Descuento"] = abs(flt(desc_fila, self.__precision))
@@ -497,7 +497,7 @@ class ElectronicDebitNote:
                         obj_item["@NumeroLinea"] = contador
                         obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
                         obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_p_purchase_three_digit']
-                        obj_item["dte:Descripcion"] = description_to_item  # description
+                        obj_item["dte:Descripcion"] = remove_html_tags(description_to_item)  # description
                         obj_item["dte:PrecioUnitario"] = abs(flt(precio_uni, self.__precision))
                         obj_item["dte:Precio"] = abs(flt(precio_item, self.__precision))
                         obj_item["dte:Descuento"] = abs(flt(desc_fila, self.__precision))

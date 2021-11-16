@@ -14,7 +14,7 @@ import xmltodict
 from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
-from factura_electronica.utils.utilities_facelec import get_currency_precision
+from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 class ElectronicInvoice:
     def __init__(self, invoice_code, conf_name, naming_series):
@@ -473,7 +473,7 @@ class ElectronicInvoice:
                         obj_item["@NumeroLinea"] = contador
                         obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                         obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
-                        obj_item["dte:Descripcion"] = description_to_item  # description
+                        obj_item["dte:Descripcion"] = remove_html_tags(description_to_item)  # description
                         obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
                         obj_item["dte:Precio"] = flt(precio_item, self.__precision) # Correcto según el esquema XML
                         obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
@@ -527,7 +527,7 @@ class ElectronicInvoice:
                         obj_item["@NumeroLinea"] = contador
                         obj_item["dte:Cantidad"] = float(self.__dat_items[i]['qty'])
                         obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
-                        obj_item["dte:Descripcion"] = description_to_item  # description
+                        obj_item["dte:Descripcion"] = remove_html_tags(description_to_item)  # description
                         obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
                         obj_item["dte:Precio"] = flt(precio_item, self.__precision) # Correcto según el esquema XML
                         obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
@@ -643,8 +643,8 @@ class ElectronicInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('FACTURA-FEL.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('FACTURA-FEL.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
