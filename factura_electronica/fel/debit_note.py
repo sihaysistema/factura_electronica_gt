@@ -378,7 +378,7 @@ class ElectronicDebitNote:
                                                         'facelec_p_is_good', 'facelec_p_is_service', 'facelec_pr_is_exempt',
                                                         'facelec_p_other_tax_amount', 'facelec_p_purchase_three_digit',
                                                         'facelec_p_gt_tax_net_fuel_amt', 'facelec_p_gt_tax_net_goods_amt',
-                                                        'facelec_p_gt_tax_net_services_amt', 'facelec_is_discount'], as_dict=True)
+                                                        'facelec_p_gt_tax_net_services_amt', 'facelec_is_discount'], order_by='idx', as_dict=True)
 
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 

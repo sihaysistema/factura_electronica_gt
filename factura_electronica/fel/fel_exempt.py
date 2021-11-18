@@ -18,7 +18,7 @@ from frappe.utils import cint, flt
 
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
-# NOTA IMPORTANTE: NO DESARRADA POR COMPLETO, SE NECESITAN CREDENCIALES DE PRUEBAS
+# NOTA IMPORTANTE: NO DESARROLADA POR COMPLETO, SE NECESITAN CREDENCIALES DE PRUEBAS
 # DE UNA COMPAÑIA QUE GENERE ESTE TIPO DE DOCUMENTOS
 
 # NOTAS:
@@ -425,7 +425,7 @@ class ExemptElectronicInvoice:
                                                         'facelec_is_good', 'factelecis_fuel', 'facelec_si_is_exempt',
                                                         'facelec_other_tax_amount', 'facelec_three_digit_uom_code',
                                                         'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
-                                                        'facelec_gt_tax_net_services_amt'], as_dict=True)
+                                                        'facelec_gt_tax_net_services_amt'], order_by='idx', as_dict=True)
 
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
