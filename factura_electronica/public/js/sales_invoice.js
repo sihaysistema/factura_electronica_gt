@@ -1,3 +1,16 @@
+/**
+ * Copyright (c) 2021 Si Hay Sistema and contributors
+ * For license information, please see license.txt
+ */
+
+import { valNit } from './facelec.js';
+import { goalSeek } from './goalSeek.js';
+
+/**
+ * @summary Realiza los calculos de impuestos de la factura que serviran para la generación de factura electrónica
+ * @param {object} frm - Objeto que contiene todas las propiedades del doctype
+ * @param {object} row - Objeto que contiene todas las propiedades de la fila de items que se este manipulando
+ */
 function sales_invoice_calculations(frm, row) {
   console.log('Seleccionaste', row.item_code, 'Fila', row.idx);
 
@@ -5,6 +18,7 @@ function sales_invoice_calculations(frm, row) {
   //   Guarda el monto de IVA puede ser 12% o 0% en caso de no incluir
   let this_company_sales_tax_var = 0;
 
+  //   Si hay tabla de impuestos
   if (cur_frm.doc.taxes.length > 0) {
     this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
   } else {
@@ -14,7 +28,7 @@ function sales_invoice_calculations(frm, row) {
         message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente'),
         indicator: 'red',
       },
-      50
+      120
     );
 
     this_company_sales_tax_var = 0;
@@ -25,17 +39,19 @@ function sales_invoice_calculations(frm, row) {
 
   // We change the fields for other tax amount as per the complete row taxable amount.
   row.facelec_other_tax_amount = row.facelec_tax_rate_per_uom * (row.qty * row.conversion_factor);
-  row.facelec_amount_minus_excise_tax = row.qty * row.rate - row.facelec_other_tax_amount; //row.stock_qty * row.facelec_tax_rate_per_uom;
+  let tax_rate_per_uom_calc = row.stock_qty * row.facelec_tax_rate_per_uom;
+  row.facelec_amount_minus_excise_tax = row.qty * row.rate - tax_rate_per_uom_calc; // row.facelec_other_tax_amount; //
 
-  console.log(row.facelec_amount_minus_excise_tax);
-  console.log(row.qty);
-  console.log(row.facelec_tax_rate_per_uom);
+  console.log('facelec_tax_rate_per_uom', row.facelec_tax_rate_per_uom);
+  console.log('qty', row.qty);
+  console.log('stock qty', row.stock_qty);
+  console.log('test calculo', tax_rate_per_uom_calc);
 
   row.facelec_gt_tax_net_fuel_amt = 0;
   row.facelec_gt_tax_net_goods_amt = 0;
   row.facelec_gt_tax_net_services_amt = 0;
 
-  // Verificacion Individual para verificar si es Fuel, Good o Service
+  // Verificacion Individual para verificar si es Fuel, Good o Service y realizar los calculos correspondientes
   if (row.factelecis_fuel) {
     row.facelec_gt_tax_net_fuel_amt = row.facelec_amount_minus_excise_tax / (1 + this_company_sales_tax_var / 100);
     row.facelec_sales_tax_for_this_row = row.facelec_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100);
@@ -51,6 +67,7 @@ function sales_invoice_calculations(frm, row) {
     row.facelec_sales_tax_for_this_row = row.facelec_gt_tax_net_services_amt * (this_company_sales_tax_var / 100);
   }
 
+  //   Por cada fila manipulada se vuelve a calcular el total de IVA para la factura
   let total_iva_factura = 0;
   $.each(frm.doc.items || [], function (i, d) {
     if (d.facelec_sales_tax_for_this_row) {
@@ -58,14 +75,19 @@ function sales_invoice_calculations(frm, row) {
     }
   });
 
-  // console.log("El total de iva acumulado para la factura es: " + total_iva_factura);
+  // Se asigna el total de IVA a la factura en custom field
   cur_frm.set_value('shs_total_iva_fac', total_iva_factura);
 }
 
+/**
+ * @summary Obtiene los detalles de impuestos especiales de X item en caso sea de tipo Combustible
+ * @param {object} frm - Objeto que contiene todas las propiedades del doctype
+ * @param {object} row - Objeto que contiene todas las propiedades de la fila de items que se este manipulando
+ */
 function get_special_tax_by_item(frm, row) {
-  // Si el item iterado es combustible: se obtiene sus detalles de impuestos especiales
   if (row.factelecis_fuel) {
-    console.log('Has selecciona un producto de tipo FUEL', row.item_code);
+    // Peticion para obtener el monto, cuenta venta de impuesto especial de combustible
+    // en funcion de item_code y la compania
     frappe.call({
       method: 'factura_electronica.api.get_special_tax',
       args: {
@@ -73,116 +95,142 @@ function get_special_tax_by_item(frm, row) {
         company: frm.doc.company,
       },
       callback: (r) => {
-        // on success
-        row.facelec_tax_rate_per_uom = r.message.facelec_tax_rate_per_uom;
-        row.facelec_tax_rate_per_uom_account = r.message.facelec_tax_rate_per_uom_selling_account;
-        frm.refresh_field('items');
-      },
-      error: (r) => {
-        console.log('Problema con petición', r.message);
+        if (r.message.facelec_tax_rate_per_uom_selling_account) {
+          // on success
+          row.facelec_tax_rate_per_uom = r.message.facelec_tax_rate_per_uom;
+          row.facelec_tax_rate_per_uom_account = r.message.facelec_tax_rate_per_uom_selling_account;
+          frm.refresh_field('items');
+        } else {
+          // Si no esta configurado el impuesto especial para el item
+          frappe.show_alert(
+            {
+              message: __(
+                `El item ${row.item_code}, Fila ${row.idx} de Tipo Combustible.
+                    No tiene configuradas las cuentas y monto para Impuesto especiales, por favor configurelo para que se realicen correctamente los calculos`
+              ),
+              indicator: 'red',
+            },
+            120
+          );
+        }
       },
     });
+    // Si no es item de tipo combustible
   } else {
-    // frm.refresh_field('items');
     row.facelec_tax_rate_per_uom = 0;
     row.facelec_tax_rate_per_uom_account = '';
     frm.refresh_field('items');
   }
 }
 
+/**
+ * @summary Ejecuta serialmente las funciones de calculos, para obtener siempre los ultimos valores cargados
+ * @param {object} frm - Objeto que contiene todas las propiedades del doctype
+ * @param {object} cdt - Current DocType
+ * @param {object} cdn - Current DocName
+ */
+function each_row(frm, cdt, cdn) {
+  frappe.run_serially([
+    () => {
+      // Si la fila manipulada es un item tipo combustible
+      let first_data_collection = frappe.get_doc(cdt, cdn);
+      get_special_tax_by_item(frm, first_data_collection);
+    },
+    () => {
+      //   console.log('Seleccionaste qty');
+    },
+    () => {
+      // Se realizan los calculos de impuestos necesarios para factura electrónica
+      let second_data_collection = frappe.get_doc(cdt, cdn);
+      sales_invoice_calculations(frm, second_data_collection);
+    },
+  ]);
+}
+
+/**
+ * Funcion para evaluar goalseek
+ *
+ * @param {*} a
+ * @param {*} b
+ * @return {*} monto
+ */
+function funct_eval(a, b) {
+  return a * b;
+}
+
 frappe.ui.form.on('Sales Invoice Item', {
+  // Cuando se elimina una fila
   before_items_remove: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
     console.log('before_items_remove', row);
   },
+  //   Cuando se agrega una fila
   items_add: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
     console.log('items_add', row);
   },
+  //   Cuando se cambia de posicion una fila
   items_move: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
     console.log('items_move', row);
   },
+  //   Al cambiar el valor de item_code
   item_code: function (frm, cdt, cdn) {
-    let row = frappe.get_doc(cdt, cdn);
-    console.log('Seleccionaste item_code', row);
-
-    get_special_tax_by_item(frm, row);
-
-    row = frappe.get_doc(cdt, cdn);
-    sales_invoice_calculations(frm, row);
+    each_row(frm, cdt, cdn);
   },
+  //   Al cambiar el valor de qty
   qty: function (frm, cdt, cdn) {
-    let row = frappe.get_doc(cdt, cdn);
-    console.log('Seleccionaste qty', row);
-
-    get_special_tax_by_item(frm, row);
-
-    row = frappe.get_doc(cdt, cdn);
-    sales_invoice_calculations(frm, row);
+    each_row(frm, cdt, cdn);
   },
-  facelec_is_discount: function (frm, cdt, cdn) {
-    let row = frappe.get_doc(cdt, cdn);
-    console.log('facelec_is_discount', row);
-
-    get_special_tax_by_item(frm, row);
-    sales_invoice_calculations(frm, row);
+  stock_qty: function (frm, cdt, cdn) {
+    each_row(frm, cdt, cdn);
   },
-  uom: function (frm, cdt, cdn) {
-    // Trigger UOM
-    //console.log("The unit of measure field was changed and the code from the trigger was run");
-    let row = frappe.get_doc(cdt, cdn);
-    console.log('Seleccionaste uom', row);
-
-    get_special_tax_by_item(frm, row);
-    sales_invoice_calculations(frm, row);
-  },
-  conversion_factor: function (frm, cdt, cdn) {
-    let row = frappe.get_doc(cdt, cdn);
-    console.log('Seleccionaste conversion_factor', row);
-
-    get_special_tax_by_item(frm, row);
-    sales_invoice_calculations(frm, row);
-  },
-  facelec_tax_rate_per_uom_account: function (frm, cdt, cdn) {
-    //facelec_otros_impuestos_fila(frm, cdt,cdn);
-    // esto debe correr aqui?
-
-    get_special_tax_by_item(frm, row);
-    sales_invoice_calculations(frm, row);
-  },
+  //   Cuando se cambia el valor de rate
   rate: function (frm, cdt, cdn) {
-    let row = frappe.get_doc(cdt, cdn);
-    console.log('Seleccionaste rate', row);
-
-    get_special_tax_by_item(frm, row);
-    sales_invoice_calculations(frm, row);
+    each_row(frm, cdt, cdn);
   },
+  //   Si se marca/desmarca la casilla de descuento
+  facelec_is_discount: function (frm, cdt, cdn) {
+    each_row(frm, cdt, cdn);
+  },
+  //   Cuando se cmbia el valor de uom
+  uom: function (frm, cdt, cdn) {
+    each_row(frm, cdt, cdn);
+  },
+  //   Cuando se cambia el valor de conversion_factor
+  conversion_factor: function (frm, cdt, cdn) {
+    each_row(frm, cdt, cdn);
+  },
+  //   CUando se cambia manualmente la cuenta de impuesto especial
+  facelec_tax_rate_per_uom_account: function (frm, cdt, cdn) {
+    each_row(frm, cdt, cdn);
+  },
+  // Cuando se cambia el valor de shs_amount_for_back_calc (monto redondeo)
   shs_amount_for_back_calc: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
-    console.log('Seleccionaste goalseek', row);
 
-    // // Permite aplicar goalSeek
-    // frm.doc.items.forEach((row, index) => {
-    //     var a = row.rate;
-    //     var b = row.qty;
-    //     var c = row.amount;
-    //     let calcu = goalSeek({
-    //         Func: funct_eval,
-    //         aFuncParams: [b, a],
-    //         oFuncArgTarget: {
-    //             Position: 0,
-    //         },
-    //         Goal: row.shs_amount_for_back_calc,
-    //         Tol: 0.001,
-    //         maxIter: 10000,
-    //     });
-    //     // console.log(calcu);
+    // Permite aplicar goalSeek
+    let a = row.rate;
+    let b = row.qty;
+    let c = row.amount;
 
-    //     frm.doc.items[index].qty = calcu;
-    //     frm.doc.items[index].stock_qty = calcu;
-    //     frm.doc.items[index].amount = calcu * frm.doc.items[index].rate;
-    //     frm.refresh_field("items");
-    // });
+    let calcu = goalSeek({
+      Func: funct_eval,
+      aFuncParams: [b, a],
+      oFuncArgTarget: {
+        Position: 0,
+      },
+      Goal: row.shs_amount_for_back_calc,
+      Tol: 0.001,
+      maxIter: 10000,
+    });
+
+    row.qty = calcu;
+    row.stock_qty = calcu;
+    row.amount = calcu * a; // frm.doc.items[index].rate;
+    frm.refresh_field('items');
+
+    each_row(frm, cdt, cdn);
+    console.log('Seleccionaste goalseek');
   },
 });

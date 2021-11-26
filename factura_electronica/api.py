@@ -612,7 +612,8 @@ def pos_calculations(doc, event):
 def generate_access_number(doc, event):
     """
     Genera numero de acceso para facturas cambiarias, si y solo si
-    el documento esta usando una serie valida
+    el documento esta usando una serie valida, el valor generado es independiente
+    de INFILE pero requerido solo funciona para referencia
     """
     try:
         is_valid = is_valid_to_fel(doc.doctype, doc.name)
@@ -642,4 +643,4 @@ def get_special_tax(item_code='', company=''):
     taxes = frappe.db.get_value('Item Default', filters={'parent': item_code, 'company': company},
                                 fieldname=fields, as_dict=1)
 
-    return taxes or []
+    return taxes or False
