@@ -633,3 +633,13 @@ def generate_access_number(doc, event):
     except:
         with open("error-camb.txt", "w") as f:
             f.write(str(frappe.get_traceback()))
+
+
+@frappe.whitelist()
+def get_special_tax(item_code='', company=''):
+    fields = ['facelec_tax_rate_per_uom', 'facelec_tax_rate_per_uom_purchase_account',
+              'facelec_tax_rate_per_uom_selling_account']
+    taxes = frappe.db.get_value('Item Default', filters={'parent': item_code, 'company': company},
+                                fieldname=fields, as_dict=1)
+
+    return taxes or []

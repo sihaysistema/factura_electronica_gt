@@ -6,7 +6,9 @@ import { valNit } from './facelec.js';
 function sales_order_each_item(frm, cdt, cdn) {
     if (frm.doc.docstatus == 0) {
         frm.doc.items.forEach((item) => {
-            shs_sales_order_calculation(frm, "Sales Order Item", item.name);
+            if (item.name === cdn) {
+                shs_sales_order_calculation(frm, "Sales Order Item", item.name);
+            }
         });
     }
 }
