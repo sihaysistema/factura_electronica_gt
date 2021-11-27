@@ -106,7 +106,7 @@ def obtener_numero_resolucion(nombre_serie):
 
 
 @frappe.whitelist()
-def generar_tabla_html(tabla):
+def generar_tabla_html(tabla, currency="GTQ"):
     """Funcion para generar tabla con html + jinja, para mostrar impuestos
     desglosados de cada item
 
@@ -127,7 +127,8 @@ def generar_tabla_html(tabla):
         "templates/sales_invoice_tax.html", dict(
             headers=headers,
             items_tax=mi_tabla,
-            index=longi
+            index=longi,
+            currency=currency
         )
     )
 
