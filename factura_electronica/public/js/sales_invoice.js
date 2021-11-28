@@ -6,13 +6,57 @@
 import { valNit } from './facelec.js';
 import { goalSeek } from './goalSeek.js';
 
+
+/**
+ * @summary Ejecuta serialmente las funciones de calculos, para obtener siempre los ultimos valores cargados
+ * @param {object} frm - Objeto que contiene todas las propiedades del doctype
+ * @param {object} cdt - Current DocType
+ * @param {object} cdn - Current DocName
+ */
+function each_row(frm, cdt, cdn) {
+  frm.doc.items.forEach((item_row, index) => {
+    if (item_row.name === cdn) {
+      console.log('item_row', item_row);
+      frappe.run_serially([
+        () => {
+          // Si la fila manipulada es un item tipo combustible
+          let first_data_collection = frappe.get_doc(cdt, cdn);
+          get_special_tax_by_item(frm, first_data_collection);
+        },
+        () => {
+          //   console.log('Seleccionaste qty');
+        },
+        () => {
+          // Se realizan los calculos de impuestos necesarios para factura electrónica
+          let second_data_collection = frappe.get_doc(cdt, cdn);
+          sales_invoice_calculations(frm, second_data_collection);
+        },
+        () => {
+          // Se realiza la validacion si existen items con cuentas de impuesto especial
+          // para agregarse a la tabla hija shs_other_taxes
+          let row = frappe.get_doc(cdt, cdn);
+          get_other_tax(frm, row);
+        },
+        () => {
+          // Valida y si es necesario calculo los montos para impuestos especiales
+          recalculate_other_taxes(frm);
+        },
+        () => {
+          shs_total_other_tax(frm)
+        },
+      ]);
+    }
+  });
+}
+
+
 /**
  * @summary Realiza los calculos de impuestos de la factura que serviran para la generación de factura electrónica
  * @param {object} frm - Objeto que contiene todas las propiedades del doctype
  * @param {object} row - Objeto que contiene todas las propiedades de la fila de items que se este manipulando
  */
 function sales_invoice_calculations(frm, row) {
-  console.log('Seleccionaste', row.item_code, 'Fila', row.idx);
+  // console.log('Seleccionaste', row.item_code, 'Fila', row.idx);
 
   // INICIO validacion existencia tabla impuesto
   //   Guarda el monto de IVA puede ser 12% o 0% en caso de no incluir
@@ -42,10 +86,10 @@ function sales_invoice_calculations(frm, row) {
   let tax_rate_per_uom_calc = row.stock_qty * row.facelec_tax_rate_per_uom;
   row.facelec_amount_minus_excise_tax = row.qty * row.rate - tax_rate_per_uom_calc; // row.facelec_other_tax_amount; //
 
-  console.log('facelec_tax_rate_per_uom', row.facelec_tax_rate_per_uom);
-  console.log('qty', row.qty);
-  console.log('stock qty', row.stock_qty);
-  console.log('test calculo', tax_rate_per_uom_calc);
+  // console.log('facelec_tax_rate_per_uom', row.facelec_tax_rate_per_uom);
+  // console.log('qty', row.qty);
+  // console.log('stock qty', row.stock_qty);
+  // console.log('test calculo', tax_rate_per_uom_calc);
 
   row.facelec_gt_tax_net_fuel_amt = 0;
   row.facelec_gt_tax_net_goods_amt = 0;
@@ -106,7 +150,8 @@ function get_special_tax_by_item(frm, row) {
             {
               message: __(
                 `El item ${row.item_code}, Fila ${row.idx} de Tipo Combustible.
-                    No tiene configuradas las cuentas y monto para Impuesto especiales, por favor configurelo para que se realicen correctamente los calculos`
+                    No tiene configuradas las cuentas y monto para Impuesto especiales, por favor configurelo
+                    para que se realicen correctamente los calculos o si no es un producto de tipo combustible cambielo a Bien o Servicio`
               ),
               indicator: 'red',
             },
@@ -121,38 +166,6 @@ function get_special_tax_by_item(frm, row) {
     row.facelec_tax_rate_per_uom_account = '';
     frm.refresh_field('items');
   }
-}
-
-/**
- * @summary Ejecuta serialmente las funciones de calculos, para obtener siempre los ultimos valores cargados
- * @param {object} frm - Objeto que contiene todas las propiedades del doctype
- * @param {object} cdt - Current DocType
- * @param {object} cdn - Current DocName
- */
-function each_row(frm, cdt, cdn) {
-  frappe.run_serially([
-    () => {
-      // Si la fila manipulada es un item tipo combustible
-      let first_data_collection = frappe.get_doc(cdt, cdn);
-      get_special_tax_by_item(frm, first_data_collection);
-    },
-    () => {
-      //   console.log('Seleccionaste qty');
-    },
-    () => {
-      // Se realizan los calculos de impuestos necesarios para factura electrónica
-      let second_data_collection = frappe.get_doc(cdt, cdn);
-      sales_invoice_calculations(frm, second_data_collection);
-    },
-    () => {
-      // Se realiza la validacion si existen items con cuentas de impuesto especial
-      let row = frappe.get_doc(cdt, cdn);
-      get_other_tax(frm, row);
-    },
-    () => {
-      recalculate_other_taxes(frm);
-    },
-  ]);
 }
 
 /**
@@ -606,49 +619,69 @@ function generar_tabla_html(frm) {
   }
 }
 
+/**
+ * Si ya existe una cuenta en shs_otros_impuestos se iteran todos los items en busca de aquellas filas que tenga una
+ * una cuenta de impuesto especial para recalcular el total por cuenta y por fila de shs_otros_impuestos
+ * y asi asegurar que esten correctos los valores si el usuario hace cambios
+ *
+ * @param {object} frm - Objeto con las propiedades del doctype
+ */
 function recalculate_other_taxes(frm) {
-
-  // Si ya existe una cuenta en shs_otros_impuestos se iteran todos los items en busca de aquellas filas que tenga una
-  // una cuenta de impuesto especial para recalcular el total por cuenta y por fila de shs_otros_impuestos
-  // y asi asegurar que esten correctos los valores si el usuario hace cambios
   frm.refresh_field('shs_otros_impuestos');
   frm.refresh_field('items');
 
-  frm.doc.items.forEach((item_row, index) => {
-    console.log("Esta es la cuenta en la iteracion", item_row.facelec_tax_rate_per_uom_account)
-    if (item_row.facelec_tax_rate_per_uom_account) {
+  let items_invoice = frm.doc.items;
+  items_invoice.forEach((item_row, index) => {
+    // console.log("Esta es la cuenta en la iteracion", item_row.facelec_tax_rate_per_uom_account)
+    // Si la fila iterada tiene una cuenta de impuesto especial y en la tabla hija de shs_otros_impuestos hay filas
+    if (item_row.facelec_tax_rate_per_uom_account && frm.doc.shs_otros_impuestos) {
       // Busca si la cuenta iterada existe en shs_otros_impuestos, si existe se volvera a iterar items y totalizar por cuenta
       // si no existe se eliminara de shs_otros_impuestos
       let total_by_account = 0;
       let idx_acc_check = frm.doc.shs_otros_impuestos.find(el => el['account_head'] === item_row.facelec_tax_rate_per_uom_account)
-      console.log('Ojo Here', idx_acc_check);
+      // console.log('Ojo', idx_acc_check);
 
       if (idx_acc_check) {
-        frm.doc.items.forEach((item_row_x, index_x) => {
+        console.log("MMMMM", idx_acc_check.idx - 1)
+        frm.refresh_field('shs_otros_impuestos');
+        // frm.doc.shs_otros_impuestos[idx_acc_check.idx - 1]['total'] = total_by_account;
+        frappe.model.set_value("Otros Impuestos Factura Electronica", idx_acc_check.name, "total", total_by_account);
+
+        items_invoice.forEach((item_row_x, index_x) => {
           if (item_row_x.facelec_tax_rate_per_uom_account === item_row.facelec_tax_rate_per_uom_account) {
-            total_by_account += item_row_x.facelec_other_tax_amount;
+            total_by_account += item_row_x.facelec_other_tax_amount || 0;
           }
         })
-        frm.doc.shs_otros_impuestos[idx_acc_check.idx - 1].total = 0;
-        frm.doc.shs_otros_impuestos[idx_acc_check.idx - 1].total = total_by_account;
+
         frm.refresh_field('shs_otros_impuestos');
+        // frm.doc.shs_otros_impuestos[idx_acc_check.idx - 1].total = total_by_account;
+        frappe.model.set_value("Otros Impuestos Factura Electronica", idx_acc_check.name, "total", total_by_account);
       }
     }
   });
+}
 
-  // Se itera shs_otros_impuestos y cada fila se compara con items, si la cuenta de la fila no existe en items se elimina
-  frm.doc.shs_otros_impuestos.forEach((tax_row, index_1) => {
-    let idx_special_acc_check = frm.doc.items.find(el => el['facelec_tax_rate_per_uom_account'] === tax_row.account_head)
+/**
+ * Suma el total de montos que se encuentren en Otros Impuestos Especiales
+ *
+ * @param {*} frm
+ */
+function shs_total_other_tax(frm) {
 
-    // Si no tiene ninguna relacion con la tabla hija items se elimina de shs_otros_impuestos
-    if (!idx_special_acc_check) {
-      console.log('Eliminando fila no existe en items', tax_row.account_head);
-      frm.doc.shs_otros_impuestos.splice(frm.doc.shs_otros_impuestos[index_1], 1);
-      frm.refresh_field("shs_otros_impuestos");
-    }
-  });
+  console.log("Entro a shs_total_other_tax");
+  frm.refresh_field('shs_otros_impuestos');
+  frm.refresh_field("shs_total_otros_imp_incl");
 
-  // console.log('acc_check', acc_check);
+  let otros_impuestos = frm.doc.shs_otros_impuestos || [];
+  if (otros_impuestos.length > 0) {
+    let total_tax = otros_impuestos.map(o => o.total).reduce((a, c) => { return a + c });
+    cur_frm.set_value('shs_total_otros_imp_incl', total_tax);
+    frm.refresh_field("shs_total_otros_imp_incl");
+
+  } else {
+    cur_frm.set_value('shs_total_otros_imp_incl', 0);
+    frm.refresh_field("shs_total_otros_imp_incl");
+  }
 }
 
 /**
@@ -662,17 +695,23 @@ function recalculate_other_taxes(frm) {
  */
 function get_other_tax(frm, row) {
   // 1. Se valida que la fila que se esta manipulando tenga una cuenta de impuesto especial
+  frm.refresh_field('items');
+  // console.log('row', row.facelec_tax_rate_per_uom_account);
+
   if (row.facelec_tax_rate_per_uom_account) {
 
     // 2. Se valida si la cuenta ya existe en shs_otros_impuestos si no existe se agrega
     // Si ya existe se iteran todos los items en busca de aquellas filas que tenga una
     // cuenta de impuesto especial para recalcular el total por cuenta y por fila de shs_otros_impuestos
 
+    let otros_impuestos = frm.doc.shs_otros_impuestos || [];
+    // console.log('Entro aqui', otros_impuestos);
+
     // Validador si la cuenta iterada existe en shs_otros_impuestos True/False
-    let acc_check = frm.doc.shs_otros_impuestos.some(function (el) {
+    let acc_check = otros_impuestos.some(function (el) {
       return el.account_head === row.facelec_tax_rate_per_uom_account && row.facelec_tax_rate_per_uom_account;
     });
-    console.log("Ver esto: ", acc_check)
+    // console.log("Ver esto: ", acc_check)
     // Contiene qty|stock_qty * facelec_tax_rate_per_uom
     let shs_otro_impuesto = row.facelec_other_tax_amount;
 
@@ -688,10 +727,36 @@ function get_other_tax(frm, row) {
   }
 }
 
+
+function remove_non_existing_taxes(frm) {
+  // Se vuelve a verificar que existan filas en shs_otros_impuestos, si no hay se retorna
+  if (!frm.doc.shs_otros_impuestos) return;
+
+  // console.log("Entro a remove_non_existing_taxes");
+
+  // Se itera shs_otros_impuestos y cada fila se compara con items, si la cuenta de la fila no existe en items se elimina
+  frm.refresh_field("items");
+  frm.doc.shs_otros_impuestos.forEach((tax_row, index) => {
+    let idx_special_acc_check = frm.doc.items.find(el => el['facelec_tax_rate_per_uom_account'] === tax_row.account_head)
+
+
+    // Si la fila iterada no tiene ninguna relacion con la tabla hija items se elimina de shs_otros_impuestos
+    if (idx_special_acc_check == undefined) {
+      // frm.doc.shs_otros_impuestos.splice(frm.doc.shs_otros_impuestos[index], 1);
+      frm.get_field("shs_otros_impuestos").grid.grid_rows[index].remove();
+      frm.refresh_field("shs_otros_impuestos");
+    }
+  });
+
+  recalculate_other_taxes(frm);
+}
+
+
 /* Factura de Ventas-------------------------------------------------------------------------------------------------- */
 frappe.ui.form.on('Sales Invoice', {
   // Se ejecuta cuando se renderiza el doctype
   onload_post_render: function (frm, cdt, cdn) {
+    // Limpia los campos con datos no necesarios cuando se duplica una factura
     clean_fields(frm);
   },
   // Se ejecuta cuando hay alguna actualizacion de datos en el doctype
@@ -790,35 +855,113 @@ frappe.ui.form.on('Sales Invoice', {
       // FIN GENERACION POLIZA CON RETENCIONES
     }
   },
-  // Se ejecuta al presionar guardar
+  // Se ejecuta al presionar el boton guardar
   validate: function (frm, cdt, cdn) {
-    console.log('validate');
+    // console.log('validate');
     generar_tabla_html(frm);
-    // facelec_tax_calc_new(frm, cdt, cdn);
-    // each_item(frm, cdt, cdn);
-    // facelec_otros_impuestos_fila(frm, cdt, cdn);
-    // // Trigger antes de guardar
-    // clean_other_tax(frm);
+
+    // Asegura que los montos de impuestos especiales se calculen correctamente
+    recalculate_other_taxes(frm);
   },
   // Se ejecuta si se modifica el nit del cliente
+  // NOTA: No se tiene activo, ya que pueden haber docs de clientes de otros paises
   nit_face_customer: function (frm, cdt, cdn) {
     // Para evitar retrasos la validacion se realiza desde customer dt
     // valNit(frm.doc.nit_face_customer, frm.doc.customer, frm);
   },
+  // TODO: PROBAR
   additional_discount_percentage: function (frm, cdt, cdn) {
     // Pensando en colocar un trigger aqui para cuando se actualice el campo de descuento adicional
   },
   discount_amount: function (frm, cdt, cdn) {
+    // Trigger Monto de descuento
+    var tax_before_calc = frm.doc.facelec_total_iva;
+    //console.log("El descuento total es:" + frm.doc.discount_amount);
+    // es-GT: Este muestra el IVA que se calculo por medio de nuestra aplicación.
+    //console.log("El IVA calculado anteriormente:" + frm.doc.facelec_total_iva);
+    var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
 
+    if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) {
+      //console.log("No hay descuento definido, calculando sin descuento.");
+    } else {
+      //console.log("El descuento parece ser un numero definido, calculando con descuento.");
+      var discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+      //console.log("El IVA del descuento es:" + discount_amount_tax_value);
+      frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
+      //console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
+    }
   },
+  // Se ejecuta antes de guardar el documento
   before_save: function (frm, cdt, cdn) {
 
   },
+  // Se ejecuta al validar el documento
   on_submit: function (frm, cdt, cdn) {
+    // Ocurre cuando se presione el boton validar. para agregar al GL los impuestos especiales
+    // console.log('on submit')
 
+    // Creacion objeto vacio para guardar nombre y valor de las cuentas que se encuentren
+    let cuentas_registradas = {};
+    let otrosimpuestos = frm.doc.shs_otros_impuestos || [];
+    // Recorre la tabla hija en busca de cuentas
+    otrosimpuestos.forEach((tax_row, index) => {
+      if (tax_row.account_head) {
+        // Agrega un nuevo valor al objeto (JSON-DICCIONARIO) con el
+        // nombre, valor de la cuenta
+        cuentas_registradas[tax_row.account_head] = tax_row.total;
+      };
+    });
+
+    console.log("Las cuentas registradas son: " + JSON.stringify(cuentas_registradas));
+
+    // Si existe por lo menos una cuenta, se ejecuta frappe.call
+    if (Object.keys(cuentas_registradas).length > 0) {
+      // llama al metodo python, el cual recibe de parametros el nombre de la factura y el objeto
+      // con las ('cuentas encontradas
+      //console.log('---------------------- se encontro por lo menos una cuenta--------------------');
+      frappe.call({
+        method: "factura_electronica.utils.special_tax.add_gl_entry_other_special_tax",
+        args: {
+          invoice_name: frm.doc.name,
+          accounts: cuentas_registradas,
+          invoice_type: "Sales Invoice"
+          /* OJO, El valor de este argumento debe ser "Sales Invoice" en sales_invoice.js
+          En el caso de purchase_invoice.js el valor del argumento debe de ser: invoice_type: "Purchase Invoice"
+          */
+        },
+        // El callback se ejecuta tras finalizar la ejecucion del script python del lado
+        // del servidor
+        callback: function () {
+          // Busca la modalidad configurada, ya sea Manual o Automatica
+          // Esto para mostrar u ocultar los botones para la geneneracion de factura
+          // electronica
+          frm.reload_doc();
+        }
+      });
+    }
+
+    frm.refresh_field('access_number_fel');
+    frm.reload_doc();
   },
   naming_series: function (frm, cdt, cdn) {
-
+    // Aplica solo para FS
+    if (frm.doc.naming_series) {
+      frappe.call({
+        method: "factura_electronica.api.obtener_numero_resolucion",
+        args: {
+          nombre_serie: frm.doc.naming_series
+        },
+        // El callback se ejecuta tras finalizar la ejecucion del script python del lado
+        // del servidor
+        callback: function (numero_resolucion) {
+          if (numero_resolucion.message === undefined) {
+            // cur_frm.set_value('shs_numero_resolucion', '');
+          } else {
+            cur_frm.set_value('shs_numero_resolucion', numero_resolucion.message);
+          }
+        }
+      });
+    }
   },
   es_nota_de_debito: function (frm) {
 
@@ -829,27 +972,24 @@ frappe.ui.form.on('Sales Invoice', {
 });
 
 frappe.ui.form.on('Sales Invoice Item', {
-  // Cuando se elimina una fila
+  // Despues de que se elimina una fila
   before_items_remove: function (frm, cdt, cdn) {
-    let row = frappe.get_doc(cdt, cdn);
-    // console.log('before_items_remove', row);
-    recalculate_other_taxes(frm);
-
-    // get_total_of_other_taxes(frm, cdn, row.facelec_tax_rate_per_uom_account, row.facelec_other_tax_amount);
+    // remove_non_existing_taxes(frm)
+    shs_total_other_tax(frm);
   },
+  // Cuando se elimina una fila
   items_remove: function (frm, cdt, cdn) {
-    recalculate_other_taxes(frm);
+    remove_non_existing_taxes(frm);
+    shs_total_other_tax(frm);
   },
-  //   Cuando se agrega una fila
+  //  Cuando se agrega una fila
   items_add: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
-    // console.log('items_add', row);
     recalculate_other_taxes(frm);
   },
   //   Cuando se cambia de posicion una fila
   items_move: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
-    // console.log('items_move', row);
     recalculate_other_taxes(frm);
   },
   //   Al cambiar el valor de item_code
@@ -909,6 +1049,25 @@ frappe.ui.form.on('Sales Invoice Item', {
     frm.refresh_field('items');
 
     each_row(frm, cdt, cdn);
-    console.log('Seleccionaste goalseek');
+    // console.log('Seleccionaste goalseek');
+  },
+});
+
+frappe.ui.form.on('Otros Impuestos Factura Electronica', {
+  // Despues de que se elimina una fila
+  before_shs_otros_impuestos_remove: function (frm, cdt, cdn) {
+    shs_total_other_tax(frm);
+  },
+  // Cuando se elimina una fila
+  shs_otros_impuestos_remove: function (frm, cdt, cdn) {
+    shs_total_other_tax(frm);
+  },
+  //  Cuando se agrega una fila
+  shs_otros_impuestos_add: function (frm, cdt, cdn) {
+    shs_total_other_tax(frm);
+  },
+  //   Cuando se cambia de posicion una fila
+  shs_otros_impuestos_move: function (frm, cdt, cdn) {
+    shs_total_other_tax(frm);
   },
 });

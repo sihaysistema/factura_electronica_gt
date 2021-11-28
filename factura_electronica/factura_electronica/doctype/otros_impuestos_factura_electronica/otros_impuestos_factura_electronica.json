@@ -29,18 +29,20 @@
    "oldfieldname": "account_head",
    "oldfieldtype": "Link",
    "options": "Account",
+   "read_only": 1,
    "search_index": 1
   },
   {
    "fieldname": "total",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Total"
+   "label": "Total",
+   "read_only": 1
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2021-11-26 20:55:17.824231",
+ "modified": "2021-11-27 17:52:47.448430",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Otros Impuestos Factura Electronica",
