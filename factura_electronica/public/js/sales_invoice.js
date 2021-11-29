@@ -14,7 +14,7 @@ import { goalSeek } from './goalSeek.js';
  * @param {object} cdn - Current DocName
  */
 function each_row(frm, cdt, cdn) {
-  console.log("Recalculando... Sales Invoice");
+  // console.log("Recalculando... Sales Invoice");
   frm.doc.items.forEach((item_row, index) => {
     if (item_row.name === cdn) {
       frappe.run_serially([
@@ -86,7 +86,7 @@ function sales_invoice_calculations(frm, row) {
 
   // We change the fields for other tax amount as per the complete row taxable amount.
   row.facelec_other_tax_amount = row.facelec_tax_rate_per_uom * (row.qty * row.conversion_factor);
-  let tax_rate_per_uom_calc = row.stock_qty * row.facelec_tax_rate_per_uom;
+  let tax_rate_per_uom_calc = row.stock_qty * row.conversion_factor * row.facelec_tax_rate_per_uom;
   row.facelec_amount_minus_excise_tax = row.qty * row.rate - tax_rate_per_uom_calc; // row.facelec_other_tax_amount; //
 
   row.facelec_gt_tax_net_fuel_amt = 0;
@@ -855,8 +855,16 @@ frappe.ui.form.on('Sales Invoice', {
     // Asegura que los montos de impuestos especiales se calculen correctamente
     recalculate_other_taxes(frm);
     shs_total_other_tax(frm);
-
     generar_tabla_html(frm);
+
+    let taxes = frm.doc.taxes || [];
+    if (taxes.length == 0) {
+      // Muestra una notificacion para cargar una tabla de impuestos
+      frappe.show_alert({
+        message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente'),
+        indicator: 'red'
+      }, 400);
+    }
   },
   // Se ejecuta si se modifica el nit del cliente
   // NOTA: No se tiene activo, ya que pueden haber docs de clientes de otros paises
@@ -969,7 +977,6 @@ frappe.ui.form.on('Sales Invoice', {
 frappe.ui.form.on('Sales Invoice Item', {
   // Despues de que se elimina una fila
   before_items_remove: function (frm, cdt, cdn) {
-    // remove_non_existing_taxes(frm)
     shs_total_other_tax(frm);
     shs_total_iva(frm)
   },
