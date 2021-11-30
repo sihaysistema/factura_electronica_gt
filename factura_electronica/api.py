@@ -134,7 +134,7 @@ def generar_tabla_html(tabla, currency="GTQ"):
 
 
 @frappe.whitelist()
-def generar_tabla_html_factura_compra(tabla):
+def generar_tabla_html_factura_compra(tabla, currency="GTQ"):
     """Funcion para generar tabla con html + jinja, para mostrar impuestos
     desglosados de cada item en Purchase invoice
 
@@ -156,7 +156,8 @@ def generar_tabla_html_factura_compra(tabla):
         "templates/purchase_invoice_tax.html", dict(
             headers=headers,
             items_tax=mi_tabla,
-            index=longi
+            index=longi,
+            currency=currency
         )
     )
 
