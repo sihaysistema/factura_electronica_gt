@@ -158,23 +158,23 @@ function qo_shs_total_by_item_type(frm) {
   let fix_gt_tax_iva = 0;
 
   $.each(frm.doc.items || [], function (i, d) {
-    fix_gt_tax_fuel += flt(d.shs_qt_gt_tax_net_fuel_amt);
-    fix_gt_tax_goods += flt(d.shs_qt_gt_tax_net_goods_amt);
-    fix_gt_tax_services += flt(d.shs_qt_gt_tax_net_services_amt);
-    fix_gt_tax_iva += flt(d.shs_qt_sales_tax_for_this_row);
+    fix_gt_tax_fuel += flt(d.facelec_qt_gt_tax_net_fuel_amt);
+    fix_gt_tax_goods += flt(d.facelec_qt_gt_tax_net_goods_amt);
+    fix_gt_tax_services += flt(d.facelec_qt_gt_tax_net_services_amt);
+    fix_gt_tax_iva += flt(d.facelec_qt_sales_tax_for_this_row);
   });
 
-  cur_frm.set_value("shs_qt_gt_tax_fuel", fix_gt_tax_fuel);
-  frm.refresh_field("shs_qt_gt_tax_fuel");
+  cur_frm.set_value("facelec_qt_gt_tax_fuel", fix_gt_tax_fuel);
+  frm.refresh_field("facelec_qt_gt_tax_fuel");
 
-  cur_frm.set_value("shs_qt_gt_tax_goods", fix_gt_tax_goods);
-  frm.refresh_field("shs_qt_gt_tax_goods");
+  cur_frm.set_value("facelec_qt_gt_tax_goods", fix_gt_tax_goods);
+  frm.refresh_field("facelec_qt_gt_tax_goods");
 
-  cur_frm.set_value("shs_qt_gt_tax_services", fix_gt_tax_services);
-  frm.refresh_field("shs_qt_gt_tax_services");
+  cur_frm.set_value("facelec_qt_gt_tax_services", fix_gt_tax_services);
+  frm.refresh_field("facelec_qt_gt_tax_services");
 
-  cur_frm.set_value("shs_qt_total_iva", fix_gt_tax_iva);
-  frm.refresh_field("shs_qt_total_iva");
+  cur_frm.set_value("facelec_qt_total_iva", fix_gt_tax_iva);
+  frm.refresh_field("facelec_qt_total_iva");
 }
 
 // Calculos para Factura de Compra
@@ -221,7 +221,7 @@ function shs_quotation_calculation(frm, cdt, cdn) {
     net_services = 0;
     net_goods = 0;
     net_fuel = flt(item_row.facelec_qt_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-    frappe.model.set_value(row.doctype, row.name, "facelec_qt_gt_tax_net_fuel_amt", flt(net_fuel));
+    frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_gt_tax_net_fuel_amt", flt(net_fuel));
 
     tax_for_this_row = flt(item_row.facelec_qt_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
     frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_sales_tax_for_this_row", flt(tax_for_this_row));
