@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2021 Si Hay Sistema and contributors
+ * For license information, please see license.txt
+ */
+
 import { valNit } from './facelec.js';
 import { goalSeek } from './goalSeek.js';
 
@@ -19,7 +24,7 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
 
   // INICIO validacion existencia tabla impuesto
   let this_company_sales_tax_var = 0;
-  let taxes_tbl = frm.doc.taxes || [];
+  const taxes_tbl = frm.doc.taxes || [];
 
   if (taxes_tbl.length > 0) {
     this_company_sales_tax_var = taxes_tbl[0].rate;
@@ -35,49 +40,64 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
   // FIN validacion existencia tabla impuesto
 
   // INICIO CALCULOS
-  // MONTO IDP
-  let other_tax_amount = row.facelec_p_tax_rate_per_uom * row.qty * row.conversion_factor;
-  frappe.model.set_value(row.doctype, row.name, "facelec_p_other_tax_amount", flt(other_tax_amount));
-
-  //OJO!  No s epuede utilizar stock_qty en los calculos, debe de ser qty a puro tubo!
-  // MONTO - IDP
-  let amount_minus_excise_tax = (row.qty * row.rate) - (row.qty * row.conversion_factor * row.facelec_p_tax_rate_per_uom);
-  frappe.model.set_value(row.doctype, row.name, "facelec_p_amount_minus_excise_tax", flt(amount_minus_excise_tax));
-
+  let amount_minus_excise_tax = 0;
+  let other_tax_amount = 0;
   let net_fuel = 0;
   let net_goods = 0;
   let net_services = 0;
   let tax_for_this_row = 0;
 
-  row.facelec_p_gt_tax_net_fuel_amt = 0;
-  row.facelec_p_gt_tax_net_goods_amt = 0;
-  row.facelec_p_gt_tax_net_services_amt = 0;
+  other_tax_amount = flt(row.facelec_p_tax_rate_per_uom * row.qty * row.conversion_factor);
+  frappe.model.set_value(row.doctype, row.name, "facelec_p_other_tax_amount", other_tax_amount);
+
+  //OJO!  No s epuede utilizar stock_qty en los calculos, debe de ser qty a puro tubo!
+  // MONTO - IDP
+  amount_minus_excise_tax = (row.qty * row.rate) - (row.qty * row.conversion_factor * row.facelec_p_tax_rate_per_uom);
+  frappe.model.set_value(row.doctype, row.name, "facelec_p_amount_minus_excise_tax", flt(amount_minus_excise_tax));
 
   // SI es combustible
-  if (row.facelec_p_is_fuel) {
+  if (row.facelec_p_is_fuel && row.item_code) {
+    net_services = 0;
+    net_goods = 0;
     net_fuel = (row.facelec_p_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
     frappe.model.set_value(row.doctype, row.name, "facelec_p_gt_tax_net_fuel_amt", flt(net_fuel));
 
     tax_for_this_row = (row.facelec_p_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
     frappe.model.set_value(row.doctype, row.name, "facelec_p_sales_tax_for_this_row", flt(tax_for_this_row));
+
+    // Los campos de bienes y servicios se resetean a 0
+    frappe.model.set_value(row.doctype, row.name, "facelec_p_gt_tax_net_goods_amt", flt(net_goods));
+    frappe.model.set_value(row.doctype, row.name, "facelec_p_gt_tax_net_services_amt", flt(net_services));
   };
   // Si es bienes
   tax_for_this_row = 0;
-  if (row.facelec_p_is_good) {
+  if (row.facelec_p_is_good && row.item_code) {
+    net_services = 0;
+    net_fuel = 0;
     net_goods = (row.facelec_p_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
     frappe.model.set_value(row.doctype, row.name, "facelec_p_gt_tax_net_goods_amt", flt(net_goods));
 
     tax_for_this_row = (row.facelec_p_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
-    frappe.model.set_value(row.doctype, row.name, "facelec_p_sales_tax_for_this_row", flt(net_goods));
+    frappe.model.set_value(row.doctype, row.name, "facelec_p_sales_tax_for_this_row", flt(tax_for_this_row));
+
+    // Los campos de servicios y combustibles se resetean a 0
+    frappe.model.set_value(row.doctype, row.name, "facelec_p_gt_tax_net_services_amt", flt(net_services));
+    frappe.model.set_value(row.doctype, row.name, "facelec_p_gt_tax_net_fuel_amt", flt(net_fuel));
   };
   // Si es servicios
   tax_for_this_row = 0;
-  if (row.facelec_p_is_service == 1) {
+  if (row.facelec_p_is_service && row.item_code) {
+    net_fuel = 0;
+    net_goods = 0;
     net_services = (row.facelec_p_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
     frappe.model.set_value(row.doctype, row.name, "facelec_p_gt_tax_net_services_amt", flt(net_services));
 
     tax_for_this_row = (row.facelec_p_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
-    frappe.model.set_value(row.doctype, row.name, "facelec_p_sales_tax_for_this_row ", flt(tax_for_this_row));
+    frappe.model.set_value(row.doctype, row.name, "facelec_p_sales_tax_for_this_row", flt(tax_for_this_row));
+
+    // Los campos de servicios y combustibles se resetean a 0
+    frappe.model.set_value(row.doctype, row.name, "facelec_p_gt_tax_net_goods_amt", flt(net_goods));
+    frappe.model.set_value(row.doctype, row.name, "facelec_p_gt_tax_net_fuel_amt", flt(net_fuel));
   };
 
   frm.refresh_field('items');
@@ -92,7 +112,7 @@ function shs_purchase_invoice_calculation(frm, cdt, cdn) {
 function pi_get_special_tax_by_item(frm, cdt, cdn) {
   let row = frappe.get_doc(cdt, cdn);
 
-  if (row.facelec_p_is_fuel) {
+  if (row.facelec_p_is_fuel && row.item_code) {
     // Peticion para obtener el monto, cuenta venta de impuesto especial de combustible
     // en funcion de item_code y la compania
     frappe.call({
@@ -103,10 +123,9 @@ function pi_get_special_tax_by_item(frm, cdt, cdn) {
       },
       callback: (r) => {
         // Si hay respuesta valida
-        if (r.message.facelec_tax_rate_per_uom_selling_account) {
+        if (r.message.facelec_tax_rate_per_uom_purchase_account) {
           frappe.model.set_value(row.doctype, row.name, "facelec_p_tax_rate_per_uom", flt(r.message.facelec_tax_rate_per_uom));
-          frappe.model.set_value(row.doctype, row.name, "facelec_p_tax_rate_per_uom_account", r.message.facelec_tax_rate_per_uom_selling_account || '');
-
+          frappe.model.set_value(row.doctype, row.name, "facelec_p_tax_rate_per_uom_account", r.message.facelec_tax_rate_per_uom_purchase_account || '');
           frm.refresh_field('items');
         } else {
           // Si no esta configurado el impuesto especial para el item
@@ -124,6 +143,7 @@ function pi_get_special_tax_by_item(frm, cdt, cdn) {
         }
       },
     });
+    return;
     // Si no es item de tipo combustible
   } else {
     frappe.model.set_value(row.doctype, row.name, "facelec_p_tax_rate_per_uom", 0);
@@ -194,7 +214,7 @@ function pi_recalculate_other_taxes(frm) {
       // si no existe se eliminara de shs_pi_otros_impuestos
       let total_by_account = 0;
       let idx_acc_check = frm.doc.shs_pi_otros_impuestos.find(el => el['account_head'] === item_row.facelec_p_tax_rate_per_uom_account)
-      // console.log('Ojo', idx_acc_check);
+
       // Si se encuentra una fila con la cuenta
       if (idx_acc_check) {
         frm.refresh_field('shs_pi_otros_impuestos');
@@ -206,8 +226,8 @@ function pi_recalculate_other_taxes(frm) {
           }
         })
 
-        frappe.model.set_value("Otros Impuestos Factura Electronica", idx_acc_check.name, "total", total_by_account);
         frm.refresh_field('shs_pi_otros_impuestos');
+        frappe.model.set_value("Otros Impuestos Factura Electronica", idx_acc_check.name, "total", total_by_account);
       }
     }
   });
@@ -225,7 +245,7 @@ function pi_shs_total_other_tax(frm) {
 
   if (otros_impuestos.length > 0) {
     let total_tax = otros_impuestos.map(o => o.total).reduce((a, c) => { return a + c });
-    cur_frm.set_value('shs_pi_total_otros_imp_incl', total_tax);
+    cur_frm.set_value('shs_pi_total_otros_imp_incl', flt(total_tax));
     frm.refresh_field("shs_pi_total_otros_imp_incl");
 
   } else {
@@ -242,22 +262,26 @@ function pi_shs_total_other_tax(frm) {
  * @param {*} frm
  */
 function pi_remove_non_existing_taxes(frm) {
+  frm.refresh_field("shs_pi_otros_impuestos");
+  let otros_impuestos = frm.doc.shs_pi_otros_impuestos || [];
   // Se vuelve a verificar que existan filas en shs_pi_otros_impuestos, si no hay se retorna
-  if (!frm.doc.shs_pi_otros_impuestos) return;
+  if (otros_impuestos.length === 0) return;
 
   // Se itera shs_pi_otros_impuestos y cada fila se compara con items, si la cuenta de la fila no existe en items se elimina
   frm.refresh_field("items");
-  frm.doc.shs_pi_otros_impuestos.forEach((tax_row, index) => {
-    let idx_special_acc_check = frm.doc.items.find(el => el['facelec_p_tax_rate_per_uom_account'] === tax_row.account_head)
+  let idx_special_acc_check
+  otros_impuestos.forEach((tax_row, index) => {
+    idx_special_acc_check = frm.doc.items.find(el => el['facelec_p_tax_rate_per_uom_account'] === tax_row.account_head)
 
     // Si la fila iterada no tiene ninguna relacion con la tabla hija items se elimina de shs_pi_otros_impuestos
-    if (idx_special_acc_check == undefined) {
+    if (idx_special_acc_check === undefined) {
       // frm.doc.shs_pi_otros_impuestos.splice(frm.doc.shs_pi_otros_impuestos[index], 1);
       frm.get_field("shs_pi_otros_impuestos").grid.grid_rows[index].remove();
       frm.refresh_field("shs_pi_otros_impuestos");
     }
   });
 
+  frm.refresh_field("shs_pi_otros_impuestos");
   pi_recalculate_other_taxes(frm);
 }
 
@@ -270,33 +294,36 @@ function pi_remove_non_existing_taxes(frm) {
  * @param {String} cdn
  */
 function pi_each_item(frm, cdt, cdn) {
+  // console.log("Entro a pi_each_item", cdt);
   // Si se trabaja una fila individual se trabaja directamente sobre la fila manipulada
   if (cdt === "Purchase Invoice Item") {
-    console.log("Aplica para una sola fila");
+    // console.log("Aplica para una sola fila");
     pi_get_special_tax_by_item(frm, cdt, cdn);
     shs_purchase_invoice_calculation(frm, cdt, cdn);
     pi_get_other_tax(frm, cdt, cdn);
+
     pi_recalculate_other_taxes(frm);
     pi_shs_total_other_tax(frm);
     pi_total_amount_by_item_type(frm);
 
   } else {  // Si no es sobre una fila especifica, se itera cada fila de items y se recalcula
-
-    var cdn
+    // Aplica cuando se guarda un documento
+    // var cdn
     cdt = "Purchase Invoice Item";
-
+    frm.refresh_field('items');
     frm.doc.items.forEach((item_row, index) => {
       cdn = item_row.name;
 
-      console.log("Aplicacion general")
       pi_get_special_tax_by_item(frm, cdt, cdn);
       shs_purchase_invoice_calculation(frm, cdt, cdn);
       pi_get_other_tax(frm, cdt, cdn);
+
       pi_recalculate_other_taxes(frm);
       pi_shs_total_other_tax(frm);
       pi_total_amount_by_item_type(frm);
     });
   }
+  frm.refresh_field('items');
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -641,6 +668,7 @@ frappe.ui.form.on("Purchase Invoice", {
 
     frm.set_df_property("bill_no", "description", __("<b>FEL: UUID de factura original</b>, dato necesario para Nota de Debito Electronica"));
     frm.set_df_property("bill_date", "description", __("<b>FEL: Fecha de factura original</b>, dato necesario para Nota de Debito Electronica"));
+    // frm.set_df_property("shs_pi_otros_impuestos", "read_only", 1); NOTA: si se descomenta no se agregaran correctamente las filas de otros impuestos
 
     // Validador para mostrar botones segun el escenario que aplique
     if (frm.doc.docstatus != 0) {
@@ -726,7 +754,8 @@ frappe.ui.form.on("Purchase Invoice", {
     pi_each_item(frm, cdt, cdn);
   },
   validate: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
+    // pi_each_item(frm, cdt, cdn);
+    pi_remove_non_existing_taxes(frm);
     generar_tabla_html_factura_compra(frm);
 
     let taxes = frm.doc.taxes || [];
@@ -802,6 +831,7 @@ frappe.ui.form.on("Purchase Invoice", {
 frappe.ui.form.on("Purchase Invoice Item", {
   // Despues de eliminar una fila
   before_items_remove: function (frm, cdt, cdn) {
+    pi_remove_non_existing_taxes(frm);
     pi_total_amount_by_item_type(frm);
     pi_shs_total_other_tax(frm);
   },
@@ -811,9 +841,10 @@ frappe.ui.form.on("Purchase Invoice Item", {
     pi_total_amount_by_item_type(frm);
     pi_shs_total_other_tax(frm);
   },
-  items_add: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
+  // NOTA: ESTE EVENTO HACE QUE SE COMPORTE MAS LENTAMENTE
+  // items_add: function (frm, cdt, cdn) {
+  //   pi_each_item(frm, cdt, cdn);
+  // },
   //   Cuando se cambia de posicion una fila
   items_move: function (frm, cdt, cdn) {
     pi_each_item(frm, cdt, cdn);
@@ -821,13 +852,15 @@ frappe.ui.form.on("Purchase Invoice Item", {
   item_code: function (frm, cdt, cdn) {
     // Trigger codigo de producto
     pi_each_item(frm, cdt, cdn);
+    pi_remove_non_existing_taxes(frm);
   },
   qty: function (frm, cdt, cdn) {
     pi_each_item(frm, cdt, cdn);
   },
-  stock_qty: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
+  // NOTA: ESTE EVENTO NUNCA SE EJECUTA
+  // stock_qty: function (frm, cdt, cdn) {
+  //   pi_each_item(frm, cdt, cdn);
+  // },
   uom: function (frm, cdt, cdn) {
     pi_each_item(frm, cdt, cdn);
   },
@@ -843,38 +876,44 @@ frappe.ui.form.on("Purchase Invoice Item", {
   conversion_factor: function (frm, cdt, cdn) {
     pi_each_item(frm, cdt, cdn);
   },
+  discount_percentage: function (frm, cdt, cdn) {
+    pi_each_item(frm, cdt, cdn);
+  },
+  discount_amount: function (frm, cdt, cdn) {
+    pi_each_item(frm, cdt, cdn);
+  },
   //   CUando se cambia manualmente la cuenta de impuesto especial
   facelec_p_tax_rate_per_uom_account: function (frm, cdt, cdn) {
     pi_each_item(frm, cdt, cdn);
   },
   shs_amount_for_back_calc: function (frm, cdt, cdn) {
-    frm.doc.items.forEach((row, index) => {
-      var a = row.rate;
-      var b = row.qty;
-      var c = row.amount;
+    let row = frappe.get_doc(cdt, cdn);
+    var a = row.rate;
+    var b = row.qty;
+    var c = row.amount;
 
-      let calcu = goalSeek({
-        Func: redondeo_sales_invoice,
-        aFuncParams: [b, a],
-        oFuncArgTarget: {
-          Position: 0
-        },
-        Goal: row.shs_amount_for_back_calc,
-        Tol: 0.001,
-        maxIter: 10000
-      });
-      // console.log(calcu);
-
-      frm.doc.items[index].qty = calcu;
-      frm.doc.items[index].stock_qty = calcu;
-      frm.doc.items[index].amount = calcu * frm.doc.items[index].rate;
-      // frm.doc.items[index].qty = calcu;
-
-      // frm.set_value('qty', calcu);
-      frm.refresh_field("items");
-
-      pi_each_item(frm, cdt, cdn);
+    let calcu = goalSeek({
+      Func: redondeo_sales_invoice,
+      aFuncParams: [b, a],
+      oFuncArgTarget: {
+        Position: 0
+      },
+      Goal: row.shs_amount_for_back_calc,
+      Tol: 0.001,
+      maxIter: 10000
     });
+    // console.log(calcu);
+
+    // frm.doc.items[index].qty = calcu;
+    frappe.model.set_value(row.doctype, row.name, "qty", flt(calcu));
+    // frm.doc.items[index].stock_qty = calcu;
+    frappe.model.set_value(row.doctype, row.name, "stock_qty", flt(calcu));
+    // frm.doc.items[index].amount = calcu * frm.doc.items[index].rate;
+    frappe.model.set_value(row.doctype, row.name, "amount", flt(calcu * a));
+
+    frm.refresh_field("items");
+
+    pi_each_item(frm, cdt, cdn);
   },
 });
 

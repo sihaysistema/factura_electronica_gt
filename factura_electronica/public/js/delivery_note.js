@@ -11,8 +11,11 @@ import { goalSeek } from './goalSeek.js';
  * @param {object} frm - Objeto que contiene todas las propiedades del doctype
  * @param {object} row - Objeto que contiene todas las propiedades de la fila de items que se este manipulando
  */
-function dn_get_special_tax_by_item(frm, row) {
-  if (row.shs_dn_is_fuel) {
+function dn_get_special_tax_by_item(frm, cdt, cdn) {
+  let row = frappe.get_doc(cdt, cdn);
+
+  frm.refresh_field('items');
+  if (row.shs_dn_is_fuel && row.item_code) {
     // Peticion para obtener el monto, cuenta venta de impuesto especial de combustible
     // en funcion de item_code y la compania
     frappe.call({
@@ -25,8 +28,8 @@ function dn_get_special_tax_by_item(frm, row) {
         // Si existe una cuenta configurada para el item
         if (r.message.facelec_tax_rate_per_uom_selling_account) {
           // on success
-          row.shs_dn_tax_rate_per_uom = r.message.facelec_tax_rate_per_uom;
-          row.shs_dn_tax_rate_per_uom_account = r.message.facelec_tax_rate_per_uom_selling_account;
+          frappe.model.set_value(row.doctype, row.name, "shs_dn_tax_rate_per_uom", flt(r.message.facelec_tax_rate_per_uom));
+          frappe.model.set_value(row.doctype, row.name, "shs_dn_tax_rate_per_uom_account", r.message.facelec_tax_rate_per_uom_selling_account || '');
           frm.refresh_field('items');
         } else {
           // Si no esta configurado el impuesto especial para el item
@@ -44,10 +47,12 @@ function dn_get_special_tax_by_item(frm, row) {
         }
       },
     });
+
+    return;
     // Si no es item de tipo combustible
   } else {
-    row.shs_dn_tax_rate_per_uom = 0;
-    row.shs_dn_tax_rate_per_uom_account = '';
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_tax_rate_per_uom", flt(0));
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_tax_rate_per_uom_account", '');
     frm.refresh_field('items');
   }
 }
@@ -60,26 +65,24 @@ function dn_get_special_tax_by_item(frm, row) {
  */
 function delivery_note_each_row(frm, cdt, cdn) {
   // console.log("Recalculando... Delivery Note");
+  if (cdt === 'Delivery Note Item') {
+    dn_get_special_tax_by_item(frm, cdt, cdn);
+    shs_delivery_note_calculation(frm, cdt, cdn);
 
-  frm.doc.items.forEach((item_row, index) => {
-    if (item_row.name === cdn) {
-      frappe.run_serially([
-        () => {
-          // Si la fila manipulada es un item tipo combustible
-          let first_data_collection = frappe.get_doc(cdt, cdn);
-          dn_get_special_tax_by_item(frm, first_data_collection);
-        },
-        () => {
-          //   console.log('Seleccionaste', item_row);
-        },
-        () => {
-          // Se realizan los calculos de impuestos necesarios
-          let second_data_collection = frappe.get_doc(cdt, cdn);
-          shs_delivery_note_calculation(frm, second_data_collection);
-        },
-      ]);
-    }
-  });
+    dn_total_by_item_type(frm);
+  } else {
+    cdt = "Delivery Note Item";
+    // Si no es una fila especifica, se iteran todas y se realizan los calculos
+    frm.refresh_field('items');
+    frm.doc.items.forEach((item_row, index) => {
+      cdn = item_row.name;
+
+      dn_get_special_tax_by_item(frm, cdt, cdn);
+      shs_delivery_note_calculation(frm, cdt, cdn);
+
+      dn_total_by_item_type(frm);
+    });
+  }
 }
 
 /**
@@ -87,14 +90,17 @@ function delivery_note_each_row(frm, cdt, cdn) {
  * @param {object} frm - Objeto que contiene todas las propiedades del doctype
  * @param {object} row - Objecto con las propiedades de la fila que se este manipulando
  */
-function shs_delivery_note_calculation(frm, row) {
-  cur_frm.refresh_fields();
+function shs_delivery_note_calculation(frm, cdt, cdn) {
+  let row = frappe.get_doc(cdt, cdn);
+  // console.log("Calculando...", row.item_code, "indice", row.idx);
 
+  frm.refresh_field('items');
   let this_company_sales_tax_var = 0;
+  const taxes_tbl = frm.doc.taxes || [];
 
   // Valida si la compania tiene carga una tabla de impuestos
-  if (cur_frm.doc.taxes.length > 0) {
-    this_company_sales_tax_var = cur_frm.doc.taxes[0].rate;
+  if (taxes_tbl.length > 0) {
+    this_company_sales_tax_var = taxes_tbl[0].rate;
   } else {
     // Muestra una notificacion para cargar una tabla de impuestos
     frappe.show_alert({
@@ -103,57 +109,101 @@ function shs_delivery_note_calculation(frm, row) {
     }, 400);
 
     this_company_sales_tax_var = 0
+    return;
   }
 
-  row.shs_dn_other_tax_amount = ((row.shs_dn_tax_rate_per_uom * (row.qty * row.conversion_factor)));
+  let amount_minus_excise_tax = 0;
+  let other_tax_amount = 0;
+  let net_fuel = 0;
+  let net_services = 0;
+  let net_goods = 0;
+  let tax_for_this_row = 0;
+
+  other_tax_amount = flt(row.shs_dn_tax_rate_per_uom * row.qty * row.conversion_factor);
+  frappe.model.set_value(row.doctype, row.name, "shs_dn_other_tax_amount", other_tax_amount);
+
   //OJO!  No s epuede utilizar stock_qty en los calculos, debe de ser qty a puro tubo!
-  row.shs_dn_amount_minus_excise_tax = ((row.qty * row.rate) - (row.qty * row.conversion_factor * row.shs_dn_tax_rate_per_uom));
+  amount_minus_excise_tax = flt((row.qty * row.rate) - (row.qty * row.conversion_factor * row.shs_dn_tax_rate_per_uom));
+  frappe.model.set_value(row.doctype, row.name, "shs_dn_amount_minus_excise_tax", amount_minus_excise_tax);
 
-  if (row.shs_dn_is_fuel) {
-    row.shs_dn_gt_tax_net_fuel_amt = (row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-    row.shs_dn_sales_tax_for_this_row = (row.shs_dn_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
+  if (row.shs_dn_is_fuel && row.item_code) {
+    net_services = 0;
+    net_goods = 0;
+    net_fuel = flt(row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_fuel_amt", flt(net_fuel));
+
+    tax_for_this_row = flt(row.shs_dn_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_sales_tax_for_this_row", tax_for_this_row);
+
+    // Los campos de bienes y servicios se resetean a 0
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_goods_amt", flt(net_goods));
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_services_amt", flt(net_services));
+
     // Sumatoria de todos los que tengan el check combustibles
-    let total_fuel = 0;
-    $.each(frm.doc.items || [], function (i, d) {
-      if (d.shs_dn_is_fuel == true) {
-        total_fuel += flt(d.shs_dn_gt_tax_net_fuel_amt);
-      };
-    });
-    frm.doc.shs_dn_gt_tax_fuel = total_fuel;
+    // let total_fuel = 0;
+    // $.each(frm.doc.items || [], function (i, d) {
+    //   if (d.shs_dn_is_fuel == true) {
+    //     total_fuel += flt(d.shs_dn_gt_tax_net_fuel_amt);
+    //   };
+    // });
+    // frm.doc.shs_dn_gt_tax_fuel = total_fuel;
   };
 
-  if (row.shs_dn_is_good) {
-    row.shs_dn_gt_tax_net_goods_amt = (row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-    row.shs_dn_sales_tax_for_this_row = (row.shs_dn_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
+  tax_for_this_row = 0;
+  if (row.shs_dn_is_good && row.item_code) {
+    net_services = 0;
+    net_fuel = 0;
+    net_goods = flt(row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_goods_amt", flt(net_goods));
+
+    tax_for_this_row = flt(row.shs_dn_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_sales_tax_for_this_row", flt(tax_for_this_row));
+
+    // Los campos de servicios y combustibles se resetean a 0
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_services_amt", flt(net_services));
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_fuel_amt", flt(net_fuel));
+
     // Sumatoria de todos los que tengan el check bienes
-    let total_goods = 0;
-    $.each(frm.doc.items || [], function (i, d) {
-      if (d.shs_dn_is_good == true) {
-        total_goods += flt(d.shs_dn_gt_tax_net_goods_amt);
-      };
-    });
-    frm.doc.shs_dn_gt_tax_goods = total_goods;
+    // let total_goods = 0;
+    // $.each(frm.doc.items || [], function (i, d) {
+    //   if (d.shs_dn_is_good == true) {
+    //     total_goods += flt(d.shs_dn_gt_tax_net_goods_amt);
+    //   };
+    // });
+    // frm.doc.shs_dn_gt_tax_goods = total_goods;
   };
 
-  if (row.shs_dn_is_service) {
-    row.shs_dn_gt_tax_net_services_amt = (row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
-    row.shs_dn_sales_tax_for_this_row = (row.shs_dn_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
+  tax_for_this_row = 0;
+  if (row.shs_dn_is_service && row.item_code) {
+    net_fuel = 0;
+    net_goods = 0;
+    net_services = flt(row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_services_amt", flt(net_services));
+
+    tax_for_this_row = flt(row.shs_dn_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_sales_tax_for_this_row", flt(tax_for_this_row));
+
+    // Los campos de bienes y combustibles se resetean a 0
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_goods_amt", flt(net_goods));
+    frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_fuel_amt", flt(net_fuel));
+
     // Sumatoria de todos los que tengan el check servicios
-    let total_servi = 0;
-    $.each(frm.doc.items || [], function (i, d) {
-      if (d.shs_dn_is_service == true) {
-        total_servi += flt(d.shs_dn_gt_tax_net_services_amt);
-      };
-    });
-    frm.doc.shs_dn_gt_tax_services = total_servi;
+    // let total_servi = 0;
+    // $.each(frm.doc.items || [], function (i, d) {
+    //   if (d.shs_dn_is_service == true) {
+    //     total_servi += flt(d.shs_dn_gt_tax_net_services_amt);
+    //   };
+    // });
+    // frm.doc.shs_dn_gt_tax_services = total_servi;
   };
 
   // Totaliza el valor de IVA
-  let full_tax_iva = 0;
-  $.each(frm.doc.items || [], function (i, d) {
-    full_tax_iva += flt(d.shs_dn_sales_tax_for_this_row);
-  });
-  frm.doc.shs_dn_total_iva = full_tax_iva;
+  // let full_tax_iva = 0;
+  // $.each(frm.doc.items || [], function (i, d) {
+  //   full_tax_iva += flt(d.shs_dn_sales_tax_for_this_row);
+  // });
+  // frm.doc.shs_dn_total_iva = full_tax_iva;
+  frm.refresh_field('items');
 }
 
 /**
@@ -170,10 +220,10 @@ function redondeo_delivery_note(a, b) {
  * @param {object} frm - Objeto que contiene todas las propiedades del doctype
  */
 function dn_total_by_item_type(frm) {
-  var fix_gt_tax_fuel = 0;
-  var fix_gt_tax_goods = 0;
-  var fix_gt_tax_services = 0;
-  var fix_gt_tax_iva = 0;
+  let fix_gt_tax_fuel = 0;
+  let fix_gt_tax_goods = 0;
+  let fix_gt_tax_services = 0;
+  let fix_gt_tax_iva = 0;
 
   $.each(frm.doc.items || [], function (i, d) {
     fix_gt_tax_fuel += flt(d.shs_dn_gt_tax_net_fuel_amt);
@@ -183,9 +233,16 @@ function dn_total_by_item_type(frm) {
   });
 
   cur_frm.set_value("shs_dn_gt_tax_fuel", fix_gt_tax_fuel);
+  frm.refresh_field("shs_dn_gt_tax_fuel");
+
   cur_frm.set_value("shs_dn_gt_tax_goods", fix_gt_tax_goods);
+  frm.refresh_field("shs_dn_gt_tax_goods");
+
   cur_frm.set_value("shs_dn_gt_tax_services", fix_gt_tax_services);
+  frm.refresh_field("shs_dn_gt_tax_services");
+
   cur_frm.set_value("shs_dn_total_iva", fix_gt_tax_iva);
+  frm.refresh_field("shs_dn_total_iva");
 }
 
 frappe.ui.form.on("Delivery Note", {
@@ -196,7 +253,7 @@ frappe.ui.form.on("Delivery Note", {
   // El validdor de nit no esta habilitado, ya que pueden existir valores de identificacion internacional
   shs_dn_nit: function (frm) {
   },
-  discount_amount: function (frm) {
+  discount_amount: function (frm, cdt, cdn) {
     // Trigger Monto de descuento
     var tax_before_calc = frm.doc.shs_dn_total_iva;
     // es-GT: Este muestra el IVA que se calculo por medio de nuestra aplicación.
@@ -208,7 +265,13 @@ frappe.ui.form.on("Delivery Note", {
       frm.doc.shs_dn_total_iva = (frm.doc.shs_dn_total_iva - discount_amount_tax_value);
     }
   },
-  validate: function (frm) {
+  before_save: function (frm, cdt, cdn) {
+    delivery_note_each_row(frm, cdt, cdn);
+  },
+  validate: function (frm, cdt, cdn) {
+    console.log("Validate");
+    // dn_total_by_item_type(frm);
+
     let taxes = frm.doc.taxes || [];
     if (taxes.length == 0) {
       // Muestra una notificacion para cargar una tabla de impuestos
@@ -221,10 +284,17 @@ frappe.ui.form.on("Delivery Note", {
 });
 
 frappe.ui.form.on("Delivery Note Item", {
-  items_add: function (frm, cdt, cdn) {
+  // NOTA ESTE EVENTO PUEDE REALENTIZAR LENTO EL CALCULO
+  // items_add: function (frm, cdt, cdn) {
+  //   dn_total_by_item_type(frm);
+  // },
+  before_items_remove: function (frm) {
     dn_total_by_item_type(frm);
   },
   items_remove: function (frm) {
+    dn_total_by_item_type(frm);
+  },
+  items_move: function (frm) {
     dn_total_by_item_type(frm);
   },
   // Cuando se cambia el valor de item_code
