@@ -313,15 +313,14 @@ function pi_each_item(frm, cdt, cdn) {
     frm.refresh_field('items');
     frm.doc.items.forEach((item_row, index) => {
       cdn = item_row.name;
-
       pi_get_special_tax_by_item(frm, cdt, cdn);
       shs_purchase_invoice_calculation(frm, cdt, cdn);
       pi_get_other_tax(frm, cdt, cdn);
-
-      pi_recalculate_other_taxes(frm);
-      pi_shs_total_other_tax(frm);
-      pi_total_amount_by_item_type(frm);
     });
+
+    pi_recalculate_other_taxes(frm);
+    pi_shs_total_other_tax(frm);
+    pi_total_amount_by_item_type(frm);
   }
   frm.refresh_field('items');
 }

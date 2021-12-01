@@ -36,11 +36,11 @@ function each_row(frm, cdt, cdn) {
       get_special_tax_by_item(frm, cdt, cdn);
       sales_invoice_calculations(frm, cdt, cdn);
       get_other_tax(frm, cdt, cdn);
-
-      recalculate_other_taxes(frm);
-      shs_total_other_tax(frm);
-      shs_total_iva(frm);
     });
+
+    recalculate_other_taxes(frm);
+    shs_total_other_tax(frm);
+    shs_total_iva(frm);
   }
   frm.refresh_field('items');
 }
@@ -127,7 +127,7 @@ function sales_invoice_calculations(frm, cdt, cdn) {
     net_services = flt(row.facelec_amount_minus_excise_tax / flt(1 + (this_company_sales_tax_var / 100)));
     frappe.model.set_value(row.doctype, row.name, "facelec_gt_tax_net_services_amt", flt(net_services));
 
-    frm.refresh_field('items');
+    // frm.refresh_field('items');
 
     tax_for_this_row = flt(row.facelec_gt_tax_net_services_amt * flt(this_company_sales_tax_var / 100));
     frappe.model.set_value(row.doctype, row.name, "facelec_sales_tax_for_this_row", flt(tax_for_this_row));

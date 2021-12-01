@@ -80,8 +80,8 @@ function delivery_note_each_row(frm, cdt, cdn) {
       dn_get_special_tax_by_item(frm, cdt, cdn);
       shs_delivery_note_calculation(frm, cdt, cdn);
 
-      dn_total_by_item_type(frm);
     });
+    dn_total_by_item_type(frm);
   }
 }
 
@@ -138,15 +138,6 @@ function shs_delivery_note_calculation(frm, cdt, cdn) {
     // Los campos de bienes y servicios se resetean a 0
     frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_goods_amt", flt(net_goods));
     frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_services_amt", flt(net_services));
-
-    // Sumatoria de todos los que tengan el check combustibles
-    // let total_fuel = 0;
-    // $.each(frm.doc.items || [], function (i, d) {
-    //   if (d.shs_dn_is_fuel == true) {
-    //     total_fuel += flt(d.shs_dn_gt_tax_net_fuel_amt);
-    //   };
-    // });
-    // frm.doc.shs_dn_gt_tax_fuel = total_fuel;
   };
 
   tax_for_this_row = 0;
@@ -162,15 +153,6 @@ function shs_delivery_note_calculation(frm, cdt, cdn) {
     // Los campos de servicios y combustibles se resetean a 0
     frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_services_amt", flt(net_services));
     frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_fuel_amt", flt(net_fuel));
-
-    // Sumatoria de todos los que tengan el check bienes
-    // let total_goods = 0;
-    // $.each(frm.doc.items || [], function (i, d) {
-    //   if (d.shs_dn_is_good == true) {
-    //     total_goods += flt(d.shs_dn_gt_tax_net_goods_amt);
-    //   };
-    // });
-    // frm.doc.shs_dn_gt_tax_goods = total_goods;
   };
 
   tax_for_this_row = 0;
@@ -186,23 +168,8 @@ function shs_delivery_note_calculation(frm, cdt, cdn) {
     // Los campos de bienes y combustibles se resetean a 0
     frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_goods_amt", flt(net_goods));
     frappe.model.set_value(row.doctype, row.name, "shs_dn_gt_tax_net_fuel_amt", flt(net_fuel));
-
-    // Sumatoria de todos los que tengan el check servicios
-    // let total_servi = 0;
-    // $.each(frm.doc.items || [], function (i, d) {
-    //   if (d.shs_dn_is_service == true) {
-    //     total_servi += flt(d.shs_dn_gt_tax_net_services_amt);
-    //   };
-    // });
-    // frm.doc.shs_dn_gt_tax_services = total_servi;
   };
 
-  // Totaliza el valor de IVA
-  // let full_tax_iva = 0;
-  // $.each(frm.doc.items || [], function (i, d) {
-  //   full_tax_iva += flt(d.shs_dn_sales_tax_for_this_row);
-  // });
-  // frm.doc.shs_dn_total_iva = full_tax_iva;
   frm.refresh_field('items');
 }
 
@@ -269,7 +236,7 @@ frappe.ui.form.on("Delivery Note", {
     delivery_note_each_row(frm, cdt, cdn);
   },
   validate: function (frm, cdt, cdn) {
-    console.log("Validate");
+    // console.log("Validate");
     // dn_total_by_item_type(frm);
 
     let taxes = frm.doc.taxes || [];
