@@ -694,7 +694,7 @@ class SalesExchangeInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            with open('FACTURA-CAMBIARIA-FEL.xml', 'w') as f:
+            with open('PREVIEW-FACTURA-CAMBIARIA-FEL.xml', 'w') as f:
                 f.write(self.__xml_string)
 
         except:

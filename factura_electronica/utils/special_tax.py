@@ -11,6 +11,10 @@ from factura_electronica.utils.utilities_facelec import get_currency_precision, 
 from frappe.utils import cint, flt
 
 
+# IMPORTANTE: OJO: NOTA: CADA ITEM DE TIPO COMBUSTIBLE DEBE TENER SU PROPIA CUENTA DE INGRESO Y GASTO CONFIGURADA
+# DE LO CONTRARIO NO CUADRARA EN GENERAL LEDGER. SI TIENES OTRA IDEA NO DUDES EN TESTEARLO AQUI
+
+
 def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, invoice_name, tax_accounts):
     '''Grand total, quitar sumatoria totoal shs otros imuestos, = neto para iva
        se calcula sobre ese neto, y se va a ir a modificar en glentry para reflejar los cambios
@@ -22,7 +26,12 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
        * invice_type (str) : Sales Invoice or Purchase Invoice
        * invoice_name (str) : Nombre de la factura
     '''
+    # IMPORTANTE: OJO: NOTA: CADA ITEM DE TIPO COMBUSTIBLE DEBE TENER SU PROPIA CUENTA DE INGRESO Y GASTO CONFIGURADA
+    # DE LO CONTRARIO NO CUADRARA EN GENERAL LEDGER
 
+    # LA LOGICA DE SALES INVOICE TAMBIEN SE APLICA PURCHASE INVOICE
+
+    # Precision calculos esto se configura en System Settings en el campo currency_precision
     precision_calc = get_currency_precision()
 
     # Calculos actualizar impuesto Sales Invoice -- Purchase Invoice
@@ -49,7 +58,7 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
         # Actualizacion sobre la tabla `tabGL Entry`
         if invoice_type == 'Sales Invoice':
             # Total Tasable
-            # es-GT: Monto total de la factura menos el total del monto del impuesto especial
+            # es-GT: Monto total de la factura
             frappe.db.sql('''
                 UPDATE `tabGL Entry` SET debit=%(nuevo_monto)s, debit_in_account_currency=%(nuevo_monto)s
                 WHERE voucher_no=%(serie_original)s AND party_type=%(tipo)s AND party=%(customer_n)s
@@ -57,9 +66,10 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                   'customer_n': str(data_gl_entry[0]['customer_name'])})
 
             # Valor Neto Iva
-            # NOTE: SOLO SE DEBEN ACTUALIZAR LAS CUENTAS DE IMPUESTO ESPECIAL NET
+            # NOTE: OJO: IMPORTANTE: SOLO SE DEBEN ACTUALIZAR LAS CUENTAS DE IMPUESTO ESPECIAL NET
             for tax_acc in tax_accounts:
-                # Net Fuel: suma de `facelec_gt_tax_net_fuel` de todos los items de la factura
+                # Net Fuel: suma de `facelec_gt_tax_net_fuel` de todos los items de la factura y asignarlo a la cuenta
+                # del item combustible
                 net_fuel = frappe.db.sql('''
                     SELECT SUM(facelec_gt_tax_net_fuel_amt) as net_fuel FROM `tabSales Invoice Item`
                     WHERE parent=%(origin_serie)s AND facelec_tax_rate_per_uom_account=%(acc)s
@@ -168,6 +178,9 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type):
     * accounts (dict) : Diccionario de cuentas
     * invoice_type (str) : Tipo de factura
     '''
+
+    # IMPORTANTE: OJO: NOTA: CADA ITEM DE TIPO COMBUSTIBLE DEBE TENER SU PROPIA CUENTA DE INGRESO Y GASTO CONFIGURADA
+    # DE LO CONTRARIO NO CUADRARA EN GENERAL LEDGER
 
     account_names = json.loads(accounts)
 

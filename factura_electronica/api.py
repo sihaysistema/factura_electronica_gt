@@ -106,7 +106,7 @@ def obtener_numero_resolucion(nombre_serie):
 
 
 @frappe.whitelist()
-def generar_tabla_html(tabla):
+def generar_tabla_html(tabla, currency="GTQ"):
     """Funcion para generar tabla con html + jinja, para mostrar impuestos
     desglosados de cada item
 
@@ -127,13 +127,14 @@ def generar_tabla_html(tabla):
         "templates/sales_invoice_tax.html", dict(
             headers=headers,
             items_tax=mi_tabla,
-            index=longi
+            index=longi,
+            currency=currency
         )
     )
 
 
 @frappe.whitelist()
-def generar_tabla_html_factura_compra(tabla):
+def generar_tabla_html_factura_compra(tabla, currency="GTQ"):
     """Funcion para generar tabla con html + jinja, para mostrar impuestos
     desglosados de cada item en Purchase invoice
 
@@ -150,12 +151,16 @@ def generar_tabla_html_factura_compra(tabla):
     mi_tabla = json.loads(tabla)
     longi = (len(mi_tabla))
 
+    # with open("probando.json", "w") as file:
+    #     file.write(json.dumps(mi_tabla, indent=2))
+
     # # Retorna la tabla HTML lista para renderizar
     return frappe.render_template(
         "templates/purchase_invoice_tax.html", dict(
             headers=headers,
             items_tax=mi_tabla,
-            index=longi
+            index=longi,
+            currency=currency
         )
     )
 
@@ -612,7 +617,8 @@ def pos_calculations(doc, event):
 def generate_access_number(doc, event):
     """
     Genera numero de acceso para facturas cambiarias, si y solo si
-    el documento esta usando una serie valida
+    el documento esta usando una serie valida, el valor generado es independiente
+    de INFILE pero requerido solo funciona para referencia
     """
     try:
         is_valid = is_valid_to_fel(doc.doctype, doc.name)
@@ -633,3 +639,13 @@ def generate_access_number(doc, event):
     except:
         with open("error-camb.txt", "w") as f:
             f.write(str(frappe.get_traceback()))
+
+
+@frappe.whitelist()
+def get_special_tax(item_code='', company=''):
+    fields = ['facelec_tax_rate_per_uom', 'facelec_tax_rate_per_uom_purchase_account',
+              'facelec_tax_rate_per_uom_selling_account']
+    taxes = frappe.db.get_value('Item Default', filters={'parent': item_code, 'company': company},
+                                fieldname=fields, as_dict=1)
+
+    return taxes or False
