@@ -219,6 +219,7 @@ frappe.ui.form.on("Sales Order", {
   },
   validate: function (frm, cdt, cdn) {
     // console.log("Validate");
+    sales_order_each_item(frm, cdt, cdn);
 
     let taxes = frm.doc.taxes || [];
     if (taxes.length == 0) {
@@ -257,6 +258,12 @@ frappe.ui.form.on("Sales Order Item", {
   },
   conversion_factor: function (frm, cdt, cdn) {
     // Trigger factor de conversion
+    sales_order_each_item(frm, cdt, cdn);
+  },
+  discount_percentage: function (frm, cdt, cdn) {
+    sales_order_each_item(frm, cdt, cdn);
+  },
+  discount_amount: function (frm, cdt, cdn) {
     sales_order_each_item(frm, cdt, cdn);
   },
   rate: function (frm, cdt, cdn) {

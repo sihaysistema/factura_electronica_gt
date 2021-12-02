@@ -151,6 +151,9 @@ def generar_tabla_html_factura_compra(tabla, currency="GTQ"):
     mi_tabla = json.loads(tabla)
     longi = (len(mi_tabla))
 
+    # with open("probando.json", "w") as file:
+    #     file.write(json.dumps(mi_tabla, indent=2))
+
     # # Retorna la tabla HTML lista para renderizar
     return frappe.render_template(
         "templates/purchase_invoice_tax.html", dict(

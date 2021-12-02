@@ -879,7 +879,7 @@ frappe.ui.form.on('Sales Invoice', {
       // FIN BOTONES GENERADORES DOCS ELECTRONICOS
 
       // INICIO GENERACION POLIZA CON RETENCIONES
-      // TODO:AGREGAR VALIDACION EXISTENCIA EN JOURNA ENTRY
+      // TODO:AGREGAR VALIDACION EXISTENCIA DE JOURNA ENTRY
       if (frm.doc.docstatus === 1 && frm.doc.status !== 'Paid') {
         btn_journal_entry_retention(frm);
       }
@@ -890,7 +890,7 @@ frappe.ui.form.on('Sales Invoice', {
   validate: function (frm, cdt, cdn) {
     // console.log('validate');
     // Asegura que los montos de impuestos especiales se calculen correctamente
-    // each_row(frm, cdt, cdn);
+    each_row(frm, cdt, cdn);
     remove_non_existing_taxes(frm)
     generar_tabla_html(frm);
 
@@ -934,7 +934,6 @@ frappe.ui.form.on('Sales Invoice', {
   // Se ejecuta antes de guardar el documento
   before_save: function (frm, cdt, cdn) {
     each_row(frm, cdt, cdn);
-    // remove_non_existing_taxes(frm)
   },
   // Se ejecuta al validar el documento
   on_submit: function (frm, cdt, cdn) {

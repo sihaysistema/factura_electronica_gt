@@ -196,6 +196,7 @@ frappe.ui.form.on("Purchase Order", {
 
   },
   validate: function (frm, cdt, cdn) {
+    purchase_order_each_item(frm, cdt, cdn);
 
     let taxes = frm.doc.taxes || [];
     if (taxes.length == 0) {

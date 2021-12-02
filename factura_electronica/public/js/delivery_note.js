@@ -237,7 +237,7 @@ frappe.ui.form.on("Delivery Note", {
   },
   validate: function (frm, cdt, cdn) {
     // console.log("Validate");
-    // dn_total_by_item_type(frm);
+    delivery_note_each_row(frm, cdt, cdn);
 
     let taxes = frm.doc.taxes || [];
     if (taxes.length == 0) {

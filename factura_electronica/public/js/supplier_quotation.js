@@ -218,6 +218,8 @@ frappe.ui.form.on("Supplier Quotation", {
     supplier_quotation_each_item(frm, cdt, cdn);
   },
   validate: function (frm, cdt, cdn) {
+    supplier_quotation_each_item(frm, cdt, cdn);
+
     let taxes = frm.doc.taxes || [];
     if (taxes.length == 0) {
       // Muestra una notificacion para cargar una tabla de impuestos

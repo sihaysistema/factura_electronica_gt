@@ -373,7 +373,7 @@ frappe.ui.form.on("Quotation", {
   validate: function (frm, cdt, cdn) {
     // console.log('validate');
     // Asegura que los montos de impuestos especiales se calculen correctamente
-    // each_row(frm, cdt, cdn);
+    quotation_each_row(frm, cdt, cdn);
     qo_remove_non_existing_taxes(frm)
 
     let taxes = frm.doc.taxes || [];
