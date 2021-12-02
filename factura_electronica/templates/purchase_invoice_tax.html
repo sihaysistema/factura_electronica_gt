@@ -21,15 +21,19 @@
             {% for i in range(0, index) %}
             <tr>
                 <td> {{ items_tax[i]["item_code"] }} </td>
-                <td class='text-right'> {{ items_tax[i]["facelec_p_tax_rate_per_uom"] }} </td>
+                <td class='text-right'> {{ '{} {}'.format(currency, items_tax[i]["facelec_p_tax_rate_per_uom"]) }} </td>
                 <td class='text-right'> {{ items_tax[i]["qty"] }} </td>
-                <td class='text-right' style="border-left-width: thick"> {{ items_tax[i]["facelec_p_other_tax_amount"] }} </td>
+                <td class='text-right' style="border-left-width: thick"> {{ '{} {}'.format(currency,
+                    items_tax[i]["facelec_p_other_tax_amount"]) }} </td>
                 <td class='text-center'> + </td>
-                <td class='text-right'> {{ items_tax[i]["facelec_p_gt_tax_net_goods_amt"] + items_tax[i]["facelec_p_gt_tax_net_fuel_amt"] + items_tax[i]["facelec_p_gt_tax_net_services_amt"]}} </td>
+                <td class='text-right'> {{ '{} {}'.format(currency, items_tax[i]["facelec_p_gt_tax_net_goods_amt"] +
+                    items_tax[i]["facelec_p_gt_tax_net_fuel_amt"] + items_tax[i]["facelec_p_gt_tax_net_services_amt"])
+                    }} </td>
                 <td class='text-center'> + </td>
-                <td class='text-right'> {{ items_tax[i]["facelec_p_sales_tax_for_this_row"] }} </td>
+                <td class='text-right'> {{ '{} {}'.format(currency, items_tax[i]["facelec_p_sales_tax_for_this_row"])
+                    }} </td>
                 <td class='text-center'> = </td>
-                <td class='text-right'> {{ items_tax[i]["amount"] }} </td>
+                <td class='text-right'> {{ '{} {}'.format(currency, items_tax[i]["amount"]) }} </td>
             </tr>
             {% endfor %}
 

@@ -257,10 +257,10 @@ def fill_fixtures():
                     "Purchase Order Item-facelec_po_is_service",
                     "Company-tax_category",
                     "Item-excise_taxes",
-                    "Item-facelec_tax_rate_per_uom",
-                    "Item-facelec_tax_rate_per_uom_purchase_account",
-                    "Item-facelec_tax_rate_per_uom_selling_account",
-                    "Item-facelec_uom_tax_included_in_price",
+                    # "Item-facelec_tax_rate_per_uom",
+                    # "Item-facelec_tax_rate_per_uom_purchase_account",
+                    # "Item-facelec_tax_rate_per_uom_selling_account",
+                    # "Item-facelec_uom_tax_included_in_price",
                     "Item-tax_per_category",
                     "Item-facelec_is_fuel",
                     "Item-facelec_is_good",
@@ -321,7 +321,9 @@ def fill_fixtures():
                     "Expense Claim Detail-column_break_26", "Expense Claim Detail-column_break_28",
                     "Expense Claim Detail-section_break_30", "Expense Claim Detail-from_invoice_reference",
                     "Customer-facelec_trade_name", "Supplier-facelec_trade_name", "Company-facelec_trade_name",
-                    "Sales Invoice-access_number_fel"
+                    "Sales Invoice-access_number_fel", "Item Default-facelec_tax_rate_per_uom_purchase_account",
+                    "Item Default-facelec_tax_rate_per_uom_selling_account", "Item Default-facelec_tax_rate_per_uom",
+                    "Item Default-facelec_uom_tax_included_in_price"
                 ]
             ]
         ]

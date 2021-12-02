@@ -633,8 +633,8 @@ class ElectronicSpecialInvoice:
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
             # Usar solo para debug
-            # with open('FACTURA-ESPECIAL.xml', 'w') as f:
-            #     f.write(self.__xml_string)
+            with open('PREVIEWFACTURA-ESPECIAL.xml', 'w') as f:
+                f.write(self.__xml_string)
 
         except:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'

@@ -898,7 +898,8 @@ def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='S
 @frappe.whitelist()
 def is_valid_to_fel(doctype, docname):
     """
-    Validador escenario para mostrar u ocultar botones para generar docs electronicos
+    Validador de escenarios para mostrar u ocultar botones para generar docs electronicos
+    Factura FEL, Anulador, Nota de Credito, etc.
 
     Args:
         doctype (str): Nombre doctype
