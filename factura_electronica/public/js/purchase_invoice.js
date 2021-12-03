@@ -841,10 +841,10 @@ frappe.ui.form.on("Purchase Invoice Item", {
     pi_total_amount_by_item_type(frm);
     pi_shs_total_other_tax(frm);
   },
-  // NOTA: ESTE EVENTO HACE QUE SE COMPORTE MAS LENTAMENTE
-  // items_add: function (frm, cdt, cdn) {
-  //   pi_each_item(frm, cdt, cdn);
-  // },
+  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+  items_add: function (frm, cdt, cdn) {
+    pi_each_item(frm, cdt, cdn);
+  },
   //   Cuando se cambia de posicion una fila
   items_move: function (frm, cdt, cdn) {
     pi_each_item(frm, cdt, cdn);

@@ -1022,10 +1022,10 @@ frappe.ui.form.on('Sales Invoice Item', {
     shs_total_other_tax(frm);
     shs_total_iva(frm)
   },
-  //  Cuando se agrega una fila: NOTA ESTE EVENTO PONE LENTO EL PROCESO
-  // items_add: function (frm, cdt, cdn) {
-  //   each_row(frm, cdt, cdn);
-  // },
+  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+  items_add: function (frm, cdt, cdn) {
+    each_row(frm, cdt, cdn);
+  },
   //   Cuando se cambia de posicion una fila
   items_move: function (frm, cdt, cdn) {
     each_row(frm, cdt, cdn);

@@ -239,8 +239,9 @@ frappe.ui.form.on("Sales Order Item", {
   items_move: function (frm) {
     sales_order_total_by_item_type(frm);
   },
+  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
   items_add: function (frm) {
-    sales_order_total_by_item_type(frm);
+    sales_order_each_item(frm, cdt, cdn);
   },
   items_remove: function (frm) {
     // es-GT: Este disparador corre al momento de eliminar una nueva fila.

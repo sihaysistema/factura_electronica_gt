@@ -238,6 +238,10 @@ frappe.ui.form.on("Purchase Receipt Item", {
   items_move: function (frm) {
     pr_total_by_item_type(frm);
   },
+  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+  items_add: function (frm) {
+    purchase_receipt_each_item(frm, cdt, cdn);
+  },
   item_code: function (frm, cdt, cdn) {
     purchase_receipt_each_item(frm, cdt, cdn);
   },

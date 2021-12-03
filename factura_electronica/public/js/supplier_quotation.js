@@ -241,6 +241,10 @@ frappe.ui.form.on("Supplier Quotation Item", {
   items_remove: function (frm, cdt, cdn) {
     sq_total_by_item_type(frm)
   },
+  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+  items_add: function (frm, cdt, cdn) {
+    supplier_quotation_each_item(frm, cdt, cdn);
+  },
   item_code: function (frm, cdt, cdn) {
     supplier_quotation_each_item(frm, cdt, cdn);
   },

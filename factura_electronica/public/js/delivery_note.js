@@ -251,10 +251,10 @@ frappe.ui.form.on("Delivery Note", {
 });
 
 frappe.ui.form.on("Delivery Note Item", {
-  // NOTA ESTE EVENTO PUEDE REALENTIZAR LENTO EL CALCULO
-  // items_add: function (frm, cdt, cdn) {
-  //   dn_total_by_item_type(frm);
-  // },
+  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+  items_add: function (frm, cdt, cdn) {
+    delivery_note_each_row(frm, cdt, cdn);
+  },
   before_items_remove: function (frm) {
     dn_total_by_item_type(frm);
   },
