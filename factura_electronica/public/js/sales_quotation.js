@@ -398,6 +398,10 @@ frappe.ui.form.on("Quotation Item", {
     qo_shs_total_by_item_type(frm);
     shs_quotation_total_other_tax(frm);
   },
+  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+  items_add: function (frm, cdt, cdn) {
+    quotation_each_row(frm, cdt, cdn);
+  },
   item_code: function (frm, cdt, cdn) {
     quotation_each_row(frm, cdt, cdn);
   },

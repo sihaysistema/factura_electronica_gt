@@ -238,6 +238,10 @@ frappe.ui.form.on("Purchase Order Item", {
   items_remove: function (frm) {
     pi_total_by_item_type(frm);
   },
+  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+  items_add: function (frm) {
+    purchase_order_each_item(frm, cdt, cdn);
+  },
   item_code: function (frm, cdt, cdn) {
     purchase_order_each_item(frm, cdt, cdn);
   },
