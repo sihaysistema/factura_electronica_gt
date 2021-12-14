@@ -30,7 +30,7 @@ def execute(filters=None):
     if not filters:
         return [], []
 
-    # Conversion fechas filtro a objetos date
+    # Conversion fechas filtro a objetos date para realizar validaciones
     start_d = datetime.datetime.strptime(filters.from_date, "%Y-%m-%d")  # en formato date
     final_d = datetime.datetime.strptime(filters.to_date, "%Y-%m-%d")
 
@@ -40,11 +40,11 @@ def execute(filters=None):
 
         # Se obtienen los datos de las facturas de venta
         datas = sales_invoices(filters)
-
+        # Se procesa la data de la db
         data = process_data_db(filters, datas)
 
         if len(data) > 0:
-            # Generar excel
+            # TODO: Generar excel AQUI
             pass
 
         return columns, data
@@ -81,7 +81,7 @@ def get_columns(filters):
             "label": _("Num Doc."),
             "fieldname": "num_doc",
             "fieldtype": "Link",
-            "options": "Purchase Invoice",
+            "options": "Sales Invoice",
             "width": 250
         },
         {
@@ -180,8 +180,6 @@ def process_data_db(filters, data_db):
     """
 
     try:
-        data_to_report = []
-
         # Si no hay data retornada por la base de datos, retorna una lista vacia
         # para no mostrar error por falta de datos
         if len(data_db) == 0:  # or (len(data_db[1]) == 0):
@@ -197,6 +195,7 @@ def process_data_db(filters, data_db):
             ref_per = frappe.db.get_value('Payment Entry Reference', {'reference_name': sales_invoice.get('num_doc')}, 'parent')
             ref_je = frappe.db.get_value('Journal Entry Account', {'reference_name': sales_invoice.get('num_doc')}, 'parent')
 
+            # Se obtiene el dominio configurado para armar la url
             site_erp = get_site_name(frappe.local.site)
             link_ref = ''
 
@@ -205,43 +204,16 @@ def process_data_db(filters, data_db):
                 link_ref = f'https://{site_erp}/app/payment-entry/{ref_per}'  # para v13
 
             if ref_je:
-                link_ref = f'https://{site_erp}/app/journal-entry/{ref_per}'
+                link_ref = f'https://{site_erp}/app/journal-entry/{ref_je}'
 
+            # Se actualiza el diccionario con la url
             sales_invoice.update({
                 "accounting_document": link_ref
             })
 
-            # Se separan los item segun su tipo
-            # Si es bien
-            if sales_invoice.get("is_good"):
-                sales_invoice.update({
-                    "goods_iva": sales_invoice.get("tax_for_item"),
-                    "services_iva": 0.0,
-                    "fuel_iva": 0.0,
-                    "sales_of_goods": sales_invoice.get("net_good"),
-                    "sales_of_services": sales_invoice.get("net_service"),
-                    "net_fuel": sales_invoice.get("net_fuel")
-                })
-
-            # Si es servicio
-            if sales_invoice.get("is_service"):
-                sales_invoice.update({
-                    "goods_iva": 0.0,
-                    "services_iva": sales_invoice.get("tax_for_item"),
-                    "fuel_iva": 0.0,
-                    "sales_of_goods": sales_invoice.get("net_good"),
-                    "sales_of_services": sales_invoice.get("net_service"),
-                    "net_fuel": sales_invoice.get("net_fuel")
-                })
-
-            # EN ESTE REPORTE NO SE TOMA EN CUENTA LAS FACTURAS DE COMBUSTIBLES (ventas)
-            # Si es fuel
-            # if sales_invoice.get("is_fuel"):
-            #     pass
-
-        # Calcula los totales
+        # Calculo fila de totales
         df_totals = pd.DataFrame.from_dict(invoices)
-
+        # Se especifican que columnas se va a sumar
         totals = df_totals[['total', 'amount', 'fuel_iva', 'goods_iva', 'net_amount', 'net_fuel',
                             'sales_of_goods', 'sales_of_services', 'services_iva']].sum()
         totals = totals.to_dict()
@@ -264,13 +236,14 @@ def process_data_db(filters, data_db):
             "currency": filters.company_currency
         })
 
+        # Debug: datos de reporte
         with open("res-gt-sales-ledger.json", 'w') as f:
             f.write(json.dumps(invoices, indent=2, default=str))
 
         return invoices
     except:
-        with open("error-report.json", "w") as f:
-            f.write(str(frappe.get_traceback()))
+        # with open("error-report.json", "w") as f:
+        #     f.write(str(frappe.get_traceback()))
         frappe.msgprint(_('Proceso no completado, no se encontraron facturas con item configurados como Bien, Servicio o Combustible'))
         return []
 
