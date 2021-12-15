@@ -17,6 +17,9 @@ from factura_electronica.factura_electronica.report.gt_sales_ledger.queries impo
                                                                                     sales_invoices_weekly)
 
 PRECISION = 2
+MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",)
+QUARTERS = ("Q1 Jan - Feb - Mar", "Q2 Abr - May - Jun", "Q3 Jul - Aug - Sep", "Q4 Oct - Nov - Dec",)
+
 
 def execute(filters=None):
     """
@@ -69,12 +72,18 @@ def execute(filters=None):
             columns = get_columns_monthly_report(filters)
             # Se obtienen los datos de las facturas de venta Mensualmente
             invoices_db = sales_invoices_monthly(filters)
+
+            # Formatea y traduce la columna mes para reporte mensual
+            [invoice.update({"month": f"{invoice.get('year_repo')} {_(MONTHS[invoice.get('month_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
             data = calculate_total(invoices_db, columns_data_db, filters, type_report="Montly")
 
         if filters.options == "Quarterly":
             columns = get_columns_quarterly_report(filters)
             # Se obtienen los datos de las facturas de venta Semestralmente
             invoices_db = sales_invoices_quarterly(filters)
+
+            # Formatea la columna para reporte mensual
+            [invoice.update({"quarter": f"{invoice.get('year_repo')} {_(QUARTERS[invoice.get('quarter_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
             data = calculate_total(invoices_db, columns_data_db, filters, type_report="Quarterly")
 
         if not data: return columns, []
@@ -82,8 +91,8 @@ def execute(filters=None):
         # TODO: AGREGAR GENERADOR EXCEL, JSON AQUI
 
         # Debug: datos de reporte
-        # with open("res-gt-sales-ledger.json", 'w') as f:
-        #     f.write(json.dumps(data, indent=2, default=str))
+        with open("res-gt-sales-ledger.json", 'w') as f:
+            f.write(json.dumps(data, indent=2, default=str))
 
         return columns, data
 
@@ -265,16 +274,16 @@ def get_columns_monthly_report(filters):
     columns = [
         {
             "label": _("Month"),
-            "fieldname": "month_repo",
+            "fieldname": "month",
             "fieldtype": "Data",
             "width": 150
         },
-        {
-            "label": _("Year"),
-            "fieldname": "year_repo",
-            "fieldtype": "Data",
-            "width": 150
-        },
+        # {
+        #     "label": _("Year"),
+        #     "fieldname": "year_repo",
+        #     "fieldtype": "Data",
+        #     "width": 150
+        # },
         {
             "label": _("Total"),
             "fieldname": "total",
@@ -316,17 +325,23 @@ def get_columns_quarterly_report(filters):
 
     columns = [
         {
-            "label": _("Quarterly"),
-            "fieldname": "quarter_repo",
+            "label": _("Quarter"),
+            "fieldname": "quarter",
             "fieldtype": "Data",
             "width": 150
         },
-        {
-            "label": _("Year"),
-            "fieldname": "year_repo",
-            "fieldtype": "Data",
-            "width": 150
-        },
+        # {
+        #     "label": _("Quarterly"),
+        #     "fieldname": "quarter_repo",
+        #     "fieldtype": "Data",
+        #     "width": 150
+        # },
+        # {
+        #     "label": _("Year"),
+        #     "fieldname": "year_repo",
+        #     "fieldtype": "Data",
+        #     "width": 150
+        # },
         {
             "label": _("Total"),
             "fieldname": "total",
