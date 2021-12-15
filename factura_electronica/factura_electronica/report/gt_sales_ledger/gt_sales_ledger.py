@@ -91,8 +91,8 @@ def execute(filters=None):
         # TODO: AGREGAR GENERADOR EXCEL, JSON AQUI
 
         # Debug: datos de reporte
-        with open("res-gt-sales-ledger.json", 'w') as f:
-            f.write(json.dumps(data, indent=2, default=str))
+        # with open("res-gt-sales-ledger.json", 'w') as f:
+        #     f.write(json.dumps(data, indent=2, default=str))
 
         return columns, data
 
