@@ -328,7 +328,7 @@ def get_columns_quarterly_report(filters):
             "label": _("Quarter"),
             "fieldname": "quarter",
             "fieldtype": "Data",
-            "width": 150
+            "width": 200
         },
         # {
         #     "label": _("Quarterly"),

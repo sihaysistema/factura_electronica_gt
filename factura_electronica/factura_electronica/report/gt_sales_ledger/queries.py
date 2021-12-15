@@ -97,14 +97,29 @@ def sales_invoices_weekly(filters):
     """
 
     # Al pasar el 1 a YEARWEEK, se obtiene el año y la semana de la fecha toma la semana que empieza desde lunes
+
+    # v1 - no ordena correctamente
+    # invoices = frappe.db.sql(
+    #     f"""
+    #     SELECT CONCAT(YEAR(SI.posting_date), '-WK', WEEK(SI.posting_date, 1)) AS week_repo,
+    #     SUM(SI.grand_total) AS total, SI.currency
+    #     FROM `tabSales Invoice` AS SI
+    #     WHERE SI.docstatus=1 AND SI.company = '{filters.company}'
+    #     AND YEARWEEK(SI.posting_date, 1) BETWEEN YEARWEEK('{filters.from_date}', 1) AND YEARWEEK('{filters.to_date}', 1)
+    #     GROUP BY week_repo, currency ORDER BY week_repo ASC;
+    #     """, as_dict=True
+    # )
+
+    # v2 Si ordena correctamente ASC
     invoices = frappe.db.sql(
         f"""
         SELECT CONCAT(YEAR(SI.posting_date), '-WK', WEEK(SI.posting_date, 1)) AS week_repo,
+        YEAR(SI.posting_date) AS year_repo, WEEK(SI.posting_date, 1) AS week_repo_no,
         SUM(SI.grand_total) AS total, SI.currency
         FROM `tabSales Invoice` AS SI
         WHERE SI.docstatus=1 AND SI.company = '{filters.company}'
         AND YEARWEEK(SI.posting_date, 1) BETWEEN YEARWEEK('{filters.from_date}', 1) AND YEARWEEK('{filters.to_date}', 1)
-        GROUP BY week_repo, currency ORDER BY week_repo ASC;
+        GROUP BY week_repo, SI.currency ORDER BY year_repo, week_repo_no  ASC;
         """, as_dict=True
     )
 
@@ -126,9 +141,8 @@ def sales_invoices_monthly(filters):
         SUM(SI.grand_total) AS total, SI.currency
         FROM `tabSales Invoice` AS SI
         WHERE SI.docstatus=1 AND SI.company = '{filters.company}'
-        AND (MONTH(SI.posting_date) BETWEEN MONTH('{filters.from_date}') AND MONTH('{filters.to_date}'))
-        AND (YEAR(SI.posting_date) BETWEEN YEAR('{filters.from_date}') AND YEAR('{filters.to_date}'))
-        GROUP BY year_repo, month_repo, currency ORDER BY month_repo, year_repo ASC;
+        AND DATE_FORMAT(SI.posting_date, '%Y%m') BETWEEN DATE_FORMAT('{filters.from_date}', '%Y%m') AND DATE_FORMAT('{filters.to_date}', '%Y%m')
+        GROUP BY year_repo, month_repo, currency ORDER BY year_repo, month_repo ASC;
         """, as_dict=True
     )
 
@@ -143,6 +157,8 @@ def sales_invoices_quarterly(filters):
     """
     Obtiene los grand total de las facturas de venta trimestral, basado en el rango de fechas
     que se seleccione
+
+    https://mysqlcode.com/mysql-quarter/
     """
     invoices = frappe.db.sql(
         f"""
@@ -150,9 +166,11 @@ def sales_invoices_quarterly(filters):
         SUM(SI.grand_total) AS total, SI.currency
         FROM `tabSales Invoice` AS SI
         WHERE SI.docstatus=1 AND SI.company = '{filters.company}'
-        AND (QUARTER(SI.posting_date) BETWEEN QUARTER('{filters.from_date}') AND QUARTER('{filters.to_date}'))
-        AND (YEAR(SI.posting_date) BETWEEN YEAR('{filters.from_date}') AND YEAR('{filters.to_date}'))
-        GROUP BY quarter_repo, year_repo, currency ORDER BY quarter_repo, year_repo ASC;
+        AND CONCAT(YEAR(SI.posting_date), QUARTER(SI.posting_date))
+        BETWEEN
+        CONCAT(YEAR('{filters.from_date}'), QUARTER('{filters.from_date}')) AND
+        CONCAT(YEAR('{filters.to_date}'), QUARTER('{filters.to_date}'))
+        GROUP BY year_repo, quarter_repo, currency ORDER BY year_repo, quarter_repo ASC;
         """, as_dict=True
     )
 
