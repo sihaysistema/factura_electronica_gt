@@ -97,14 +97,29 @@ def sales_invoices_weekly(filters):
     """
 
     # Al pasar el 1 a YEARWEEK, se obtiene el año y la semana de la fecha toma la semana que empieza desde lunes
+
+    # v1 - no ordena correctamente
+    # invoices = frappe.db.sql(
+    #     f"""
+    #     SELECT CONCAT(YEAR(SI.posting_date), '-WK', WEEK(SI.posting_date, 1)) AS week_repo,
+    #     SUM(SI.grand_total) AS total, SI.currency
+    #     FROM `tabSales Invoice` AS SI
+    #     WHERE SI.docstatus=1 AND SI.company = '{filters.company}'
+    #     AND YEARWEEK(SI.posting_date, 1) BETWEEN YEARWEEK('{filters.from_date}', 1) AND YEARWEEK('{filters.to_date}', 1)
+    #     GROUP BY week_repo, currency ORDER BY week_repo ASC;
+    #     """, as_dict=True
+    # )
+
+    # v2 Si ordena correctamente ASC
     invoices = frappe.db.sql(
         f"""
         SELECT CONCAT(YEAR(SI.posting_date), '-WK', WEEK(SI.posting_date, 1)) AS week_repo,
+        YEAR(SI.posting_date) AS year_repo, WEEK(SI.posting_date, 1) AS week_repo_no,
         SUM(SI.grand_total) AS total, SI.currency
         FROM `tabSales Invoice` AS SI
         WHERE SI.docstatus=1 AND SI.company = '{filters.company}'
         AND YEARWEEK(SI.posting_date, 1) BETWEEN YEARWEEK('{filters.from_date}', 1) AND YEARWEEK('{filters.to_date}', 1)
-        GROUP BY week_repo, currency ORDER BY week_repo ASC;
+        GROUP BY week_repo, SI.currency ORDER BY year_repo, week_repo_no  ASC;
         """, as_dict=True
     )
 
