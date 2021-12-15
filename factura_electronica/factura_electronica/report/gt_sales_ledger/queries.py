@@ -7,6 +7,7 @@ import frappe
 import json
 from frappe import _
 
+# INFO: https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html
 
 def sales_invoices(filters):
     """
@@ -71,13 +72,92 @@ def sales_invoices(filters):
         JOIN `tabSales Invoice Item` AS SII
         ON SI.NAME = SII.parent
         WHERE SI.docstatus=1 AND SI.company = '{filters.company}'
-        AND SI.posting_date BETWEEN '{filters.from_date}'
-        AND '{filters.to_date}' {filters_query} GROUP BY SI.name ORDER BY SI.posting_date ASC
+        AND SI.posting_date BETWEEN '{filters.from_date}' AND '{filters.to_date}'
+        {filters_query} GROUP BY SI.name ORDER BY SI.posting_date ASC
         """, as_dict=True
     )
 
     # Debug: para ver la estructura de datos que retorna la consulta
-    with open("from-db.json", "w") as f:
-        f.write(json.dumps(invoices, indent=2, default=str))
+    # with open("from-db.json", "w") as f:
+    #     f.write(json.dumps(invoices, indent=2, default=str))
 
     return invoices # , items
+
+
+def sales_invoices_weekly(filters):
+    """
+    Query para obtener datos sobre las facturas de venta de la base de datos.
+    Especificamente obtiene todas las facturas y de las facturas sus items, todo
+    esto en funcion al rango de fechas, company, cliente seleccionados en el front end.
+
+    Segun las fechas especificadas se obtendran las semanas y se usan como filtros
+    las semanas se toman que empiezan dia lunes usando ISO 8601
+
+    Mas detalles de YEARWEEK en: https://mysqlcode.com/mysql-yearweek/
+    """
+
+    # Al pasar el 1 a YEARWEEK, se obtiene el año y la semana de la fecha toma la semana que empieza desde lunes
+    invoices = frappe.db.sql(
+        f"""
+        SELECT CONCAT(YEAR(SI.posting_date), '-WK', WEEK(SI.posting_date, 1)) AS week_repo,
+        SUM(SI.grand_total) AS total, SI.currency
+        FROM `tabSales Invoice` AS SI
+        WHERE SI.docstatus=1 AND SI.company = '{filters.company}'
+        AND YEARWEEK(SI.posting_date, 1) BETWEEN YEARWEEK('{filters.from_date}', 1) AND YEARWEEK('{filters.to_date}', 1)
+        GROUP BY week_repo, currency ORDER BY week_repo ASC;
+        """, as_dict=True
+    )
+
+    # Debug: para ver la estructura de datos que retorna la consulta
+    # with open("weekly-from-db.json", "w") as f:
+    #     f.write(json.dumps(invoices, indent=2, default=str))
+
+    return invoices
+
+
+def sales_invoices_monthly(filters):
+    """
+    Obtiene los grand total de las facturas de venta mensualmente, basado en el rango de fechas
+    que se seleccione
+    """
+    invoices = frappe.db.sql(
+        f"""
+        SELECT MONTH(SI.posting_date) AS month_repo, YEAR(SI.posting_date) AS year_repo,
+        SUM(SI.grand_total) AS total, SI.currency
+        FROM `tabSales Invoice` AS SI
+        WHERE SI.docstatus=1 AND SI.company = '{filters.company}'
+        AND (MONTH(SI.posting_date) BETWEEN MONTH('{filters.from_date}') AND MONTH('{filters.to_date}'))
+        AND (YEAR(SI.posting_date) BETWEEN YEAR('{filters.from_date}') AND YEAR('{filters.to_date}'))
+        GROUP BY year_repo, month_repo, currency ORDER BY month_repo, year_repo ASC;
+        """, as_dict=True
+    )
+
+    # Debug: para ver la estructura de datos que retorna la consulta
+    # with open("monthly-from-db.json", "w") as f:
+    #     f.write(json.dumps(invoices, indent=2, default=str))
+
+    return invoices
+
+
+def sales_invoices_quarterly(filters):
+    """
+    Obtiene los grand total de las facturas de venta trimestral, basado en el rango de fechas
+    que se seleccione
+    """
+    invoices = frappe.db.sql(
+        f"""
+        SELECT QUARTER(SI.posting_date) AS quarter_repo, YEAR(SI.posting_date) AS year_repo,
+        SUM(SI.grand_total) AS total, SI.currency
+        FROM `tabSales Invoice` AS SI
+        WHERE SI.docstatus=1 AND SI.company = '{filters.company}'
+        AND (QUARTER(SI.posting_date) BETWEEN QUARTER('{filters.from_date}') AND QUARTER('{filters.to_date}'))
+        AND (YEAR(SI.posting_date) BETWEEN YEAR('{filters.from_date}') AND YEAR('{filters.to_date}'))
+        GROUP BY quarter_repo, year_repo, currency ORDER BY quarter_repo, year_repo ASC;
+        """, as_dict=True
+    )
+
+    # Debug: para ver la estructura de datos que retorna la consulta
+    # with open("quarterly-from-db.json", "w") as f:
+    #     f.write(json.dumps(invoices, indent=2, default=str))
+
+    return invoices

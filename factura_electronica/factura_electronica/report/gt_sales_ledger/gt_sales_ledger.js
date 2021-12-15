@@ -80,7 +80,14 @@ frappe.query_reports["GT Sales Ledger"] = {
       default: "No se incluyen descripcion de facturas con items no configurados, ni items de combustibles",
       fieldtype: "Data",
       read_only: 1,
-      width: "400px",
+      width: "40px",
+    },
+    {
+      fieldname: "options",
+      label: __("Options"),
+      default: "No Subtotal",
+      fieldtype: "Select",
+      options: ["No Subtotal", "Weekly", "Monthly", "Quarterly"],
     },
   ],
   // onload: function (report) {
