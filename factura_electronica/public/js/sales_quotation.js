@@ -3,11 +3,11 @@
  * For license information, please see license.txt
  */
 
-import { valNit } from './facelec.js';
+import { valNit } from "./facelec.js";
 
 /* Sales Quotation (Cotizacion) ------------------------------------------------------------------------------------------------------- */
 function quotation_each_row(frm, cdt, cdn) {
-  if (cdt === 'Quotation Item') {
+  if (cdt === "Quotation Item") {
     // Si es una especifica fila de items
     qo_get_special_tax_by_item(frm, cdt, cdn);
     shs_quotation_calculation(frm, cdt, cdn);
@@ -20,7 +20,7 @@ function quotation_each_row(frm, cdt, cdn) {
     // var cdn;
     cdt = "Quotation Item";
     // Si no es una fila especifica, se iteran todas y se realizan los calculos
-    frm.refresh_field('items');
+    frm.refresh_field("items");
     frm.doc.items.forEach((item_row, index) => {
       cdn = item_row.name;
       qo_get_special_tax_by_item(frm, cdt, cdn);
@@ -32,7 +32,7 @@ function quotation_each_row(frm, cdt, cdn) {
     qo_shs_total_other_tax(frm);
     qo_shs_total_by_item_type(frm);
   }
-  frm.refresh_field('items');
+  frm.refresh_field("items");
 }
 
 /**
@@ -41,17 +41,20 @@ function quotation_each_row(frm, cdt, cdn) {
  * @param {*} frm
  */
 function qo_shs_total_other_tax(frm) {
-  frm.refresh_field('shs_tax_quotation');
+  frm.refresh_field("shs_tax_quotation");
 
   let otros_impuestos = frm.doc.shs_tax_quotation || [];
 
   if (otros_impuestos.length > 0) {
-    let total_tax = otros_impuestos.map(o => o.total).reduce((a, c) => { return a + c });
-    cur_frm.set_value('shs_qt_total_otros_imp_incl', flt(total_tax));
+    let total_tax = otros_impuestos
+      .map((o) => o.total)
+      .reduce((a, c) => {
+        return a + c;
+      });
+    cur_frm.set_value("shs_qt_total_otros_imp_incl", flt(total_tax));
     frm.refresh_field("shs_qt_total_otros_imp_incl");
-
   } else {
-    cur_frm.set_value('shs_qt_total_otros_imp_incl', 0);
+    cur_frm.set_value("shs_qt_total_otros_imp_incl", 0);
     frm.refresh_field("shs_qt_total_otros_imp_incl");
   }
 }
@@ -69,10 +72,9 @@ function qo_get_other_tax(frm, cdt, cdn) {
   let row = frappe.get_doc(cdt, cdn);
 
   // 1. Se valida que la fila que se esta manipulando tenga una cuenta de impuesto especial
-  frm.refresh_field('items');
+  frm.refresh_field("items");
 
   if (row.facelec_qt_tax_rate_per_uom_account) {
-
     // 2. Se valida si la cuenta ya existe en shs_tax_quotation si no existe se agrega
     // Si ya existe se iteran todos los items en busca de aquellas filas que tenga una
     // cuenta de impuesto especial para recalcular el total por cuenta y por fila de shs_tax_quotation
@@ -87,12 +89,12 @@ function qo_get_other_tax(frm, cdt, cdn) {
 
     // Si no existe en la tabla hija shs_tax_quotation se agrega
     if (!acc_check) {
-      frm.add_child('shs_tax_quotation', {
+      frm.add_child("shs_tax_quotation", {
         account_head: row.facelec_qt_tax_rate_per_uom_account,
-        total: shs_otro_impuesto
+        total: shs_otro_impuesto,
       });
 
-      frm.refresh_field('shs_tax_quotation');
+      frm.refresh_field("shs_tax_quotation");
     }
   }
 }
@@ -105,12 +107,12 @@ function qo_get_other_tax(frm, cdt, cdn) {
 function qo_get_special_tax_by_item(frm, cdt, cdn) {
   let row = frappe.get_doc(cdt, cdn);
 
-  frm.refresh_field('items');
+  frm.refresh_field("items");
   if (row.facelec_qt_is_fuel && row.item_code) {
     // Peticion para obtener el monto, cuenta venta de impuesto especial de combustible
     // en funcion de item_code y la compania
     frappe.call({
-      method: 'factura_electronica.api.get_special_tax',
+      method: "factura_electronica.api.get_special_tax",
       args: {
         item_code: row.item_code,
         company: frm.doc.company,
@@ -118,9 +120,19 @@ function qo_get_special_tax_by_item(frm, cdt, cdn) {
       callback: (r) => {
         // Si hay una respuesta valida
         if (r.message.facelec_tax_rate_per_uom_selling_account) {
-          frappe.model.set_value(row.doctype, row.name, "facelec_qt_tax_rate_per_uom", flt(r.message.facelec_tax_rate_per_uom));
-          frappe.model.set_value(row.doctype, row.name, "facelec_qt_tax_rate_per_uom_account", r.message.facelec_tax_rate_per_uom_selling_account || '');
-          frm.refresh_field('items');
+          frappe.model.set_value(
+            row.doctype,
+            row.name,
+            "facelec_qt_tax_rate_per_uom",
+            flt(r.message.facelec_tax_rate_per_uom)
+          );
+          frappe.model.set_value(
+            row.doctype,
+            row.name,
+            "facelec_qt_tax_rate_per_uom_account",
+            r.message.facelec_tax_rate_per_uom_selling_account || ""
+          );
+          frm.refresh_field("items");
         } else {
           // Si no esta configurado el impuesto especial para el item
           frappe.show_alert(
@@ -130,7 +142,7 @@ function qo_get_special_tax_by_item(frm, cdt, cdn) {
                     No tiene configuradas las cuentas y monto para Impuesto especiales, por favor configurelo
                     para que se realicen correctamente los calculos o si no es un producto de tipo combustible cambielo a Bien o Servicio`
               ),
-              indicator: 'red',
+              indicator: "red",
             },
             120
           );
@@ -138,12 +150,12 @@ function qo_get_special_tax_by_item(frm, cdt, cdn) {
       },
     });
 
-    return
+    return;
     // Si no es item de tipo combustible
   } else {
     frappe.model.set_value(row.doctype, row.name, "facelec_qt_tax_rate_per_uom", flt(0));
-    frappe.model.set_value(row.doctype, row.name, "facelec_qt_tax_rate_per_uom_account", '');
-    frm.refresh_field('items');
+    frappe.model.set_value(row.doctype, row.name, "facelec_qt_tax_rate_per_uom_account", "");
+    frm.refresh_field("items");
   }
 }
 
@@ -181,7 +193,7 @@ function qo_shs_total_by_item_type(frm) {
 function shs_quotation_calculation(frm, cdt, cdn) {
   let item_row = frappe.get_doc(cdt, cdn);
 
-  frm.refresh_field('items');
+  frm.refresh_field("items");
   let this_company_sales_tax_var = 0;
   const taxes_tbl = frm.doc.taxes || [];
 
@@ -192,14 +204,16 @@ function shs_quotation_calculation(frm, cdt, cdn) {
     // Muestra una notificacion para que se cargue una tabla de impuestos
     frappe.show_alert(
       {
-        message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente'),
-        indicator: 'red',
+        message: __(
+          "Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente"
+        ),
+        indicator: "red",
       },
       400
     );
 
     this_company_sales_tax_var = 0;
-    return
+    return;
   }
 
   let amount_minus_excise_tax = 0;
@@ -209,18 +223,20 @@ function shs_quotation_calculation(frm, cdt, cdn) {
   let net_goods = 0;
   let tax_for_this_row = 0;
 
-  other_tax_amount = flt((item_row.facelec_qt_tax_rate_per_uom * item_row.qty * item_row.conversion_factor));
+  other_tax_amount = flt(item_row.facelec_qt_tax_rate_per_uom * item_row.qty * item_row.conversion_factor);
   frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_other_tax_amount", other_tax_amount);
 
   //OJO!  No s epuede utilizar stock_qty en los calculos, debe de ser qty a puro tubo!
   // * row.stock_qty --> Al usar stock_qty los calculos no se realizan correctamente ya que se carga demasiado lento el valor
-  amount_minus_excise_tax = flt((item_row.qty * item_row.rate) - ((item_row.qty * item_row.conversion_factor) * item_row.facelec_qt_tax_rate_per_uom));
+  amount_minus_excise_tax = flt(
+    item_row.qty * item_row.rate - item_row.qty * item_row.conversion_factor * item_row.facelec_qt_tax_rate_per_uom
+  );
   frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_amount_minus_excise_tax", amount_minus_excise_tax);
 
   if (item_row.facelec_qt_is_fuel && item_row.item_code) {
     net_services = 0;
     net_goods = 0;
-    net_fuel = flt(item_row.facelec_qt_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+    net_fuel = flt(item_row.facelec_qt_amount_minus_excise_tax / (1 + this_company_sales_tax_var / 100));
     frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_gt_tax_net_fuel_amt", flt(net_fuel));
 
     tax_for_this_row = flt(item_row.facelec_qt_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100));
@@ -229,13 +245,13 @@ function shs_quotation_calculation(frm, cdt, cdn) {
     // Los campos de bienes y servicios se resetean a 0
     frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_gt_tax_net_goods_amt", flt(net_goods));
     frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_gt_tax_net_services_amt", flt(net_services));
-  };
+  }
 
   tax_for_this_row = 0;
   if (item_row.facelec_qt_is_good && item_row.item_code) {
     net_services = 0;
     net_fuel = 0;
-    net_goods = flt(item_row.facelec_qt_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+    net_goods = flt(item_row.facelec_qt_amount_minus_excise_tax / (1 + this_company_sales_tax_var / 100));
     frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_gt_tax_net_goods_amt", flt(net_goods));
 
     tax_for_this_row = flt(item_row.facelec_qt_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100));
@@ -244,13 +260,13 @@ function shs_quotation_calculation(frm, cdt, cdn) {
     // Los campos de servicios y combustibles se resetean a 0
     frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_gt_tax_net_services_amt", flt(net_services));
     frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_gt_tax_net_fuel_amt", flt(net_fuel));
-  };
+  }
 
   tax_for_this_row = 0;
   if (item_row.facelec_qt_is_service && item_row.item_code) {
     net_fuel = 0;
     net_goods = 0;
-    net_services = flt(item_row.facelec_qt_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)));
+    net_services = flt(item_row.facelec_qt_amount_minus_excise_tax / (1 + this_company_sales_tax_var / 100));
     frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_gt_tax_net_services_amt", flt(net_services));
 
     tax_for_this_row = flt(item_row.facelec_qt_gt_tax_net_services_amt * (this_company_sales_tax_var / 100));
@@ -259,23 +275,26 @@ function shs_quotation_calculation(frm, cdt, cdn) {
     // Los campos de bienes y combustibles se resetean a 0
     frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_gt_tax_net_goods_amt", flt(net_goods));
     frappe.model.set_value(item_row.doctype, item_row.name, "facelec_qt_gt_tax_net_fuel_amt", flt(net_fuel));
-  };
+  }
 
-  frm.refresh_field('items');
+  frm.refresh_field("items");
 }
 
 function shs_quotation_total_other_tax(frm) {
-  frm.refresh_field('shs_tax_quotation');
+  frm.refresh_field("shs_tax_quotation");
 
   let otros_impuestos = frm.doc.shs_tax_quotation || [];
 
   if (otros_impuestos.length > 0) {
-    let total_tax = otros_impuestos.map(o => o.total).reduce((a, c) => { return a + c });
-    cur_frm.set_value('shs_qt_total_otros_imp_incl', flt(total_tax));
+    let total_tax = otros_impuestos
+      .map((o) => o.total)
+      .reduce((a, c) => {
+        return a + c;
+      });
+    cur_frm.set_value("shs_qt_total_otros_imp_incl", flt(total_tax));
     frm.refresh_field("shs_qt_total_otros_imp_incl");
-
   } else {
-    cur_frm.set_value('shs_qt_total_otros_imp_incl', 0);
+    cur_frm.set_value("shs_qt_total_otros_imp_incl", 0);
     frm.refresh_field("shs_qt_total_otros_imp_incl");
   }
 }
@@ -288,8 +307,8 @@ function shs_quotation_total_other_tax(frm) {
  * @param {object} frm - Objeto con las propiedades del doctype
  */
 function qo_recalculate_other_taxes(frm) {
-  frm.refresh_field('shs_tax_quotation');
-  frm.refresh_field('items');
+  frm.refresh_field("shs_tax_quotation");
+  frm.refresh_field("items");
 
   let items_invoice = frm.doc.items || [];
   items_invoice.forEach((item_row, index) => {
@@ -299,19 +318,21 @@ function qo_recalculate_other_taxes(frm) {
       // Busca si la cuenta iterada existe en shs_tax_quotation, si existe se volvera a iterar items y totalizar por cuenta
       // si no existe se eliminara de shs_tax_quotation
       let total_by_account = 0;
-      let idx_acc_check = frm.doc.shs_tax_quotation.find(el => el['account_head'] === item_row.facelec_qt_tax_rate_per_uom_account)
+      let idx_acc_check = frm.doc.shs_tax_quotation.find(
+        (el) => el["account_head"] === item_row.facelec_qt_tax_rate_per_uom_account
+      );
 
       if (idx_acc_check) {
-        frm.refresh_field('shs_tax_quotation');
+        frm.refresh_field("shs_tax_quotation");
         frappe.model.set_value("Otros Impuestos Factura Electronica", idx_acc_check.name, "total", total_by_account);
 
         items_invoice.forEach((item_row_x, index_x) => {
           if (item_row_x.facelec_qt_tax_rate_per_uom_account === item_row.facelec_qt_tax_rate_per_uom_account) {
-            total_by_account += flt(item_row_x.facelec_qt_other_tax_amount)
+            total_by_account += flt(item_row_x.facelec_qt_other_tax_amount);
           }
-        })
+        });
 
-        frm.refresh_field('shs_tax_quotation');
+        frm.refresh_field("shs_tax_quotation");
         frappe.model.set_value("Otros Impuestos Factura Electronica", idx_acc_check.name, "total", total_by_account);
       }
     }
@@ -330,7 +351,7 @@ function qo_remove_non_existing_taxes(frm) {
   let idx_special_acc_check;
   otros_impuestos.forEach((tax_row, index) => {
     // retorna un objecto o undefined
-    idx_special_acc_check = frm.doc.items.find(el => el['facelec_qt_tax_rate_per_uom_account'] === tax_row.account_head)
+    idx_special_acc_check = frm.doc.items.find((el) => el["facelec_qt_tax_rate_per_uom_account"] === tax_row.account_head);
 
     // Si la fila iterada no tiene ninguna relacion con la tabla hija items se elimina de shs_tax_quotation
     if (idx_special_acc_check === undefined) {
@@ -353,16 +374,16 @@ frappe.ui.form.on("Quotation", {
   },
   discount_amount: function (frm, cdt, cdn) {
     // Trigger Monto de descuento
-    var tax_before_calc = frm.doc.facelec_total_iva;;
+    var tax_before_calc = frm.doc.facelec_total_iva;
     // es-GT: Este muestra el IVA que se calculo por medio de nuestra aplicación.
-    var discount_amount_net_value = (frm.doc.discount_amount / (1 + (cur_frm.doc.taxes[0].rate / 100)));
+    var discount_amount_net_value = frm.doc.discount_amount / (1 + cur_frm.doc.taxes[0].rate / 100);
 
     if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) {
     } else {
       // console.log("El descuento parece ser un numero definido, calculando con descuento.");
-      discount_amount_tax_value = (discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100));
+      discount_amount_tax_value = discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100);
       // console.log("El IVA del descuento es:" + discount_amount_tax_value);
-      frm.doc.facelec_total_iva = (frm.doc.facelec_total_iva - discount_amount_tax_value);
+      frm.doc.facelec_total_iva = frm.doc.facelec_total_iva - discount_amount_tax_value;
       // console.log("El IVA ya sin el iva del descuento es ahora:" + frm.doc.facelec_total_iva);
     }
   },
@@ -374,15 +395,20 @@ frappe.ui.form.on("Quotation", {
     // console.log('validate');
     // Asegura que los montos de impuestos especiales se calculen correctamente
     quotation_each_row(frm, cdt, cdn);
-    qo_remove_non_existing_taxes(frm)
+    qo_remove_non_existing_taxes(frm);
 
     let taxes = frm.doc.taxes || [];
     if (taxes.length == 0) {
       // Muestra una notificacion para cargar una tabla de impuestos
-      frappe.show_alert({
-        message: __('Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente'),
-        indicator: 'red'
-      }, 400);
+      frappe.show_alert(
+        {
+          message: __(
+            "Tabla de impuestos no se encuentra cargada, por favor agregarla para que los calculos se generen correctamente"
+          ),
+          indicator: "red",
+        },
+        400
+      );
     }
   },
 });
@@ -428,7 +454,7 @@ frappe.ui.form.on("Quotation Item", {
   },
 });
 
-frappe.ui.form.on('Otros Impuestos Factura Electronica', {
+frappe.ui.form.on("Otros Impuestos Factura Electronica", {
   // Despues de que se elimina una fila
   before_shs_tax_quotation_remove: function (frm, cdt, cdn) {
     shs_quotation_total_other_tax(frm);
