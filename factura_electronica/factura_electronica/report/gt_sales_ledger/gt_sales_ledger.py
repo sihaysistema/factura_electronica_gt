@@ -4,17 +4,20 @@
 from __future__ import unicode_literals
 
 import datetime
-# from erpnext.accounts.report.utils import convert  # value, from_, to, date
 import json
 
 import frappe
 import pandas as pd
+import xlsxwriter
 from frappe import _, _dict, scrub
 from frappe.utils import cstr, flt, get_site_name, nowdate
+from frappe.utils.file_manager import save_file
+import base64
 
 from factura_electronica.factura_electronica.report.gt_sales_ledger.queries import (sales_invoices, sales_invoices_monthly,
                                                                                     sales_invoices_quarterly,
                                                                                     sales_invoices_weekly)
+from factura_electronica.utils.utilities_facelec import create_folder
 
 PRECISION = 2
 MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",)
@@ -31,73 +34,98 @@ def execute(filters=None):
     Returns:
         tuple: Posicion 0 las columnas, Posicion 1 datos para las columnas
     """
+    try:
+        # NOTA: los frappe.msgprint no estan funcionando en version Frappe ++v13.16.0
+        columns = []
 
-    # NOTA: los frappe.msgprint no estan funcionando en version Frappe ++v13.16.0
-    columns = []
+        if not filters:
+            return columns, []
 
-    if not filters:
-        return columns, []
+        # Conversion fechas filtro a objetos date para realizar validaciones
+        start_d = datetime.datetime.strptime(filters.from_date, "%Y-%m-%d")  # en formato date
+        final_d = datetime.datetime.strptime(filters.to_date, "%Y-%m-%d")
 
-    # Conversion fechas filtro a objetos date para realizar validaciones
-    start_d = datetime.datetime.strptime(filters.from_date, "%Y-%m-%d")  # en formato date
-    final_d = datetime.datetime.strptime(filters.to_date, "%Y-%m-%d")
+        # Validaciones de fechas
+        if (start_d < final_d) or (final_d == start_d):
 
-    # Validaciones de fechas
-    if (start_d < final_d) or (final_d == start_d):
+            # Definicion de columnas a totalizar
+            # v1
+            # columns_data_db = ['total', 'goods_iva', 'services_iva', 'fuel_iva', 'exempt_sales',
+            #                    'net_fuel', 'sales_of_goods', 'sales_of_services', 'minus_excise_tax', 'other_tax']
 
-        # Definicion de columnas a totalizar
-        # v1
-        # columns_data_db = ['total', 'goods_iva', 'services_iva', 'fuel_iva', 'exempt_sales',
-        #                    'net_fuel', 'sales_of_goods', 'sales_of_services', 'minus_excise_tax', 'other_tax']
+            # v2
+            columns_data_db = ['total']
+            data = []
+            invoices_db = []
 
-        # v2
-        columns_data_db = ['total']
-        data = []
-        invoices_db = []
+            if filters.options == "No Subtotal":
+                columns = get_columns(filters)
+                # Se obtienen los datos de las facturas de venta
+                invoices_db = sales_invoices(filters)
+                # Se procesa la data de la db y los totales
+                data = process_data_db(filters, invoices_db)
 
-        if filters.options == "No Subtotal":
-            columns = get_columns(filters)
-            # Se obtienen los datos de las facturas de venta
-            invoices_db = sales_invoices(filters)
-             # Se procesa la data de la db y los totales
-            data = process_data_db(filters, invoices_db)
+            if filters.options == "Weekly":
+                columns = get_columns_weekly_report(filters)
+                # Se obtienen los datos de las facturas de venta Semanalmente
+                invoices_db = sales_invoices_weekly(filters)
+                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Weekly")
 
-        if filters.options == "Weekly":
-            columns = get_columns_weekly_report(filters)
-            # Se obtienen los datos de las facturas de venta Semanalmente
-            invoices_db = sales_invoices_weekly(filters)
-            data = calculate_total(invoices_db, columns_data_db, filters, type_report="Weekly")
+            if filters.options == "Monthly":
+                columns = get_columns_monthly_report(filters)
+                # Se obtienen los datos de las facturas de venta Mensualmente
+                invoices_db = sales_invoices_monthly(filters)
 
-        if filters.options == "Monthly":
-            columns = get_columns_monthly_report(filters)
-            # Se obtienen los datos de las facturas de venta Mensualmente
-            invoices_db = sales_invoices_monthly(filters)
+                # Formatea y traduce la columna mes para reporte mensual
+                [invoice.update({"month": f"{invoice.get('year_repo')} {_(MONTHS[invoice.get('month_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
+                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Montly")
 
-            # Formatea y traduce la columna mes para reporte mensual
-            [invoice.update({"month": f"{invoice.get('year_repo')} {_(MONTHS[invoice.get('month_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
-            data = calculate_total(invoices_db, columns_data_db, filters, type_report="Montly")
+            if filters.options == "Quarterly":
+                columns = get_columns_quarterly_report(filters)
+                # Se obtienen los datos de las facturas de venta Semestralmente
+                invoices_db = sales_invoices_quarterly(filters)
 
-        if filters.options == "Quarterly":
-            columns = get_columns_quarterly_report(filters)
-            # Se obtienen los datos de las facturas de venta Semestralmente
-            invoices_db = sales_invoices_quarterly(filters)
+                # Formatea la columna para reporte mensual
+                [invoice.update({"quarter": f"{invoice.get('year_repo')} {_(QUARTERS[invoice.get('quarter_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
+                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Quarterly")
 
-            # Formatea la columna para reporte mensual
-            [invoice.update({"quarter": f"{invoice.get('year_repo')} {_(QUARTERS[invoice.get('quarter_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
-            data = calculate_total(invoices_db, columns_data_db, filters, type_report="Quarterly")
+            if not data: return columns, []
 
-        if not data: return columns, []
+            # TODO: AGREGAR GENERADOR EXCEL, JSON AQUI
+            new_doc = frappe.new_doc('Prepared Report Facelec')
+            # new_doc.title = 'New Task 2'
+            new_doc.insert(ignore_permissions=True)
 
-        # TODO: AGREGAR GENERADOR EXCEL, JSON AQUI
+            # Se crea el carpeta donde se almacenaran los reportes generados
+            # Si ya existe se retorna el path de la carpeta
+            doctype_folder = create_folder(new_doc.doctype)
 
-        # Debug: datos de reporte
-        # with open("res-gt-sales-ledger.json", 'w') as f:
-        #     f.write(json.dumps(data, indent=2, default=str))
+            # Se guardan el archivo tipo .json
+            formato = ".json"
+            file_name = f"GT Sales Ledger {nowdate()}{formato}"
+            content = json.dumps(data, indent=2, default=str)
+            to_doctype = new_doc.doctype
+            to_name = new_doc.name
 
-        return columns, data
+            save_json_data(file_name, content, to_doctype, to_name, doctype_folder, 1)
 
-    else:
-        return [], []
+            # Se guarda el archivo tipo .xlsx Excel
+            file_name = "GT Sales Ledger"
+            save_excel_data(file_name, data, to_doctype, to_name, doctype_folder, 1, 'week_repo')
+
+
+            # Se guarda el archivo tipo .xlsx Excel
+            # Debug: datos de reporte
+            with open("res-gt-sales-ledger.json", 'w') as f:
+                f.write(json.dumps(data, indent=2, default=str))
+
+            return columns, data
+
+        else:
+            return [], []
+    except:
+        with open("error-report.txt", 'w') as f:
+                f.write(str(frappe.get_traceback()))
 
 
 def get_columns(filters):
@@ -559,3 +587,39 @@ def calculate_total(data, columns, filters, type_report="Default"):
         })
 
     return data_total
+
+
+def save_json_data(file_name, content, to_dt, to_dn, folder, is_private):
+    save_file(file_name, content, to_dt, to_dn, folder=folder, is_private=is_private)
+
+
+def save_excel_data(file_name, content, to_dt, to_dn, folder, is_private, column_idx):
+    try:
+        # f"GT Sales Ledger {nowdate()}"
+        file_name = f'{file_name}.xlsx'
+        invoices = content
+
+        # Horizontal
+        df = pd.DataFrame.from_dict(invoices).fillna("")
+        df = df.set_index(column_idx)
+
+        # Vertical: Se aplica la transpuesta
+        df_transpose = df.T
+
+        # Generación .xlsx
+        writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
+        df.to_excel(writer, sheet_name='Vertical')
+        df_transpose.to_excel(writer, sheet_name='Horizontal')
+
+        # Close the Pandas Excel writer and output the Excel file.
+        writer.save()
+
+        excel_file = open(file_name, 'rb')
+        ok_read = excel_file.read()
+        fileb64 = base64.encodebytes(ok_read)
+
+        save_file(file_name, fileb64, to_dt, to_dn, folder=folder, decode=True, is_private=is_private)
+        excel_file.close()
+    except:
+        with open("error-excel.txt", "w") as f:
+            f.write(str(frappe.get_traceback()))

@@ -24,6 +24,15 @@
   },
   {
    "hidden": 0,
+   "is_query_report": 0,
+   "label": "Prepared Report",
+   "link_to": "Prepared Report Facelec",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
    "is_query_report": 1,
    "label": "Purchase and Sales Ledger Tax Declaration Report",
    "link_to": "Purchase and Sales Ledger Tax Declaration",
@@ -237,7 +246,7 @@
    "type": "Link"
   }
  ],
- "modified": "2021-08-16 22:15:25.993173",
+ "modified": "2021-12-16 12:13:28.418221",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Factura Electronica",

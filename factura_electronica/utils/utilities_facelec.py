@@ -8,6 +8,7 @@ import datetime
 import json
 import unicodedata
 from xml.sax.saxutils import escape
+from frappe.core.doctype.file.file import create_new_folder
 
 import frappe
 import pandas as pd
@@ -194,3 +195,13 @@ def remove_html_tags(text):
     except:
         # Si no se puede procesar se retorna lo que se recibe
         return str(text)
+
+
+def create_folder(folder, parent="Home"):
+    """Make sure the folder exists and return it's name."""
+    new_folder_name = "/".join([parent, folder])
+
+    if not frappe.db.exists("File", new_folder_name):
+        create_new_folder(folder, parent)
+
+    return new_folder_name

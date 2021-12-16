@@ -90,10 +90,29 @@ frappe.query_reports["GT Sales Ledger"] = {
       options: ["No Subtotal", "Weekly", "Monthly", "Quarterly"],
     },
   ],
-  // onload: function (report) {
-  //     report.page.add_inner_button(__("Download Excel"), function () {
-  //         window.open("/api/method/factura_electronica.api.download_excel_sales_ledger");
-  //         // window.open("sihaysistema.com", "_blank");
-  //     });
-  // },
+  onload: function (report) {
+    report.page.add_inner_button(__("Download Report"), function () {
+      let d = new frappe.ui.Dialog({
+        title: __("Download Report"),
+        fields: [
+          {
+            label: __("Select Format"),
+            fieldname: "format",
+            fieldtype: "Select",
+            options: ["Excel", "JSON"],
+          },
+        ],
+        primary_action_label: "OK",
+        primary_action(values) {
+          console.log(values);
+          d.hide();
+        },
+      });
+
+      d.show();
+
+      // window.open("/api/method/factura_electronica.api.download_excel_sales_ledger");
+      // window.open("sihaysistema.com", "_blank");
+    });
+  },
 };
