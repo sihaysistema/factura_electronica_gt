@@ -5,12 +5,13 @@ from __future__ import unicode_literals
 
 import datetime
 import json
+from math import trunc
 
 import frappe
 import pandas as pd
 import xlsxwriter
 from frappe import _, _dict, scrub
-from frappe.utils import cstr, flt, get_site_name, nowdate
+from frappe.utils import cstr, flt, get_site_name, nowdate, now
 from frappe.utils.file_manager import save_file
 import base64
 
@@ -91,30 +92,6 @@ def execute(filters=None):
 
             if not data: return columns, []
 
-            # TODO: AGREGAR GENERADOR EXCEL, JSON AQUI
-            new_doc = frappe.new_doc('Prepared Report Facelec')
-            # new_doc.title = 'New Task 2'
-            new_doc.insert(ignore_permissions=True)
-
-            # Se crea el carpeta donde se almacenaran los reportes generados
-            # Si ya existe se retorna el path de la carpeta
-            doctype_folder = create_folder(new_doc.doctype)
-
-            # Se guardan el archivo tipo .json
-            formato = ".json"
-            file_name = f"GT Sales Ledger {nowdate()}{formato}"
-            content = json.dumps(data, indent=2, default=str)
-            to_doctype = new_doc.doctype
-            to_name = new_doc.name
-
-            save_json_data(file_name, content, to_doctype, to_name, doctype_folder, 1)
-
-            # Se guarda el archivo tipo .xlsx Excel
-            file_name = "GT Sales Ledger"
-            save_excel_data(file_name, data, to_doctype, to_name, doctype_folder, 1, 'week_repo')
-
-
-            # Se guarda el archivo tipo .xlsx Excel
             # Debug: datos de reporte
             with open("res-gt-sales-ledger.json", 'w') as f:
                 f.write(json.dumps(data, indent=2, default=str))
@@ -590,13 +567,42 @@ def calculate_total(data, columns, filters, type_report="Default"):
 
 
 def save_json_data(file_name, content, to_dt, to_dn, folder, is_private):
-    save_file(file_name, content, to_dt, to_dn, folder=folder, is_private=is_private)
+    """Guarda los datos del reporte como archivo .JSON que se adjunta
+    al Doctype Prepared Report Facelec de Factura Electronica
+
+    Args:
+        file_name (str): Nombre para el archivo
+        content (json): Datos que contendra el archivo
+        to_dt (str): Nombre Doctype
+        to_dn (str): Nombre Docname `name`
+        folder (str): Path destino
+        is_private (int): 1 privado ! publico
+
+    Returns:
+        Object: datos de archivo creado de Doctype File
+    """
+    return save_file(file_name, content, to_dt, to_dn, folder=folder, is_private=is_private)
 
 
-def save_excel_data(file_name, content, to_dt, to_dn, folder, is_private, column_idx):
+def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx):
+    """Guarda los datos del reporte como archivo .xlsx que se adjunta
+    al Doctype Prepared Report Facelec de Factura Electronica
+
+    Args:
+        file_name (str): Nombre para el archivo
+        content (json): Datos que contendra el archivo
+        to_dt (str): Nombre Doctype
+        to_dn (str): Nombre Docname `name`
+        folder (str): Path destino
+        is_private (int): 1 privado ! publico
+        column_idx (str): Nombre columna para establecer como indice, sirve
+        para sustituir el indice defautl que genera pandas
+
+    Returns:
+        Object: datos de archivo creado de Doctype File
+    """
     try:
-        # f"GT Sales Ledger {nowdate()}"
-        file_name = f'{file_name}.xlsx'
+        file_name = f'{fname}.xlsx'
         invoices = content
 
         # Horizontal
@@ -611,15 +617,76 @@ def save_excel_data(file_name, content, to_dt, to_dn, folder, is_private, column
         df.to_excel(writer, sheet_name='Vertical')
         df_transpose.to_excel(writer, sheet_name='Horizontal')
 
-        # Close the Pandas Excel writer and output the Excel file.
+        # Cierra y guarda los datos en Excel.
         writer.save()
 
+        # El archivo recien generado se abre como bytes para ser convertido a base64
+        # Y que pueda ser adjuntado/registrado a Files de Frappe
         excel_file = open(file_name, 'rb')
         ok_read = excel_file.read()
         fileb64 = base64.encodebytes(ok_read)
 
-        save_file(file_name, fileb64, to_dt, to_dn, folder=folder, decode=True, is_private=is_private)
+        file_name_to_dt = f'{fname} {now()}.xlsx'
+        f_name = save_file(file_name_to_dt, fileb64, to_dt, to_dn, folder=folder, decode=True, is_private=is_private)
         excel_file.close()
+
+        return f_name
     except:
         with open("error-excel.txt", "w") as f:
             f.write(str(frappe.get_traceback()))
+
+
+@frappe.whitelist()
+def generate_report_files(data, col_idx, f_type="JSON"):
+    """Genera y guarda archivos, se consume desde el reporte `gt-sales-ledger`
+
+    Args:
+        data (list): Datos de reporte recien generado
+        f_type (str, optional): str. Tipo de archivo a generar/guardar to "JSON".
+
+    Returns:
+        tuple: details
+    """
+
+    OPTIONS = {
+        "No Subtotal": "date",
+        "Weekly": "week_repo",
+        "Monthly": "month",
+        "Quarterly": "quarter"
+    }
+
+    try:
+        # Se carga la data del reporte
+        data = json.loads(data)
+
+        # Se crea un registro en Prepared Report Facelec para adjuntar los archivos
+        # que se generen
+        new_doc = frappe.new_doc('Prepared Report Facelec')
+        # new_doc.title = 'New Task 2'
+        new_doc.insert(ignore_permissions=True)
+
+        # Se crea el carpeta donde se almacenaran los reportes generados
+        # Si ya existe se retorna el path de la carpeta
+        doctype_folder = create_folder(new_doc.doctype)
+        to_doctype = new_doc.doctype
+        to_name = new_doc.name
+
+        # Se genera y guarda el archivo .json
+        if f_type == "JSON":
+            formato = ".json"
+            file_name = f"GT Sales Ledger {OPTIONS.get(col_idx)} {now()}{formato}"
+            content = json.dumps(data, indent=2, default=str)
+            saved_file = save_json_data(file_name, content, to_doctype, to_name, doctype_folder, 1)
+
+        # Se genera y guarda el archivo tipo .xlsx Excel
+        if f_type == "Excel":
+            file_name = f"GT Sales Ledger {OPTIONS.get(col_idx)}"
+            saved_file = save_excel_data(file_name, data, to_doctype, to_name, doctype_folder, 1, OPTIONS.get(col_idx))
+
+        return True, saved_file.file_url
+
+    except:
+        with open("error-generator.txt", "w") as f:
+            f.write(str(frappe.get_traceback()))
+
+        return False, None
