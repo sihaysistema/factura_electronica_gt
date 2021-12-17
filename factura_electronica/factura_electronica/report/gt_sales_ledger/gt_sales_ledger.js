@@ -35,6 +35,7 @@ frappe.query_reports["GT Sales Ledger"] = {
       options: "Customer",
       default: "",
       reqd: 0,
+      depends_on: 'eval:doc.options=="No Subtotal"',
     },
     {
       fieldname: "from_date",
@@ -70,6 +71,7 @@ frappe.query_reports["GT Sales Ledger"] = {
       label: __("Group?"),
       default: "",
       fieldtype: "Check",
+      depends_on: 'eval:doc.options=="No Subtotal"',
     },
     {
       fieldtype: "Break",
@@ -134,6 +136,7 @@ frappe.query_reports["GT Sales Ledger"] = {
                   },
                   60
                 );
+                // frappe.utils.play_sound("submit");
               },
               error: (r) => {
                 // on error

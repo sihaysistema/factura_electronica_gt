@@ -5,12 +5,11 @@ from __future__ import unicode_literals
 
 import datetime
 import json
-from math import trunc
 
 import frappe
 import pandas as pd
 import xlsxwriter
-from frappe import _, _dict, scrub
+from frappe import _
 from frappe.utils import cstr, flt, get_site_name, nowdate, now
 from frappe.utils.file_manager import save_file
 import base64
@@ -18,7 +17,7 @@ import base64
 from factura_electronica.factura_electronica.report.gt_sales_ledger.queries import (sales_invoices, sales_invoices_monthly,
                                                                                     sales_invoices_quarterly,
                                                                                     sales_invoices_weekly)
-from factura_electronica.utils.utilities_facelec import create_folder
+from factura_electronica.utils.utilities_facelec import create_folder, remove_html_tags
 
 PRECISION = 2
 MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",)
@@ -79,7 +78,7 @@ def execute(filters=None):
 
                 # Formatea y traduce la columna mes para reporte mensual
                 [invoice.update({"month": f"{invoice.get('year_repo')} {_(MONTHS[invoice.get('month_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
-                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Montly")
+                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Monthly")
 
             if filters.options == "Quarterly":
                 columns = get_columns_quarterly_report(filters)
@@ -93,16 +92,25 @@ def execute(filters=None):
             if not data: return columns, []
 
             # Debug: datos de reporte
-            with open("res-gt-sales-ledger.json", 'w') as f:
-                f.write(json.dumps(data, indent=2, default=str))
+            # with open("res-gt-sales-ledger.json", 'w') as f:
+            #     f.write(json.dumps(data, indent=2, default=str))
 
             return columns, data
 
         else:
             return [], []
     except:
-        with open("error-report.txt", 'w') as f:
-                f.write(str(frappe.get_traceback()))
+        # DEBUG:
+        # with open("error-report.txt", 'w') as f:
+        #         f.write(str(frappe.get_traceback()))
+
+        frappe.msgprint(
+            msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
+            title=_(f'Reporte no generado'),
+            raise_exception=True
+        )
+
+        return [], []
 
 
 def get_columns(filters):
@@ -435,7 +443,11 @@ def process_data_db(filters, data_db):
         # with open("error-report.txt", "w") as f:
         #     f.write(str(frappe.get_traceback()))
 
-        frappe.msgprint(_('Proceso no completado, no se encontraron facturas con item configurados como Bien, Servicio o Combustible'))
+        frappe.msgprint(
+            msg=f'No se encontraron facturas con item configurados como Bien, Servicio o Combustible',
+            title=_(f'No hay datos disponibles'),
+            raise_exception=True
+        )
         return []
 
 
@@ -499,7 +511,11 @@ def sales_invoice_grouper(invoices, filters):
     except:
         # with open("error-report-grouper.json", "w") as f:
         #     f.write(str(frappe.get_traceback()))
-        frappe.msgprint(str(frappe.get_traceback()))
+        frappe.msgprint(
+            msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
+            title=_(f'No se pudo agrupar correctamente la data'),
+            raise_exception=True
+        )
 
 
 def calculate_total(data, columns, filters, type_report="Default"):
@@ -543,7 +559,7 @@ def calculate_total(data, columns, filters, type_report="Default"):
             "type_doc": "",
             "num_doc": "",
             "tax_id": "",
-            "customer": _("TOTALS"),
+            "customer": _("<span style='font-weight: bold'>TOTALS</span>"),
             # "total": f'<span style="font-weight: bold">{flt(totals.get("total", 0.0), PRECISION)}</span>', NO FUNCIONA POR QUE EL CAMPO DEBE SER NUMERICO
             "total": flt(totals.get("total", 0.0), PRECISION),
             "amount": flt(totals.get("amount", 0.0), PRECISION),
@@ -556,9 +572,24 @@ def calculate_total(data, columns, filters, type_report="Default"):
             "net_fuel": flt(totals.get("net_fuel", 0.0), PRECISION),
             "currency": filters.company_currency
         })
-    else:
+
+    if type_report == "Weekly":
         data_total.append({
             "week_repo": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
+            "total": flt(totals.get("total", 0.0), PRECISION),
+            "currency": filters.company_currency
+        })
+
+    if type_report == "Monthly":
+        data_total.append({
+            "month": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
+            "total": flt(totals.get("total", 0.0), PRECISION),
+            "currency": filters.company_currency
+        })
+
+    if type_report == "Quarterly":
+        data_total.append({
+            "Quarterly": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
             "total": flt(totals.get("total", 0.0), PRECISION),
             "currency": filters.company_currency
         })
@@ -607,6 +638,17 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
 
         # Horizontal
         df = pd.DataFrame.from_dict(invoices).fillna("")
+
+        # Se eliminan las etiquetas HTML para que se muestre correctamente en archivo generado JSON/XLSX
+        if column_idx == "date":
+            df['customer'] = df['customer'].apply(lambda x: remove_html_tags(x))
+        if column_idx == "week_repo":
+            df['week_repo'] = df['week_repo'].apply(lambda x: remove_html_tags(x))
+        if column_idx == "month":
+            df['month'] = df['month'].apply(lambda x: remove_html_tags(x))
+        if column_idx == "quarter":
+            df['quarter'] = df['quarter'].apply(lambda x: remove_html_tags(x))
+
         df = df.set_index(column_idx)
 
         # Vertical: Se aplica la transpuesta
@@ -632,8 +674,15 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
 
         return f_name
     except:
-        with open("error-excel.txt", "w") as f:
-            f.write(str(frappe.get_traceback()))
+        # DEBUG
+        # with open("error-excel.txt", "w") as f:
+        #     f.write(str(frappe.get_traceback()))
+
+        frappe.msgprint(
+            msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
+            title=_(f'Archivo Excel no pudo ser generado y guardado'),
+            raise_exception=True
+        )
 
 
 @frappe.whitelist()
@@ -686,7 +735,14 @@ def generate_report_files(data, col_idx, f_type="JSON"):
         return True, saved_file.file_url
 
     except:
-        with open("error-generator.txt", "w") as f:
-            f.write(str(frappe.get_traceback()))
+        # DEBUG:
+        # with open("error-generator.txt", "w") as f:
+        #     f.write(str(frappe.get_traceback()))
+
+        frappe.msgprint(
+            msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
+            title=_(f'Archivo {f_type} no pudo ser generado'),
+            raise_exception=True
+        )
 
         return False, None
