@@ -204,7 +204,7 @@ class ElectronicCreditNote:
             # Validacion de existencia en los campos de direccion, ya que son obligatorio por parte de la API FEL
             # Usaremos la primera que se encuentre
             for dire in dat_direccion[0]:
-                if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
+                if not dat_direccion[0][dire]:
                     return False, '''No se puede completar la operacion ya que el campo {} de la direccion de compania no\
                                      tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire))
 

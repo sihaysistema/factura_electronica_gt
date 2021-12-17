@@ -35,6 +35,7 @@ frappe.query_reports["GT Sales Ledger"] = {
       options: "Customer",
       default: "",
       reqd: 0,
+      depends_on: 'eval:doc.options=="No Subtotal"',
     },
     {
       fieldname: "from_date",
@@ -70,6 +71,7 @@ frappe.query_reports["GT Sales Ledger"] = {
       label: __("Group?"),
       default: "",
       fieldtype: "Check",
+      depends_on: 'eval:doc.options=="No Subtotal"',
     },
     {
       fieldtype: "Break",
@@ -90,10 +92,70 @@ frappe.query_reports["GT Sales Ledger"] = {
       options: ["No Subtotal", "Weekly", "Monthly", "Quarterly"],
     },
   ],
-  // onload: function (report) {
-  //     report.page.add_inner_button(__("Download Excel"), function () {
-  //         window.open("/api/method/factura_electronica.api.download_excel_sales_ledger");
-  //         // window.open("sihaysistema.com", "_blank");
-  //     });
-  // },
+  onload: function (report) {
+    report.page.add_inner_button(__("Download Report"), function () {
+      if (report.data.length > 0) {
+        let d = new frappe.ui.Dialog({
+          title: __("Download Report"),
+          fields: [
+            {
+              label: __("Select Format"),
+              fieldname: "format",
+              fieldtype: "Select",
+              options: ["Excel", "JSON"],
+            },
+          ],
+          primary_action_label: __("Generate and download"),
+          primary_action(values) {
+            d.hide();
+            // Se ejecuta la funcion para generar y guardar archivos
+            frappe.call({
+              method: "factura_electronica.factura_electronica.report.gt_sales_ledger.gt_sales_ledger.generate_report_files",
+              args: {
+                data: report.data,
+                col_idx: report.filters[9].value, // El rango
+                f_type: values.format,
+              },
+              freeze: true,
+              freeze_message: __("Generating and saving file 📄📄📄"),
+              callback: (r) => {
+                // on success
+                console.log(r.message);
+
+                // Si el archivo se genera/guarda correctamente se descarga automaticamente
+                if (r.message[0]) {
+                  file_url = r.message[1].replace(/#/g, "%23");
+                  window.open(file_url);
+                }
+
+                // Sucess MSG
+                frappe.show_alert(
+                  {
+                    message: __("File Generated!"),
+                    indicator: "green",
+                  },
+                  60
+                );
+                // frappe.utils.play_sound("submit");
+              },
+              error: (r) => {
+                // on error
+                console.log(r.message);
+              },
+            });
+          },
+        });
+
+        d.show();
+      } else {
+        frappe.show_alert(
+          {
+            message: __("No es posible generar y descargar archivo, aun no ha generado el reporte"),
+            indicator: "yellow",
+          },
+          5
+        );
+      }
+    });
+  },
 };
