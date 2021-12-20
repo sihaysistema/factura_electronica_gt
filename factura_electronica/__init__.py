@@ -11,7 +11,7 @@ from numinwords import numinwords
 
 # locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
 
-__version__ = '7.1.6'
+__version__ = '7.1.7'
 
 @frappe.whitelist()
 def currency_in_words(amount, currency, cent_in_numb=0):
