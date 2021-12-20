@@ -259,7 +259,7 @@ class FacturaElectronicaFEL:
             if len(dat_direccion) > 0:  # Si existe por lo menos una direccion
                 # Validacion data
                 for dire in dat_direccion[0]:
-                    if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
+                    if not dat_direccion[0][dire]:
                         return 'No se puede completar la operacion ya que el campo {} de la direccion de compania no tiene data, por favor asignarle un valor e intentar de nuevo'.format(str(dire))
             else:
                 return 'No se encontro ninguna direccion para la compania, verificar que exista una e intentar de nuevo'
@@ -314,7 +314,7 @@ class FacturaElectronicaFEL:
             if len(dat_direccion) > 0:  # Si existe por lo menos una direccion
                 # Validacion data
                 for dire in dat_direccion[0]:
-                    if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
+                    if not dat_direccion[0][dire]:
                         return 'No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no tiene data, por favor asignarle un valor e intentar de nuevo'.format(str(dire), self.nombre_cliente)
             else:
                 return 'No se encontro ninguna direccion para el cliente, verificar que exista una e intentar de nuevo ya que es necesaria para generar factura electronica'
