@@ -142,7 +142,7 @@ frappe.query_reports["GT Sales Ledger"] = {
                     message: __("File Generated!"),
                     indicator: "green",
                   },
-                  60
+                  6
                 );
                 // frappe.utils.play_sound("submit");
               },

@@ -97,6 +97,10 @@ frappe.ui.form.on("Item", {
       // se muestra, la los campos para ingresas datos de impuestos sobre combustible
       // IMPORTANTE: ACTUALEMENTE SOLO CALCULAMOS EL ESCENARIO IDP
       cur_frm.toggle_display("taxable_unit_name", true);
+      cur_frm.set_value(
+        "facelec_fuel_note",
+        "<b style='color: red'>IMPORTANTE: Recuerde configurar las cuentas de IDP venta e IDP compra, y cuenta de ingreso y gasto para el producto en la tabla hija de Predeterminados. De lo contrario en GL Ledger no cuadraran los montos.</b>"
+      );
       // cur_frm.toggle_display("facelec_tax_rate_per_uom", true);
       // cur_frm.toggle_display("facelec_uom_tax_included_in_price", true);
       // cur_frm.toggle_display("facelec_tax_rate_per_uom_selling_account", true);
@@ -133,6 +137,8 @@ frappe.ui.form.on("Item", {
 
       // Se resetean los valores de los campos de impuestos para no generar inconvenientes
       cur_frm.set_value("taxable_unit_name", "");
+      cur_frm.set_value("tax_name", "");
+      cur_frm.set_value("taxable_unit_code", "");
       // cur_frm.set_value("facelec_tax_rate_per_uom", "");
       // cur_frm.set_value("facelec_uom_tax_included_in_price", "");
       // cur_frm.set_value("facelec_tax_rate_per_uom", "");
@@ -155,6 +161,8 @@ frappe.ui.form.on("Item", {
 
       // Se resetean los valores de los campos de impuestos para no generar inconvenientes
       cur_frm.set_value("taxable_unit_name", "");
+      cur_frm.set_value("tax_name", "");
+      cur_frm.set_value("taxable_unit_code", "");
       // cur_frm.set_value("facelec_tax_rate_per_uom", "");
       // cur_frm.set_value("facelec_uom_tax_included_in_price", "");
       // cur_frm.set_value("facelec_tax_rate_per_uom", "");

@@ -323,7 +323,7 @@ def fill_fixtures():
                     "Customer-facelec_trade_name", "Supplier-facelec_trade_name", "Company-facelec_trade_name",
                     "Sales Invoice-access_number_fel", "Item Default-facelec_tax_rate_per_uom_purchase_account",
                     "Item Default-facelec_tax_rate_per_uom_selling_account", "Item Default-facelec_tax_rate_per_uom",
-                    "Item Default-facelec_uom_tax_included_in_price"
+                    "Item Default-facelec_uom_tax_included_in_price", "Item-facelec_fuel_note"
                 ]
             ]
         ]
