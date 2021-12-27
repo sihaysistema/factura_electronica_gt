@@ -99,7 +99,7 @@ frappe.query_reports["GT Sales Ledger"] = {
           title: __("Download Report"),
           fields: [
             {
-              label: __("Select Format"),
+              label: __("Select A File Fype"),
               fieldname: "format",
               fieldtype: "Select",
               options: ["Excel", "JSON"],
@@ -108,19 +108,27 @@ frappe.query_reports["GT Sales Ledger"] = {
           primary_action_label: __("Generate and download"),
           primary_action(values) {
             d.hide();
+            const filters = {};
+
+            report.filters.forEach((element) => {
+              filters[element.fieldname] = element.value;
+            });
+
             // Se ejecuta la funcion para generar y guardar archivos
             frappe.call({
               method: "factura_electronica.factura_electronica.report.gt_sales_ledger.gt_sales_ledger.generate_report_files",
               args: {
                 data: report.data,
                 col_idx: report.filters[9].value, // El rango
+                filters: JSON.stringify(filters),
+                report_name: report.report_name,
                 f_type: values.format,
               },
               freeze: true,
-              freeze_message: __("Generating and saving file 📄📄📄"),
+              freeze_message: __("Generating and saving file") + " 📄📄📄",
               callback: (r) => {
                 // on success
-                console.log(r.message);
+                // console.log(r.message);
 
                 // Si el archivo se genera/guarda correctamente se descarga automaticamente
                 if (r.message[0]) {
@@ -134,7 +142,7 @@ frappe.query_reports["GT Sales Ledger"] = {
                     message: __("File Generated!"),
                     indicator: "green",
                   },
-                  60
+                  6
                 );
                 // frappe.utils.play_sound("submit");
               },
@@ -150,7 +158,7 @@ frappe.query_reports["GT Sales Ledger"] = {
       } else {
         frappe.show_alert(
           {
-            message: __("No es posible generar y descargar archivo, aun no ha generado el reporte"),
+            message: __("No es posible generar y descargar el archivo, aun no ha generado el reporte"),
             indicator: "yellow",
           },
           5

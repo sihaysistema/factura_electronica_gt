@@ -3,16 +3,17 @@
 
 from __future__ import unicode_literals
 
+import base64
 import datetime
+import io
 import json
 
 import frappe
 import pandas as pd
 import xlsxwriter
 from frappe import _
-from frappe.utils import cstr, flt, get_site_name, nowdate, now
+from frappe.utils import flt, get_site_name, now
 from frappe.utils.file_manager import save_file
-import base64
 
 from factura_electronica.factura_electronica.report.gt_sales_ledger.queries import (sales_invoices, sales_invoices_monthly,
                                                                                     sales_invoices_quarterly,
@@ -633,7 +634,6 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
         Object: datos de archivo creado de Doctype File
     """
     try:
-        file_name = f'{fname}.xlsx'
         invoices = content
 
         # Horizontal
@@ -654,30 +654,29 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
         # Vertical: Se aplica la transpuesta
         df_transpose = df.T
 
+        # Generación de archivo, primero se crea en memoria para luego ser guardado en el servidor
+        # Crea una salida como bytes
+        output = io.BytesIO()
+
+        # Utiliza el objeto BytesIO como manejador del archivo.
+        writer = pd.ExcelWriter(output, engine='xlsxwriter')
+
         # Generación .xlsx
-        writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
+        # writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
         df.to_excel(writer, sheet_name='Vertical')
         df_transpose.to_excel(writer, sheet_name='Horizontal')
 
         # Cierra y guarda los datos en Excel.
         writer.save()
 
-        # El archivo recien generado se abre como bytes para ser convertido a base64
-        # Y que pueda ser adjuntado/registrado a Files de Frappe
-        excel_file = open(file_name, 'rb')
-        ok_read = excel_file.read()
-        fileb64 = base64.encodebytes(ok_read)
+        # Obtiene los datos del archivo generado en bytes
+        xlsx_data = output.getvalue()
 
         file_name_to_dt = f'{fname} {now()}.xlsx'
-        f_name = save_file(file_name_to_dt, fileb64, to_dt, to_dn, folder=folder, decode=True, is_private=is_private)
-        excel_file.close()
+        f_name = save_file(file_name_to_dt, xlsx_data, to_dt, to_dn, folder=folder, decode=False, is_private=is_private)
 
         return f_name
     except:
-        # DEBUG
-        # with open("error-excel.txt", "w") as f:
-        #     f.write(str(frappe.get_traceback()))
-
         frappe.msgprint(
             msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
             title=_(f'Archivo Excel no pudo ser generado y guardado'),
@@ -686,7 +685,7 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
 
 
 @frappe.whitelist()
-def generate_report_files(data, col_idx, f_type="JSON"):
+def generate_report_files(data, col_idx, filters, report_name, f_type="JSON"):
     """Genera y guarda archivos, se consume desde el reporte `gt-sales-ledger`
 
     Args:
@@ -711,7 +710,8 @@ def generate_report_files(data, col_idx, f_type="JSON"):
         # Se crea un registro en Prepared Report Facelec para adjuntar los archivos
         # que se generen
         new_doc = frappe.new_doc('Prepared Report Facelec')
-        # new_doc.title = 'New Task 2'
+        new_doc.filters = json.dumps(json.loads(filters), default=str)
+        new_doc.report_name = report_name
         new_doc.insert(ignore_permissions=True)
 
         # Se crea el carpeta donde se almacenaran los reportes generados
@@ -723,13 +723,13 @@ def generate_report_files(data, col_idx, f_type="JSON"):
         # Se genera y guarda el archivo .json
         if f_type == "JSON":
             formato = ".json"
-            file_name = f"GT Sales Ledger {OPTIONS.get(col_idx)} {now()}{formato}"
+            file_name = f"GT Sales Ledger {col_idx} {now()}{formato}"
             content = json.dumps(data, indent=2, default=str)
             saved_file = save_json_data(file_name, content, to_doctype, to_name, doctype_folder, 1)
 
         # Se genera y guarda el archivo tipo .xlsx Excel
         if f_type == "Excel":
-            file_name = f"GT Sales Ledger {OPTIONS.get(col_idx)}"
+            file_name = f"GT Sales Ledger {col_idx}"
             saved_file = save_excel_data(file_name, data, to_doctype, to_name, doctype_folder, 1, OPTIONS.get(col_idx))
 
         return True, saved_file.file_url

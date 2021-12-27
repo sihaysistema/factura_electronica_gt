@@ -323,7 +323,7 @@ def fill_fixtures():
                     "Customer-facelec_trade_name", "Supplier-facelec_trade_name", "Company-facelec_trade_name",
                     "Sales Invoice-access_number_fel", "Item Default-facelec_tax_rate_per_uom_purchase_account",
                     "Item Default-facelec_tax_rate_per_uom_selling_account", "Item Default-facelec_tax_rate_per_uom",
-                    "Item Default-facelec_uom_tax_included_in_price"
+                    "Item Default-facelec_uom_tax_included_in_price", "Item-facelec_fuel_note"
                 ]
             ]
         ]
@@ -433,7 +433,9 @@ def fill_fixtures():
                     "Authorized By:", "Code and Item Image", "Name, Quantity, Price, Destination Warehouse", "Name, Quantity, Price, Source Warehouse",
                     "Codigo Unidad de Medida", "Codigo de 3 caracteres para unidad de medida a enviar con Factura Electronica. Previamente validado con INFILE.",
                     "Series Configuration For Purchase Invoices", "Purchase Invoice Series", "Combination Of Phrases", "FEL Combinations", "Access Number FCAM",
-                    "Series Configuration For Sales Invoices", "Tax per category", "TAX FACELEC", "Is Discount?"
+                    "Series Configuration For Sales Invoices", "Tax per category", "TAX FACELEC", "Is Discount?", "Select A File Fype", "File Generated!",
+                    "Generate and Download", "Generating and saving file", "No es posible generar y descargar el archivo, aun no ha generado el reporte",
+                    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",
                 ]
             ]
         ]
