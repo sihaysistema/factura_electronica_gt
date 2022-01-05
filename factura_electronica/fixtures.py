@@ -323,7 +323,8 @@ def fill_fixtures():
                     "Customer-facelec_trade_name", "Supplier-facelec_trade_name", "Company-facelec_trade_name",
                     "Sales Invoice-access_number_fel", "Item Default-facelec_tax_rate_per_uom_purchase_account",
                     "Item Default-facelec_tax_rate_per_uom_selling_account", "Item Default-facelec_tax_rate_per_uom",
-                    "Item Default-facelec_uom_tax_included_in_price", "Item-facelec_fuel_note"
+                    "Item Default-facelec_uom_tax_included_in_price", "Item-facelec_fuel_note",
+                    "Company-facelec_name_of_owner"
                 ]
             ]
         ]
@@ -435,7 +436,8 @@ def fill_fixtures():
                     "Series Configuration For Purchase Invoices", "Purchase Invoice Series", "Combination Of Phrases", "FEL Combinations", "Access Number FCAM",
                     "Series Configuration For Sales Invoices", "Tax per category", "TAX FACELEC", "Is Discount?", "Select A File Fype", "File Generated!",
                     "Generate and Download", "Generating and saving file", "No es posible generar y descargar el archivo, aun no ha generado el reporte",
-                    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",
+                    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "Name Of Owner",
+                    "FACELEC: If the company is owned by a single person, enter the owner's name.", "Applies only for production."
                 ]
             ]
         ]

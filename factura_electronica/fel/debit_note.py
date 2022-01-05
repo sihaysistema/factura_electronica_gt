@@ -220,8 +220,22 @@ class ElectronicDebitNote:
                                   {'name': self.__config_name}, 'usar_datos_prueba') == 1:
                 nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
                                                    {'name': self.__config_name}, 'nombre_empresa_prueba')
+
+                # Si la compania es de un propietario
+                if frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'is_individual'):
+                    nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'facelec_name_of_owner')
+                else:
+                    nombre_emisor = nom_comercial
+
+            # Aplica Si los datos son para producción
             else:
                 nom_comercial = dat_compania[0]['company_name']
+
+                # Si la compania es de un propietario
+                if frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'is_individual'):
+                    nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'facelec_name_of_owner')
+                else:
+                    nombre_emisor = dat_compania[0]['company_name']
 
             # Asignacion data
             self.__d_emisor = {
@@ -231,7 +245,7 @@ class ElectronicDebitNote:
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
                 "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', '').upper(),
                 "@NombreComercial": nom_comercial,
-                "@NombreEmisor": nom_comercial,
+                "@NombreEmisor": nombre_emisor,
                 "dte:DireccionEmisor": {
                     "dte:Direccion": dat_direccion[0]['address_line1'],
                     "dte:CodigoPostal": dat_direccion[0]['pincode'],  # Codig postal
