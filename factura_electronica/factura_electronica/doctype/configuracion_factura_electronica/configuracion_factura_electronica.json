@@ -555,7 +555,6 @@
   },
   {
    "default": "0",
-   "description": "Applies only for production.",
    "fieldname": "is_individual",
    "fieldtype": "Check",
    "label": "La compania es de propietario individual?"
@@ -564,7 +563,7 @@
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2022-01-04 17:15:25.342110",
+ "modified": "2022-01-05 12:05:23.956265",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

@@ -227,8 +227,11 @@ class ElectronicSpecialInvoice:
                 nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
                                                    {'name': self.__config_name}, 'nombre_empresa_prueba')
 
-                # En la modalidad de pruebas no hay problema si tienen el mismo valor
-                nombre_emisor = nom_comercial
+                # Si la compania es de un propietario
+                if frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'is_individual'):
+                    nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'facelec_name_of_owner')
+                else:
+                    nombre_emisor = nom_comercial
 
             # Aplica Si los datos son para producción
             else:
