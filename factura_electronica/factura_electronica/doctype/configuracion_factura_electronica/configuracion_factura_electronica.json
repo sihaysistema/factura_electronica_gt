@@ -13,6 +13,8 @@
   "configuracion_pdf",
   "descargar_pdf_factura_electronica",
   "company",
+  "is_individual",
+  "facelec_name_of_owner",
   "usar_datos_prueba",
   "nombre_empresa_prueba",
   "documentos_electronicos_section",
@@ -542,12 +544,27 @@
    "fieldname": "factura_cambiaria_fel",
    "fieldtype": "Check",
    "label": "Factura Cambiaria FEL"
+  },
+  {
+   "depends_on": "eval:doc.is_individual == 1",
+   "fetch_from": "company.facelec_name_of_owner",
+   "fieldname": "facelec_name_of_owner",
+   "fieldtype": "Data",
+   "label": "Name Of Owner",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Applies only for production.",
+   "fieldname": "is_individual",
+   "fieldtype": "Check",
+   "label": "La compania es de propietario individual?"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2021-08-23 11:39:47.471099",
+ "modified": "2022-01-04 17:15:25.342110",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

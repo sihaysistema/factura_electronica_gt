@@ -2910,5 +2910,53 @@
   "parenttype": null,
   "source_text": "December",
   "translated_text": "Diciembre"
+ },
+ {
+  "context": null,
+  "contributed": 0,
+  "contribution_docname": null,
+  "contribution_status": "",
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2022-01-04 18:47:48.980829",
+  "name": "4ddb61c017",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_text": "Name Of Owner",
+  "translated_text": "Nombre De Propietario"
+ },
+ {
+  "context": null,
+  "contributed": 0,
+  "contribution_docname": null,
+  "contribution_status": "",
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2022-01-04 18:48:58.756199",
+  "name": "5edd22e73e",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_text": "FACELEC: If the company is owned by a single person, enter the owner's name.",
+  "translated_text": "FACELEC: Si la empresa es propiedad de una sola persona, introduzca el nombre del propietario"
+ },
+ {
+  "context": null,
+  "contributed": 0,
+  "contribution_docname": null,
+  "contribution_status": "",
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2022-01-04 18:50:03.550627",
+  "name": "6d339ba318",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_text": "Applies only for production.",
+  "translated_text": "Aplica solo para modo producci\u00f3n."
  }
 ]
