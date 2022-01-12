@@ -224,7 +224,7 @@ frappe.ui.form.on("Sales Order", {
     }
   },
   before_save: function (frm, cdt, cdn) {
-    sales_order_each_item(frm, cdt, cdn);
+    // sales_order_each_item(frm, cdt, cdn);
   },
   validate: function (frm, cdt, cdn) {
     // console.log("Validate");

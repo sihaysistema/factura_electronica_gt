@@ -228,7 +228,7 @@ frappe.ui.form.on("Purchase Receipt", {
     }
   },
   before_save: function (frm, cdt, cdn) {
-    purchase_receipt_each_item(frm, cdt, cdn);
+    // purchase_receipt_each_item(frm, cdt, cdn);
   },
   validate: function (frm, cdt, cdn) {
     let taxes = frm.doc.taxes || [];

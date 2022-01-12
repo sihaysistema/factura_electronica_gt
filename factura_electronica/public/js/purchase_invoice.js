@@ -798,7 +798,7 @@ frappe.ui.form.on("Purchase Invoice", {
     }
   },
   before_save: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
+    // pi_each_item(frm, cdt, cdn);
     generar_tabla_html_factura_compra(frm);
   },
   validate: function (frm, cdt, cdn) {
