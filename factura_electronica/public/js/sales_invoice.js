@@ -971,7 +971,7 @@ frappe.ui.form.on("Sales Invoice", {
   },
   // Se ejecuta antes de guardar el documento
   before_save: function (frm, cdt, cdn) {
-    each_row(frm, cdt, cdn);
+    // each_row(frm, cdt, cdn);
   },
   // Se ejecuta al validar el documento
   on_submit: function (frm, cdt, cdn) {

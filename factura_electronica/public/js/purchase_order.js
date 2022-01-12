@@ -237,7 +237,7 @@ frappe.ui.form.on("Purchase Order", {
     }
   },
   before_save: function (frm, cdt, cdn) {
-    purchase_order_each_item(frm, cdt, cdn);
+    // purchase_order_each_item(frm, cdt, cdn);
   },
 });
 

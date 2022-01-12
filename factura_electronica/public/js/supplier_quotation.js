@@ -223,7 +223,7 @@ frappe.ui.form.on("Supplier Quotation", {
     }
   },
   before_save: function (frm, cdt, cdn) {
-    supplier_quotation_each_item(frm, cdt, cdn);
+    // supplier_quotation_each_item(frm, cdt, cdn);
   },
   validate: function (frm, cdt, cdn) {
     supplier_quotation_each_item(frm, cdt, cdn);

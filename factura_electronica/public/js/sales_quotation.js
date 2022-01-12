@@ -388,7 +388,7 @@ frappe.ui.form.on("Quotation", {
     }
   },
   before_save: function (frm, cdt, cdn) {
-    quotation_each_row(frm, cdt, cdn);
+    // quotation_each_row(frm, cdt, cdn);
   },
   // Se ejecuta al presionar el boton guardar
   validate: function (frm, cdt, cdn) {
