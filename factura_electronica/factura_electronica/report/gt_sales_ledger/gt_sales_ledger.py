@@ -42,6 +42,9 @@ def execute(filters=None):
         if not filters:
             return columns, []
 
+        # with open("filtros-test.json", "w") as f:
+        #     f.write(json.dumps(filters))
+
         # Conversion fechas filtro a objetos date para realizar validaciones
         start_d = datetime.datetime.strptime(filters.from_date, "%Y-%m-%d")  # en formato date
         final_d = datetime.datetime.strptime(filters.to_date, "%Y-%m-%d")
@@ -531,6 +534,8 @@ def calculate_total(data, columns, filters, type_report="Default"):
     Returns:
         list: Lista diccionarios con datos + fila total a mostrar en reporte
     """
+
+    if not data: return []
 
     data_total = json.loads(json.dumps(data, default=str))
     # Calculo fila de totales
