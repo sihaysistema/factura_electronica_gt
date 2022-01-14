@@ -42,8 +42,8 @@ def execute(filters=None):
         if not filters:
             return columns, []
 
-        with open("filtros-test.json", "w") as f:
-            f.write(json.dumps(filters))
+        # with open("filtros-test.json", "w") as f:
+        #     f.write(json.dumps(filters))
 
         # Conversion fechas filtro a objetos date para realizar validaciones
         start_d = datetime.datetime.strptime(filters.from_date, "%Y-%m-%d")  # en formato date

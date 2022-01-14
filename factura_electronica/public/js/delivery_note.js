@@ -239,7 +239,7 @@ frappe.ui.form.on("Delivery Note", {
     }
   },
   before_save: function (frm, cdt, cdn) {
-    delivery_note_each_row(frm, cdt, cdn);
+    // delivery_note_each_row(frm, cdt, cdn);
   },
   validate: function (frm, cdt, cdn) {
     // console.log("Validate");
