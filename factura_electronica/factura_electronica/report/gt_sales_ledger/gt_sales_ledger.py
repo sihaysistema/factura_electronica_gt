@@ -51,13 +51,6 @@ def execute(filters=None):
 
         # Validaciones de fechas
         if (start_d < final_d) or (final_d == start_d):
-
-            # Definicion de columnas a totalizar
-            # v1
-            # columns_data_db = ['total', 'goods_iva', 'services_iva', 'fuel_iva', 'exempt_sales',
-            #                    'net_fuel', 'sales_of_goods', 'sales_of_services', 'minus_excise_tax', 'other_tax']
-
-            # v2
             columns_data_db = ['total']
             data = []
             invoices_db = []
