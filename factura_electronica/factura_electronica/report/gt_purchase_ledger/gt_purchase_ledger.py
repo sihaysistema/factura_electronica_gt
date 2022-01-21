@@ -4,19 +4,22 @@
 from __future__ import unicode_literals
 
 import datetime
-# from erpnext.accounts.report.utils import convert  # value, from_, to, date
 import json
 
-import pandas as pd
-
 import frappe
-from frappe import _, _dict, scrub
-from frappe.utils import cstr, flt, nowdate
-from frappe.utils import get_site_name
+import pandas as pd
+from frappe import _
+from frappe.utils import flt, get_site_name, nowdate
 
-from factura_electronica.factura_electronica.report.gt_purchase_ledger.queries import purchase_invoices
-# Para este reporte tambien se generara excel?
-# from factura_electronica.utils_factura_electronica.purchase_ledger_excel_generator import creator
+from factura_electronica.utils.utilities_facelec import create_folder, remove_html_tags, save_excel_data
+from factura_electronica.factura_electronica.report.gt_purchase_ledger.queries import (purchase_invoices,
+                                                                                       purchase_invoices_monthly,
+                                                                                       purchase_invoices_quarterly,
+                                                                                       purchase_invoices_weekly)
+
+PRECISION = 2
+MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",)
+QUARTERS = ("Q1 Jan - Feb - Mar", "Q2 Abr - May - Jun", "Q3 Jul - Aug - Sep", "Q4 Oct - Nov - Dec",)
 
 
 def execute(filters=None):
@@ -30,46 +33,72 @@ def execute(filters=None):
         tuple: Posicion 0 las columnas, Posicion 1 datos para las columnas
     """
 
-    # Conversion fechas filtro a objetos date
-    start_d = datetime.datetime.strptime(filters.from_date, "%Y-%m-%d")  # en formato date
-    final_d = datetime.datetime.strptime(filters.to_date, "%Y-%m-%d")
+    try:
+        columns = []
 
-    # Validaciones de fechas
-    # Solo se permiten fechas en un mismo anio,
-    if ((final_d > start_d) or (final_d == start_d)) and (start_d.year == final_d.year):
+        if not filters:
+            return columns, []
 
-        columns = get_columns(filters)
-        data_pi = purchase_invoices(filters)
+        # Conversion fechas filtro a objetos date
+        start_d = datetime.datetime.strptime(filters.from_date, "%Y-%m-%d")
+        final_d = datetime.datetime.strptime(filters.to_date, "%Y-%m-%d")
 
-        data = process_data_db(filters, data_pi)
+        # Validaciones de fechas
+        if (start_d < final_d) or (final_d == start_d):
+            # Definicion Columnas de valores numericos Weekly, Monthly, Quarterly
+            columns_data_db = ['total']
 
+            data = []
+            invoices_db = []
 
-        if len(data) > 0:
-            pass
-            # TODO: SE GENERARA EXCEL?
-            # Llamamos a la funcion para crear excel
-            # status_excel = creator(json.loads(json.dumps(data, indent=2, default=str)), filters.company_currency,
-            #                        filters.company_currency, filters.from_date, filters.to_date, filters.language, filters)
+            if filters.options == "Detailed":
+                columns = get_columns()
+                # Se obtienen las facturas de compra
+                invoices_db = purchase_invoices(filters)
+                # Se procesa la data de la db y los totales
+                data = process_data_db(filters, invoices_db)
 
-            # Descomentar si quiers mostrar la notificacion
-            # if status_excel[0] == True:
-            #     frappe.msgprint(msg=_('Successfully generated report and excel'),
-            #                     title=_('Process completed'), indicator='green')
+            if filters.options == "Weekly":
+                columns = get_columns_weekly_report()
+                invoices_db = purchase_invoices_weekly(filters)
+                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Weekly")
 
-        return columns, data
+            if filters.options == "Monthly":
+                columns = get_columns_monthly_report()
+                invoices_db = purchase_invoices_monthly(filters)
 
-    else:
-        frappe.msgprint(msg=_('The initial date must be less than the final date and for the same year'),
-                        title=_('Uncompleted Task'), indicator='yellow')
+                 # Formatea y traduce la columna mes para reporte mensual
+                [invoice.update({"month": f"{invoice.get('year_repo')} {_(MONTHS[invoice.get('month_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
+                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Monthly")
+
+            if filters.options == "Quarterly":
+                columns = get_columns_quarterly_report()
+                # Se obtienen los datos de las facturas de venta Semestralmente
+                invoices_db = purchase_invoices_quarterly(filters)
+
+                # Formatea la columna para reporte mensual
+                [invoice.update({"quarter": f"{invoice.get('year_repo')} {_(QUARTERS[invoice.get('quarter_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
+                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Quarterly")
+
+            if not data: return columns, []
+
+            # DEBUG:
+            # with open('datos-purchase.json', 'w') as f:
+            #     f.write(json.dumps(data, indent=2, default=str))
+
+            return columns, data
+
+        else:
+            return [], []
+    except:
+        frappe.msgprint(msg=f"{_('If the error persists please report it. Details:')} <br><hr> <code>{frappe.get_traceback()}</code>",
+                        title=_('Uncompleted Task'), indicator='red')
+
         return [], []
 
-
-def get_columns(filters):
+def get_columns():
     """
     Asigna las propiedades para cada columna que va en el reporte
-
-    Args:
-        filters (dict): Filtros front end
 
     Returns:
         list: Lista de diccionarios
@@ -80,20 +109,20 @@ def get_columns(filters):
             "label": _("Date"),
             "fieldname": "date",
             "fieldtype": "Date",
-            "width": 150
+            "width": 125
         },
         {
             "label": _("Type Doc."),
             "fieldname": "type_doc",
             "fieldtype": "Data",
-            "width": 250
+            "width": 150
         },
         {
             "label": _("Num Doc."),
             "fieldname": "num_doc",
             "fieldtype": "Link",
             "options": "Purchase Invoice",
-            "width": 250
+            "width": 200
         },
         {
             "label": _("Tax ID"),
@@ -109,46 +138,53 @@ def get_columns(filters):
             "width": 250
         },
         {
-            "label": _("Purchases"),
+            "label": _("Purchases (Net Total)"),
             "fieldname": "purchases",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 125
+            "width": 150
         },
         {
             "label": _("Imports"),
             "fieldname": "imports",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 250
+            "width": 150
         },
         {
             "label": _("Services"),
             "fieldname": "services",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 250
+            "width": 150
+        },
+        {
+            "label": _("Goods"),
+            "fieldname": "goods",
+            "fieldtype": "Currency",
+            "options": "currency",
+            "width": 150
         },
         {
             "label": _("Exempt"),
             "fieldname": "exempt",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 125
+            "width": 150
         },
         {
             "label": _("IVA"),
             "fieldname": "iva",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 125
+            "width": 150
         },
         {
             "label": _("Total"),
             "fieldname": "total",
             "fieldtype": "Currency",
             "options": "currency",
-            "width": 125
+            "width": 150
         },
         {
             "label": _("Currency"),
@@ -163,8 +199,107 @@ def get_columns(filters):
             "fieldname": "accounting_document",
             "fieldtype": "Data",
             # "options": "Currency",
-            "width": 250,
+            "width": 300,
             # "hidden": 1
+        }
+    ]
+
+    return columns
+
+
+def get_columns_weekly_report():
+    """Columnas para el reporte semanal
+
+    Returns:
+        list: lista dict con las columnas
+    """
+
+    columns = [
+        {
+            "label": _("Week"),
+            "fieldname": "week_repo",
+            "fieldtype": "Data",
+            "width": 125
+        },
+        {
+            "label": _("Total"),
+            "fieldname": "total",
+            "fieldtype": "Currency",
+            "options": "currency",
+            "width": 125
+        },
+        {
+            "label": _("Currency"),
+            "fieldname": "currency",
+            "fieldtype": "Link",
+            "options": "Currency",
+            "hidden": 1
+        }
+    ]
+
+    return columns
+
+
+def get_columns_monthly_report():
+    """Columnas para el reporte Mensual
+
+    Returns:
+        list: lista dict con las columnas
+    """
+
+    columns = [
+        {
+            "label": _("Month"),
+            "fieldname": "month",
+            "fieldtype": "Data",
+            "width": 125
+        },
+        {
+            "label": _("Total"),
+            "fieldname": "total",
+            "fieldtype": "Currency",
+            "options": "currency",
+            "width": 125
+        },
+        {
+            "label": _("Currency"),
+            "fieldname": "currency",
+            "fieldtype": "Link",
+            "options": "Currency",
+            "hidden": 1
+        }
+    ]
+
+    return columns
+
+
+def get_columns_quarterly_report():
+    """Columnas para el reporte Trimestral
+
+    Returns:
+        list: lista dict con las columnas
+    """
+
+    columns = [
+        {
+            "label": _("Quarter"),
+            "fieldname": "quarter",
+            "fieldtype": "Data",
+            "width": 200
+        },
+        {
+            "label": _("Total"),
+            "fieldname": "total",
+            "fieldtype": "Currency",
+            "options": "currency",
+            "width": 125
+        },
+        {
+            "label": _("Currency"),
+            "fieldname": "currency",
+            "fieldtype": "Link",
+            "options": "Currency",
+            "hidden": 1
         }
     ]
 
@@ -173,8 +308,10 @@ def get_columns(filters):
 
 def process_data_db(filters, data_db):
     """
-    procesa los datos obtenidos de la base de datos para agregar una fila con
-    los totales para las columnas purchases, services, iva, total
+    procesa los datos obtenidos de la base de datos para agregar una fila de
+    totales y por cada uno de los registros generar un link de acceso
+
+    Se utiliza para el reporte Default
 
     Args:
         filters (dict): Filtros front end
@@ -187,18 +324,13 @@ def process_data_db(filters, data_db):
     if len(data_db) == 0:
         return data_db
 
-    # Cnvertirmos a json, para no trabajar los objeto date
-    processed = json.dumps(data_db, default=str)
+    # Definicion columnas con valores numericos para ser totalizados
+    columns = ['purchases', 'goods', 'services', 'iva', 'total']
 
-    df = pd.read_json(processed)
-
-    totals = df[['purchases', 'services', 'iva', 'total']].sum()
-    totals = totals.to_dict()
-
+    # NOTE: REINTEGRAR SI LO PIDE AG
     # si el check group esta marcado
-    if filters.group:
-        return purchase_invoice_grouper(processed, filters)
-
+    # if filters.group:
+    #     return purchase_invoice_grouper(processed, filters)
 
     # Agregamos las referencias
     for purchase_invoice in data_db:
@@ -211,48 +343,97 @@ def process_data_db(filters, data_db):
         link_ref = ''
 
         if ref_per:
-            # link_ref = f'''
-            #     {ref_per}
-            # <a class="btn-open no-decoration" title="Open Link"
-            #     href="#Form/Payment%20Entry/{ref_per}">
-            #     <i class="octicon octicon-arrow-right"></i>
-            # </a>'''
-            link_ref = f'https://{site_erp}/desk#Form/Payment%20Entry/{ref_per}'
+            link_ref = f'''
+            <a class="btn-open no-decoration" title="Open Link"
+                href="/app/payment-entry/{ref_per}" target="_blank">
+                {ref_per}
+                <i class="octicon octicon-arrow-right"></i>
+            </a>'''
+            # link_ref = f'https://{site_erp}/app/payment-entry/{ref_per}'
 
         if ref_je:
-            # link_ref = f'''
-            #     {ref_je}
-            # <a class="btn-open no-decoration" title="Open Link"
-            #     href="#Form/Journal%20Entry/{ref_je}">
-            #     <i class="octicon octicon-arrow-right"></i>
-            # </a>'''
-            link_ref = f'https://{site_erp}/desk#Form/Journal%20Entry/{ref_je}'
+            link_ref = f'''
+            <a class="btn-open no-decoration" title="Open Link"
+                href="/app/journal-entry/{ref_je}" target="_blank">
+                {ref_je}
+                <i class="octicon octicon-arrow-right"></i>
+            </a>'''
+            # link_ref = f'https://{site_erp}/app/journal-entry/{ref_je}'
 
         purchase_invoice.update({
             "accounting_document": link_ref
         })
 
-
-    # Agrega la fila de totales
-    data_db.append({
-        "type_doc": "",
-        "num_doc": "",
-        "tax_id": "",
-        "supplier": _("TOTALS"),
-        "purchases": totals.get("purchases", 0.0),
-        "services": totals.get("services", 0.0),
-        "iva": totals.get("iva", 0.0),
-        "total": totals.get("total", 0.0),
-        "currency": filters.company_currency
-    })
-
-    # PARA DEBUG
-    # with open('purchase_report.json', 'w') as f:
-    #     f.write(json.dumps(data_db, indent=2, default=str))
-
-    return data_db
+    return calculate_total(data_db, columns, filters)
 
 
+def calculate_total(data, columns, filters, type_report="Default"):
+    """Agrega una fila de totales segun el tipo de reporte y aplica
+    redondeo de decimales usando `flt`
+
+    Args:
+        data (list): List Dict
+        columns (list): Valores numericos
+        filters (dict): Filtros front end
+        type_report (str, optional): Tipo de reporte. Defaults to "Default".
+
+    Returns:
+        list: List Dict
+    """
+    if not data: return []
+
+    # Cnvertirmos a json, para no trabajar los objeto `date`
+    processed = json.loads(json.dumps(data, default=str))
+
+    # Los datos se cargan a un dataframe para sumar de forma facil los totales
+    # por columna
+    df = pd.DataFrame.from_dict(processed)
+    totals = df[columns].sum()
+    totals = totals.to_dict()
+
+    # Se aplica redondeo a los valores numericos
+    for row_data in data:
+        [row_data.update({x: flt(row_data[x], PRECISION)}) for x in row_data if x in columns]
+
+    if type_report == "Default":
+        # Agrega la fila de totales
+        data.append({
+            "type_doc": "",
+            "num_doc": "",
+            "tax_id": "",
+            "supplier": f"<span style='font-weight: bold'>{_('TOTALS')}</span>",
+            "purchases": flt(totals.get("purchases", 0.0), PRECISION),
+            "services": flt(totals.get("services", 0.0), PRECISION),
+            "iva": flt(totals.get("iva", 0.0), PRECISION),
+            "total": flt(totals.get("total", 0.0), PRECISION),
+            "currency": filters.company_currency
+        })
+
+    if type_report == "Weekly":
+        data.append({
+            "week_repo": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
+            "total": flt(totals.get("total", 0.0), PRECISION),
+            "currency": filters.company_currency
+        })
+
+    if type_report == "Monthly":
+        data.append({
+            "month": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
+            "total": flt(totals.get("total", 0.0), PRECISION),
+            "currency": filters.company_currency
+        })
+
+    if type_report == "Quarterly":
+        data.append({
+            "Quarterly": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
+            "total": flt(totals.get("total", 0.0), PRECISION),
+            "currency": filters.company_currency
+        })
+
+    return data
+
+
+# NO IMPLEMENTADO, REINTEGRARLO SOLO SI LO PIDE AG
 def purchase_invoice_grouper(invoices, filters):
     """
     Agrupa por facturas y suma todos los montos para mostrarlo en una sola linea

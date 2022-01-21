@@ -3,9 +3,7 @@
 
 from __future__ import unicode_literals
 
-import base64
 import datetime
-import io
 import json
 
 import frappe
@@ -18,7 +16,7 @@ from frappe.utils.file_manager import save_file
 from factura_electronica.factura_electronica.report.gt_sales_ledger.queries import (sales_invoices, sales_invoices_monthly,
                                                                                     sales_invoices_quarterly,
                                                                                     sales_invoices_weekly)
-from factura_electronica.utils.utilities_facelec import create_folder, remove_html_tags
+from factura_electronica.utils.utilities_facelec import create_folder, remove_html_tags, save_excel_data
 
 PRECISION = 2
 MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",)
@@ -36,7 +34,6 @@ def execute(filters=None):
         tuple: Posicion 0 las columnas, Posicion 1 datos para las columnas
     """
     try:
-        # NOTA: los frappe.msgprint no estan funcionando en version Frappe ++v13.16.0
         columns = []
 
         if not filters:
@@ -95,6 +92,8 @@ def execute(filters=None):
             return columns, data
 
         else:
+            frappe.msgprint(msg=_('The initial date must be less than the final date and for the same year'),
+                            title=_('Uncompleted Task'), indicator='yellow')
             return [], []
     except:
         # DEBUG:
@@ -102,9 +101,9 @@ def execute(filters=None):
         #         f.write(str(frappe.get_traceback()))
 
         frappe.msgprint(
-            msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
-            title=_(f'Reporte no generado'),
-            raise_exception=True
+            msg=f"{_('If the error persists please report it. Details:')} <br><hr> <code>{frappe.get_traceback()}</code>",
+            title=_('Uncompleted Task'), indicator='red'
+            # raise_exception=True
         )
 
         return [], []
@@ -405,9 +404,10 @@ def process_data_db(filters, data_db):
         # Se carga a JSON para parsear las fechas a string
         invoices = json.loads(json.dumps(data_db, default=str))
 
+        # Reintegrarlo si lo pide AG
         # Si la opcion check esta marcada, agrupara toda la data
-        if filters.group:
-            return sales_invoice_grouper(invoices, filters)
+        # if filters.group:
+        #     return sales_invoice_grouper(invoices, filters)
 
         # Por cada factura que se obtuvo de la base de datos
         for sales_invoice in invoices:
@@ -463,7 +463,8 @@ def sales_invoice_grouper(invoices, filters):
     try:
         df_purchase_invoice = pd.DataFrame.from_dict(invoices)
 
-        # Agrupamos y sumamos por type_doc
+        # Agrupamos y sumamos por type_doc ya que se obtienen datos
+        # de tabla hija
         grouped = df_purchase_invoice.groupby(['type_doc']).sum()
         grouped.reset_index(inplace=True)
 
@@ -558,7 +559,7 @@ def calculate_total(data, columns, filters, type_report="Default"):
             "type_doc": "",
             "num_doc": "",
             "tax_id": "",
-            "customer": _("<span style='font-weight: bold'>TOTALS</span>"),
+            "customer": f"<span style='font-weight: bold'>{_('TOTALS')}</span>",
             # "total": f'<span style="font-weight: bold">{flt(totals.get("total", 0.0), PRECISION)}</span>', NO FUNCIONA POR QUE EL CAMPO DEBE SER NUMERICO
             "total": flt(totals.get("total", 0.0), PRECISION),
             "amount": flt(totals.get("amount", 0.0), PRECISION),
@@ -614,77 +615,10 @@ def save_json_data(file_name, content, to_dt, to_dn, folder, is_private):
     return save_file(file_name, content, to_dt, to_dn, folder=folder, is_private=is_private)
 
 
-def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx):
-    """Guarda los datos del reporte como archivo .xlsx que se adjunta
-    al Doctype Prepared Report Facelec de Factura Electronica
-
-    Args:
-        file_name (str): Nombre para el archivo
-        content (json): Datos que contendra el archivo
-        to_dt (str): Nombre Doctype
-        to_dn (str): Nombre Docname `name`
-        folder (str): Path destino
-        is_private (int): 1 privado ! publico
-        column_idx (str): Nombre columna para establecer como indice, sirve
-        para sustituir el indice defautl que genera pandas
-
-    Returns:
-        Object: datos de archivo creado de Doctype File
-    """
-    try:
-        invoices = content
-
-        # Horizontal
-        df = pd.DataFrame.from_dict(invoices).fillna("")
-
-        # Se eliminan las etiquetas HTML para que se muestre correctamente en archivo generado JSON/XLSX
-        if column_idx == "date":
-            df['customer'] = df['customer'].apply(lambda x: remove_html_tags(x))
-        if column_idx == "week_repo":
-            df['week_repo'] = df['week_repo'].apply(lambda x: remove_html_tags(x))
-        if column_idx == "month":
-            df['month'] = df['month'].apply(lambda x: remove_html_tags(x))
-        if column_idx == "quarter":
-            df['quarter'] = df['quarter'].apply(lambda x: remove_html_tags(x))
-
-        df = df.set_index(column_idx)
-
-        # Vertical: Se aplica la transpuesta
-        df_transpose = df.T
-
-        # Generación de archivo, primero se crea en memoria para luego ser guardado en el servidor
-        # Crea una salida como bytes
-        output = io.BytesIO()
-
-        # Utiliza el objeto BytesIO como manejador del archivo.
-        writer = pd.ExcelWriter(output, engine='xlsxwriter')
-
-        # Generación .xlsx
-        # writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
-        df.to_excel(writer, sheet_name='Vertical')
-        df_transpose.to_excel(writer, sheet_name='Horizontal')
-
-        # Cierra y guarda los datos en Excel.
-        writer.save()
-
-        # Obtiene los datos del archivo generado en bytes
-        xlsx_data = output.getvalue()
-
-        file_name_to_dt = f'{fname} {now()}.xlsx'
-        f_name = save_file(file_name_to_dt, xlsx_data, to_dt, to_dn, folder=folder, decode=False, is_private=is_private)
-
-        return f_name
-    except:
-        frappe.msgprint(
-            msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
-            title=_(f'Archivo Excel no pudo ser generado y guardado'),
-            raise_exception=True
-        )
-
 
 @frappe.whitelist()
-def generate_report_files(data, col_idx, filters, report_name, f_type="JSON"):
-    """Genera y guarda archivos, se consume desde el reporte `gt-sales-ledger`
+def generate_report_files(data, col_idx, filters, report_name, f_type="JSON", r_name="GT Sales Ledger"):
+    """Genera y guarda archivos, se consume desde el reporte `gt-sales-ledger` y `gt-purchase-ledger`
 
     Args:
         data (list): Datos de reporte recien generado
@@ -721,22 +655,18 @@ def generate_report_files(data, col_idx, filters, report_name, f_type="JSON"):
         # Se genera y guarda el archivo .json
         if f_type == "JSON":
             formato = ".json"
-            file_name = f"GT Sales Ledger {col_idx} {now()}{formato}"
+            file_name = f"{r_name} {col_idx} {now()}{formato}"
             content = json.dumps(data, indent=2, default=str)
             saved_file = save_json_data(file_name, content, to_doctype, to_name, doctype_folder, 1)
 
         # Se genera y guarda el archivo tipo .xlsx Excel
         if f_type == "Excel":
-            file_name = f"GT Sales Ledger {col_idx}"
+            file_name = f"{r_name} {col_idx}"
             saved_file = save_excel_data(file_name, data, to_doctype, to_name, doctype_folder, 1, OPTIONS.get(col_idx))
 
         return True, saved_file.file_url
 
     except:
-        # DEBUG:
-        # with open("error-generator.txt", "w") as f:
-        #     f.write(str(frappe.get_traceback()))
-
         frappe.msgprint(
             msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
             title=_(f'Archivo {f_type} no pudo ser generado'),

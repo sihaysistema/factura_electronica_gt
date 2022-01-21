@@ -32,8 +32,7 @@ def sales_invoices(filters):
         filters_query += f" AND SI.customer = '{filters.customer}' "
 
     invoices = frappe.db.sql(
-        f"""
-        SELECT SI.name AS num_doc,
+        f"""SELECT SI.name AS num_doc,
         SI.posting_date AS date, SI.naming_series AS type_doc,
         SI.nit_face_customer AS tax_id, SI.customer,
         (SI.grand_total * SI.conversion_rate) AS total,
@@ -78,8 +77,7 @@ def sales_invoices_weekly(filters):
 
     # Al pasar el 1 a YEARWEEK, se obtiene el año y la semana de la fecha toma la semana que empieza desde lunes
     invoices = frappe.db.sql(
-        f"""
-        SELECT CONCAT(YEAR(SI.posting_date), '-WK', WEEK(SI.posting_date, 1)) AS week_repo,
+        f"""SELECT CONCAT(YEAR(SI.posting_date), '-WK', WEEK(SI.posting_date, 1)) AS week_repo,
         YEAR(SI.posting_date) AS year_repo, WEEK(SI.posting_date, 1) AS week_repo_no,
         SUM(SI.grand_total * SI.conversion_rate) AS total, SI.currency AS currency_inv,
         '{filters.company_currency}' AS currency
@@ -103,8 +101,7 @@ def sales_invoices_monthly(filters):
     que se seleccione
     """
     invoices = frappe.db.sql(
-        f"""
-        SELECT MONTH(SI.posting_date) AS month_repo, YEAR(SI.posting_date) AS year_repo,
+        f"""SELECT MONTH(SI.posting_date) AS month_repo, YEAR(SI.posting_date) AS year_repo,
         SUM(SI.grand_total * SI.conversion_rate) AS total, SI.currency AS currency_inv,
         '{filters.company_currency}' AS currency
         FROM `tabSales Invoice` AS SI
@@ -129,8 +126,7 @@ def sales_invoices_quarterly(filters):
     https://mysqlcode.com/mysql-quarter/
     """
     invoices = frappe.db.sql(
-        f"""
-        SELECT QUARTER(SI.posting_date) AS quarter_repo, YEAR(SI.posting_date) AS year_repo,
+        f"""SELECT QUARTER(SI.posting_date) AS quarter_repo, YEAR(SI.posting_date) AS year_repo,
         SUM(SI.grand_total * SI.conversion_rate) AS total, SI.currency AS currency_inv,
         '{filters.company_currency}' AS currency
         FROM `tabSales Invoice` AS SI

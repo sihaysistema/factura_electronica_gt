@@ -66,13 +66,14 @@ frappe.query_reports["GT Sales Ledger"] = {
       fieldtype: "Link",
       options: "Language",
     },
-    {
-      fieldname: "group",
-      label: __("Group?"),
-      default: "",
-      fieldtype: "Check",
-      depends_on: 'eval:doc.options=="No Subtotal"',
-    },
+    // Reintegrarlo si lo pide AG
+    // {
+    //   fieldname: "group",
+    //   label: __("Group?"),
+    //   default: "",
+    //   fieldtype: "Check",
+    //   depends_on: 'eval:doc.options=="No Subtotal"',
+    // },
     {
       fieldtype: "Break",
     },
