@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Si Hay Sistema and contributors
+# Copyright (c) 2022, Si Hay Sistema and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
@@ -9,9 +9,8 @@ import json
 import frappe
 import pandas as pd
 from frappe import _
-from frappe.utils import flt, get_site_name, nowdate
+from frappe.utils import flt, get_site_name
 
-from factura_electronica.utils.utilities_facelec import create_folder, remove_html_tags, save_excel_data
 from factura_electronica.factura_electronica.report.gt_purchase_ledger.queries import (purchase_invoices,
                                                                                        purchase_invoices_monthly,
                                                                                        purchase_invoices_quarterly,
@@ -331,6 +330,7 @@ def process_data_db(filters, data_db):
     # si el check group esta marcado
     # if filters.group:
     #     return purchase_invoice_grouper(processed, filters)
+    site_erp = get_site_name(frappe.local.site)
 
     # Agregamos las referencias
     for purchase_invoice in data_db:
@@ -339,25 +339,14 @@ def process_data_db(filters, data_db):
         ref_je = frappe.db.get_value('Journal Entry Account',
                                     {'reference_name': purchase_invoice.get('num_doc')}, 'parent')
 
-        site_erp = get_site_name(frappe.local.site)
         link_ref = ''
 
         if ref_per:
-            link_ref = f'''
-            <a class="btn-open no-decoration" title="Open Link"
-                href="/app/payment-entry/{ref_per}" target="_blank">
-                {ref_per}
-                <i class="octicon octicon-arrow-right"></i>
-            </a>'''
+            link_ref = f'''<a class="btn-open no-decoration" href="/app/payment-entry/{ref_per}" target="_blank">{ref_per}</a>'''
             # link_ref = f'https://{site_erp}/app/payment-entry/{ref_per}'
 
         if ref_je:
-            link_ref = f'''
-            <a class="btn-open no-decoration" title="Open Link"
-                href="/app/journal-entry/{ref_je}" target="_blank">
-                {ref_je}
-                <i class="octicon octicon-arrow-right"></i>
-            </a>'''
+            link_ref = f'''<a class="btn-open no-decoration" href="/app/journal-entry/{ref_je}" target="_blank">{ref_je}</a>'''
             # link_ref = f'https://{site_erp}/app/journal-entry/{ref_je}'
 
         purchase_invoice.update({

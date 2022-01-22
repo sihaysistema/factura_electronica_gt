@@ -235,14 +235,25 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
 
         # Se eliminan las etiquetas HTML para que se muestre correctamente en archivo generado JSON/XLSX
         if column_idx == "date":
-            df['customer'] = df['customer'].apply(lambda x: remove_html_tags(x))
+            # Para el reporte detallado se usan todas las columnas
+            cols = list(df.columns)
+            party_type = 'customer' if 'customer' in cols else 'supplier'
+            df[party_type] = df[party_type].apply(lambda x: remove_html_tags(x))
+            df['accounting_document'] = df['accounting_document'].apply(lambda x: remove_html_tags(x))
+
         if column_idx == "week_repo":
+            cols = ["week_repo", "currency", "total"]
             df['week_repo'] = df['week_repo'].apply(lambda x: remove_html_tags(x))
+
         if column_idx == "month":
+            cols = ["month", "currency", "total"]
             df['month'] = df['month'].apply(lambda x: remove_html_tags(x))
+
         if column_idx == "quarter":
+            cols = ["quarter", "currency", "total"]
             df['quarter'] = df['quarter'].apply(lambda x: remove_html_tags(x))
 
+        df = df[cols]
         df = df.set_index(column_idx)
 
         # Vertical: Se aplica la transpuesta

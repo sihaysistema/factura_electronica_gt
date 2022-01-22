@@ -8,7 +8,6 @@ import json
 
 import frappe
 import pandas as pd
-import xlsxwriter
 from frappe import _
 from frappe.utils import flt, get_site_name, now
 from frappe.utils.file_manager import save_file
@@ -16,7 +15,7 @@ from frappe.utils.file_manager import save_file
 from factura_electronica.factura_electronica.report.gt_sales_ledger.queries import (sales_invoices, sales_invoices_monthly,
                                                                                     sales_invoices_quarterly,
                                                                                     sales_invoices_weekly)
-from factura_electronica.utils.utilities_facelec import create_folder, remove_html_tags, save_excel_data
+from factura_electronica.utils.utilities_facelec import create_folder, save_excel_data
 
 PRECISION = 2
 MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",)
@@ -92,8 +91,6 @@ def execute(filters=None):
             return columns, data
 
         else:
-            frappe.msgprint(msg=_('The initial date must be less than the final date and for the same year'),
-                            title=_('Uncompleted Task'), indicator='yellow')
             return [], []
     except:
         # DEBUG:
@@ -105,7 +102,6 @@ def execute(filters=None):
             title=_('Uncompleted Task'), indicator='red'
             # raise_exception=True
         )
-
         return [], []
 
 
@@ -409,6 +405,9 @@ def process_data_db(filters, data_db):
         # if filters.group:
         #     return sales_invoice_grouper(invoices, filters)
 
+        # Se obtiene el dominio configurado para armar la url
+        site_erp = get_site_name(frappe.local.site)
+
         # Por cada factura que se obtuvo de la base de datos
         for sales_invoice in invoices:
             # Agregamos las referencias, puede ser de Payment Entry o Journal Entry
@@ -416,25 +415,23 @@ def process_data_db(filters, data_db):
             ref_per = frappe.db.get_value('Payment Entry Reference', {'reference_name': sales_invoice.get('num_doc')}, 'parent')
             ref_je = frappe.db.get_value('Journal Entry Account', {'reference_name': sales_invoice.get('num_doc')}, 'parent')
 
-            # Se obtiene el dominio configurado para armar la url
-            site_erp = get_site_name(frappe.local.site)
             link_ref = ''
 
             # Si aplica se generan los link a Payment Entry o Journal Entry
             if ref_per:
-                link_ref = f'https://{site_erp}/app/payment-entry/{ref_per}'  # para v13
+                link_ref = f'''<a class="btn-open no-decoration" href="/app/payment-entry/{ref_per}" target="_blank">{ref_per}</a>'''
+                # link_ref = f'https://{site_erp}/app/payment-entry/{ref_per}'  # para v13
 
             if ref_je:
-                link_ref = f'https://{site_erp}/app/journal-entry/{ref_je}'
+                link_ref = f'''<a class="btn-open no-decoration" href="/app/journal-entry/{ref_je}" target="_blank">{ref_je}</a>'''
+                # link_ref = f'https://{site_erp}/app/journal-entry/{ref_je}'
 
             # Se actualiza el diccionario con la url
             sales_invoice.update({
                 "accounting_document": link_ref
             })
 
-        final_data = calculate_total(invoices, columns, filters)
-
-        return final_data
+        return calculate_total(invoices, columns, filters)
     except:
         # DEBUG
         # with open("error-report.txt", "w") as f:
@@ -615,7 +612,6 @@ def save_json_data(file_name, content, to_dt, to_dn, folder, is_private):
     return save_file(file_name, content, to_dt, to_dn, folder=folder, is_private=is_private)
 
 
-
 @frappe.whitelist()
 def generate_report_files(data, col_idx, filters, report_name, f_type="JSON", r_name="GT Sales Ledger"):
     """Genera y guarda archivos, se consume desde el reporte `gt-sales-ledger` y `gt-purchase-ledger`
@@ -629,7 +625,8 @@ def generate_report_files(data, col_idx, filters, report_name, f_type="JSON", r_
     """
 
     OPTIONS = {
-        "No Subtotal": "date",
+        "No Subtotal": "date", # Sales
+        "Detailed": "date", # Purchases
         "Weekly": "week_repo",
         "Monthly": "month",
         "Quarterly": "quarter"
@@ -668,7 +665,7 @@ def generate_report_files(data, col_idx, filters, report_name, f_type="JSON", r_
 
     except:
         frappe.msgprint(
-            msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
+            msg=f'Si la falla persiste, por favor reportelo con soporte. Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
             title=_(f'Archivo {f_type} no pudo ser generado'),
             raise_exception=True
         )

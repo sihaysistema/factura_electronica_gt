@@ -120,10 +120,11 @@ frappe.query_reports["GT Sales Ledger"] = {
               method: "factura_electronica.factura_electronica.report.gt_sales_ledger.gt_sales_ledger.generate_report_files",
               args: {
                 data: report.data,
-                col_idx: report.filters[9].value, // El rango
+                col_idx: report.filters[8].value, // El rango
                 filters: JSON.stringify(filters),
                 report_name: report.report_name,
                 f_type: values.format,
+                r_name: "GT Sales Ledger",
               },
               freeze: true,
               freeze_message: __("Generating and saving file") + " 📄📄📄",
