@@ -52,20 +52,20 @@ def execute(filters=None):
             invoices_db = []
 
             if filters.options == "No Subtotal":
-                columns = get_columns(filters)
+                columns = get_columns()
                 # Se obtienen los datos de las facturas de venta
                 invoices_db = sales_invoices(filters)
                 # Se procesa la data de la db y los totales
                 data = process_data_db(filters, invoices_db)
 
             if filters.options == "Weekly":
-                columns = get_columns_weekly_report(filters)
+                columns = get_columns_weekly_report()
                 # Se obtienen los datos de las facturas de venta Semanalmente
                 invoices_db = sales_invoices_weekly(filters)
                 data = calculate_total(invoices_db, columns_data_db, filters, type_report="Weekly")
 
             if filters.options == "Monthly":
-                columns = get_columns_monthly_report(filters)
+                columns = get_columns_monthly_report()
                 # Se obtienen los datos de las facturas de venta Mensualmente
                 invoices_db = sales_invoices_monthly(filters)
 
@@ -74,7 +74,7 @@ def execute(filters=None):
                 data = calculate_total(invoices_db, columns_data_db, filters, type_report="Monthly")
 
             if filters.options == "Quarterly":
-                columns = get_columns_quarterly_report(filters)
+                columns = get_columns_quarterly_report()
                 # Se obtienen los datos de las facturas de venta Semestralmente
                 invoices_db = sales_invoices_quarterly(filters)
 
@@ -105,7 +105,7 @@ def execute(filters=None):
         return [], []
 
 
-def get_columns(filters):
+def get_columns():
     """
     Asigna las propiedades para cada columna que va en el reporte
 
@@ -219,7 +219,7 @@ def get_columns(filters):
     return columns
 
 
-def get_columns_weekly_report(filters):
+def get_columns_weekly_report():
     """
     Asigna las propiedades para cada columna que va en el reporte
 
@@ -265,7 +265,7 @@ def get_columns_weekly_report(filters):
     return columns
 
 
-def get_columns_monthly_report(filters):
+def get_columns_monthly_report():
     """
     Asigna las propiedades para cada columna que va en el reporte
 
@@ -317,7 +317,7 @@ def get_columns_monthly_report(filters):
     return columns
 
 
-def get_columns_quarterly_report(filters):
+def get_columns_quarterly_report():
     """
     Asigna las propiedades para cada columna que va en el reporte
 
