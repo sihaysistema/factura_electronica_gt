@@ -977,9 +977,9 @@ class ElectronicInvoice:
                 if frappe.db.exists('Payment Entry Reference', {'parent': serie_fac_original}):
                     frappe.db.sql('''UPDATE `tabSales Invoice Payment` SET parent=%(name)s
                                     WHERE parent=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
-                    # FIX
-                    frappe.db.sql('''UPDATE `tabPayment Entry Reference` SET reference=%(name)s
-                                    WHERE reference=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
+                    # FIXED
+                    frappe.db.sql('''UPDATE `tabPayment Entry Reference` SET reference_name=%(name)s
+                                    WHERE reference_name=%(serieFa)s''', {'name':serieFEL, 'serieFa':serie_fac_original})
 
                 # Sales Order, si existe
                 # 15 - tabSales Order

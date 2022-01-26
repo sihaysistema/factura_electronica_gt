@@ -240,7 +240,10 @@ def actualizarTablas(serieOriginalFac):
             if frappe.db.exists('Payment Entry Reference', {'parent': serie_fac_original}):
                 frappe.db.sql('''UPDATE `tabSales Invoice Payment` SET parent=%(name)s
                                 WHERE parent=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
-            # else:
+                # FIXED
+                frappe.db.sql('''UPDATE `tabPayment Entry Reference` SET reference_name=%(name)s
+                                WHERE reference_name=%(serieFa)s''', {'name':serieDte, 'serieFa':serie_fac_original})
+        # else:
             #     frappe.msgprint(_('No hay registro en tabPayment Entry Reference))
 
             # Sales Order

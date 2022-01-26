@@ -60,7 +60,8 @@ def execute(filters=None):
             if filters.options == "Weekly":
                 columns = get_columns_weekly_report()
                 invoices_db = purchase_invoices_weekly(filters)
-                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Weekly")
+                df_inv = pd.DataFrame.from_dict(json.loads(json.dumps(invoices_db, default=str)))
+                data = calculate_total(df_inv, columns_data_db, filters, 'week_repo')
 
             if filters.options == "Monthly":
                 columns = get_columns_monthly_report()
@@ -68,7 +69,8 @@ def execute(filters=None):
 
                  # Formatea y traduce la columna mes para reporte mensual
                 [invoice.update({"month": f"{invoice.get('year_repo')} {_(MONTHS[invoice.get('month_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
-                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Monthly")
+                df_inv = pd.DataFrame.from_dict(json.loads(json.dumps(invoices_db, default=str)))
+                data = calculate_total(df_inv, columns_data_db, filters, 'month')
 
             if filters.options == "Quarterly":
                 columns = get_columns_quarterly_report()
@@ -77,7 +79,8 @@ def execute(filters=None):
 
                 # Formatea la columna para reporte mensual
                 [invoice.update({"quarter": f"{invoice.get('year_repo')} {_(QUARTERS[invoice.get('quarter_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
-                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Quarterly")
+                df_inv = pd.DataFrame.from_dict(json.loads(json.dumps(invoices_db, default=str)))
+                data = calculate_total(df_inv, columns_data_db, filters, 'quarter')
 
             if not data: return columns, []
 
@@ -326,100 +329,59 @@ def process_data_db(filters, data_db):
     # Definicion columnas con valores numericos para ser totalizados
     columns = ['purchases', 'goods', 'services', 'iva', 'total']
 
+    # Parsea los datos para no manejar objetos date desde `invoices`
+    invoices = json.loads(json.dumps(data_db, default=str))
+
     # NOTE: REINTEGRAR SI LO PIDE AG
     # si el check group esta marcado
     # if filters.group:
     #     return purchase_invoice_grouper(processed, filters)
     site_erp = get_site_name(frappe.local.site)
 
-    # Agregamos las referencias
-    for purchase_invoice in data_db:
-        ref_per = frappe.db.get_value('Payment Entry Reference',
-                                     {'reference_name': purchase_invoice.get('num_doc')}, 'parent')
-        ref_je = frappe.db.get_value('Journal Entry Account',
-                                    {'reference_name': purchase_invoice.get('num_doc')}, 'parent')
+    # Los datos se cargan a un df
+    df_inv = pd.DataFrame.from_dict(invoices)
 
-        link_ref = ''
+    # Crea una columna con las referencias de pagos (si existen)
+    df_inv['accounting_document'] = df_inv['num_doc'].apply(lambda x: get_payment_ref(x))
 
-        if ref_per:
-            link_ref = f'''<a class="btn-open no-decoration" href="/app/payment-entry/{ref_per}" target="_blank">{ref_per}</a>'''
-            # link_ref = f'https://{site_erp}/app/payment-entry/{ref_per}'
-
-        if ref_je:
-            link_ref = f'''<a class="btn-open no-decoration" href="/app/journal-entry/{ref_je}" target="_blank">{ref_je}</a>'''
-            # link_ref = f'https://{site_erp}/app/journal-entry/{ref_je}'
-
-        purchase_invoice.update({
-            "accounting_document": link_ref
-        })
-
-    return calculate_total(data_db, columns, filters)
+    return calculate_total(df_inv, columns, filters, 'supplier')
 
 
-def calculate_total(data, columns, filters, type_report="Default"):
+def calculate_total(data, columns, filters, key_total):
     """Agrega una fila de totales segun el tipo de reporte y aplica
     redondeo de decimales usando `flt`
 
     Args:
-        data (list): List Dict
+        data (DataFrame): Df db
         columns (list): Valores numericos
         filters (dict): Filtros front end
-        type_report (str, optional): Tipo de reporte. Defaults to "Default".
+        key_total (str): Clave de la columna para colocar texto TOTAL
 
     Returns:
         list: List Dict
     """
-    if not data: return []
 
-    # Cnvertirmos a json, para no trabajar los objeto `date`
-    processed = json.loads(json.dumps(data, default=str))
+    df_inv = data
 
-    # Los datos se cargan a un dataframe para sumar de forma facil los totales
-    # por columna
-    df = pd.DataFrame.from_dict(processed)
-    totals = df[columns].sum()
-    totals = totals.to_dict()
+    # Se totalizan las columnas numericas
+    totals = df_inv[list(columns)].sum()
+    # El resultado es un objeto de tipo Series se convierte a df y se aplica transpuesta
+    # para que coincidan las columnas
+    totals = totals.to_frame().T
+    # Se agrega la descripcion TOTALES a la columna que se le especifique
+    totals[key_total] = f"<span style='font-weight: bold'>{_('TOTAL')}</span>"
+    # Se especifica la moneda default de la compañia ya los montos estan convertidos
+    totals['currency'] = filters.company_currency
 
-    # Se aplica redondeo a los valores numericos
-    for row_data in data:
-        [row_data.update({x: flt(row_data[x], PRECISION)}) for x in row_data if x in columns]
+    # Se aplica el redondeo de decimales definida por `PRECISION`
+    df_inv[columns] = df_inv[columns].apply(lambda x: round(x, PRECISION))
+    totals[columns] = totals[columns].apply(lambda x: round(x, PRECISION))
 
-    if type_report == "Default":
-        # Agrega la fila de totales
-        data.append({
-            "type_doc": "",
-            "num_doc": "",
-            "tax_id": "",
-            "supplier": f"<span style='font-weight: bold'>{_('TOTALS')}</span>",
-            "purchases": flt(totals.get("purchases", 0.0), PRECISION),
-            "services": flt(totals.get("services", 0.0), PRECISION),
-            "iva": flt(totals.get("iva", 0.0), PRECISION),
-            "total": flt(totals.get("total", 0.0), PRECISION),
-            "currency": filters.company_currency
-        })
+    # Conversion a diccionario
+    ok_data = df_inv.to_dict(orient='records')
+    ok_data.extend(totals.to_dict(orient='records'))
 
-    if type_report == "Weekly":
-        data.append({
-            "week_repo": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
-            "total": flt(totals.get("total", 0.0), PRECISION),
-            "currency": filters.company_currency
-        })
-
-    if type_report == "Monthly":
-        data.append({
-            "month": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
-            "total": flt(totals.get("total", 0.0), PRECISION),
-            "currency": filters.company_currency
-        })
-
-    if type_report == "Quarterly":
-        data.append({
-            "Quarterly": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
-            "total": flt(totals.get("total", 0.0), PRECISION),
-            "currency": filters.company_currency
-        })
-
-    return data
+    return ok_data
 
 
 # NO IMPLEMENTADO, REINTEGRARLO SOLO SI LO PIDE AG
@@ -482,3 +444,25 @@ def purchase_invoice_grouper(invoices, filters):
     except:
         frappe.msgprint(str(frappe.get_traceback()))
 
+
+def get_payment_ref(inv_name):
+    """Busca referenicas de pagos"""
+    # Agregamos las referencias
+    ref_per = frappe.db.get_values('Payment Entry Reference', filters={'reference_name': inv_name, 'docstatus': 1},
+                                   fieldname=['parent'], as_dict=1)
+    ref_je = frappe.db.get_values('Journal Entry Account', filters={'reference_name': inv_name, 'docstatus': 1},
+                                  fieldname=['parent'], as_dict=1)
+    link_ref = ''
+
+    # Si aplica se generan los link a Payment Entry o Journal Entry
+    for i in ref_per:
+        if i.get("parent"):
+            link_ref += f'''<a class="btn-open no-decoration" href="/app/payment-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
+            # link_ref = f'https://{site_erp}/app/payment-entry/{ref_per}'  # para v13
+
+    for i in ref_je:
+        if i.get("parent"):
+            link_ref += f'''<a class="btn-open no-decoration" href="/app/journal-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
+            # link_ref = f'https://{site_erp}/app/journal-entry/{ref_je}'
+
+    return link_ref

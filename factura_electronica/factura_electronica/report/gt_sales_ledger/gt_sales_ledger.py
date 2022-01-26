@@ -479,8 +479,6 @@ def sales_invoice_grouper(invoices, filters):
         return grouped_dict
 
     except:
-        # with open("error-report-grouper.json", "w") as f:
-        #     f.write(str(frappe.get_traceback()))
         frappe.msgprint(
             msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
             title=_(f'No se pudo agrupar correctamente la data'),
@@ -495,7 +493,7 @@ def calculate_total(data, columns, filters, key_total):
         data (DataFrame): Dataframe con datos de la db
         columns (list): Lista columnas a totalizar
         filters (dict): Filtros frontend
-        type_report (str, optional): Tipo de reporte. Defaults to "Default".
+        key_total (str): Clave de la columna para colocar texto TOTAL
 
     Returns:
         list: Lista diccionarios con datos + fila total a mostrar en reporte
@@ -509,7 +507,7 @@ def calculate_total(data, columns, filters, key_total):
     # para que coincidan las columnas
     totals = totals.to_frame().T
     # Se agrega la descripcion TOTALES a la columna que se le especifique
-    totals[key_total] = f"<span style='font-weight: bold'>{_('TOTALS')}</span>"
+    totals[key_total] = f"<span style='font-weight: bold'>{_('TOTAL')}</span>"
     # Se especifica la moneda default de la compañia ya los montos estan convertidos
     totals['currency'] = filters.company_currency
 
