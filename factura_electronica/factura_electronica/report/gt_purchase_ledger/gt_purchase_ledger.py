@@ -374,8 +374,8 @@ def calculate_total(data, columns, filters, key_total):
     totals['currency'] = filters.company_currency
 
     # Se aplica el redondeo de decimales definida por `PRECISION`
-    df_inv[columns] = df_inv[columns].apply(lambda x: round(x, PRECISION))
-    totals[columns] = totals[columns].apply(lambda x: round(x, PRECISION))
+    df_inv[columns] = df_inv[columns].apply(lambda x: flt(x, PRECISION))
+    totals[columns] = totals[columns].apply(lambda x: flt(x, PRECISION))
 
     # Conversion a diccionario
     ok_data = df_inv.to_dict(orient='records')
