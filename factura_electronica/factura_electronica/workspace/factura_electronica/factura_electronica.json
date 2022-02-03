@@ -34,33 +34,6 @@
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Purchase and Sales Ledger Tax Declaration Report",
-   "link_to": "Purchase and Sales Ledger Tax Declaration",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "VAT and Income Tax Retention Report",
-   "link_to": "VAT and Income Tax Retention Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "VAT Payable and Receivable Conciliation",
-   "link_to": "VAT Payable and Receivable Conciliation",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
    "label": "GT General Ledger",
    "link_to": "GT General Ledger",
    "link_type": "Report",
@@ -121,7 +94,7 @@
    "type": "Link"
   },
   {
-   "hidden": 0,
+   "hidden": 1,
    "is_query_report": 0,
    "label": "Taxes",
    "link_type": "DocType",
@@ -246,7 +219,7 @@
    "type": "Link"
   }
  ],
- "modified": "2021-12-16 12:13:28.418221",
+ "modified": "2022-01-24 14:44:17.911498",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Factura Electronica",

@@ -913,9 +913,10 @@ frappe.ui.form.on("Sales Invoice", {
 
       // INICIO GENERACION POLIZA CON RETENCIONES
       // TODO:AGREGAR VALIDACION EXISTENCIA DE JOURNA ENTRY
-      if (frm.doc.docstatus === 1 && frm.doc.status !== "Paid") {
-        btn_journal_entry_retention(frm);
-      }
+      // VALIDAR Y CREAR DOCUMENTACION DE RETENCIONES
+      // if (frm.doc.docstatus === 1 && frm.doc.status !== "Paid") {
+      //   btn_journal_entry_retention(frm);
+      // }
       // FIN GENERACION POLIZA CON RETENCIONES
     }
   },

@@ -4,17 +4,20 @@
 
 from __future__ import unicode_literals
 
+import base64
 import datetime
+import io
 import json
 import unicodedata
 from xml.sax.saxutils import escape
-from frappe.core.doctype.file.file import create_new_folder
 
 import frappe
 import pandas as pd
 from frappe import _
+from frappe.core.doctype.file.file import create_new_folder
 # from frappe.model.naming import make_autoname
-from frappe.utils import cint, flt
+from frappe.utils import cint, flt, get_site_name, now
+from frappe.utils.file_manager import save_file
 
 
 def encuentra_errores(cadena):
@@ -205,3 +208,83 @@ def create_folder(folder, parent="Home"):
         create_new_folder(folder, parent)
 
     return new_folder_name
+
+
+def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx):
+    """Guarda los datos de los reportes GT Sales/Purchase Ledger como archivo .xlsx que se adjunta
+    al Doctype Prepared Report Facelec de Factura Electronica
+
+    Args:
+        file_name (str): Nombre para el archivo
+        content (json): Datos que contendra el archivo
+        to_dt (str): Nombre Doctype
+        to_dn (str): Nombre Docname `name`
+        folder (str): Path destino
+        is_private (int): 1 privado ! publico
+        column_idx (str): Nombre columna para establecer como indice, sirve
+        para sustituir el indice defautl que genera pandas
+
+    Returns:
+        Object: datos de archivo creado de Doctype File
+    """
+    try:
+        invoices = content
+
+        # Horizontal
+        df = pd.DataFrame.from_dict(invoices).fillna("")
+
+        # Se eliminan las etiquetas HTML para que se muestre correctamente en archivo generado JSON/XLSX
+        if column_idx == "date":
+            # Para el reporte detallado se usan todas las columnas
+            cols = list(df.columns)
+            party_type = 'customer' if 'customer' in cols else 'supplier'
+            df[party_type] = df[party_type].apply(lambda x: remove_html_tags(x))
+            df['accounting_document'] = df['accounting_document'].apply(lambda x: remove_html_tags(x))
+
+        if column_idx == "week_repo":
+            cols = ["week_repo", "currency", "total"]
+            df['week_repo'] = df['week_repo'].apply(lambda x: remove_html_tags(x))
+
+        if column_idx == "month":
+            cols = ["month", "currency", "total"]
+            df['month'] = df['month'].apply(lambda x: remove_html_tags(x))
+
+        if column_idx == "quarter":
+            cols = ["quarter", "currency", "total"]
+            df['quarter'] = df['quarter'].apply(lambda x: remove_html_tags(x))
+
+        df = df[cols]
+        df = df.set_index(column_idx)
+
+        # Vertical: Se aplica la transpuesta
+        df_transpose = df.T
+
+        # Generación de archivo, primero se crea en memoria para luego ser guardado en el servidor
+        # Crea una salida como bytes
+        output = io.BytesIO()
+
+        # Utiliza el objeto BytesIO como manejador del archivo.
+        writer = pd.ExcelWriter(output, engine='xlsxwriter')
+
+        # Generación .xlsx
+        # writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
+        df.to_excel(writer, sheet_name='Vertical')
+        df_transpose.to_excel(writer, sheet_name='Horizontal')
+
+        # Cierra y guarda los datos en Excel.
+        writer.save()
+
+        # Obtiene los datos del archivo generado en bytes
+        xlsx_data = output.getvalue()
+
+        file_name_to_dt = f'{fname} {now()}.xlsx'
+        f_name = save_file(file_name_to_dt, xlsx_data, to_dt, to_dn, folder=folder, decode=False, is_private=is_private)
+
+        return f_name
+    except:
+        frappe.msgprint(
+            msg=f'{_("If the error persists please report it. Details:")} <br><hr> <code>{frappe.get_traceback()}</code>',
+            title=_(f'Excel file could not be generated'),
+            raise_exception=True
+        )
+

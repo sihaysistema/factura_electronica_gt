@@ -3,14 +3,11 @@
 
 from __future__ import unicode_literals
 
-import base64
 import datetime
-import io
 import json
 
 import frappe
 import pandas as pd
-import xlsxwriter
 from frappe import _
 from frappe.utils import flt, get_site_name, now
 from frappe.utils.file_manager import save_file
@@ -18,7 +15,7 @@ from frappe.utils.file_manager import save_file
 from factura_electronica.factura_electronica.report.gt_sales_ledger.queries import (sales_invoices, sales_invoices_monthly,
                                                                                     sales_invoices_quarterly,
                                                                                     sales_invoices_weekly)
-from factura_electronica.utils.utilities_facelec import create_folder, remove_html_tags
+from factura_electronica.utils.utilities_facelec import create_folder, save_excel_data
 
 PRECISION = 2
 MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",)
@@ -36,14 +33,10 @@ def execute(filters=None):
         tuple: Posicion 0 las columnas, Posicion 1 datos para las columnas
     """
     try:
-        # NOTA: los frappe.msgprint no estan funcionando en version Frappe ++v13.16.0
         columns = []
 
         if not filters:
             return columns, []
-
-        # with open("filtros-test.json", "w") as f:
-        #     f.write(json.dumps(filters))
 
         # Conversion fechas filtro a objetos date para realizar validaciones
         start_d = datetime.datetime.strptime(filters.from_date, "%Y-%m-%d")  # en formato date
@@ -51,47 +44,43 @@ def execute(filters=None):
 
         # Validaciones de fechas
         if (start_d < final_d) or (final_d == start_d):
-
-            # Definicion de columnas a totalizar
-            # v1
-            # columns_data_db = ['total', 'goods_iva', 'services_iva', 'fuel_iva', 'exempt_sales',
-            #                    'net_fuel', 'sales_of_goods', 'sales_of_services', 'minus_excise_tax', 'other_tax']
-
-            # v2
             columns_data_db = ['total']
             data = []
             invoices_db = []
 
             if filters.options == "No Subtotal":
-                columns = get_columns(filters)
+                columns = get_columns()
                 # Se obtienen los datos de las facturas de venta
                 invoices_db = sales_invoices(filters)
                 # Se procesa la data de la db y los totales
                 data = process_data_db(filters, invoices_db)
 
             if filters.options == "Weekly":
-                columns = get_columns_weekly_report(filters)
+                columns = get_columns_weekly_report()
                 # Se obtienen los datos de las facturas de venta Semanalmente
                 invoices_db = sales_invoices_weekly(filters)
-                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Weekly")
+                df_inv = pd.DataFrame.from_dict(json.loads(json.dumps(invoices_db, default=str)))
+                data = calculate_total(df_inv, columns_data_db, filters, 'week_repo')
 
             if filters.options == "Monthly":
-                columns = get_columns_monthly_report(filters)
+                columns = get_columns_monthly_report()
                 # Se obtienen los datos de las facturas de venta Mensualmente
                 invoices_db = sales_invoices_monthly(filters)
 
-                # Formatea y traduce la columna mes para reporte mensual
+                # Formatea y traduce la columna mes para reporte mensual: Se puede optimizar un poco mas haciendolo con pandas la diferencia es de milisegundos
                 [invoice.update({"month": f"{invoice.get('year_repo')} {_(MONTHS[invoice.get('month_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
-                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Monthly")
+                df_inv = pd.DataFrame.from_dict(json.loads(json.dumps(invoices_db, default=str)))
+                data = calculate_total(df_inv, columns_data_db, filters, 'month')
 
             if filters.options == "Quarterly":
-                columns = get_columns_quarterly_report(filters)
+                columns = get_columns_quarterly_report()
                 # Se obtienen los datos de las facturas de venta Semestralmente
                 invoices_db = sales_invoices_quarterly(filters)
 
-                # Formatea la columna para reporte mensual
+                # Formatea y traduce la columna mes para reporte mensual: Se puede optimizar un poco mas haciendolo con pandas la diferencia es de milisegundos
                 [invoice.update({"quarter": f"{invoice.get('year_repo')} {_(QUARTERS[invoice.get('quarter_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
-                data = calculate_total(invoices_db, columns_data_db, filters, type_report="Quarterly")
+                df_inv = pd.DataFrame.from_dict(json.loads(json.dumps(invoices_db, default=str)))
+                data = calculate_total(df_inv, columns_data_db, filters, 'quarter')
 
             if not data: return columns, []
 
@@ -104,20 +93,15 @@ def execute(filters=None):
         else:
             return [], []
     except:
-        # DEBUG:
-        # with open("error-report.txt", 'w') as f:
-        #         f.write(str(frappe.get_traceback()))
-
         frappe.msgprint(
-            msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
-            title=_(f'Reporte no generado'),
-            raise_exception=True
+            msg=f"{_('If the error persists please report it. Details:')} <br><hr> <code>{frappe.get_traceback()}</code>",
+            title=_('Uncompleted Task'), indicator='red'
+            # raise_exception=True
         )
-
         return [], []
 
 
-def get_columns(filters):
+def get_columns():
     """
     Asigna las propiedades para cada columna que va en el reporte
 
@@ -223,7 +207,7 @@ def get_columns(filters):
             "fieldname": "accounting_document",
             "fieldtype": "Data",
             # "options": "Currency",
-            "width": 250,
+            "width": 300,
             # "hidden": 1
         }
     ]
@@ -231,7 +215,7 @@ def get_columns(filters):
     return columns
 
 
-def get_columns_weekly_report(filters):
+def get_columns_weekly_report():
     """
     Asigna las propiedades para cada columna que va en el reporte
 
@@ -277,7 +261,7 @@ def get_columns_weekly_report(filters):
     return columns
 
 
-def get_columns_monthly_report(filters):
+def get_columns_monthly_report():
     """
     Asigna las propiedades para cada columna que va en el reporte
 
@@ -329,7 +313,7 @@ def get_columns_monthly_report(filters):
     return columns
 
 
-def get_columns_quarterly_report(filters):
+def get_columns_quarterly_report():
     """
     Asigna las propiedades para cada columna que va en el reporte
 
@@ -408,45 +392,26 @@ def process_data_db(filters, data_db):
         # Definicion de columnas con valores numericos
         columns = ['total', 'amount', 'fuel_iva', 'goods_iva', 'net_amount', 'net_fuel', 'sales_of_goods', 'sales_of_services', 'services_iva']
 
-        # Cargamos a la variable como diccionarios, para no manejar objetos date
-        # Se carga a JSON para parsear las fechas a string
+        # Parsea los datos para no manejar objetos date desde `invoices`
         invoices = json.loads(json.dumps(data_db, default=str))
 
+        # Reintegrarlo si lo pide AG
         # Si la opcion check esta marcada, agrupara toda la data
-        if filters.group:
-            return sales_invoice_grouper(invoices, filters)
+        # if filters.group:
+        #     return sales_invoice_grouper(invoices, filters)
 
-        # Por cada factura que se obtuvo de la base de datos
-        for sales_invoice in invoices:
-            # Agregamos las referencias, puede ser de Payment Entry o Journal Entry
-            # Esto aplica si la factura tiene enlace con Payment Entry o Journal Entry
-            ref_per = frappe.db.get_value('Payment Entry Reference', {'reference_name': sales_invoice.get('num_doc')}, 'parent')
-            ref_je = frappe.db.get_value('Journal Entry Account', {'reference_name': sales_invoice.get('num_doc')}, 'parent')
+        # Se obtiene el dominio configurado para armar la url
+        site_erp = get_site_name(frappe.local.site)
 
-            # Se obtiene el dominio configurado para armar la url
-            site_erp = get_site_name(frappe.local.site)
-            link_ref = ''
+        # Los datos se cargan a un df
+        df_inv = pd.DataFrame.from_dict(invoices)
 
-            # Si aplica se generan los link a Payment Entry o Journal Entry
-            if ref_per:
-                link_ref = f'https://{site_erp}/app/payment-entry/{ref_per}'  # para v13
+        # Crea una columna con las referencias de pagos (si existen)
+        df_inv['accounting_document'] = df_inv['num_doc'].apply(lambda x: get_payment_ref(x))
 
-            if ref_je:
-                link_ref = f'https://{site_erp}/app/journal-entry/{ref_je}'
+        return calculate_total(df_inv, columns, filters, 'customer')
 
-            # Se actualiza el diccionario con la url
-            sales_invoice.update({
-                "accounting_document": link_ref
-            })
-
-        final_data = calculate_total(invoices, columns, filters)
-
-        return final_data
     except:
-        # DEBUG
-        # with open("error-report.txt", "w") as f:
-        #     f.write(str(frappe.get_traceback()))
-
         frappe.msgprint(
             msg=f'No se encontraron facturas con item configurados como Bien, Servicio o Combustible',
             title=_(f'No hay datos disponibles'),
@@ -470,7 +435,8 @@ def sales_invoice_grouper(invoices, filters):
     try:
         df_purchase_invoice = pd.DataFrame.from_dict(invoices)
 
-        # Agrupamos y sumamos por type_doc
+        # Agrupamos y sumamos por type_doc ya que se obtienen datos
+        # de tabla hija
         grouped = df_purchase_invoice.groupby(['type_doc']).sum()
         grouped.reset_index(inplace=True)
 
@@ -513,8 +479,6 @@ def sales_invoice_grouper(invoices, filters):
         return grouped_dict
 
     except:
-        # with open("error-report-grouper.json", "w") as f:
-        #     f.write(str(frappe.get_traceback()))
         frappe.msgprint(
             msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
             title=_(f'No se pudo agrupar correctamente la data'),
@@ -522,85 +486,40 @@ def sales_invoice_grouper(invoices, filters):
         )
 
 
-def calculate_total(data, columns, filters, type_report="Default"):
+def calculate_total(data, columns, filters, key_total):
     """Obtiene el total de cada columna que se le especifique
 
     Args:
-        data (list): Lista diccionarios
+        data (DataFrame): Dataframe con datos de la db
         columns (list): Lista columnas a totalizar
         filters (dict): Filtros frontend
-        type_report (str, optional): Tipo de reporte. Defaults to "Default".
+        key_total (str): Clave de la columna para colocar texto TOTAL
 
     Returns:
         list: Lista diccionarios con datos + fila total a mostrar en reporte
     """
 
-    if not data: return []
+    df_inv = data
 
-    data_total = json.loads(json.dumps(data, default=str))
-    # Calculo fila de totales
-    df_totals = pd.DataFrame.from_dict(data_total)
+    # Se totalizan las columnas numericas
+    totals = df_inv[list(columns)].sum()
+    # El resultado es un objeto de tipo Series se convierte a df y se aplica transpuesta
+    # para que coincidan las columnas
+    totals = totals.to_frame().T
+    # Se agrega la descripcion TOTALES a la columna que se le especifique
+    totals[key_total] = f"<span style='font-weight: bold'>{_('TOTAL')}</span>"
+    # Se especifica la moneda default de la compañia ya los montos estan convertidos
+    totals['currency'] = filters.company_currency
 
-    # Se especifican que columnas se va a sumar
-    totals = df_totals[list(columns)].sum()
-    totals = totals.to_dict()
+    # Se aplica el redondeo de decimales definida por `PRECISION`
+    df_inv[columns] = df_inv[columns].apply(lambda x: flt(x, PRECISION))
+    totals[columns] = totals[columns].apply(lambda x: flt(x, PRECISION))
 
-    # frappe.publish_realtime(event='msgprint', message=str(columns)) # ,user='user@example.com'
+    # Conversion a diccionario
+    ok_data = df_inv.to_dict(orient='records')
+    ok_data.extend(totals.to_dict(orient='records'))
 
-    # DEBUG
-    # with open("res-antes-de-redondeo.json", "w") as f:
-    #     f.write(json.dumps(data_total, indent=2, default=str))
-    # with open("res-total-antes-de-redondeo.json", "w") as f:
-    #     f.write(json.dumps(totals, indent=2, default=str))
-
-    # Se aplican los decimales a la data iterada:
-    # Si la clave del diccionario que se esta iterando se encuentra en columns,
-    # entonces se aplica el redondeo de decimales al valor numerico
-    for row_data in data_total:
-        [row_data.update({x: flt(row_data[x], PRECISION)}) for x in row_data if x in columns]
-
-    if type_report == "Default":
-        # Al objeto original se le agrega la fila con los totales correspondientes
-        data_total.append({
-            "type_doc": "",
-            "num_doc": "",
-            "tax_id": "",
-            "customer": _("<span style='font-weight: bold'>TOTALS</span>"),
-            # "total": f'<span style="font-weight: bold">{flt(totals.get("total", 0.0), PRECISION)}</span>', NO FUNCIONA POR QUE EL CAMPO DEBE SER NUMERICO
-            "total": flt(totals.get("total", 0.0), PRECISION),
-            "amount": flt(totals.get("amount", 0.0), PRECISION),
-            "fuel_iva": flt(totals.get("fuel_iva", 0.0), PRECISION),
-            "goods_iva": flt(totals.get("goods_iva", 0.0), PRECISION),
-            "sales_of_goods": flt(totals.get("sales_of_goods", 0.0), PRECISION),
-            "sales_of_services": flt(totals.get("sales_of_services", 0.0), PRECISION),
-            "services_iva": flt(totals.get("services_iva", 0.0), PRECISION),
-            "net_amount": flt(totals.get("net_amount", 0.0), PRECISION),
-            "net_fuel": flt(totals.get("net_fuel", 0.0), PRECISION),
-            "currency": filters.company_currency
-        })
-
-    if type_report == "Weekly":
-        data_total.append({
-            "week_repo": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
-            "total": flt(totals.get("total", 0.0), PRECISION),
-            "currency": filters.company_currency
-        })
-
-    if type_report == "Monthly":
-        data_total.append({
-            "month": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
-            "total": flt(totals.get("total", 0.0), PRECISION),
-            "currency": filters.company_currency
-        })
-
-    if type_report == "Quarterly":
-        data_total.append({
-            "Quarterly": f"<span style='font-weight: bold'>{_('TOTAL')}</span>",
-            "total": flt(totals.get("total", 0.0), PRECISION),
-            "currency": filters.company_currency
-        })
-
-    return data_total
+    return ok_data
 
 
 def save_json_data(file_name, content, to_dt, to_dn, folder, is_private):
@@ -621,77 +540,9 @@ def save_json_data(file_name, content, to_dt, to_dn, folder, is_private):
     return save_file(file_name, content, to_dt, to_dn, folder=folder, is_private=is_private)
 
 
-def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx):
-    """Guarda los datos del reporte como archivo .xlsx que se adjunta
-    al Doctype Prepared Report Facelec de Factura Electronica
-
-    Args:
-        file_name (str): Nombre para el archivo
-        content (json): Datos que contendra el archivo
-        to_dt (str): Nombre Doctype
-        to_dn (str): Nombre Docname `name`
-        folder (str): Path destino
-        is_private (int): 1 privado ! publico
-        column_idx (str): Nombre columna para establecer como indice, sirve
-        para sustituir el indice defautl que genera pandas
-
-    Returns:
-        Object: datos de archivo creado de Doctype File
-    """
-    try:
-        invoices = content
-
-        # Horizontal
-        df = pd.DataFrame.from_dict(invoices).fillna("")
-
-        # Se eliminan las etiquetas HTML para que se muestre correctamente en archivo generado JSON/XLSX
-        if column_idx == "date":
-            df['customer'] = df['customer'].apply(lambda x: remove_html_tags(x))
-        if column_idx == "week_repo":
-            df['week_repo'] = df['week_repo'].apply(lambda x: remove_html_tags(x))
-        if column_idx == "month":
-            df['month'] = df['month'].apply(lambda x: remove_html_tags(x))
-        if column_idx == "quarter":
-            df['quarter'] = df['quarter'].apply(lambda x: remove_html_tags(x))
-
-        df = df.set_index(column_idx)
-
-        # Vertical: Se aplica la transpuesta
-        df_transpose = df.T
-
-        # Generación de archivo, primero se crea en memoria para luego ser guardado en el servidor
-        # Crea una salida como bytes
-        output = io.BytesIO()
-
-        # Utiliza el objeto BytesIO como manejador del archivo.
-        writer = pd.ExcelWriter(output, engine='xlsxwriter')
-
-        # Generación .xlsx
-        # writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
-        df.to_excel(writer, sheet_name='Vertical')
-        df_transpose.to_excel(writer, sheet_name='Horizontal')
-
-        # Cierra y guarda los datos en Excel.
-        writer.save()
-
-        # Obtiene los datos del archivo generado en bytes
-        xlsx_data = output.getvalue()
-
-        file_name_to_dt = f'{fname} {now()}.xlsx'
-        f_name = save_file(file_name_to_dt, xlsx_data, to_dt, to_dn, folder=folder, decode=False, is_private=is_private)
-
-        return f_name
-    except:
-        frappe.msgprint(
-            msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
-            title=_(f'Archivo Excel no pudo ser generado y guardado'),
-            raise_exception=True
-        )
-
-
 @frappe.whitelist()
-def generate_report_files(data, col_idx, filters, report_name, f_type="JSON"):
-    """Genera y guarda archivos, se consume desde el reporte `gt-sales-ledger`
+def generate_report_files(data, col_idx, filters, report_name, f_type="JSON", r_name="GT Sales Ledger"):
+    """Genera y guarda archivos, se consume desde el reporte `gt-sales-ledger` y `gt-purchase-ledger`
 
     Args:
         data (list): Datos de reporte recien generado
@@ -702,7 +553,8 @@ def generate_report_files(data, col_idx, filters, report_name, f_type="JSON"):
     """
 
     OPTIONS = {
-        "No Subtotal": "date",
+        "No Subtotal": "date", # Sales
+        "Detailed": "date", # Purchases
         "Weekly": "week_repo",
         "Monthly": "month",
         "Quarterly": "quarter"
@@ -728,26 +580,48 @@ def generate_report_files(data, col_idx, filters, report_name, f_type="JSON"):
         # Se genera y guarda el archivo .json
         if f_type == "JSON":
             formato = ".json"
-            file_name = f"GT Sales Ledger {col_idx} {now()}{formato}"
+            file_name = f"{r_name} {col_idx} {now()}{formato}"
             content = json.dumps(data, indent=2, default=str)
             saved_file = save_json_data(file_name, content, to_doctype, to_name, doctype_folder, 1)
 
         # Se genera y guarda el archivo tipo .xlsx Excel
         if f_type == "Excel":
-            file_name = f"GT Sales Ledger {col_idx}"
+            file_name = f"{r_name} {col_idx}"
             saved_file = save_excel_data(file_name, data, to_doctype, to_name, doctype_folder, 1, OPTIONS.get(col_idx))
 
         return True, saved_file.file_url
 
     except:
-        # DEBUG:
-        # with open("error-generator.txt", "w") as f:
-        #     f.write(str(frappe.get_traceback()))
-
         frappe.msgprint(
-            msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
+            msg=f'Si la falla persiste, por favor reportelo con soporte. Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
             title=_(f'Archivo {f_type} no pudo ser generado'),
             raise_exception=True
         )
 
         return False, None
+
+
+def get_payment_ref(ref_inv):
+    """Busca referenicas de pagos"""
+    # Agregamos las referencias, puede ser de Payment Entry o Journal Entry
+    # Esto aplica si la factura tiene enlace con Payment Entry o Journal Entry
+
+    ref_per = frappe.db.get_values('Payment Entry Reference', filters={'reference_name': ref_inv, 'docstatus': 1},
+                                   fieldname=['parent'], as_dict=1)
+    ref_je = frappe.db.get_values('Journal Entry Account', filters={'reference_name': ref_inv, 'docstatus': 1},
+                                  fieldname=['parent'], as_dict=1)
+
+    link_ref = ''
+
+    # Si aplica se generan los link a Payment Entry o Journal Entry
+    for i in ref_per:
+        if i.get("parent"):
+            link_ref += f'''<a class="btn-open no-decoration" href="/app/payment-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
+            # link_ref = f'https://{site_erp}/app/payment-entry/{ref_per}'  # para v13
+
+    for i in ref_je:
+        if i.get("parent"):
+            link_ref += f'''<a class="btn-open no-decoration" href="/app/journal-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
+            # link_ref = f'https://{site_erp}/app/journal-entry/{ref_je}'
+
+    return link_ref
