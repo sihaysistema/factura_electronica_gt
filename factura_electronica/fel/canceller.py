@@ -60,7 +60,7 @@ class CancelDocument:
         """
 
         try:
-            self.tax_id_company = frappe.db.get_value('Company', {'name': self.info_invoice.company}, 'tax_id').replace('-', '').upper()
+            self.tax_id_company = frappe.db.get_value('Company', {'name': self.info_invoice.company}, 'tax_id').replace('-', '').upper().strip()
             # Momento en que se esta anulando la factura
             issue_date = frappe.db.get_value('Envio FEL', {'name': self.info_invoice.numero_autorizacion_fel}, 'fecha')
 
@@ -79,7 +79,7 @@ class CancelDocument:
                                 "@FechaEmisionDocumentoAnular": str(issue_date),  # "2020-03-04T00:00:00-06:00",
                                 "@FechaHoraAnulacion": str(nowdate())+'T'+str(nowtime().rpartition('.')[0]),  # "2020-04-21T00:00:00-06:00",
                                 "@ID": "DatosAnulacion",
-                                "@IDReceptor": str(self.info_invoice.tax_id).replace('-', '').replace('/', '').upper(),
+                                "@IDReceptor": str(self.info_invoice.tax_id).replace('-', '').replace('/', '').upper().strip(),
                                 "@MotivoAnulacion": "Anulación",
                                 "@NITEmisor": self.tax_id_company,
                                 "@NumeroDocumentoAAnular": self.info_invoice.numero_autorizacion_fel

@@ -249,7 +249,7 @@ class ElectronicSpecialInvoice:
                                                      {'name': self.__config_name}, 'afiliacion_iva'),
                 "@CodigoEstablecimiento": dat_direccion[0]['facelec_establishment'],
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
-                "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', '').upper(),
+                "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', '').upper().strip(),
                 "@NombreComercial": nom_comercial,
                 "@NombreEmisor": nombre_emisor,
                 "dte:DireccionEmisor": {
@@ -309,7 +309,7 @@ class ElectronicSpecialInvoice:
                 # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
                 # electronico, los demas campos se pueden dejar como defualt para ciudad
                 if str(self.dat_fac[0]['facelec_nit_fproveedor']).upper() == 'C/F':
-                    self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', '')).upper()
+                    self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', '')).upper().strip()
                     ok_dpi = ''
                     try:
                         ok_dpi = contact_per[0]['id_number']
@@ -319,7 +319,7 @@ class ElectronicSpecialInvoice:
 
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
-                        "@IDReceptor": ok_dpi,  # (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
+                        "@IDReceptor": ok_dpi.strip(),  # (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
                         "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
                         "@TipoEspecial":"CUI",
                         "dte:DireccionReceptor": {
@@ -332,7 +332,7 @@ class ElectronicSpecialInvoice:
                     }
                 else:
                     # Si si hay un NIT
-                    self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')).upper()
+                    self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')).upper().strip()
                     ok_dpi = ''
                     try:
                         ok_dpi = contact_per[0]['id_number']
@@ -342,7 +342,7 @@ class ElectronicSpecialInvoice:
 
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
-                        "@IDReceptor": ok_dpi,  # str(self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', ''),  # NIT
+                        "@IDReceptor": ok_dpi.strip(),  # str(self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', ''),  # NIT
                         "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
                         "@TipoEspecial":"CUI",
                         "dte:DireccionReceptor": {
@@ -357,7 +357,7 @@ class ElectronicSpecialInvoice:
             else:
                 # Si es consumidor Final: para generar factura electronica obligatoriamente se debe asignar un correo
                 # electronico, los demas campos se pueden dejar como defualt para ciudad
-                self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', '')).upper()
+                self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', '')).upper().strip()
                 ok_dpi = ''
                 try:
                     ok_dpi = contact_per[0]['id_number']
@@ -368,7 +368,7 @@ class ElectronicSpecialInvoice:
                 if str(self.dat_fac[0]['facelec_nit_fproveedor']).upper() == 'C/F':
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
-                        "@IDReceptor": ok_dpi, # (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
+                        "@IDReceptor": ok_dpi.strip(), # (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
                         "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
                         "@TipoEspecial":"CUI",
                         "dte:DireccionReceptor": {
@@ -380,10 +380,10 @@ class ElectronicSpecialInvoice:
                         }
                     }
                 else:  # Si hay NIT
-                    self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')).upper()
+                    self.nit_proveedor_limpio = str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')).upper().strip()
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
-                        "@IDReceptor": str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')).upper(),  # NIT
+                        "@IDReceptor": str((self.dat_fac[0]['facelec_nit_fproveedor']).replace('-', '')).upper().strip(),  # NIT
                         "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
@@ -725,7 +725,7 @@ class ElectronicSpecialInvoice:
 
         try:
             data_fac = frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'company')
-            nit_company = (str(frappe.db.get_value('Company', {'name': self.dat_fac[0]['company']}, 'nit_face_company')).replace('-', '')).upper()
+            nit_company = (str(frappe.db.get_value('Company', {'name': self.dat_fac[0]['company']}, 'nit_face_company')).replace('-', '')).upper().strip()
 
             url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
             user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
