@@ -5,6 +5,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "code",
   "message"
  ],
  "fields": [
@@ -13,11 +14,17 @@
    "fieldtype": "Text",
    "in_list_view": 1,
    "label": "Message"
+  },
+  {
+   "description": "Campo Opcional: segun la especificacion FEL se usa para indicar el codigo de cliente, u otra referencia, puede ser usado en propinas",
+   "fieldname": "code",
+   "fieldtype": "Data",
+   "label": "Code"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2022-02-03 10:53:54.492772",
+ "modified": "2022-03-16 17:04:50.819080",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Custom Message",

@@ -21,6 +21,7 @@ from factura_electronica.fel.special_invoice import ElectronicSpecialInvoice
 
 # !USAR SOLO PARA COSAS RELACIONADAS CON FEL :)
 
+
 # INICIO FEL NORMAL
 # API para uso interno con apps hechas con Frappe Framework, Para
 # Generar Facturas electronicas FEL
