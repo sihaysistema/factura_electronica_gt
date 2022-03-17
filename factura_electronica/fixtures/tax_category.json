@@ -1,5 +1,6 @@
 [
  {
+  "disabled": 0,
   "docstatus": 0,
   "doctype": "Tax Category",
   "modified": "2020-07-10 15:37:33.501888",
@@ -10,6 +11,7 @@
   "title": "SAT: Agente Retenedor de IVA"
  },
  {
+  "disabled": 0,
   "docstatus": 0,
   "doctype": "Tax Category",
   "modified": "2020-07-01 00:03:45.558792",
@@ -20,6 +22,7 @@
   "title": "SAT: Exportador"
  },
  {
+  "disabled": 0,
   "docstatus": 0,
   "doctype": "Tax Category",
   "modified": "2020-07-01 00:04:07.663323",
@@ -30,6 +33,7 @@
   "title": "SAT: Entidad Publica"
  },
  {
+  "disabled": 0,
   "docstatus": 0,
   "doctype": "Tax Category",
   "modified": "2020-07-01 00:04:37.239775",
@@ -40,6 +44,7 @@
   "title": "SAT: Contribuyente Especial"
  },
  {
+  "disabled": 0,
   "docstatus": 0,
   "doctype": "Tax Category",
   "modified": "2020-07-01 00:04:54.787514",
@@ -50,6 +55,7 @@
   "title": "SAT: Otros Calificados por SAT"
  },
  {
+  "disabled": 0,
   "docstatus": 0,
   "doctype": "Tax Category",
   "modified": "2020-07-01 00:05:09.069468",
@@ -60,6 +66,7 @@
   "title": "SAT: Gasolinera"
  },
  {
+  "disabled": 0,
   "docstatus": 0,
   "doctype": "Tax Category",
   "modified": "2020-07-03 16:39:27.346918",
@@ -70,6 +77,7 @@
   "title": "SAT: Asociacion sin fines de lucro"
  },
  {
+  "disabled": 0,
   "docstatus": 0,
   "doctype": "Tax Category",
   "modified": "2020-07-23 22:14:28.735824",
@@ -80,6 +88,7 @@
   "title": "SAT: General"
  },
  {
+  "disabled": 0,
   "docstatus": 0,
   "doctype": "Tax Category",
   "modified": "2020-07-23 22:18:16.170945",
@@ -90,6 +99,7 @@
   "title": "SAT: Regimen Especial Contribuyente Agropecuario"
  },
  {
+  "disabled": 0,
   "docstatus": 0,
   "doctype": "Tax Category",
   "modified": "2020-07-23 22:19:06.037291",
@@ -100,6 +110,7 @@
   "title": "SAT: Pequeno Contribuyente"
  },
  {
+  "disabled": 0,
   "docstatus": 0,
   "doctype": "Tax Category",
   "modified": "2020-07-23 22:20:24.852614",

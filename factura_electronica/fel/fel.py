@@ -7,14 +7,14 @@ import base64
 import datetime
 import json
 
-import datetime
 import frappe
 import requests
 import xmltodict
-from frappe import _, _dict
+from frappe import _
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
+
 
 class ElectronicInvoice:
     def __init__(self, invoice_code, conf_name, naming_series):
@@ -31,6 +31,7 @@ class ElectronicInvoice:
         self.__log_error = []
         self.__precision = get_currency_precision()
         self.__default_address = False
+        self.__tiene_adenda = False
 
     def build_invoice(self):
         """
@@ -70,6 +71,9 @@ class ElectronicInvoice:
                         }
                     }
                 }
+
+                if self.__tiene_adenda:
+                    self.__base_peticion['dte:GTDocumento']['dte:SAT']['dte:Adenda'] = self.__adendas
 
                 # USAR SOLO PARA DEBUG:
                 # with open('mi_factura.json', 'w') as f:
@@ -121,6 +125,11 @@ class ElectronicInvoice:
         status_totals = self.totals()
         if status_totals[0] == False:
             return status_totals
+
+        # Validacion y generacion seccion adendas
+        status_adendas = self.adendas()
+        if status_adendas[0] == False:
+            return status_adendas
 
         # Si todo va bien, retorna True
         return True, 'OK'
@@ -643,6 +652,32 @@ class ElectronicInvoice:
 
         except:
             return False, 'No se pudo obtener data de la factura {}, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
+
+    def adendas(self):
+        """Funcion encargada de generar adendas a la factura en caso existan
+
+        NOTA: Solo se acepta una adenda por factura por lo que la info se toma de un campo de la factura
+
+        Returns:
+            tuple: bool, msg
+        """
+        try:
+            self.__description_adenda = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'facelec_adenda') or ''
+
+            if len(self.__description_adenda) > 0:
+                self.__tiene_adenda = True
+                self.__adendas = {
+                    "Observaciones": self.__description_adenda
+                }
+
+            else:
+                # Si no hay, se retorna status OK
+                return True, 'OK',
+
+            return True, 'OK',
+
+        except:
+            return False, 'No se pudo obtener data de la factura {} para generar adendas, Error: {}'.format(self.serie_factura, str(frappe.get_traceback()))
 
     def sign_invoice(self):
         """
