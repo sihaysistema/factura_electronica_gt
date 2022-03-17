@@ -656,24 +656,20 @@ class ElectronicInvoice:
     def adendas(self):
         """Funcion encargada de generar adendas a la factura en caso existan
 
+        NOTA: Solo se acepta una adenda por factura por lo que la info se toma de un campo de la factura
+
         Returns:
             tuple: bool, msg
         """
         try:
-            # Si existen adendas en la factura se obtienen los datos
-            self.__adendas_invoice = frappe.db.get_values('Custom Message', filters={'parent': str(self.__invoice_code)},
-                                                          fieldname=['code', 'message'], order_by='idx', as_dict=True) or []
+            self.__description_adenda = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'facelec_adenda') or ''
 
-            if len(self.__adendas_invoice) > 0:
+            if len(self.__description_adenda) > 0:
                 self.__tiene_adenda = True
-                # Template para agregar adendas
-                self.__adendas = []
+                self.__adendas = {
+                    "Observaciones": self.__description_adenda
+                }
 
-                for adenda in self.__adendas_invoice:
-                    self.__adendas.append({
-                        "Codigo_cliente": adenda.get('code', ''),
-                        "Observaciones": adenda.get('message', '')
-                    })
             else:
                 # Si no hay, se retorna status OK
                 return True, 'OK',
