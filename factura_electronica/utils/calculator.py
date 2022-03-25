@@ -12,10 +12,16 @@ from factura_electronica.api import get_special_tax
 
 PRECISION = get_currency_precision()
 
+# NOTA IMPORTANTE: Las funciones comparten la misma logica sin embargo se mantiene separado y codigo
+# repetido para no dependen der una sola funcion y estar listo a cualquier cosa repentina que pidan
+
 
 @frappe.whitelist()
 def sales_invoice_calculator(invoice_name):
-    """
+    """Calculador montos, impuestos necesarios para generar docs electronicos
+
+    Args:
+        invoice_name (str): name of the invoice
     """
 
     try:

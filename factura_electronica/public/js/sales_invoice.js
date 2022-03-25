@@ -1,7 +1,7 @@
-// /**
-//  * Copyright (c) 2021 Si Hay Sistema and contributors
-//  * For license information, please see license.txt
-//  */
+/**
+ * Copyright (c) 2021 Si Hay Sistema and contributors
+ * For license information, please see license.txt
+ */
 
 // import { valNit } from "./facelec.js";
 import { goalSeek } from "./goalSeek.js";
@@ -621,6 +621,7 @@ function pdf_credit_note(frm) {
     })
     .addClass("btn-primary");
 }
+
 /**
  * @summary Valida que existan los datos minimos necesarios para realizar calculos correctamente
  * @param {Object} frm
@@ -653,11 +654,6 @@ frappe.ui.form.on("Sales Invoice", {
   },
   // Se ejecuta cuando hay alguna actualizacion de datos en el doctype
   refresh: function (frm, cdt, cdn) {
-    // es-GT: Obtiene el numero de Identificacion tributaria ingresado en la hoja del cliente.
-    // en-US: Fetches the Taxpayer Identification Number entered in the Customer doctype.
-    // cur_frm.add_fetch("customer", "nit_face_customer", "nit_face_customer");
-    // frm.set_df_property("shs_otros_impuestos", "read_only", 1);
-
     if (frm.doc.docstatus != 0) {
       btn_generator(frm);
     }
@@ -665,7 +661,7 @@ frappe.ui.form.on("Sales Invoice", {
   // Se ejecuta al presionar el boton guardar
   validate: function (frm, cdt, cdn) {
     dependency_validator(frm);
-    // generar_tabla_html(frm);
+    generar_tabla_html(frm);
   },
   discount_amount: function (frm, cdt, cdn) {},
   // Se ejecuta antes de guardar el documento
