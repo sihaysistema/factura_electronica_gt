@@ -48,6 +48,7 @@ def sales_invoice_calculator(invoice_name):
             this_company_sales_tax_var = taxes_inv[0].rate
 
         # Calculos para productos tipo bien, servicio, combustible
+        total_iva = 0
         for row in items:
             amount_minus_excise_tax = 0
             other_tax_amount = 0
@@ -56,6 +57,11 @@ def sales_invoice_calculator(invoice_name):
             net_goods = 0
             tax_for_this_row = 0
             conversion_fact = 1
+
+            # Si el item iterado tiene monto y cuenta para impuestos especial
+            special_tax = get_special_tax(row.item_code, invoice_data.company)
+            row.facelec_tax_rate_per_uom = special_tax.get('facelec_tax_rate_per_uom', 0)
+            row.facelec_tax_rate_per_uom_account = special_tax.get('facelec_tax_rate_per_uom_selling_account', '')
 
             if row.conversion_factor == 0:
                 other_tax_amount = flt(row.facelec_tax_rate_per_uom * row.qty * conversion_fact, PRECISION)
@@ -69,11 +75,6 @@ def sales_invoice_calculator(invoice_name):
             row.facelec_amount_minus_excise_tax = amount_minus_excise_tax
 
             if (row.factelecis_fuel):
-                # Se obtiene monto y cuenta para impuestos especial
-                special_tax = get_special_tax(row.item_code, invoice_data.company)
-                row.facelec_tax_rate_per_uom = special_tax.get('facelec_tax_rate_per_uom', 0)
-                row.facelec_tax_rate_per_uom_account = special_tax.get('facelec_tax_rate_per_uom_selling_account', '')
-
                 net_services = 0
                 net_goods = 0
                 net_fuel = flt(row.facelec_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), PRECISION)
@@ -111,7 +112,9 @@ def sales_invoice_calculator(invoice_name):
                 tax_for_this_row = flt(row.facelec_gt_tax_net_services_amt * (this_company_sales_tax_var / 100), PRECISION)
                 row.facelec_sales_tax_for_this_row = tax_for_this_row
 
-        invoice_data.shs_total_iva_fac = flt(sum([x.facelec_sales_tax_for_this_row for x in items]), PRECISION)
+            total_iva += row.facelec_sales_tax_for_this_row
+
+        invoice_data.shs_total_iva_fac = flt(total_iva, PRECISION)  # flt(sum([x.facelec_sales_tax_for_this_row for x in items]), PRECISION)
         invoice_data.save()
 
         # Agregando otros impuestos si existen
@@ -143,6 +146,109 @@ def sales_invoice_calculator(invoice_name):
         invoice_data_to_totals = frappe.get_doc("Sales Invoice", invoice_name)
         invoice_data_to_totals.shs_total_otros_imp_incl = flt(sum([x.total for x in invoice_data_to_totals.shs_otros_impuestos]), PRECISION)
         invoice_data_to_totals.save()
+
+    except Exception as e:
+        frappe.msgprint(frappe.get_traceback())
+        frappe.msgprint(_("Error: {0}").format(e))
+
+
+@frappe.whitelist()
+def delivery_note_calculator(invoice_name):
+    """Calculador montos, impuestos para Notas de Entrega
+
+    Args:
+        invoice_name (str): name of the invoice
+    """
+
+    try:
+        invoice_data = frappe.get_doc("Delivery Note", invoice_name)
+        items = invoice_data.items
+        taxes_inv = invoice_data.taxes
+
+        this_company_sales_tax_var = 0
+        if len(taxes_inv) > 0:
+            this_company_sales_tax_var = taxes_inv[0].rate
+
+        # Calculos para productos tipo bien, servicio, combustible
+        total_iva = 0
+        total_goods = 0
+        total_services = 0
+        total_fuels = 0
+
+        for row in items:
+            amount_minus_excise_tax = 0
+            other_tax_amount = 0
+            net_fuel = 0
+            net_services = 0
+            net_goods = 0
+            tax_for_this_row = 0
+            conversion_fact = 1
+
+            # Si el item iterado tiene monto y cuenta para impuestos especial
+            special_tax = get_special_tax(row.item_code, invoice_data.company)
+            row.shs_dn_tax_rate_per_uom = special_tax.get('facelec_tax_rate_per_uom', 0)
+            row.shs_dn_tax_rate_per_uom_account = special_tax.get('facelec_tax_rate_per_uom_selling_account', '')
+
+            if row.conversion_factor == 0:
+                other_tax_amount = flt(row.shs_dn_tax_rate_per_uom * row.qty * conversion_fact, PRECISION)
+
+            if row.conversion_factor > 0:
+                other_tax_amount = flt(row.shs_dn_tax_rate_per_uom * row.qty * row.conversion_factor, PRECISION)
+
+            row.shs_dn_other_tax_amount = other_tax_amount
+
+            amount_minus_excise_tax = flt((row.qty * row.rate) - row.qty * row.shs_dn_tax_rate_per_uom, PRECISION)
+            row.shs_dn_amount_minus_excise_tax = amount_minus_excise_tax
+
+            if (row.shs_dn_is_fuel):
+                net_services = 0
+                net_goods = 0
+                net_fuel = flt(row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), PRECISION)
+
+                row.shs_dn_gt_tax_net_fuel_amt = net_fuel
+                row.shs_dn_gt_tax_net_goods_amt = net_goods
+                row.shs_dn_gt_tax_net_services_amt = net_services
+
+                tax_for_this_row = flt(row.shs_dn_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100), PRECISION)
+                row.shs_dn_sales_tax_for_this_row = tax_for_this_row
+
+            tax_for_this_row = 0
+            if (row.shs_dn_is_good):
+                net_services = 0
+                net_fuel = 0
+                net_goods = flt(row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), PRECISION)
+
+                row.shs_dn_gt_tax_net_fuel_amt = net_fuel
+                row.shs_dn_gt_tax_net_goods_amt = net_goods
+                row.shs_dn_gt_tax_net_services_amt = net_services
+
+                tax_for_this_row = flt(row.shs_dn_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100), PRECISION)
+                row.shs_dn_sales_tax_for_this_row = tax_for_this_row
+
+            tax_for_this_row = 0
+            if (row.shs_dn_is_service):
+                net_goods = 0
+                net_fuel = 0
+                net_services = flt(row.shs_dn_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), PRECISION)
+
+                row.shs_dn_gt_tax_net_fuel_amt = net_fuel
+                row.shs_dn_gt_tax_net_goods_amt = net_goods
+                row.shs_dn_gt_tax_net_services_amt = net_services
+
+                tax_for_this_row = flt(row.shs_dn_gt_tax_net_services_amt * (this_company_sales_tax_var / 100), PRECISION)
+                row.shs_dn_sales_tax_for_this_row = tax_for_this_row
+
+            # Totales
+            total_iva += row.shs_dn_sales_tax_for_this_row
+            total_goods += row.shs_dn_gt_tax_net_goods_amt
+            total_services += row.shs_dn_gt_tax_net_services_amt
+            total_fuels += row.shs_dn_gt_tax_net_fuel_amt
+
+        invoice_data.shs_dn_total_iva = flt(total_iva, PRECISION)
+        invoice_data.shs_dn_gt_tax_fuel = flt(total_fuels, PRECISION)
+        invoice_data.shs_dn_gt_tax_goods = flt(total_goods, PRECISION)
+        invoice_data.shs_dn_gt_tax_services = flt(total_services, PRECISION)
+        invoice_data.save()
 
     except Exception as e:
         frappe.msgprint(frappe.get_traceback())
