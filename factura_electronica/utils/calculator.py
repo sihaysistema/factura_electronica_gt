@@ -148,8 +148,9 @@ def sales_invoice_calculator(invoice_name):
         invoice_data_to_totals.save()
 
     except Exception as e:
-        msg_err = 'Por favor verifique que cada item en la factura se encuentren configurados adecuadamente. En el caso de productos de combustible \
-            deben tener una cuenta de ingreso, gasto y monto configurado. SI la falla persiste por favor reporte este error con soporte técnico.'
+        msg_err = _('Por favor verifique que cada item en la Factura de Venta se encuentren configurados adecuadamente. En el caso de productos de combustible \
+            deben tener una cuenta de ingreso, gasto, monto configurado y cuenta de impuestos ingreso, gasto.\
+                SI la falla persiste por favor reporte este error con soporte técnico.')
         frappe.msgprint(msg=_(f'{msg_err} <hr> <code>{frappe.get_traceback()} <br> {e}</code>'),
                         title=_('Calculos no generados correctamente'), indicator='red',
                         raise_exception=1)
@@ -254,8 +255,8 @@ def delivery_note_calculator(invoice_name):
         invoice_data.save()
 
     except Exception as e:
-        msg_err = 'Por favor verifique que cada item en la Nota de Entrega se encuentren configurados adecuadamente. En el caso de productos de combustible \
-            deben tener una cuenta de ingreso, gasto y monto configurado. SI la falla persiste por favor reporte este error con soporte técnico.'
+        msg_err = _('Por favor verifique que cada item en la Nota de Entrega se encuentren configurados adecuadamente. \
+        SI la falla persiste por favor reporte este error con soporte técnico.')
         frappe.msgprint(msg=_(f'{msg_err} <hr> <code>{frappe.get_traceback()} <br> {e}</code>'),
                         title=_('Calculos no generados correctamente'), indicator='red',
                         raise_exception=1)
@@ -394,8 +395,115 @@ def purchase_invoice_calculator(invoice_name):
         invoice_data_to_totals.save()
 
     except Exception as e:
-        msg_err = 'Por favor verifique que cada item en la factura se encuentren configurados adecuadamente. En el caso de productos de combustible \
-            deben tener una cuenta de ingreso, gasto y monto configurado. SI la falla persiste por favor reporte este error con soporte técnico.'
+        msg_err = _('Por favor verifique que cada item en la Factura de Compra se encuentren configurados adecuadamente. En el caso de productos de combustible \
+            deben tener una cuenta de ingreso, gasto, monto configurado y cuenta de impuestos ingreso, gasto.\
+                SI la falla persiste por favor reporte este error con soporte técnico.')
+        frappe.msgprint(msg=_(f'{msg_err} <hr> <code>{frappe.get_traceback()} <br> {e}</code>'),
+                        title=_('Calculos no generados correctamente'), indicator='red',
+                        raise_exception=1)
+
+
+@frappe.whitelist()
+def purchase_order_calculator(invoice_name):
+    """Calculador montos, impuestos para Ordenes de Compra
+
+    Args:
+        invoice_name (str): name of the invoice
+    """
+
+    try:
+        invoice_data = frappe.get_doc("Purchase Order", invoice_name)
+        items = invoice_data.items
+        taxes_inv = invoice_data.taxes
+
+        this_company_sales_tax_var = 0
+        if len(taxes_inv) > 0:
+            this_company_sales_tax_var = taxes_inv[0].rate
+
+        # Calculos para productos tipo bien, servicio, combustible
+        total_iva = 0
+        total_goods = 0
+        total_services = 0
+        total_fuels = 0
+
+        for row in items:
+            amount_minus_excise_tax = 0
+            other_tax_amount = 0
+            net_fuel = 0
+            net_services = 0
+            net_goods = 0
+            tax_for_this_row = 0
+            conversion_fact = 1
+
+            # Si el item iterado tiene monto y cuenta para impuestos especial
+            special_tax = get_special_tax(row.item_code, invoice_data.company)
+            row.facelec_po_tax_rate_per_uom = special_tax.get('facelec_tax_rate_per_uom', 0)
+            row.shs_po_tax_rate_per_uom_account = special_tax.get('facelec_tax_rate_per_uom_selling_account', '')
+
+            if row.conversion_factor == 0:
+                other_tax_amount = flt(row.facelec_po_tax_rate_per_uom * row.qty * conversion_fact, PRECISION)
+
+            if row.conversion_factor > 0:
+                other_tax_amount = flt(row.facelec_po_tax_rate_per_uom * row.qty * row.conversion_factor, PRECISION)
+
+            row.facelec_po_other_tax_amount = other_tax_amount
+
+            amount_minus_excise_tax = flt((row.qty * row.rate) - row.qty * row.facelec_po_tax_rate_per_uom, PRECISION)
+            row.facelec_po_amount_minus_excise_tax = amount_minus_excise_tax
+
+            if (row.facelec_po_is_fuel):
+                net_services = 0
+                net_goods = 0
+                net_fuel = flt(row.facelec_po_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), PRECISION)
+
+                row.facelec_po_gt_tax_net_fuel_amt = net_fuel
+                row.facelec_po_gt_tax_net_goods_amt = net_goods
+                row.facelec_po_gt_tax_net_services_amt = net_services
+
+                tax_for_this_row = flt(row.facelec_po_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100), PRECISION)
+                row.facelec_po_sales_tax_for_this_row = tax_for_this_row
+
+            tax_for_this_row = 0
+            if (row.facelec_po_is_good):
+                net_services = 0
+                net_fuel = 0
+                net_goods = flt(row.facelec_po_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), PRECISION)
+
+                row.facelec_po_gt_tax_net_fuel_amt = net_fuel
+                row.facelec_po_gt_tax_net_goods_amt = net_goods
+                row.facelec_po_gt_tax_net_services_amt = net_services
+
+                tax_for_this_row = flt(row.facelec_po_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100), PRECISION)
+                row.facelec_po_sales_tax_for_this_row = tax_for_this_row
+
+            tax_for_this_row = 0
+            if (row.facelec_po_is_service):
+                net_goods = 0
+                net_fuel = 0
+                net_services = flt(row.facelec_po_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), PRECISION)
+
+                row.facelec_po_gt_tax_net_fuel_amt = net_fuel
+                row.facelec_po_gt_tax_net_goods_amt = net_goods
+                row.facelec_po_gt_tax_net_services_amt = net_services
+
+                tax_for_this_row = flt(row.facelec_po_gt_tax_net_services_amt * (this_company_sales_tax_var / 100), PRECISION)
+                row.facelec_po_sales_tax_for_this_row = tax_for_this_row
+
+            # Totales
+            total_iva += row.facelec_po_sales_tax_for_this_row
+            total_goods += row.facelec_po_gt_tax_net_goods_amt
+            total_services += row.facelec_po_gt_tax_net_services_amt
+            total_fuels += row.facelec_po_gt_tax_net_fuel_amt
+
+        invoice_data.facelec_po_total_iva = flt(total_iva, PRECISION)
+        invoice_data.facelec_po_gt_tax_fuel = flt(total_fuels, PRECISION)
+        invoice_data.facelec_po_gt_tax_goods = flt(total_goods, PRECISION)
+        invoice_data.facelec_po_gt_tax_services = flt(total_services, PRECISION)
+        invoice_data.save()
+
+    except Exception as e:
+        msg_err = _('Por favor verifique que cada item en la Orden de compra se encuentren configurados adecuadamente. \
+            SI la falla persiste por favor reporte este error con soporte técnico.')
         frappe.msgprint(msg=_(f'{msg_err} <hr> <code>{frappe.get_traceback()} <br> {e}</code>'),
                         title=_('Calculos no generados correctamente'), indicator='red',
                         raise_exception=1)

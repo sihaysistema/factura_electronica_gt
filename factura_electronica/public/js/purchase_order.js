@@ -201,10 +201,35 @@ function shs_purchase_order_calculation(frm, cdt, cdn) {
   frm.refresh_field("items");
 }
 
+/**
+ * @summary Calculador de montos para generar documentos electronicos
+ * @param {Object} frm - Propiedades del Doctype
+ */
+function purchase_order_calc(frm) {
+  frappe.call({
+    method: "factura_electronica.utils.calculator.purchase_order_calculator",
+    args: {
+      invoice_name: frm.doc.name,
+    },
+    freeze: true,
+    freeze_message: __("Calculating") + " 📄📄📄",
+    callback: (r) => {
+      frm.reload_doc();
+      console.log("Purchase Order Calculated", r.message);
+      // frm.save();
+    },
+    error: (r) => {
+      // on error
+      console.log("Purchase Order Calculated Error");
+    },
+  });
+  frm.reload_doc();
+}
+
 frappe.ui.form.on("Purchase Order", {
   onload_post_render: function (frm, cdt, cdn) {},
   validate: function (frm, cdt, cdn) {
-    purchase_order_each_item(frm, cdt, cdn);
+    // purchase_order_each_item(frm, cdt, cdn);
 
     let taxes = frm.doc.taxes || [];
     if (taxes.length == 0) {
@@ -239,36 +264,40 @@ frappe.ui.form.on("Purchase Order", {
   before_save: function (frm, cdt, cdn) {
     // purchase_order_each_item(frm, cdt, cdn);
   },
+  // Se ejecuta despues de guardar el doctype
+  after_save: function (frm, cdt, cdn) {
+    purchase_order_calc(frm);
+  },
 });
 
-frappe.ui.form.on("Purchase Order Item", {
-  before_items_remove: function (frm) {
-    pi_total_by_item_type(frm);
-  },
-  items_remove: function (frm) {
-    pi_total_by_item_type(frm);
-  },
-  items_remove: function (frm) {
-    pi_total_by_item_type(frm);
-  },
-  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
-  items_add: function (frm) {
-    purchase_order_each_item(frm, cdt, cdn);
-  },
-  item_code: function (frm, cdt, cdn) {
-    purchase_order_each_item(frm, cdt, cdn);
-  },
-  qty: function (frm, cdt, cdn) {
-    // Trigger cantidad
-    purchase_order_each_item(frm, cdt, cdn);
-  },
-  conversion_factor: function (frm, cdt, cdn) {
-    // Trigger factor de conversion
-    purchase_order_each_item(frm, cdt, cdn);
-  },
-  rate: function (frm, cdt, cdn) {
-    purchase_order_each_item(frm, cdt, cdn);
-  },
-});
+// frappe.ui.form.on("Purchase Order Item", {
+//   before_items_remove: function (frm) {
+//     pi_total_by_item_type(frm);
+//   },
+//   items_remove: function (frm) {
+//     pi_total_by_item_type(frm);
+//   },
+//   items_remove: function (frm) {
+//     pi_total_by_item_type(frm);
+//   },
+//   // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+//   items_add: function (frm) {
+//     purchase_order_each_item(frm, cdt, cdn);
+//   },
+//   item_code: function (frm, cdt, cdn) {
+//     purchase_order_each_item(frm, cdt, cdn);
+//   },
+//   qty: function (frm, cdt, cdn) {
+//     // Trigger cantidad
+//     purchase_order_each_item(frm, cdt, cdn);
+//   },
+//   conversion_factor: function (frm, cdt, cdn) {
+//     // Trigger factor de conversion
+//     purchase_order_each_item(frm, cdt, cdn);
+//   },
+//   rate: function (frm, cdt, cdn) {
+//     purchase_order_each_item(frm, cdt, cdn);
+//   },
+// });
 
 /* ----------------------------------------------------------------------------------------------------------------- */
