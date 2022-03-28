@@ -235,12 +235,12 @@ function delivery_note_calc(frm) {
     freeze_message: __("Calculating") + " 📄📄📄",
     callback: (r) => {
       frm.reload_doc();
-      console.log("Delivery Note Calculated", r.message);
+      // console.log("Delivery Note Calculated", r.message);
       // frm.save();
     },
     error: (r) => {
       // on error
-      console.log("Delivery Note Calculated Error");
+      // console.log("Delivery Note Calculated Error");
     },
   });
   frm.reload_doc();

@@ -223,7 +223,7 @@ function purchase_receipt_calc(frm) {
     freeze_message: __("Calculating") + " 📄📄📄",
     callback: (r) => {
       frm.reload_doc();
-      console.log("Purchase Receipt Calculated", r.message);
+      // console.log("Purchase Receipt Calculated", r.message);
       // frm.save();
     },
     error: (r) => {

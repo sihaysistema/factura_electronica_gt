@@ -714,7 +714,7 @@ function purchase_invoice_calc(frm) {
     freeze_message: __("Calculating") + " 📄📄📄",
     callback: (r) => {
       frm.reload_doc();
-      console.log("Purchase Invoice Calculated", r.message);
+      // console.log("Purchase Invoice Calculated", r.message);
       // frm.save();
     },
     error: (r) => {

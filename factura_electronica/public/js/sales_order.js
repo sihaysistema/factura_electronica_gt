@@ -219,7 +219,7 @@ function sales_order_calc(frm) {
     freeze_message: __("Calculating") + " 📄📄📄",
     callback: (r) => {
       frm.reload_doc();
-      console.log("Sales Order Calculated", r.message);
+      // console.log("Sales Order Calculated", r.message);
       // frm.save();
     },
     error: (r) => {

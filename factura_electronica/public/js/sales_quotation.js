@@ -378,7 +378,7 @@ function quotation_calc(frm) {
     freeze_message: __("Calculating") + " 📄📄📄",
     callback: (r) => {
       frm.reload_doc();
-      console.log("Sales Quotation Calculated", r.message);
+      // console.log("Sales Quotation Calculated", r.message);
       // frm.save();
     },
     error: (r) => {

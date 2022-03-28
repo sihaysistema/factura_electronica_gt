@@ -201,11 +201,36 @@ function shs_supplier_quotation_calculation(frm, cdt, cdn) {
   frm.refresh_field("items");
 }
 
+/**
+ * @summary Calculador de montos para generar documentos electronicos
+ * @param {Object} frm - Propiedades del Doctype
+ */
+function supplier_quotation_calc(frm) {
+  frappe.call({
+    method: "factura_electronica.utils.calculator.supplier_quotation_calculator",
+    args: {
+      invoice_name: frm.doc.name,
+    },
+    freeze: true,
+    freeze_message: __("Calculating") + " 📄📄📄",
+    callback: (r) => {
+      frm.reload_doc();
+      // console.log("Supplier Quotation Calculated");
+      // frm.save();
+    },
+    error: (r) => {
+      // on error
+      // console.log("Supplier Quotation Calculated Error");
+    },
+  });
+  frm.reload_doc();
+}
+
 frappe.ui.form.on("Supplier Quotation", {
   onload_post_render: function (frm, cdt, cdn) {},
   shs_spq_nit: function (frm) {
     // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
-    valNit(frm.doc.shs_spq_nit, frm.doc.supplier, frm);
+    // valNit(frm.doc.shs_spq_nit, frm.doc.supplier, frm);
   },
   discount_amount: function (frm) {
     // Trigger Monto de descuento
@@ -225,8 +250,12 @@ frappe.ui.form.on("Supplier Quotation", {
   before_save: function (frm, cdt, cdn) {
     // supplier_quotation_each_item(frm, cdt, cdn);
   },
+  // Se ejecuta despues de guardar el doc
+  after_save: function (frm, cdt, cdn) {
+    supplier_quotation_calc(frm);
+  },
   validate: function (frm, cdt, cdn) {
-    supplier_quotation_each_item(frm, cdt, cdn);
+    // supplier_quotation_each_item(frm, cdt, cdn);
 
     let taxes = frm.doc.taxes || [];
     if (taxes.length == 0) {
@@ -244,32 +273,32 @@ frappe.ui.form.on("Supplier Quotation", {
   },
 });
 
-frappe.ui.form.on("Supplier Quotation Item", {
-  before_items_remove: function (frm) {
-    sq_total_by_item_type(frm);
-  },
-  items_move: function (frm) {
-    sq_total_by_item_type(frm);
-  },
-  items_remove: function (frm, cdt, cdn) {
-    sq_total_by_item_type(frm);
-  },
-  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
-  items_add: function (frm, cdt, cdn) {
-    supplier_quotation_each_item(frm, cdt, cdn);
-  },
-  item_code: function (frm, cdt, cdn) {
-    supplier_quotation_each_item(frm, cdt, cdn);
-  },
-  qty: function (frm, cdt, cdn) {
-    supplier_quotation_each_item(frm, cdt, cdn);
-  },
-  conversion_factor: function (frm, cdt, cdn) {
-    supplier_quotation_each_item(frm, cdt, cdn);
-  },
-  rate: function (frm, cdt, cdn) {
-    supplier_quotation_each_item(frm, cdt, cdn);
-  },
-});
+// frappe.ui.form.on("Supplier Quotation Item", {
+//   before_items_remove: function (frm) {
+//     sq_total_by_item_type(frm);
+//   },
+//   items_move: function (frm) {
+//     sq_total_by_item_type(frm);
+//   },
+//   items_remove: function (frm, cdt, cdn) {
+//     sq_total_by_item_type(frm);
+//   },
+//   // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+//   items_add: function (frm, cdt, cdn) {
+//     supplier_quotation_each_item(frm, cdt, cdn);
+//   },
+//   item_code: function (frm, cdt, cdn) {
+//     supplier_quotation_each_item(frm, cdt, cdn);
+//   },
+//   qty: function (frm, cdt, cdn) {
+//     supplier_quotation_each_item(frm, cdt, cdn);
+//   },
+//   conversion_factor: function (frm, cdt, cdn) {
+//     supplier_quotation_each_item(frm, cdt, cdn);
+//   },
+//   rate: function (frm, cdt, cdn) {
+//     supplier_quotation_each_item(frm, cdt, cdn);
+//   },
+// });
 
 /* ----------------------------------------------------------------------------------------------------------------- */
