@@ -613,3 +613,109 @@ def purchase_receipt_calculator(invoice_name):
         frappe.msgprint(msg=_(f'{msg_err} <hr> <code>{frappe.get_traceback()} <br> {e}</code>'),
                         title=_('Calculos no generados correctamente'), indicator='red',
                         raise_exception=1)
+
+
+@frappe.whitelist()
+def sales_order_calculator(invoice_name):
+    """Calculador montos, impuestos para Ordenes de Venta
+
+    Args:
+        invoice_name (str): name of the invoice
+    """
+
+    try:
+        invoice_data = frappe.get_doc("Sales Order", invoice_name)
+        items = invoice_data.items
+        taxes_inv = invoice_data.taxes
+
+        this_company_sales_tax_var = 0
+        if len(taxes_inv) > 0:
+            this_company_sales_tax_var = taxes_inv[0].rate
+
+        # Calculos para productos tipo bien, servicio, combustible
+        total_iva = 0
+        total_goods = 0
+        total_services = 0
+        total_fuels = 0
+
+        for row in items:
+            amount_minus_excise_tax = 0
+            other_tax_amount = 0
+            net_fuel = 0
+            net_services = 0
+            net_goods = 0
+            tax_for_this_row = 0
+            conversion_fact = 1
+
+            # Si el item iterado tiene monto y cuenta para impuestos especial
+            special_tax = get_special_tax(row.item_code, invoice_data.company)
+            row.shs_so_tax_rate_per_uom = special_tax.get('facelec_tax_rate_per_uom', 0)
+            row.shs_so_tax_rate_per_uom_account = special_tax.get('facelec_tax_rate_per_uom_selling_account', '')
+
+            if row.conversion_factor == 0:
+                other_tax_amount = flt(row.shs_so_tax_rate_per_uom * row.qty * conversion_fact, PRECISION)
+
+            if row.conversion_factor > 0:
+                other_tax_amount = flt(row.shs_so_tax_rate_per_uom * row.qty * row.conversion_factor, PRECISION)
+
+            row.shs_so_other_tax_amount = other_tax_amount
+
+            amount_minus_excise_tax = flt((row.qty * row.rate) - row.qty * row.shs_so_tax_rate_per_uom, PRECISION)
+            row.shs_so_amount_minus_excise_tax = amount_minus_excise_tax
+
+            if (row.shs_so_is_fuel):
+                net_services = 0
+                net_goods = 0
+                net_fuel = flt(row.shs_so_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), PRECISION)
+
+                row.shs_so_gt_tax_net_fuel_amt = net_fuel
+                row.shs_so_gt_tax_net_goods_amt = net_goods
+                row.shs_so_gt_tax_net_services_amt = net_services
+
+                tax_for_this_row = flt(row.shs_so_gt_tax_net_fuel_amt * (this_company_sales_tax_var / 100), PRECISION)
+                row.shs_so_sales_tax_for_this_row = tax_for_this_row
+
+            tax_for_this_row = 0
+            if (row.shs_so_is_good):
+                net_services = 0
+                net_fuel = 0
+                net_goods = flt(row.shs_so_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), PRECISION)
+
+                row.shs_so_gt_tax_net_fuel_amt = net_fuel
+                row.shs_so_gt_tax_net_goods_amt = net_goods
+                row.shs_so_gt_tax_net_services_amt = net_services
+
+                tax_for_this_row = flt(row.shs_so_gt_tax_net_goods_amt * (this_company_sales_tax_var / 100), PRECISION)
+                row.shs_so_sales_tax_for_this_row = tax_for_this_row
+
+            tax_for_this_row = 0
+            if (row.shs_so_is_service):
+                net_goods = 0
+                net_fuel = 0
+                net_services = flt(row.shs_so_amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), PRECISION)
+
+                row.shs_so_gt_tax_net_fuel_amt = net_fuel
+                row.shs_so_gt_tax_net_goods_amt = net_goods
+                row.shs_so_gt_tax_net_services_amt = net_services
+
+                tax_for_this_row = flt(row.shs_so_gt_tax_net_services_amt * (this_company_sales_tax_var / 100), PRECISION)
+                row.shs_so_sales_tax_for_this_row = tax_for_this_row
+
+            # Totales
+            total_iva += row.shs_so_sales_tax_for_this_row
+            total_goods += row.shs_so_gt_tax_net_goods_amt
+            total_services += row.shs_so_gt_tax_net_services_amt
+            total_fuels += row.shs_so_gt_tax_net_fuel_amt
+
+        invoice_data.shs_so_total_iva = flt(total_iva, PRECISION)
+        invoice_data.shs_gt_tax_fuel = flt(total_fuels, PRECISION)
+        invoice_data.shs_so_gt_tax_goods = flt(total_goods, PRECISION)
+        invoice_data.shs_so_gt_tax_services = flt(total_services, PRECISION)
+        invoice_data.save()
+
+    except Exception as e:
+        msg_err = _('Por favor verifique que cada item en la Orden de Venta se encuentren configurados adecuadamente. \
+            SI la falla persiste por favor reporte este error con soporte técnico.')
+        frappe.msgprint(msg=_(f'{msg_err} <hr> <code>{frappe.get_traceback()} <br> {e}</code>'),
+                        title=_('Calculos no generados correctamente'), indicator='red',
+                        raise_exception=1)
