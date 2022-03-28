@@ -148,8 +148,11 @@ def sales_invoice_calculator(invoice_name):
         invoice_data_to_totals.save()
 
     except Exception as e:
-        frappe.msgprint(frappe.get_traceback())
-        frappe.msgprint(_("Error: {0}").format(e))
+        msg_err = 'Por favor verifique que cada item en la factura se encuentren configurados adecuadamente. En el caso de productos de combustible \
+            deben tener una cuenta de ingreso, gasto y monto configurado. SI la falla persiste por favor reporte este error con soporte técnico.'
+        frappe.msgprint(msg=_(f'{msg_err} \n <code>{frappe.get_traceback()} <br> {e}</code>'),
+                        title=_('Calculos no generados correctamente'), indicator='red',
+                        raise_exception=1)
 
 
 @frappe.whitelist()
@@ -251,5 +254,8 @@ def delivery_note_calculator(invoice_name):
         invoice_data.save()
 
     except Exception as e:
-        frappe.msgprint(frappe.get_traceback())
-        frappe.msgprint(_("Error: {0}").format(e))
+        msg_err = 'Por favor verifique que cada item en la Nota de Entrega se encuentren configurados adecuadamente. En el caso de productos de combustible \
+            deben tener una cuenta de ingreso, gasto y monto configurado. SI la falla persiste por favor reporte este error con soporte técnico.'
+        frappe.msgprint(msg=_(f'{msg_err} \n <code>{frappe.get_traceback()} <br> {e}</code>'),
+                        title=_('Calculos no generados correctamente'), indicator='red',
+                        raise_exception=1)
