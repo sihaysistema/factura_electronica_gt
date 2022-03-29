@@ -121,6 +121,8 @@ def generar_tabla_html(tabla, currency="GTQ"):
                _("Base Value"), _("+"), _("IVA"), _("="), _("Total")]
     mi_tabla = json.loads(tabla)
     longi = (len(mi_tabla))
+    if longi > 20:
+        return
 
     # # Retorna la tabla HTML lista para renderizar
     return frappe.render_template(
@@ -150,6 +152,8 @@ def generar_tabla_html_factura_compra(tabla, currency="GTQ"):
 
     mi_tabla = json.loads(tabla)
     longi = (len(mi_tabla))
+    if longi > 20:
+        return
 
     # with open("probando.json", "w") as file:
     #     file.write(json.dumps(mi_tabla, indent=2))

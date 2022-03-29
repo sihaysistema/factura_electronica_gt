@@ -364,6 +364,31 @@ function qo_remove_non_existing_taxes(frm) {
   qo_recalculate_other_taxes(frm);
 }
 
+/**
+ * @summary Calculador de montos para generar documentos electronicos
+ * @param {Object} frm - Propiedades del Doctype
+ */
+function quotation_calc(frm) {
+  frappe.call({
+    method: "factura_electronica.utils.calculator.sales_quotation_calculator",
+    args: {
+      invoice_name: frm.doc.name,
+    },
+    freeze: true,
+    freeze_message: __("Calculating") + " 📄📄📄",
+    callback: (r) => {
+      frm.reload_doc();
+      // console.log("Sales Quotation Calculated", r.message);
+      // frm.save();
+    },
+    error: (r) => {
+      // on error
+      console.log("Sales Quotation Calculated Error");
+    },
+  });
+  frm.reload_doc();
+}
+
 frappe.ui.form.on("Quotation", {
   onload_post_render: function (frm, cdt, cdn) {
     // Funciona unicamente cuando se carga por primera vez el documento y aplica unicamente para el form y no childtables
@@ -390,12 +415,15 @@ frappe.ui.form.on("Quotation", {
   before_save: function (frm, cdt, cdn) {
     // quotation_each_row(frm, cdt, cdn);
   },
+  after_save: function (frm, cdt, cdn) {
+    quotation_calc(frm);
+  },
   // Se ejecuta al presionar el boton guardar
   validate: function (frm, cdt, cdn) {
     // console.log('validate');
     // Asegura que los montos de impuestos especiales se calculen correctamente
-    quotation_each_row(frm, cdt, cdn);
-    qo_remove_non_existing_taxes(frm);
+    // quotation_each_row(frm, cdt, cdn);
+    // qo_remove_non_existing_taxes(frm);
 
     let taxes = frm.doc.taxes || [];
     if (taxes.length == 0) {
@@ -413,63 +441,63 @@ frappe.ui.form.on("Quotation", {
   },
 });
 
-frappe.ui.form.on("Quotation Item", {
-  before_items_remove: function (frm, cdt, cdn) {
-    qo_remove_non_existing_taxes(frm);
-    qo_shs_total_other_tax(frm);
-    qo_shs_total_by_item_type(frm);
-  },
-  items_remove: function (frm, cdt, cdn) {
-    qo_remove_non_existing_taxes(frm);
-    qo_shs_total_by_item_type(frm);
-    shs_quotation_total_other_tax(frm);
-  },
-  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
-  items_add: function (frm, cdt, cdn) {
-    quotation_each_row(frm, cdt, cdn);
-  },
-  item_code: function (frm, cdt, cdn) {
-    quotation_each_row(frm, cdt, cdn);
-  },
-  discount_percentage: function (frm, cdt, cdn) {
-    quotation_each_row(frm, cdt, cdn);
-  },
-  discount_amount: function (frm, cdt, cdn) {
-    quotation_each_row(frm, cdt, cdn);
-  },
-  qty: function (frm, cdt, cdn) {
-    quotation_each_row(frm, cdt, cdn);
-  },
-  uom: function (frm, cdt, cdn) {
-    quotation_each_row(frm, cdt, cdn);
-  },
-  conversion_factor: function (frm, cdt, cdn) {
-    quotation_each_row(frm, cdt, cdn);
-  },
-  rate: function (frm, cdt, cdn) {
-    quotation_each_row(frm, cdt, cdn);
-  },
-  facelec_qt_tax_rate_per_uom_account: function (frm, cdt, cdn) {
-    quotation_each_row(frm, cdt, cdn);
-  },
-});
+// frappe.ui.form.on("Quotation Item", {
+//   before_items_remove: function (frm, cdt, cdn) {
+//     qo_remove_non_existing_taxes(frm);
+//     qo_shs_total_other_tax(frm);
+//     qo_shs_total_by_item_type(frm);
+//   },
+//   items_remove: function (frm, cdt, cdn) {
+//     qo_remove_non_existing_taxes(frm);
+//     qo_shs_total_by_item_type(frm);
+//     shs_quotation_total_other_tax(frm);
+//   },
+//   // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+//   items_add: function (frm, cdt, cdn) {
+//     quotation_each_row(frm, cdt, cdn);
+//   },
+//   item_code: function (frm, cdt, cdn) {
+//     quotation_each_row(frm, cdt, cdn);
+//   },
+//   discount_percentage: function (frm, cdt, cdn) {
+//     quotation_each_row(frm, cdt, cdn);
+//   },
+//   discount_amount: function (frm, cdt, cdn) {
+//     quotation_each_row(frm, cdt, cdn);
+//   },
+//   qty: function (frm, cdt, cdn) {
+//     quotation_each_row(frm, cdt, cdn);
+//   },
+//   uom: function (frm, cdt, cdn) {
+//     quotation_each_row(frm, cdt, cdn);
+//   },
+//   conversion_factor: function (frm, cdt, cdn) {
+//     quotation_each_row(frm, cdt, cdn);
+//   },
+//   rate: function (frm, cdt, cdn) {
+//     quotation_each_row(frm, cdt, cdn);
+//   },
+//   facelec_qt_tax_rate_per_uom_account: function (frm, cdt, cdn) {
+//     quotation_each_row(frm, cdt, cdn);
+//   },
+// });
 
-frappe.ui.form.on("Otros Impuestos Factura Electronica", {
-  // Despues de que se elimina una fila
-  before_shs_tax_quotation_remove: function (frm, cdt, cdn) {
-    shs_quotation_total_other_tax(frm);
-  },
-  // Cuando se elimina una fila
-  shs_tax_quotation_remove: function (frm, cdt, cdn) {
-    shs_quotation_total_other_tax(frm);
-  },
-  //  Cuando se agrega una fila
-  shs_tax_quotation_add: function (frm, cdt, cdn) {
-    shs_quotation_total_other_tax(frm);
-  },
-  //   Cuando se cambia de posicion una fila
-  shs_tax_quotation_move: function (frm, cdt, cdn) {
-    shs_quotation_total_other_tax(frm);
-  },
-});
+// frappe.ui.form.on("Otros Impuestos Factura Electronica", {
+//   // Despues de que se elimina una fila
+//   before_shs_tax_quotation_remove: function (frm, cdt, cdn) {
+//     shs_quotation_total_other_tax(frm);
+//   },
+//   // Cuando se elimina una fila
+//   shs_tax_quotation_remove: function (frm, cdt, cdn) {
+//     shs_quotation_total_other_tax(frm);
+//   },
+//   //  Cuando se agrega una fila
+//   shs_tax_quotation_add: function (frm, cdt, cdn) {
+//     shs_quotation_total_other_tax(frm);
+//   },
+//   //   Cuando se cambia de posicion una fila
+//   shs_tax_quotation_move: function (frm, cdt, cdn) {
+//     shs_quotation_total_other_tax(frm);
+//   },
+// });
 /* ----------------------------------------------------------------------------------------------------------------- */

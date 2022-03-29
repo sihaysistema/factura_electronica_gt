@@ -205,12 +205,34 @@ function sales_order_total_by_item_type(frm) {
   frm.refresh_field("shs_so_total_iva");
 }
 
+/**
+ * @summary Calculador de montos para generar documentos electronicos
+ * @param {Object} frm - Propiedades del Doctype
+ */
+function sales_order_calc(frm) {
+  frappe.call({
+    method: "factura_electronica.utils.calculator.sales_order_calculator",
+    args: {
+      invoice_name: frm.doc.name,
+    },
+    freeze: true,
+    freeze_message: __("Calculating") + " 📄📄📄",
+    callback: (r) => {
+      frm.reload_doc();
+      // console.log("Sales Order Calculated", r.message);
+      // frm.save();
+    },
+    error: (r) => {
+      // on error
+      console.log("Sales Order Calculated Error");
+    },
+  });
+  frm.reload_doc();
+}
+
 frappe.ui.form.on("Sales Order", {
   onload_post_render: function (frm, cdt, cdn) {},
-  shs_so_nit: function (frm) {
-    // Funcion para validar NIT: Se ejecuta cuando exista un cambio en el campo de NIT
-    // valNit(frm.doc.shs_so_nit, frm.doc.customer, frm);
-  },
+  shs_so_nit: function (frm) {},
   discount_amount: function (frm) {
     // Trigger Monto de descuento
     var tax_before_calc = frm.doc.shs_so_total_iva;
@@ -226,9 +248,13 @@ frappe.ui.form.on("Sales Order", {
   before_save: function (frm, cdt, cdn) {
     // sales_order_each_item(frm, cdt, cdn);
   },
+  // Se ejecuta despues de guardar el doctype
+  after_save: function (frm, cdt, cdn) {
+    sales_order_calc(frm);
+  },
   validate: function (frm, cdt, cdn) {
     // console.log("Validate");
-    sales_order_each_item(frm, cdt, cdn);
+    // sales_order_each_item(frm, cdt, cdn);
 
     let taxes = frm.doc.taxes || [];
     if (taxes.length == 0) {
@@ -246,54 +272,54 @@ frappe.ui.form.on("Sales Order", {
   },
 });
 
-frappe.ui.form.on("Sales Order Item", {
-  before_items_remove: function (frm) {
-    sales_order_total_by_item_type(frm);
-  },
-  items_move: function (frm) {
-    sales_order_total_by_item_type(frm);
-  },
-  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
-  items_add: function (frm) {
-    sales_order_each_item(frm, cdt, cdn);
-  },
-  items_remove: function (frm) {
-    // es-GT: Este disparador corre al momento de eliminar una nueva fila.
-    // en-US: This trigger runs when removing a row.
-    // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
-    sales_order_total_by_item_type(frm);
-  },
-  item_code: function (frm, cdt, cdn) {
-    // Trigger codigo de producto
-    sales_order_each_item(frm, cdt, cdn);
-  },
-  qty: function (frm, cdt, cdn) {
-    // Trigger cantidad
-    sales_order_each_item(frm, cdt, cdn);
-  },
-  conversion_factor: function (frm, cdt, cdn) {
-    // Trigger factor de conversion
-    sales_order_each_item(frm, cdt, cdn);
-  },
-  discount_percentage: function (frm, cdt, cdn) {
-    sales_order_each_item(frm, cdt, cdn);
-  },
-  discount_amount: function (frm, cdt, cdn) {
-    sales_order_each_item(frm, cdt, cdn);
-  },
-  rate: function (frm, cdt, cdn) {
-    sales_order_each_item(frm, cdt, cdn);
-  },
-  conversion_factor: function (frm, cdt, cdn) {
-    sales_order_each_item(frm, cdt, cdn);
-  },
-  stock_qty: function (frm, cdt, cdn) {
-    sales_order_each_item(frm, cdt, cdn);
-  },
-  // Cuando se cambia el valor de uom
-  uom: function (frm, cdt, cdn) {
-    sales_order_each_item(frm, cdt, cdn);
-  },
-});
+// frappe.ui.form.on("Sales Order Item", {
+//   before_items_remove: function (frm) {
+//     sales_order_total_by_item_type(frm);
+//   },
+//   items_move: function (frm) {
+//     sales_order_total_by_item_type(frm);
+//   },
+//   // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+//   items_add: function (frm) {
+//     sales_order_each_item(frm, cdt, cdn);
+//   },
+//   items_remove: function (frm) {
+//     // es-GT: Este disparador corre al momento de eliminar una nueva fila.
+//     // en-US: This trigger runs when removing a row.
+//     // Vuelve a calcular los totales de FUEL, GOODS, SERVICES e IVA cuando se elimina una fila.
+//     sales_order_total_by_item_type(frm);
+//   },
+//   item_code: function (frm, cdt, cdn) {
+//     // Trigger codigo de producto
+//     sales_order_each_item(frm, cdt, cdn);
+//   },
+//   qty: function (frm, cdt, cdn) {
+//     // Trigger cantidad
+//     sales_order_each_item(frm, cdt, cdn);
+//   },
+//   conversion_factor: function (frm, cdt, cdn) {
+//     // Trigger factor de conversion
+//     sales_order_each_item(frm, cdt, cdn);
+//   },
+//   discount_percentage: function (frm, cdt, cdn) {
+//     sales_order_each_item(frm, cdt, cdn);
+//   },
+//   discount_amount: function (frm, cdt, cdn) {
+//     sales_order_each_item(frm, cdt, cdn);
+//   },
+//   rate: function (frm, cdt, cdn) {
+//     sales_order_each_item(frm, cdt, cdn);
+//   },
+//   conversion_factor: function (frm, cdt, cdn) {
+//     sales_order_each_item(frm, cdt, cdn);
+//   },
+//   stock_qty: function (frm, cdt, cdn) {
+//     sales_order_each_item(frm, cdt, cdn);
+//   },
+//   // Cuando se cambia el valor de uom
+//   uom: function (frm, cdt, cdn) {
+//     sales_order_each_item(frm, cdt, cdn);
+//   },
+// });
 
 /* ----------------------------------------------------------------------------------------------------------------- */

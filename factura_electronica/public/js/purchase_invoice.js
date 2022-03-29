@@ -700,6 +700,129 @@ function generar_tabla_html_factura_compra(frm) {
   }
 }
 
+/**
+ * @summary Calculador de montos para generar documentos electronicos
+ * @param {Object} frm - Propiedades del Doctype
+ */
+function purchase_invoice_calc(frm) {
+  frappe.call({
+    method: "factura_electronica.utils.calculator.purchase_invoice_calculator",
+    args: {
+      invoice_name: frm.doc.name,
+    },
+    freeze: true,
+    freeze_message: __("Calculating") + " 📄📄📄",
+    callback: (r) => {
+      frm.reload_doc();
+      // console.log("Purchase Invoice Calculated", r.message);
+      // frm.save();
+    },
+    error: (r) => {
+      // on error
+      console.log("Purchase Invoice Calculated Error");
+    },
+  });
+  frm.reload_doc();
+}
+
+/**
+ * @summary Funcion para insertar cuentas de impuestos especiales y cuadrar en GL Entry
+ * @param {Object} frm
+ */
+function special_pi_tax(frm) {
+  // Creacion objeto vacio para guardar nombre y valor de las cuentas que se encuentren
+  let cuentas_registradas = {};
+  let otrosImpuestos = frm.doc.shs_pi_otros_impuestos || [];
+
+  // Recorre la tabla hija en busca de cuentas
+  otrosImpuestos.forEach((tax_row, index) => {
+    if (tax_row.account_head) {
+      // Agrega un nuevo valor al objeto (JSON-DICCIONARIO) con el
+      // nombre, valor de la cuenta
+      cuentas_registradas[tax_row.account_head] = tax_row.total;
+    }
+  });
+
+  // Si existe por lo menos una cuenta, se ejecuta frappe.call
+  if (Object.keys(cuentas_registradas).length > 0) {
+    frappe.call({
+      method: "factura_electronica.utils.special_tax.add_gl_entry_other_special_tax",
+      args: {
+        invoice_name: frm.doc.name,
+        accounts: cuentas_registradas,
+        invoice_type: "Purchase Invoice",
+      },
+      // El callback se ejecuta tras finalizar la ejecucion del script python del lado
+      // del servidor
+      callback: function () {
+        frm.reload_doc();
+      },
+    });
+  }
+}
+
+/**
+ * @summary Validador escenario para generar botones segun la serie seleccionada
+ * @param {Object} frm
+ */
+function btn_pi_generator(frm) {
+  frappe.call({
+    method: "factura_electronica.fel_api.is_valid_to_fel",
+    args: {
+      doctype: frm.doc.doctype,
+      docname: frm.doc.name,
+    },
+    callback: function (data) {
+      // ESCENARIO BOTON ANULADOR
+      if (data.message[1] === "anulador" && data.message[2]) {
+        // validaor para mostrar u ocultar btn anulador tras generacion
+        frappe
+          .call("factura_electronica.api.btn_activator", {
+            electronic_doc: "anulador_de_facturas_ventas_fel",
+          })
+          .then((r) => {
+            if (r.message) {
+              // Si la anulacion electronica ya fue realizada, se mostrara boton para ver pdf doc anulado
+              frappe
+                .call("factura_electronica.api.invoice_exists", {
+                  uuid: frm.doc.numero_autorizacion_fel,
+                })
+                .then((r2) => {
+                  if (r2.message) {
+                    cur_frm.clear_custom_buttons();
+                    pdf_electronic_doc(frm);
+                  } else {
+                    // SI no aplica lo anterior se muestra btn para anular doc
+                    btn_pi_canceller(frm);
+                    pdf_electronic_doc(frm);
+                  }
+                });
+            }
+          });
+      }
+
+      // ESCENARIO BOTON FACTURA ESPECIAL
+      if (data.message[0] == "FESP" && data.message[1]) {
+        btn_factura_especial(frm);
+        if (frm.doc.numero_autorizacion_fel) {
+          cur_frm.clear_custom_buttons();
+          pdf_electronic_doc(frm);
+          btn_poliza_factura_especial(frm);
+        }
+      }
+
+      // ESCENARIO BOTON  NOTA DE DEBITO
+      if (data.message[0] == "NDEB" && data.message[1]) {
+        btn_debit_note(frm);
+        if (frm.doc.numero_autorizacion_fel) {
+          cur_frm.clear_custom_buttons();
+          pdf_electronic_doc(frm);
+        }
+      }
+    },
+  });
+}
+
 frappe.ui.form.on("Purchase Invoice", {
   refresh: function (frm, cdt, cdn) {
     frm.set_df_property(
@@ -716,71 +839,11 @@ frappe.ui.form.on("Purchase Invoice", {
 
     // Validador para mostrar botones segun el escenario que aplique
     if (frm.doc.docstatus != 0) {
-      frappe.call({
-        method: "factura_electronica.fel_api.is_valid_to_fel",
-        args: {
-          doctype: frm.doc.doctype,
-          docname: frm.doc.name,
-        },
-        callback: function (data) {
-          // ESCENARIO BOTON ANULADOR
-          if (data.message[1] === "anulador" && data.message[2]) {
-            // validaor para mostrar u ocultar btn anulador tras generacion
-            frappe
-              .call("factura_electronica.api.btn_activator", {
-                electronic_doc: "anulador_de_facturas_ventas_fel",
-              })
-              .then((r) => {
-                if (r.message) {
-                  // Si la anulacion electronica ya fue realizada, se mostrara boton para ver pdf doc anulado
-                  frappe
-                    .call("factura_electronica.api.invoice_exists", {
-                      uuid: frm.doc.numero_autorizacion_fel,
-                    })
-                    .then((r2) => {
-                      if (r2.message) {
-                        cur_frm.clear_custom_buttons();
-                        pdf_electronic_doc(frm);
-                      } else {
-                        // SI no aplica lo anterior se muestra btn para anular doc
-                        btn_pi_canceller(frm);
-                        pdf_electronic_doc(frm);
-                      }
-                    });
-                }
-              });
-          }
-
-          // ESCENARIO BOTON FACTURA ESPECIAL
-          if (data.message[0] == "FESP" && data.message[1]) {
-            btn_factura_especial(frm);
-            if (frm.doc.numero_autorizacion_fel) {
-              cur_frm.clear_custom_buttons();
-              pdf_electronic_doc(frm);
-              btn_poliza_factura_especial(frm);
-            }
-          }
-
-          // ESCENARIO BOTON  NOTA DE DEBITO
-          if (data.message[0] == "NDEB" && data.message[1]) {
-            btn_debit_note(frm);
-            if (frm.doc.numero_autorizacion_fel) {
-              cur_frm.clear_custom_buttons();
-              pdf_electronic_doc(frm);
-            }
-          }
-        },
-      });
+      btn_pi_generator(frm);
     }
   },
   onload_post_render: function (frm, cdt, cdn) {
     // NOTA: LOS LISTENER YA NO TIENE EL MISMO FUNCIONAMIENTO QUE EN VERSIONES ANTERIORES
-    // Limpieza de campos cuando se duplique una factura de compra
-    clean_fields(frm);
-  },
-  facelec_nit_fproveedor: function (frm, cdt, cdn) {
-    // Para evitar muchos mensajes de error, la validacion se hace desde el cliente
-    // valNit(frm.doc.facelec_nit_fproveedor, frm.doc.supplier, frm);
   },
   discount_amount: function (frm, cdt, cdn) {
     // Trigger Monto de descuento
@@ -801,9 +864,11 @@ frappe.ui.form.on("Purchase Invoice", {
     // pi_each_item(frm, cdt, cdn);
     generar_tabla_html_factura_compra(frm);
   },
+  // Se ejecuta despues de guardar
+  after_save: function (frm, cdt, cdn) {
+    purchase_invoice_calc(frm);
+  },
   validate: function (frm, cdt, cdn) {
-    // pi_each_item(frm, cdt, cdn);
-    pi_remove_non_existing_taxes(frm);
     generar_tabla_html_factura_compra(frm);
 
     let taxes = frm.doc.taxes || [];
@@ -823,122 +888,11 @@ frappe.ui.form.on("Purchase Invoice", {
   on_submit: function (frm, cdt, cdn) {
     // Ocurre cuando se presione el boton validar.
     // Cuando se valida el documento, se hace la consulta al servidor por medio de frappe.call
-
-    // Creacion objeto vacio para guardar nombre y valor de las cuentas que se encuentren
-    let cuentas_registradas = {};
-    let otrosImpuestos = frm.doc.shs_pi_otros_impuestos || [];
-
-    // Recorre la tabla hija en busca de cuentas
-    otrosImpuestos.forEach((tax_row, index) => {
-      if (tax_row.account_head) {
-        // Agrega un nuevo valor al objeto (JSON-DICCIONARIO) con el
-        // nombre, valor de la cuenta
-        cuentas_registradas[tax_row.account_head] = tax_row.total;
-      }
-    });
-
-    // Si existe por lo menos una cuenta, se ejecuta frappe.call
-    if (Object.keys(cuentas_registradas).length > 0) {
-      frappe.call({
-        method: "factura_electronica.utils.special_tax.add_gl_entry_other_special_tax",
-        args: {
-          invoice_name: frm.doc.name,
-          accounts: cuentas_registradas,
-          invoice_type: "Purchase Invoice",
-        },
-        // El callback se ejecuta tras finalizar la ejecucion del script python del lado
-        // del servidor
-        callback: function () {
-          frm.reload_doc();
-        },
-      });
-    }
-  },
-  naming_series: function (frm, cdt, cdn) {
-    // console.log(frm.doc.naming_series);
-    /* No aplica para FEL
-    // frappe.call({
-    //     method: "factura_electronica.utils.special_invoice.verificar_existencia_series",
-    //     args: {
-    //         serie: frm.doc.naming_series
-    //     },
-    //     callback: function (r) {
-    //         // frm.reload_doc();
-    //         console.log(r.message);
-
-    //         if (r.message != 'fail') {
-    //             // Limpia la tabla hija de Purchase Taxes and Charges
-    //             cur_frm.clear_table("taxes");
-    //             cur_frm.refresh_fields();
-
-    //             // Asigna el nombre de la plantilla de impuestos a utilizar configurada
-    //             frm.set_value('taxes_and_charges', r.message[2]);
-    //             frm.refresh_field("taxes_and_charges");
-    //         }
-    //     }
-    // });
-    **/
+    special_pi_tax(frm);
   },
 });
 
 frappe.ui.form.on("Purchase Invoice Item", {
-  // Despues de eliminar una fila
-  before_items_remove: function (frm, cdt, cdn) {
-    pi_remove_non_existing_taxes(frm);
-    pi_total_amount_by_item_type(frm);
-    pi_shs_total_other_tax(frm);
-  },
-  // Cuando se elimina una fila
-  items_remove: function (frm, cdt, cdn) {
-    pi_remove_non_existing_taxes(frm);
-    pi_total_amount_by_item_type(frm);
-    pi_shs_total_other_tax(frm);
-  },
-  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
-  items_add: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
-  //   Cuando se cambia de posicion una fila
-  items_move: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
-  item_code: function (frm, cdt, cdn) {
-    // Trigger codigo de producto
-    pi_each_item(frm, cdt, cdn);
-    pi_remove_non_existing_taxes(frm);
-  },
-  qty: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
-  // NOTA: ESTE EVENTO NUNCA SE EJECUTA
-  // stock_qty: function (frm, cdt, cdn) {
-  //   pi_each_item(frm, cdt, cdn);
-  // },
-  uom: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
-  conversion_factor: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
-  rate: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
-  facelec_is_discount: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
-  conversion_factor: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
-  discount_percentage: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
-  discount_amount: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
-  //   CUando se cambia manualmente la cuenta de impuesto especial
-  facelec_p_tax_rate_per_uom_account: function (frm, cdt, cdn) {
-    pi_each_item(frm, cdt, cdn);
-  },
   shs_amount_for_back_calc: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
     var a = row.rate;
@@ -965,26 +919,5 @@ frappe.ui.form.on("Purchase Invoice Item", {
     frappe.model.set_value(row.doctype, row.name, "amount", flt(calcu * a));
 
     frm.refresh_field("items");
-
-    pi_each_item(frm, cdt, cdn);
-  },
-});
-
-frappe.ui.form.on("Otros Impuestos Factura Electronica", {
-  // Despues de que se elimina una fila
-  before_shs_pi_otros_impuestos_remove: function (frm, cdt, cdn) {
-    pi_shs_total_other_tax(frm);
-  },
-  // Cuando se elimina una fila
-  shs_otros_pi_impuestos_remove: function (frm, cdt, cdn) {
-    pi_shs_total_other_tax(frm);
-  },
-  // Cuando se agrega una fila
-  shs_otros_pi_impuestos_add: function (frm, cdt, cdn) {
-    pi_shs_total_other_tax(frm);
-  },
-  // Cuando se cambia de posicion una fila
-  shs_otros_pi_impuestos_move: function (frm, cdt, cdn) {
-    pi_shs_total_other_tax(frm);
   },
 });

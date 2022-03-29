@@ -209,6 +209,31 @@ function pr_total_by_item_type(frm) {
   frm.refresh_field("facelec_pr_total_iva");
 }
 
+/**
+ * @summary Calculador de montos para generar documentos electronicos
+ * @param {Object} frm - Propiedades del Doctype
+ */
+function purchase_receipt_calc(frm) {
+  frappe.call({
+    method: "factura_electronica.utils.calculator.purchase_receipt_calculator",
+    args: {
+      invoice_name: frm.doc.name,
+    },
+    freeze: true,
+    freeze_message: __("Calculating") + " 📄📄📄",
+    callback: (r) => {
+      frm.reload_doc();
+      // console.log("Purchase Receipt Calculated", r.message);
+      // frm.save();
+    },
+    error: (r) => {
+      // on error
+      console.log("Purchase Receipt Calculated Error");
+    },
+  });
+  frm.reload_doc();
+}
+
 frappe.ui.form.on("Purchase Receipt", {
   onload_post_render: function (frm, cdt, cdn) {},
   facelec_nit_prproveedor: function (frm) {
@@ -230,6 +255,10 @@ frappe.ui.form.on("Purchase Receipt", {
   before_save: function (frm, cdt, cdn) {
     // purchase_receipt_each_item(frm, cdt, cdn);
   },
+  // Se ejecuta despues de guardar
+  after_save: function (frm, cdt, cdn) {
+    purchase_receipt_calc(frm);
+  },
   validate: function (frm, cdt, cdn) {
     let taxes = frm.doc.taxes || [];
     if (taxes.length == 0) {
@@ -248,34 +277,34 @@ frappe.ui.form.on("Purchase Receipt", {
 });
 
 frappe.ui.form.on("Purchase Receipt Item", {
-  before_items_remove: function (frm) {
-    pr_total_by_item_type(frm);
-  },
-  items_remove: function (frm) {
-    pr_total_by_item_type(frm);
-  },
-  items_move: function (frm) {
-    pr_total_by_item_type(frm);
-  },
-  // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
-  items_add: function (frm) {
-    purchase_receipt_each_item(frm, cdt, cdn);
-  },
-  item_code: function (frm, cdt, cdn) {
-    purchase_receipt_each_item(frm, cdt, cdn);
-  },
-  qty: function (frm, cdt, cdn) {
-    purchase_receipt_each_item(frm, cdt, cdn);
-  },
-  conversion_factor: function (frm, cdt, cdn) {
-    purchase_receipt_each_item(frm, cdt, cdn);
-  },
-  rate: function (frm, cdt, cdn) {
-    purchase_receipt_each_item(frm, cdt, cdn);
-  },
-  uom: function (frm, cdt, cdn) {
-    purchase_receipt_each_item(frm, cdt, cdn);
-  },
+  // before_items_remove: function (frm) {
+  //   pr_total_by_item_type(frm);
+  // },
+  // items_remove: function (frm) {
+  //   pr_total_by_item_type(frm);
+  // },
+  // items_move: function (frm) {
+  //   pr_total_by_item_type(frm);
+  // },
+  // // NOTA: SI el proceso se realentiza al momento de agregar/duplicar filas comentar este bloque de codigo
+  // items_add: function (frm) {
+  //   purchase_receipt_each_item(frm, cdt, cdn);
+  // },
+  // item_code: function (frm, cdt, cdn) {
+  //   purchase_receipt_each_item(frm, cdt, cdn);
+  // },
+  // qty: function (frm, cdt, cdn) {
+  //   purchase_receipt_each_item(frm, cdt, cdn);
+  // },
+  // conversion_factor: function (frm, cdt, cdn) {
+  //   purchase_receipt_each_item(frm, cdt, cdn);
+  // },
+  // rate: function (frm, cdt, cdn) {
+  //   purchase_receipt_each_item(frm, cdt, cdn);
+  // },
+  // uom: function (frm, cdt, cdn) {
+  //   purchase_receipt_each_item(frm, cdt, cdn);
+  // },
   shs_amount_for_back_calc: function (frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
 
@@ -300,7 +329,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
     row.amount = calcu * a; //  frm.doc.items[index].rate;
     frm.refresh_field("items");
 
-    purchase_receipt_each_item(frm, cdt, cdn);
+    // purchase_receipt_each_item(frm, cdt, cdn);
   },
 });
 
