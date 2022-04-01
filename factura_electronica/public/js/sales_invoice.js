@@ -205,6 +205,7 @@ function special_tax(frm) {
         invoice_name: frm.doc.name,
         accounts: cuentas_registradas,
         invoice_type: "Sales Invoice",
+        is_return: frm.doc.is_return,
         /* OJO, El valor de este argumento debe ser "Sales Invoice" en sales_invoice.js
         En el caso de purchase_invoice.js el valor del argumento debe de ser: invoice_type: "Purchase Invoice"
         */
