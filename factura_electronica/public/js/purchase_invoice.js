@@ -751,6 +751,7 @@ function special_pi_tax(frm) {
         invoice_name: frm.doc.name,
         accounts: cuentas_registradas,
         invoice_type: "Purchase Invoice",
+        is_return: frm.doc.is_return,
       },
       // El callback se ejecuta tras finalizar la ejecucion del script python del lado
       // del servidor
