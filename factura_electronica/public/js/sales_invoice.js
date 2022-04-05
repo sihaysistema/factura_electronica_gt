@@ -726,10 +726,13 @@ frappe.ui.form.on("Sales Invoice Item", {
       maxIter: 10000,
     });
 
-    frappe.model.set_value(row.doctype, row.name, "qty", flt(calcu));
-    frappe.model.set_value(row.doctype, row.name, "stock_qty", flt(calcu));
-    frappe.model.set_value(row.doctype, row.name, "amount", flt(calcu * a));
+    // frappe.model.set_value(row.doctype, row.name, "qty", calcu);
+    // frappe.model.set_value(row.doctype, row.name, "stock_qty", calcu);
+    // frappe.model.set_value(row.doctype, row.name, "amount", calcu * a);
 
+    row.qty = calcu;
+    row.stock_qty = calcu;
+    row.amount = calcu * a;
     frm.refresh_field("items");
   },
 });

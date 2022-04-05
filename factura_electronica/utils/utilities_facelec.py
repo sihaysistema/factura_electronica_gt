@@ -165,6 +165,7 @@ def clean_traceback_py(mensaje):
     return str(x[msj_e]) + str(x[msj_e+1])
 
 
+@frappe.whitelist()
 def get_currency_precision():
     """
     Obtiene el numero de decimales a usar en los calculos para los reportes, solo se usa en los calculos
