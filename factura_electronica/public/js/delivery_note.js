@@ -247,6 +247,17 @@ function delivery_note_calc(frm) {
 }
 
 frappe.ui.form.on("Delivery Note", {
+  // Cuando se carga por primera vez una factura se asegura que active o no el redondeo
+  // de decimales dependiendo de la configucion
+  setup(frm) {
+    if (frm.doc.docstatus == 0) {
+      frappe.call("factura_electronica.utils.utilities_facelec.get_rounding_config").then(({ message }) => {
+        frm.set_value("disable_rounded_total", message);
+        frm.refresh_field("disable_rounded_total");
+        // console.log("Reondeo desde Delivery Note", message);
+      });
+    }
+  },
   // Se ejecuta cuando se renderiza el formulario
   onload_post_render: function (frm, cdt, cdn) {},
   // El validdor de nit no esta habilitado, ya que pueden existir valores de identificacion internacional
