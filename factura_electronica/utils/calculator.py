@@ -10,7 +10,6 @@ from frappe.utils import flt
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 from factura_electronica.api import get_special_tax
 
-PRECISION = get_currency_precision()
 
 # NOTA IMPORTANTE: Las funciones comparten la misma logica sin embargo se mantiene separado y codigo
 # repetido para no dependen der una sola funcion y estar listo a cualquier cosa repentina que pidan
@@ -25,6 +24,7 @@ def sales_invoice_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Sales Invoice", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -115,7 +115,7 @@ def sales_invoice_calculator(invoice_name):
             total_iva += row.facelec_sales_tax_for_this_row
 
         invoice_data.shs_total_iva_fac = flt(total_iva, PRECISION)  # flt(sum([x.facelec_sales_tax_for_this_row for x in items]), PRECISION)
-        invoice_data.save()
+        invoice_data.save(ignore_permissions=True)
 
         # Agregando otros impuestos si existen
 
@@ -140,12 +140,12 @@ def sales_invoice_calculator(invoice_name):
                     'total': flt(sum([x.facelec_other_tax_amount for x in items if x.facelec_tax_rate_per_uom_account == acc]),
                                  PRECISION),
                 })
-                shs_otros_impuestos.save()
+                shs_otros_impuestos.save(ignore_permissions=True)
 
         # Se obtiene de nuevo la data para calcular totales
         invoice_data_to_totals = frappe.get_doc("Sales Invoice", invoice_name)
         invoice_data_to_totals.shs_total_otros_imp_incl = flt(sum([x.total for x in invoice_data_to_totals.shs_otros_impuestos]), PRECISION)
-        invoice_data_to_totals.save()
+        invoice_data_to_totals.save(ignore_permissions=True)
 
     except Exception as e:
         msg_err = _('Por favor verifique que cada item en la Factura de Venta se encuentren configurados adecuadamente. En el caso de productos de combustible \
@@ -165,6 +165,7 @@ def delivery_note_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Delivery Note", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -252,7 +253,7 @@ def delivery_note_calculator(invoice_name):
         invoice_data.shs_dn_gt_tax_fuel = flt(total_fuels, PRECISION)
         invoice_data.shs_dn_gt_tax_goods = flt(total_goods, PRECISION)
         invoice_data.shs_dn_gt_tax_services = flt(total_services, PRECISION)
-        invoice_data.save()
+        invoice_data.save(ignore_permissions=True)
 
     except Exception as e:
         msg_err = _('Por favor verifique que cada item en la Nota de Entrega se encuentren configurados adecuadamente. \
@@ -271,6 +272,7 @@ def purchase_invoice_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Purchase Invoice", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -363,7 +365,7 @@ def purchase_invoice_calculator(invoice_name):
         invoice_data.facelec_p_gt_tax_fuel = flt(total_fuels, PRECISION)
         invoice_data.facelec_p_gt_tax_goods = flt(total_goods, PRECISION)
         invoice_data.facelec_p_gt_tax_services = flt(total_services, PRECISION)
-        invoice_data.save()
+        invoice_data.save(ignore_permissions=True)
 
         # Agregando otros impuestos si existen
         # Se obtienen las cuentas de impuestos especiales (unicas)
@@ -387,12 +389,12 @@ def purchase_invoice_calculator(invoice_name):
                     'total': flt(sum([x.facelec_p_other_tax_amount for x in items if x.facelec_p_tax_rate_per_uom_account == acc]),
                                  PRECISION),
                 })
-                shs_otros_impuestos.save()
+                shs_otros_impuestos.save(ignore_permissions=True)
 
         # Se obtiene de nuevo la data para calcular totales
         invoice_data_to_totals = frappe.get_doc("Purchase Invoice", invoice_name)
         invoice_data_to_totals.shs_pi_total_otros_imp_incl = flt(sum([x.total for x in invoice_data_to_totals.shs_pi_otros_impuestos]), PRECISION)
-        invoice_data_to_totals.save()
+        invoice_data_to_totals.save(ignore_permissions=True)
 
     except Exception as e:
         msg_err = _('Por favor verifique que cada item en la Factura de Compra se encuentren configurados adecuadamente. En el caso de productos de combustible \
@@ -412,6 +414,7 @@ def purchase_order_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Purchase Order", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -499,7 +502,7 @@ def purchase_order_calculator(invoice_name):
         invoice_data.facelec_po_gt_tax_fuel = flt(total_fuels, PRECISION)
         invoice_data.facelec_po_gt_tax_goods = flt(total_goods, PRECISION)
         invoice_data.facelec_po_gt_tax_services = flt(total_services, PRECISION)
-        invoice_data.save()
+        invoice_data.save(ignore_permissions=True)
 
     except Exception as e:
         msg_err = _('Por favor verifique que cada item en la Orden de compra se encuentren configurados adecuadamente. \
@@ -518,6 +521,7 @@ def purchase_receipt_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Purchase Receipt", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -605,7 +609,7 @@ def purchase_receipt_calculator(invoice_name):
         invoice_data.facelec_pr_gt_tax_fuel = flt(total_fuels, PRECISION)
         invoice_data.facelec_pr_gt_tax_goods = flt(total_goods, PRECISION)
         invoice_data.facelec_pr_gt_tax_services = flt(total_services, PRECISION)
-        invoice_data.save()
+        invoice_data.save(ignore_permissions=True)
 
     except Exception as e:
         msg_err = _('Por favor verifique que cada item en el Recibo de compra se encuentren configurados adecuadamente. \
@@ -624,6 +628,7 @@ def sales_order_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Sales Order", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -711,7 +716,7 @@ def sales_order_calculator(invoice_name):
         invoice_data.shs_gt_tax_fuel = flt(total_fuels, PRECISION)
         invoice_data.shs_so_gt_tax_goods = flt(total_goods, PRECISION)
         invoice_data.shs_so_gt_tax_services = flt(total_services, PRECISION)
-        invoice_data.save()
+        invoice_data.save(ignore_permissions=True)
 
     except Exception as e:
         msg_err = _('Por favor verifique que cada item en la Orden de Venta se encuentren configurados adecuadamente. \
@@ -730,6 +735,7 @@ def sales_quotation_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Quotation", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -817,7 +823,7 @@ def sales_quotation_calculator(invoice_name):
         invoice_data.facelec_qt_gt_tax_fuel = flt(total_fuels, PRECISION)
         invoice_data.facelec_qt_gt_tax_goods = flt(total_goods, PRECISION)
         invoice_data.facelec_qt_gt_tax_services = flt(total_services, PRECISION)
-        invoice_data.save()
+        invoice_data.save(ignore_permissions=True)
 
         # Agregando otros impuestos si existen
         # Se obtienen las cuentas de impuestos especiales (unicas)
@@ -841,12 +847,12 @@ def sales_quotation_calculator(invoice_name):
                     'total': flt(sum([x.facelec_qt_other_tax_amount for x in items if x.facelec_qt_tax_rate_per_uom_account == acc]),
                                  PRECISION),
                 })
-                shs_otros_impuestos.save()
+                shs_otros_impuestos.save(ignore_permissions=True)
 
         # Se obtiene de nuevo la data para calcular totales
         invoice_data_to_totals = frappe.get_doc("Quotation", invoice_name)
         invoice_data_to_totals.shs_qt_total_otros_imp_incl = flt(sum([x.total for x in invoice_data_to_totals.shs_tax_quotation]), PRECISION)
-        invoice_data_to_totals.save()
+        invoice_data_to_totals.save(ignore_permissions=True)
 
     except Exception as e:
         msg_err = _('Por favor verifique que cada item en la Cotizacion se encuentren configurados adecuadamente. \
@@ -865,6 +871,7 @@ def supplier_quotation_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Supplier Quotation", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -952,7 +959,7 @@ def supplier_quotation_calculator(invoice_name):
         invoice_data.shs_spq_gt_tax_fuel = flt(total_fuels, PRECISION)
         invoice_data.shs_spq_gt_tax_goods = flt(total_goods, PRECISION)
         invoice_data.shs_spq_gt_tax_services = flt(total_services, PRECISION)
-        invoice_data.save()
+        invoice_data.save(ignore_permissions=True)
 
     except Exception as e:
         msg_err = _('Por favor verifique que cada item en la Cotizacion de Proveedor se encuentren configurados adecuadamente. \
