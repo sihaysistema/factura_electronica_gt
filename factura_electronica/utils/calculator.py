@@ -10,7 +10,6 @@ from frappe.utils import flt
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 from factura_electronica.api import get_special_tax
 
-PRECISION = get_currency_precision()
 
 # NOTA IMPORTANTE: Las funciones comparten la misma logica sin embargo se mantiene separado y codigo
 # repetido para no dependen der una sola funcion y estar listo a cualquier cosa repentina que pidan
@@ -25,6 +24,7 @@ def sales_invoice_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Sales Invoice", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -165,6 +165,7 @@ def delivery_note_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Delivery Note", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -271,6 +272,7 @@ def purchase_invoice_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Purchase Invoice", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -412,6 +414,7 @@ def purchase_order_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Purchase Order", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -518,6 +521,7 @@ def purchase_receipt_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Purchase Receipt", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -624,6 +628,7 @@ def sales_order_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Sales Order", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -730,6 +735,7 @@ def sales_quotation_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Quotation", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -865,6 +871,7 @@ def supplier_quotation_calculator(invoice_name):
     """
 
     try:
+        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Supplier Quotation", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
