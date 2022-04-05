@@ -289,3 +289,7 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
             raise_exception=True
         )
 
+
+@frappe.whitelist()
+def get_rounding_config():
+    return cint(frappe.db.get_single_value('Global Defaults', 'disable_rounded_total'))

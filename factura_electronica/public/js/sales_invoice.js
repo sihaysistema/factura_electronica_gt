@@ -645,6 +645,16 @@ function dependency_validator(frm) {
 
 /* Factura de Ventas-------------------------------------------------------------------------------------------------- */
 frappe.ui.form.on("Sales Invoice", {
+  // Cuando se carga por primera vez una factura se asegura que active o no el redondeo
+  // de decimales dependiendo de la configucion
+  setup(frm) {
+    if (frm.doc.docstatus == 0) {
+      frappe.call("factura_electronica.utils.utilities_facelec.get_rounding_config").then(({ message }) => {
+        frm.set_value("disable_rounded_total", message);
+        frm.refresh_field("disable_rounded_total");
+      });
+    }
+  },
   // Se ejecuta cuando se renderiza el doctype
   onload_post_render: function (frm, cdt, cdn) {
     // clean_fields(frm);
