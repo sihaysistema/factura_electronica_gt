@@ -13,7 +13,7 @@ import xmltodict
 from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
-from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
+from factura_electronica.utils.utilities_facelec import get_currency_precision, get_currency_precision_facelec, remove_html_tags
 
 # Una nota de crédito es un documento comercial emitido por
 # un vendedor a un comprador. Las notas de crédito actúan como un documento
@@ -38,7 +38,7 @@ class ElectronicCreditNote:
         self.__reason = reason
         self.__inv_credit_note = actual_inv_name  # HACE REFERENCIA A LA NUEVA NOTA DE CREDITO
         self.__log_error = []
-        self.__precision = get_currency_precision()
+        self.__precision = get_currency_precision_facelec(conf_name)
         self.__tiene_adenda = False
 
     def build_credit_note(self):

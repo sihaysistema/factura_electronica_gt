@@ -13,7 +13,7 @@ import xmltodict
 from frappe import _
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
-from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
+from factura_electronica.utils.utilities_facelec import get_currency_precision, get_currency_precision_facelec, remove_html_tags
 
 
 class ElectronicInvoice:
@@ -29,7 +29,7 @@ class ElectronicInvoice:
         self.__config_name = conf_name
         self.__naming_serie = naming_series
         self.__log_error = []
-        self.__precision = get_currency_precision()
+        self.__precision = get_currency_precision_facelec(conf_name)
         self.__default_address = False
         self.__tiene_adenda = False
 
@@ -691,7 +691,7 @@ class ElectronicInvoice:
             self.__start_datetime = get_datetime()
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
-            # Usar solo para debug
+            # Usar solo para debug: Esquema de factura antes de ser generada como electronica
             with open('PREVIEW-FACTURA-FEL.xml', 'w') as f:
                 f.write(self.__xml_string)
 

@@ -185,6 +185,25 @@ def get_currency_precision():
         return 2
 
 
+@frappe.whitelist()
+def get_currency_precision_facelec(config_name):
+    """
+    Obtiene el numero de decimales a usar en la generacion de docs electronica, el valor se
+    obtiene de la configuracion de facelec
+
+    NOTA: si la precision esta configurada en 0, se hara un redondeo al proximo numero entero
+
+    Returns:
+        int: numero de decimales
+    """
+
+    precision = frappe.db.get_value('Configuracion Factura Electronica', config_name, 'number_of_decimales')
+    if precision == 'System Configuration' or not precision:
+        return get_currency_precision()
+
+    return cint(precision)
+
+
 # @frappe.whitelist()
 # def autoname_exchange_inv():
 

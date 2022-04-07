@@ -14,7 +14,7 @@ import xmltodict
 from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
-from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
+from factura_electronica.utils.utilities_facelec import get_currency_precision, get_currency_precision_facelec, remove_html_tags
 
 
 class SalesExchangeInvoice:
@@ -30,7 +30,7 @@ class SalesExchangeInvoice:
         self.__config_name = conf_name
         self.__naming_serie = naming_series
         self.__log_error = []
-        self.__precision = get_currency_precision()
+        self.__precision = get_currency_precision_facelec(conf_name)
         self.__default_address = False
 
     def build_invoice(self):

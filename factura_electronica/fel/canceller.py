@@ -13,7 +13,7 @@ import xmltodict
 from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
-from factura_electronica.utils.utilities_facelec import get_currency_precision
+from factura_electronica.utils.utilities_facelec import get_currency_precision_facelec
 
 
 class CancelDocument:
@@ -31,7 +31,7 @@ class CancelDocument:
         self.__config_name = conf_name
         self.__doctype = doctype_name
         self.__log_error = []
-        self.__precision = get_currency_precision()
+        self.__precision = get_currency_precision_facelec(conf_name)
         self.__reason = reason_cancelation
 
     def validate_requirements(self):

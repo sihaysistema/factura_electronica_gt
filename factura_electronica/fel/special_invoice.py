@@ -14,7 +14,7 @@ from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
 from factura_electronica.utils.formulas import apply_formula_isr
-from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
+from factura_electronica.utils.utilities_facelec import get_currency_precision, get_currency_precision_facelec, remove_html_tags
 
 # La contenida en el artículo 52 se refiere al documento que utiliza y emite
 # el comprador cuando adquiere bienes o servicios de personas individuales que
@@ -36,7 +36,7 @@ class ElectronicSpecialInvoice:
         self.__naming_serie = naming_series
         self.__log_error = []
         self.__d_frases = {}
-        self.__precision = get_currency_precision()
+        self.__precision = get_currency_precision_facelec(conf_name)
 
     def build_special_invoice(self):
         """
