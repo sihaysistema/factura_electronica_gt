@@ -745,8 +745,8 @@ class ElectronicInvoice:
             self.__doc_firmado = json.loads((response.content).decode('utf-8'))
 
             # Guardamos la respuesta en un archivo DEBUG
-            # with open('recibido_firmado.json', 'w') as f:
-            #      f.write(json.dumps(self.__doc_firmado, indent=2))
+            with open('recibido_firmado.json', 'w') as f:
+                 f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
             if self.__doc_firmado.get('resultado') == True:
@@ -801,8 +801,8 @@ class ElectronicInvoice:
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
-            # with open('RESPONSE-FACTURA-FEL.json', 'w') as f:
-            #     f.write(json.dumps(self.__response_ok, indent=2))
+            with open('RESPONSE-FACTURA-FEL.json', 'w') as f:
+                f.write(json.dumps(self.__response_ok, indent=2))
 
             return True, 'OK'
 
