@@ -10,6 +10,7 @@
   "regimen",
   "generacion_factura",
   "url_descarga_pdf",
+  "number_of_decimales",
   "configuracion_pdf",
   "descargar_pdf_factura_electronica",
   "company",
@@ -17,6 +18,9 @@
   "facelec_name_of_owner",
   "usar_datos_prueba",
   "nombre_empresa_prueba",
+  "configuration_of_establishments_section",
+  "is_it_an_establishment",
+  "parent_company",
   "documentos_electronicos_section",
   "factura_venta_fel",
   "nota_credito_fel",
@@ -373,6 +377,7 @@
   {
    "fieldname": "company",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Company",
    "options": "Company"
   },
@@ -558,12 +563,39 @@
    "fieldname": "is_individual",
    "fieldtype": "Check",
    "label": "La compania es de propietario individual?"
+  },
+  {
+   "default": "System Configuration",
+   "fieldname": "number_of_decimales",
+   "fieldtype": "Select",
+   "label": "Number of Decimales",
+   "options": "System Configuration\n2\n3\n4\n5\n6\n7\n8\n9",
+   "reqd": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "configuration_of_establishments_section",
+   "fieldtype": "Section Break",
+   "label": "Configuration of Establishments"
+  },
+  {
+   "default": "0",
+   "description": "Check this option, if the configuration will apply to an establishment of the company.",
+   "fieldname": "is_it_an_establishment",
+   "fieldtype": "Check",
+   "label": "Is it an establishment?"
+  },
+  {
+   "fieldname": "parent_company",
+   "fieldtype": "Link",
+   "label": "Parent Company",
+   "options": "Company"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2022-01-05 12:05:23.956265",
+ "modified": "2022-04-08 16:58:01.915969",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

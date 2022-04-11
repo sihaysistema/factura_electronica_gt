@@ -1,0 +1,62 @@
+{
+ "actions": [],
+ "autoname": "FACELEC-ERROR-.######",
+ "creation": "2022-04-11 11:13:07.431012",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "error_description",
+  "date_and_time",
+  "reference",
+  "reference_document"
+ ],
+ "fields": [
+  {
+   "fieldname": "error_description",
+   "fieldtype": "Long Text",
+   "label": "Error Description"
+  },
+  {
+   "fieldname": "reference",
+   "fieldtype": "Data",
+   "label": "Reference"
+  },
+  {
+   "fieldname": "reference_document",
+   "fieldtype": "Link",
+   "label": "Reference Document",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "date_and_time",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Date Time",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2022-04-11 11:23:23.166620",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Facelec Error Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

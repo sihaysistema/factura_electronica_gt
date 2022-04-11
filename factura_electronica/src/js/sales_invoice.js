@@ -8,6 +8,7 @@ import { goalSeek } from "./goalSeek.js";
 
 /**
  * @summary Limpia los campos con data no necesaria, al momento de duplicar
+ * NOTE: Esta funcion altera el estado de doc haciendo que aparezca en Draft
  *
  * @param {*} frm
  */
@@ -35,6 +36,7 @@ function clean_fields(frm) {
 
 /**
  * @summary Generador tabla HTML con detalles de impuestos e impuestos especiales
+ * de los items de la factura
  *
  * @param {*} frm
  */
@@ -59,6 +61,7 @@ function generar_tabla_html(frm) {
 
 /**
  * @summary Calculador de montos para generar documentos electronicos
+ * Se ejecuta despues de guardar los datos en la DB
  * @param {Object} frm - Propiedades del Doctype
  */
 function sales_invoice_calc(frm) {
@@ -71,15 +74,41 @@ function sales_invoice_calc(frm) {
     freeze_message: __("Calculating") + " 📄📄📄",
     callback: (r) => {
       frm.reload_doc();
-      // console.log("Sales Invoice Calculated", r.message);
-      // frm.save();
-    },
-    error: (r) => {
-      // on error
-      console.log("Sales Invoice Calculated Error");
     },
   });
   frm.reload_doc();
+}
+
+// Valida que tipo de boton generador fel debe aparecer
+function btn_validator(frm) {
+  frappe.call({
+    method: "factura_electronica.fel_api.btn_validator",
+    args: {
+      doctype: frm.doc.doctype,
+      docname: frm.doc.name,
+    },
+    callback: function ({ message }) {
+      console.log("El tipo de doc es", message);
+      btn_fel_generator(frm, message);
+    },
+  });
+}
+
+function btn_fel_generator(frm, { type_doc }) {
+  if (!type_doc) {
+    // Si no hay dato no se muestra ningun btn generador
+    return;
+  }
+
+  // Factura Venta Normal
+  if (type_doc === "FACT") {
+    generar_boton_factura(__("Generar Factura FEL"), frm);
+    if (frm.doc.numero_autorizacion_fel) {
+      // Si ya se genero se muestra el btn para ver pdf
+      cur_frm.clear_custom_buttons();
+      pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
+    }
+  }
 }
 
 /**
@@ -666,7 +695,8 @@ frappe.ui.form.on("Sales Invoice", {
   // Se ejecuta cuando hay alguna actualizacion de datos en el doctype
   refresh: function (frm, cdt, cdn) {
     if (frm.doc.docstatus != 0) {
-      btn_generator(frm);
+      // btn_generator(frm);
+      btn_validator(frm);
     }
   },
   // Se ejecuta al presionar el boton guardar

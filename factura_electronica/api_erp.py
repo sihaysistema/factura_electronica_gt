@@ -16,6 +16,7 @@ from factura_electronica.fel_api import validate_configuration
 
 # USAR ESTE SCRIPT COMO API PARA COMUNICAR APPS DEL ECOSISTEMA FRAPPE/ERPNEXT :)
 
+
 @frappe.whitelist()
 def batch_generator_api(invoices):
     try:

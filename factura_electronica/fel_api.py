@@ -2,9 +2,7 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-
-import json
-import time
+from unicodedata import name
 
 import frappe
 from frappe import _
@@ -45,7 +43,7 @@ def api_interface(invoice_code, naming_series):
     try:
         # Guarda el estado de la funcion encargada de aplicar la generacion de factura electronica
         state_of = generate_electronic_invoice(invoice_code, naming_series)
-        if state_of[0] == False:
+        if not state_of[0]:
             if type(state_of[1]) is dict:
                 frappe.msgprint(msg=_(f'{state_of[1]}'),
                                 title=_('Proceso no completado'), indicator='red')
@@ -1125,3 +1123,99 @@ def generate_exchange_invoice_si(invoice_code: str, naming_series: str) -> tuple
     except:
         return False, str(frappe.get_traceback())
 
+
+# ------------------------------------------------------------------------------------------------------------
+@frappe.whitelist()
+def validate_config_fel(company):
+    """Valida y retorna que configuracion se encuentra activa para la compañia/sucursal
+
+    Args:
+        naming_serie (str): serie utilizada en el doc
+        company (str): nombre de la compañia en el doc
+
+    Returns:
+        tuple: bool/str
+    """
+
+    if frappe.db.exists('Configuracion Factura Electronica', {'docstatus': 1, 'company': company}):
+        # Retorna el nombre de la config que se valido de ultimo
+        return True, frappe.db.get_value('Configuracion Factura Electronica', {'docstatus': 1, 'company': company}, 'name'),
+    else:
+        return False, 'No existe configuracion para la serie y compañia',
+
+
+@frappe.whitelist()
+def generate_sales_invoice_fel(company, invoice_name, naming_serie):
+    pass
+
+
+@frappe.whitelist()
+def btn_validator(doctype, docname):
+    """Valida que tipo de boton se deben mostrar en la factura segun la serie y configuracion"""
+    # FACT, FACTEXP, NCRED, FESP, NDEB, CANCEL
+    doc = frappe.get_doc(doctype, {'name': docname})
+    status_list = ['Credit Note Issued', 'Debit Note Issued', 'Return']
+
+    config = validate_config_fel(doc.company)
+    if not config[0]:
+        return {'type_doc': ''}
+
+    # Obtiene informacion de los tipos de generadores activos en la configuracion
+    options = ['factura_venta_fel', 'nota_credito_fel', 'anulador_de_facturas_ventas_fel', 'factura_exportacion_fel',
+               'nota_de_debito_electronica', 'factura_cambiaria_fel', 'factura_especial_fel', 'factura_electronica_fel_pos']
+    options_fel = frappe.db.get_list('Configuracion Factura Electronica', filters={'name': config[1]}, fields=options)[0]
+
+    # Anulador de docs electronicos: Aplica para cualquier doc electronico
+    if doc.docstatus == 2 and doc.numero_autorizacion_fel and options_fel['anulador_de_facturas_ventas_fel'] == 1:
+        if doctype == 'Sales Invoice':
+            type_doc_fel = frappe.db.get_value('Configuracion Series FEL', {'parent': config[1], 'serie': doc.naming_series}, 'tipo_documento')
+            return {'type_doc': 'anulador_si'}
+
+        if doctype == 'Purchase Invoice':
+            type_doc_fel = frappe.db.get_value('Serial Configuration For Purchase Invoice',
+                                               {'parent': config[1], 'serie': doc.naming_series}, 'tipo_documento')
+            return {'type_doc': 'anulador_pi'}
+
+    # Validacion para Doctype SALES INVOICE
+    if doctype == 'Sales Invoice':
+        # Factura Venta FEL Normal y Factura Cambiaria
+        if ((doc.status not in status_list) and (not doc.is_it_an_international_invoice) and
+                (options_fel['factura_venta_fel'] == 1 or options_fel['factura_cambiaria_fel'] == 1)):
+            type_doc_fel = frappe.db.get_value('Configuracion Series FEL', {'parent': config[1], 'serie': doc.naming_series}, 'tipo_documento')
+            # Puede ser cambiaria o normal
+            if type_doc_fel == 'FCAM':
+                return {'type_doc': 'cambiaria'}
+            if type_doc_fel == 'FACT':
+                return {'type_doc': 'factura_fel'}
+
+        # Factura Venta FEL - Exportacion
+        if (doc.status not in status_list) and doc.is_it_an_international_invoice and options_fel['factura_exportacion_fel'] == 1:
+            type_doc_fel = frappe.db.get_value('Configuracion Series FEL', {'parent': config[1], 'serie': doc.naming_series,
+                                                                            'es_exportacion': 1}, 'tipo_documento')
+            if type_doc_fel == 'FACT':
+                return {'type_doc': 'exportacion'}
+
+        # Nota de Credito FEL
+        if doc.is_return == 1 and doc.return_against and options_fel['nota_credito_fel'] == 1:
+            type_doc_fel = frappe.db.get_value('Configuracion Series FEL', {'parent': config[1], 'serie': doc.naming_series}, 'tipo_documento')
+            if type_doc_fel == 'NCRE':
+                return {'type_doc': 'nota_credito'}
+
+    # Validacion para Doctype PURCHASE INVOICE
+    if doctype == 'Purchase Invoice':
+        # Factura Especial
+        if (doc.status not in status_list) and options_fel['factura_especial_fel'] == 1:
+            type_doc_fel = frappe.db.get_value('Serial Configuration For Purchase Invoice',
+                                               {'parent': config[1], 'serie': doc.naming_series}, 'tipo_documento')
+            if type_doc_fel == 'FESP':
+                return {'type_doc': 'factura_especial'}
+
+        # Nota de Debito
+        if doc.is_return == 1 and doc.bill_no and doc.bill_date and doc.return_against:
+            type_doc_fel = frappe.db.get_value('Serial Configuration For Purchase Invoice',
+                                               {'parent': config[1], 'serie': doc.naming_series}, 'tipo_documento')
+            if type_doc_fel == 'NDEB':
+                return {'type_doc': 'nota_debito'}
+
+    # SI no aplica a ninguna condicion
+    return {'type_doc': ''}
