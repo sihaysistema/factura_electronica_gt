@@ -432,23 +432,6 @@ def download_excel_sales_ledger():
 
 
 @frappe.whitelist()
-def invoice_exists(uuid):
-    """Valida si el documento electronico se encuentra como cancelado en Envios FEL
-    segun su UUID
-
-    Args:
-        uuid (str): Identificador único universal
-
-    Returns:
-        bool: true/false
-    """
-    if frappe.db.exists('Envio FEL', {'name': uuid, 'status': 'Cancelled'}):
-        return True
-    else:
-        return False
-
-
-@frappe.whitelist()
 def btn_activator(electronic_doc):
     """Define si se muestra/oculta el boton generador de docs electronicos en el SI/PI
 

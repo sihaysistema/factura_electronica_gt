@@ -88,20 +88,24 @@ function btn_validator(frm) {
       docname: frm.doc.name,
     },
     callback: function ({ message }) {
-      console.log("El tipo de doc es", message);
       btn_fel_generator(frm, message);
     },
   });
 }
 
-function btn_fel_generator(frm, { type_doc }) {
+function btn_fel_generator(frm, msg) {
+  const { type_doc, show_btn } = msg;
+
+  // console.log("El tipo de doc es", type_doc);
+  // console.log("Status btn", show_btn);
+
   if (!type_doc) {
     // Si no hay dato no se muestra ningun btn generador
     return;
   }
 
   // Factura Venta Normal
-  if (type_doc === "FACT") {
+  if (type_doc === "factura_fel") {
     generar_boton_factura(__("Generar Factura FEL"), frm);
     if (frm.doc.numero_autorizacion_fel) {
       // Si ya se genero se muestra el btn para ver pdf
@@ -109,101 +113,47 @@ function btn_fel_generator(frm, { type_doc }) {
       pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
     }
   }
-}
-
-/**
- * @summary Validador de que boton se debe generar para docs electronicos
- * @param {Object} frm
- */
-function btn_generator(frm) {
-  // INICIO VALIDACION DE ESCENARIOS PARA MOSTRAR LOS BOTOTNES GENERADORES DOCS ELECTRONICOS ADECUADOS
-  // El documento debe estar guardado para que la funcion is_valid_to_fel valide correctamente el escenario
-  frappe.call({
-    method: "factura_electronica.fel_api.is_valid_to_fel",
-    args: {
-      doctype: frm.doc.doctype,
-      docname: frm.doc.name,
-    },
-    callback: function (r) {
-      // DEBUG: usar para ver si aplica
-      // console.log(r.message);
-
-      // SI APLICA EL ESCENARIO MUESTRA EL BOTON PARA ANULAR DOCS ELECTRONICOS
-      // Solo si el documento actual ya fue generado anteriormente como electronico
-      if (r.message[1] === "anulador" && r.message[2]) {
-        frappe
-          .call("factura_electronica.api.btn_activator", {
-            electronic_doc: "anulador_de_facturas_ventas_fel",
-          })
-          .then((r) => {
-            // console.log(r.message)
-            if (r.message) {
-              // Si la anulacion electronica ya fue realizada, se mostrara boton para ver pdf doc anulado
-              frappe
-                .call("factura_electronica.api.invoice_exists", {
-                  uuid: frm.doc.numero_autorizacion_fel,
-                })
-                .then((r) => {
-                  // console.log(r.message)
-                  if (r.message) {
-                    cur_frm.clear_custom_buttons();
-                    pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
-                  } else {
-                    // SI no aplica lo anterior se muestra btn para anular doc
-                    btn_canceller(frm);
-                    pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
-                  }
-                });
-            }
-          });
+  // Factura Exportacion
+  if (type_doc === "exportacion") {
+    btn_export_invoice(frm);
+    // Si ya se genero se muestra el btn para ver pdf
+    if (frm.doc.numero_autorizacion_fel) {
+      cur_frm.clear_custom_buttons();
+      pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
+    }
+  }
+  // Nota de Credito
+  if (type_doc === "nota_credito") {
+    btn_credit_note(frm);
+    // Si ya se genero se muestra el btn para ver pdf
+    if (frm.doc.numero_autorizacion_fel) {
+      cur_frm.clear_custom_buttons();
+      pdf_credit_note(frm);
+    }
+  }
+  // Factura Cambiaria
+  if (type_doc === "cambiaria") {
+    btn_exchange_invoice(frm);
+    // Si ya se genero se muestra el btn para ver pdf
+    if (frm.doc.numero_autorizacion_fel) {
+      cur_frm.clear_custom_buttons();
+      pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
+    }
+  }
+  // Anulador de docs
+  if (type_doc === "anulador_si") {
+    if (show_btn == false) {
+      // Si ya esta cancelada
+      // Si ya se genero se muestra el btn para ver pdf
+      if (frm.doc.numero_autorizacion_fel) {
+        cur_frm.clear_custom_buttons();
+        pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
       }
-
-      // SI APLICA EL ESCENARIO MUESTRA EL BOTON PARA Generación Facturas Electrónicas FEL - Normal Type
-      if (r.message[0] === "FACT" && r.message[2]) {
-        generar_boton_factura(__("Factura Electrónica FEL"), frm);
-        if (frm.doc.numero_autorizacion_fel) {
-          cur_frm.clear_custom_buttons();
-          pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
-        }
-      }
-
-      // SI APLICA EL ESCENARIO MUESTRA EL BOTON PARA Generación Facturas Electrónicas FEL - Exportación
-      if (r.message[0] === "FACT" && r.message[1] == "export") {
-        btn_export_invoice(frm);
-        if (frm.doc.numero_autorizacion_fel) {
-          cur_frm.clear_custom_buttons();
-          pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
-        }
-      }
-
-      // SI APLICA EL ESCENARIO MUESTRA EL BOTON PARA Generación Nota Credito Electronica
-      if (r.message[0] === "NCRE" && r.message[1] === "valido" && r.message[2]) {
-        btn_credit_note(frm);
-        if (frm.doc.numero_autorizacion_fel) {
-          cur_frm.clear_custom_buttons();
-          pdf_credit_note(frm);
-        }
-      }
-
-      // SI APLICA EL ESCENARIO MUESTRA EL BOTON PARA  Generación Factura Cambiaria
-      if (r.message[0] === "FCAM" && r.message[1] === "valido" && r.message[2]) {
-        btn_exchange_invoice(frm);
-        if (frm.doc.numero_autorizacion_fel) {
-          cur_frm.clear_custom_buttons();
-          pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
-        }
-      }
-    },
-  });
-  // FIN BOTONES GENERADORES DOCS ELECTRONICOS
-
-  // INICIO GENERACION POLIZA CON RETENCIONES
-  // TODO:AGREGAR VALIDACION EXISTENCIA DE JOURNA ENTRY
-  // VALIDAR Y CREAR DOCUMENTACION DE RETENCIONES
-  // if (frm.doc.docstatus === 1 && frm.doc.status !== "Paid") {
-  //   btn_journal_entry_retention(frm);
-  // }
-  // FIN GENERACION POLIZA CON RETENCIONES
+    }
+    if (show_btn == true) {
+      btn_canceller(frm);
+    }
+  }
 }
 
 /**
@@ -322,18 +272,19 @@ function generar_boton_factura(tipo_factura, frm) {
       // Guarda la url actual
       let mi_url = window.location.href;
       frappe.call({
-        method: "factura_electronica.fel_api.api_interface",
+        method: "factura_electronica.fel_api.fel_generator",
         args: {
-          invoice_code: frm.doc.name,
-          naming_series: frm.doc.naming_series,
+          doctype: frm.doc.doctype,
+          docname: frm.doc.name,
+          type_doc: "factura_fel",
         },
         // El callback recibe como parametro el dato retornado por el script python del lado del servidor
         // para validar si se genero correctamente la factura electronica
-        callback: function (data) {
-          // console.log(data.message);
-          if (data.message[0] === true) {
+        callback: function ({ message }) {
+          console.log(message);
+          if (message.status === true && message.uuid) {
             // Crea una nueva url con el nombre del documento actualizado
-            let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
+            let url_nueva = mi_url.replace(serie_de_factura, message.serie_fel);
             // Asigna la nueva url a la ventana actual
             window.location.assign(url_nueva);
             // Recarga la pagina
@@ -355,7 +306,7 @@ function generar_boton_factura(tipo_factura, frm) {
 function btn_export_invoice(frm) {
   cur_frm.clear_custom_buttons(); // Limpia otros customs buttons para generar uno nuevo
   frm
-    .add_custom_button(__("FACTURA ELECTRONICA EXPORTACION FEL"), function () {
+    .add_custom_button(__("Generar Factura Exportacion FEL"), function () {
       frappe.call({
         method: "factura_electronica.fel_api.api_interface_export",
         args: {
@@ -390,7 +341,7 @@ function btn_export_invoice(frm) {
 function btn_credit_note(frm) {
   cur_frm.clear_custom_buttons();
   frm
-    .add_custom_button(__("CREDIT NOTE FEL"), function () {
+    .add_custom_button(__("Generar Nota Credito FEL"), function () {
       // Permite hacer confirmaciones
       frappe.confirm(
         __("Are you sure you want to proceed to generate a credit note?"),
@@ -593,7 +544,7 @@ function btn_journal_entry_retention(frm) {
 function btn_exchange_invoice(frm) {
   cur_frm.clear_custom_buttons(); // Limpia otros customs buttons para generar uno nuevo
   frm
-    .add_custom_button(__("FACTURA CAMBIARIA FEL"), function () {
+    .add_custom_button(__("Generar Factura Cambiaria FEL"), function () {
       frappe.call({
         method: "factura_electronica.fel_api.generate_exchange_invoice_si",
         args: {
