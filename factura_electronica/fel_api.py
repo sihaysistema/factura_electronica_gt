@@ -1137,7 +1137,7 @@ def validate_config_fel(company):
     Returns:
         tuple: bool/str
     """
-    # Guarda las posibles configuracion para X Compania
+    # Guarda las posibles configuraciones para X Compania
     list_config = frappe.db.get_list('Configuracion Factura Electronica', filters={'docstatus': 1, 'company': company},
                                      fields=['count(name) as count', 'name'])[0]
 
@@ -1285,10 +1285,10 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
                 'title': _('Factura Electronica No Configurada')
             }
 
-        # 2 - Se crea una instancia de la clase FacturaElectronica para generar la factura
+        # 2 - Se crea una instancia de la clase FacturaElectronica para generarla
         new_invoice = ElectronicInvoice(invoice_name, config[1], naming_series)
 
-        # Se valida y constriye la peticion para INFILE
+        # Se valida y construye la peticion para INFILE
         build_inv = new_invoice.build_invoice()
         if not build_inv.get('status'):  # True/False
             return {
@@ -1372,8 +1372,46 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
         return
 
 
+def msg_generator(details):
+    """Generador de mensajes, todos los generadores de docs electronicos comparten la misma
+    estructura de respuestas
+
+    Args:
+        details (dict): detalles operacion de cada fase de la generacion de docs electronicos
+
+    Returns:
+        dict: detalles de la operacion
+    """
+    # Si la respuesta incluye errores
+    if details.get('error'):
+        msg_with_errors = f'{details.get("description")} <strong>{_("Si la falla persiste reporte este mensaje")} \
+            </strong> {_("Mas detalles en el siguiente log:")} <br> <br> <code>{details.get("error")}</code>'
+        frappe.msgprint(msg=msg_with_errors, title=details.get('title'), indicator=details.get('indicator'))
+        return details
+
+    # Mensajes o Advertencias
+    if not details.get('status') and not details.get('error'):
+        frappe.msgprint(msg=details.get('description'), title=details.get('title'), indicator=details.get('indicator'))
+        return details
+
+    # Si la respuesta es exitosa
+    if details.get('status'):
+        frappe.msgprint(msg=details.get('description'), title=details.get('title'), indicator=details.get('indicator'))
+        return details
+
+
 @frappe.whitelist()
 def fel_generator(doctype, docname, type_doc):
+    """Valida que tipo de doc electronico se debe generar
+
+    Args:
+        doctype (str): nombre doctype
+        docname (str): name del documento
+        type_doc (str): tipo de doc electronico a generar
+
+    Returns:
+        dict: status operacion
+    """
 
     naming_series = frappe.db.get_value(doctype, {'name': docname}, 'naming_series')
     company = frappe.db.get_value(doctype, {'name': docname}, 'company')
@@ -1381,23 +1419,7 @@ def fel_generator(doctype, docname, type_doc):
     if doctype == 'Sales Invoice':
         if type_doc == 'factura_fel':
             fel_si = api_generate_sales_invoice_fel(docname, company, naming_series)
-
-            # Si la respuesta incluye errores
-            if fel_si.get('error'):
-                msg_with_errors = f'{fel_si.get("description")} <strong>{_("Si la falla persiste reporte este mensaje")} \
-                    </strong> {_("Mas detalles en el siguiente log:")} <br> <br> <code>{fel_si.get("error")}</code>'
-                frappe.msgprint(msg=msg_with_errors, title=fel_si.get('title'), indicator=fel_si.get('indicator'))
-                return fel_si
-
-            # Mensajes o Advertencias
-            if not fel_si.get('status') and not fel_si.get('error'):
-                frappe.msgprint(msg=fel_si.get('description'), title=fel_si.get('title'), indicator=fel_si.get('indicator'))
-                return fel_si
-
-            # Si la respuesta es exitosa
-            if fel_si.get('status'):
-                frappe.msgprint(msg=fel_si.get('description'), title=fel_si.get('title'), indicator=fel_si.get('indicator'))
-                return fel_si
+            return msg_generator(fel_si)
 
     else:
         return {'status': False}

@@ -43,8 +43,10 @@ class ElectronicInvoice:
         """
 
         try:
+            self.__start_datetime = get_datetime()
+
             # 1 Valida y construye por partes el XML desde un dict
-            status_validate = self.validate()
+            status_validate = self.validate()  # True/False
 
             if status_validate.get('status'):
                 # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
@@ -75,11 +77,14 @@ class ElectronicInvoice:
                 if self.__tiene_adenda:
                     self.__base_peticion['dte:GTDocumento']['dte:SAT']['dte:Adenda'] = self.__adendas
 
-                # USAR SOLO PARA DEBUG:
+                # USAR SOLO PARA DEBUG: Los archivos al tener el mismo nombre en cada generacion, se sobreescriben
                 with open('PREVIEW-FACTURA-FEL.xml', 'w') as f:
                     f.write(xmltodict.unparse(self.__base_peticion, pretty=True))
 
-                return {'status': True, 'description': 'OK', 'error': []}
+                with open('PREVIEW-JSON-FACELEC.json', 'w') as f:
+                    f.write(json.dumps(self.__base_peticion, default=str))
+
+                return {'status': True, 'description': 'OK', 'error': ''}
             else:
                 # return False, status_validate[1]
                 return {'status': False, 'description': status_validate.get('description'), 'error': status_validate.get('error')}
@@ -237,7 +242,7 @@ class ElectronicInvoice:
                 if frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'is_it_an_establishment'):
                     nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'parent_company')
 
-                # Si la compania es de un propietario (INDIVIDUAL)
+                # Si la compania es de un propietario (INDIVIDUAL): Se usa el nombre del propietario
                 elif frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'is_individual'):
                     nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'facelec_name_of_owner')
 
@@ -254,15 +259,13 @@ class ElectronicInvoice:
                     nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'parent_company')
                     nom_comercial = nombre_emisor
 
-                # Si la compania es de un propietario (INDIVIDUAL)
+                # Si la compania es de un propietario (INDIVIDUAL): se usa el nombre del propietario
                 elif frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'is_individual'):
                     nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'facelec_name_of_owner')
 
                 else:
                     # Si no es de propiedad individual, se usa el nombre de la empresa
                     nombre_emisor = nom_comercial
-
-            # Validacion para el escenario, la compania esta configurada como una sucursal se usa el nombre de la compania configurada como emisor
 
             # Asignacion data
             self.__d_emisor = {
@@ -724,8 +727,6 @@ class ElectronicInvoice:
                 # Si no hay, se retorna status OK
                 return {'status': True, 'description': 'OK', 'error': ''}
 
-            return {'status': True, 'description': 'OK', 'error': ''}
-
         except Exception:
             return {'status': False, 'description': 'Adendas no pudieron ser procesadas correctamente', 'error': frappe.get_traceback()}
 
@@ -738,7 +739,6 @@ class ElectronicInvoice:
         """
 
         try:
-            self.__start_datetime = get_datetime()
             # To XML: Convierte de JSON a XML indentado
             self.__xml_string = xmltodict.unparse(self.__base_peticion, pretty=True)
 
@@ -795,7 +795,7 @@ class ElectronicInvoice:
                 f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
-            if self.__doc_firmado.get('resultado'):
+            if self.__doc_firmado.get('resultado'):  # True/False
                 # Guardamos en privado el documento firmado y encriptado
                 self.__encrypted = self.__doc_firmado.get('archivo')
 
@@ -873,7 +873,7 @@ class ElectronicInvoice:
 
                 # Al primer error encontrado retornara un detalle con el mismo
                 if not status_saved:
-                    return False, status_saved
+                    return status_saved
                     # return {'status': 'ERROR', 'detalles_errores': status_saved, 'numero_errores':1}
 
                 return {'status': True, 'description': 'OK', 'error': '',
@@ -904,6 +904,7 @@ class ElectronicInvoice:
         """
 
         try:
+            # Valida que no se haya guardado con anterioridad
             if not frappe.db.exists('Envio FEL', {'name': self.__response_ok['uuid']}):
                 resp_fel = frappe.new_doc("Envio FEL")
                 resp_fel.resultado = self.__response_ok['resultado']
@@ -1109,7 +1110,7 @@ class ElectronicInvoice:
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
                 if self.__default_address:
                     frappe.msgprint(_('Factura generada exitosamente, sin embargo se sugiere configurar correctamente la dirección del cliente, \
-                        porque se usaron datos default. Haga clic <a href="#List/Address/List"><b>Aquí</b></a> para configurarlo si lo desea.'))
+                        ya que se usaron datos default. Haga clic <a href="#List/Address/List"><b>Aquí</b></a> para configurarlo si lo desea.'))
                 # Se utilizara el UUID como clave para orquestar el resto de las apps que lo necesiten
                 # return True, factura_guardada[0]['uuid']
                 return {'status': True, 'description': 'Factura generada exitosamente',

@@ -4,19 +4,17 @@
 
 from __future__ import unicode_literals
 
-import base64
-import datetime
 import io
 import json
 import unicodedata
-from xml.sax.saxutils import escape
+# from xml.sax.saxutils import escape
 
 import frappe
 import pandas as pd
 from frappe import _
 from frappe.core.doctype.file.file import create_new_folder
 # from frappe.model.naming import make_autoname
-from frappe.utils import cint, flt, get_site_name, now
+from frappe.utils import cint, now
 from frappe.utils.file_manager import save_file
 
 
@@ -27,14 +25,14 @@ def encuentra_errores(cadena):
         import re
         reemplazo = {';': ','}
         regex = re.compile("(%s)" % "{delimiter}".join(map(re.escape, reemplazo.keys())))
-        diccionario = regex.sub(lambda x: str(reemplazo[x.string[x.start() :x.end()]]), cadena)
+        diccionario = regex.sub(lambda x: str(reemplazo[x.string[x.start(): x.end()]]), cadena)
         diccionarioError = eval(diccionario)
 
         # Guarda en un archiv json el registro de los ultimos errores ocurridos
         # with open('registro_errores.json', 'w') as registro_error:
         #     registro_error.write(diccionario)
         #     registro_error.close()
-    except:
+    except Exception:
         diccionarioError = {'Mensaje': str(cadena)}
 
     return diccionarioError
@@ -65,8 +63,8 @@ def validar_configuracion():
     if frappe.db.exists('Configuracion Factura Electronica', {'docstatus': 1}):
 
         configuracion_valida = frappe.db.get_values('Configuracion Factura Electronica',
-                                                   filters={'docstatus': 1},
-                                                   fieldname=['name', 'regimen'], as_dict=1)
+                                                    filters={'docstatus': 1},
+                                                    fieldname=['name', 'regimen'], as_dict=1)
         if (len(configuracion_valida) == 1):
             return (int(1), str(configuracion_valida[0]['name']), str(configuracion_valida[0]['regimen']))
 
@@ -117,7 +115,7 @@ def generate_asl_file(datos_asiste, file_name='ASISTE', delimiter='|', extension
 
         return True, 'OK'
 
-    except:
+    except Exception:
         return False, str(frappe.get_traceback())
 
 
@@ -140,16 +138,16 @@ def string_cleaner(str_to_clean, opt=False):
     try:
         s = str(str_to_clean)
 
-        if opt == False:
+        if not opt:
             # removiendo numeros
             result = ''.join([i for i in s if not i.isdigit()])
 
-        elif opt == True:
+        elif opt:
             # removiendo letras
             result = ''.join([i for i in s if i.isdigit()])
         else:
             return False
-    except:
+    except Exception:
         return False
     else:
         return result
@@ -181,7 +179,7 @@ def get_currency_precision():
         precision = cint(frappe.db.get_single_value('System Settings', 'currency_precision'))
         return precision
 
-    except:
+    except Exception:
         return 2
 
 
@@ -215,7 +213,7 @@ def remove_html_tags(text):
         import re
         clean = re.compile('<.*?>')
         return re.sub(clean, '', text)
-    except:
+    except Exception:
         # Si no se puede procesar se retorna lo que se recibe
         return str(text)
 
@@ -301,10 +299,10 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
         f_name = save_file(file_name_to_dt, xlsx_data, to_dt, to_dn, folder=folder, decode=False, is_private=is_private)
 
         return f_name
-    except:
+    except Exception:
         frappe.msgprint(
             msg=f'{_("If the error persists please report it. Details:")} <br><hr> <code>{frappe.get_traceback()}</code>',
-            title=_(f'Excel file could not be generated'),
+            title=_('Excel file could not be generated'),
             raise_exception=True
         )
 

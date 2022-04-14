@@ -555,8 +555,8 @@ def generate_report_files(data, col_idx, filters, report_name, f_type="JSON", r_
     """
 
     OPTIONS = {
-        "No Subtotal": "date", # Sales
-        "Detailed": "date", # Purchases
+        "No Subtotal": "date",  # Sales
+        "Detailed": "date",  # Purchases
         "Weekly": "week_repo",
         "Monthly": "month",
         "Quarterly": "quarter"
@@ -593,7 +593,7 @@ def generate_report_files(data, col_idx, filters, report_name, f_type="JSON", r_
 
         return True, saved_file.file_url
 
-    except:
+    except Exception:
         frappe.msgprint(
             msg=f'Si la falla persiste, por favor reportelo con soporte. Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
             title=_(f'Archivo {f_type} no pudo ser generado'),
