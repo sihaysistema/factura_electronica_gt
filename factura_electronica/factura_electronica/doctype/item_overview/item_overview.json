@@ -9,9 +9,13 @@
   "item_name",
   "description",
   "qty",
-  "three_digit_uom",
   "rate",
   "amount",
+  "column_break_7",
+  "uom",
+  "three_digit_uom",
+  "conversion_factor",
+  "stock_qty",
   "excise_tax_calculation_section",
   "tax_rate_per_uom",
   "other_tax_amount",
@@ -141,12 +145,32 @@
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Amout"
+  },
+  {
+   "fieldname": "column_break_7",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "conversion_factor",
+   "fieldtype": "Float",
+   "label": "UOM Conversion Factor"
+  },
+  {
+   "fieldname": "stock_qty",
+   "fieldtype": "Float",
+   "label": "Qty as per Stock UOM"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-04-19 12:12:31.237693",
+ "modified": "2022-04-19 13:27:28.393315",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Item Overview",
