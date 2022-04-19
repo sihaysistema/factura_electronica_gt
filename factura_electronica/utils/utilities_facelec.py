@@ -310,3 +310,21 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
 @frappe.whitelist()
 def get_rounding_config():
     return cint(frappe.db.get_single_value('Global Defaults', 'disable_rounded_total'))
+
+
+def save_json_file(file_name, content, to_dt, to_dn, folder, is_private):
+    """Guarda los datos del reporte como archivo .JSON que se adjunta
+    al Doctype Prepared Report Facelec de Factura Electronica
+
+    Args:
+        file_name (str): Nombre para el archivo
+        content (json): Datos que contendra el archivo
+        to_dt (str): Nombre Doctype
+        to_dn (str): Nombre Docname `name`
+        folder (str): Path destino
+        is_private (int): 1 privado ! publico
+
+    Returns:
+        Object: datos de archivo creado de Doctype File
+    """
+    return save_file(file_name, content, to_dt, to_dn, folder=folder, is_private=is_private)

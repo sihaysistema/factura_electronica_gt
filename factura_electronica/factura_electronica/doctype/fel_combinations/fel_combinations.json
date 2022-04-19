@@ -52,13 +52,14 @@
    "fetch_from": "tipo_frase.descripcion",
    "fieldname": "descripcion_tipo_frase",
    "fieldtype": "Text",
+   "in_preview": 1,
    "label": "Descripcion Tipo Frase",
    "read_only": 1
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2021-08-16 12:18:46.950696",
+ "modified": "2022-04-14 17:24:59.741196",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "FEL Combinations",

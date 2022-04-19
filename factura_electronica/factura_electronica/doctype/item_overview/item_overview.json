@@ -1,0 +1,157 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2022-04-18 13:07:15.303392",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "item_name",
+  "description",
+  "qty",
+  "three_digit_uom",
+  "rate",
+  "amount",
+  "excise_tax_calculation_section",
+  "tax_rate_per_uom",
+  "other_tax_amount",
+  "column_break_12",
+  "amount_minus_excise_tax",
+  "sales_tax_for_this_row",
+  "type_of_expense_for_tax_purposes_section",
+  "net_goods_amount",
+  "net_services_amount",
+  "net_fuel_amount",
+  "column_break_19",
+  "is_service",
+  "is_good",
+  "is_fuel"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item"
+  },
+  {
+   "fetch_from": "item_code.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name"
+  },
+  {
+   "fetch_from": "item_code.description",
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "label": "Description",
+   "read_only": 1
+  },
+  {
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty"
+  },
+  {
+   "fieldname": "three_digit_uom",
+   "fieldtype": "Data",
+   "label": "Three Digit UOM"
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Rate"
+  },
+  {
+   "fieldname": "excise_tax_calculation_section",
+   "fieldtype": "Section Break",
+   "label": "Excise Tax Calculation"
+  },
+  {
+   "fieldname": "tax_rate_per_uom",
+   "fieldtype": "Currency",
+   "label": "Tax Rate Per UOM"
+  },
+  {
+   "fieldname": "other_tax_amount",
+   "fieldtype": "Currency",
+   "label": "Other Tax Amount"
+  },
+  {
+   "fieldname": "column_break_12",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amount_minus_excise_tax",
+   "fieldtype": "Currency",
+   "label": "Amount Minus Excise Tax"
+  },
+  {
+   "fieldname": "sales_tax_for_this_row",
+   "fieldtype": "Currency",
+   "label": "Sales Tax For This Row"
+  },
+  {
+   "fieldname": "type_of_expense_for_tax_purposes_section",
+   "fieldtype": "Section Break",
+   "label": "Type of Expense for Tax Purposes"
+  },
+  {
+   "fieldname": "net_goods_amount",
+   "fieldtype": "Currency",
+   "label": "Net Goods Amount"
+  },
+  {
+   "fieldname": "net_services_amount",
+   "fieldtype": "Currency",
+   "label": "Net Services Amount"
+  },
+  {
+   "fieldname": "net_fuel_amount",
+   "fieldtype": "Currency",
+   "label": "Net Fuel Amount"
+  },
+  {
+   "fieldname": "column_break_19",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_service",
+   "fieldtype": "Check",
+   "label": "Is Service"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_good",
+   "fieldtype": "Check",
+   "label": "Is Good"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_fuel",
+   "fieldtype": "Check",
+   "label": "Is Fuel"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amout"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2022-04-19 12:12:31.237693",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Item Overview",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

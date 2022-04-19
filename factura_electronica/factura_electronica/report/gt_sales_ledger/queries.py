@@ -4,12 +4,13 @@
 from __future__ import unicode_literals
 
 import frappe
-import json
-from frappe import _
+# import json
+# from frappe import _
 
 # INFO: https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html
 
 # NOTE: IMPORTANTE: Los montos se convierten a la moneda default de la compañia
+
 
 def sales_invoices(filters):
     """
@@ -60,7 +61,7 @@ def sales_invoices(filters):
     # with open("from-db.json", "w") as f:
     #     f.write(json.dumps(invoices, indent=2, default=str))
 
-    return invoices # , items
+    return invoices  # , items
 
 
 def sales_invoices_weekly(filters):

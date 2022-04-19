@@ -1190,7 +1190,7 @@ def btn_validator(doctype, docname):
             return {'type_doc': 'anulador_pi', 'show_btn': False}
 
     # Validacion para Doctype SALES INVOICE
-    if doctype == 'Sales Invoice':
+    if doctype == 'Sales Invoice' and doc.docstatus == 1:
         # Factura Venta FEL Normal y Factura Cambiaria
         if ((doc.status not in status_list) and (not doc.is_it_an_international_invoice) and
                 (options_fel['factura_venta_fel'] == 1 or options_fel['factura_cambiaria_fel'] == 1)):
@@ -1215,7 +1215,7 @@ def btn_validator(doctype, docname):
                 return {'type_doc': 'nota_credito'}
 
     # Validacion para Doctype PURCHASE INVOICE
-    if doctype == 'Purchase Invoice':
+    if doctype == 'Purchase Invoice' and doc.docstatus == 1:
         # Factura Especial
         if (doc.status not in status_list) and options_fel['factura_especial_fel'] == 1:
             type_doc_fel = frappe.db.get_value('Serial Configuration For Purchase Invoice',
@@ -1253,10 +1253,15 @@ def invoice_exists(uuid):
 
 @frappe.whitelist()
 def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
-    """_summary_
+    """Generador de Factura Electronica para Facturas de Venta
 
     Args:
-        invoice_name (_type_): _description_
+        invoice_name (str): `name` de la factura
+        company (str): nombre de la compañia
+        naming_series (str): serie utilizada para la factura
+
+    Returns:
+        dict: estado de la operacion
     """
     try:
         # 1 - VALIDACION EXISTENCIA DE FACTURA EN ENVIOS FEL: PARA EVITAR DUPLICIDAD EN CASO SE DE EL ESCENARIO
@@ -1285,10 +1290,10 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
                 'title': _('Factura Electronica No Configurada')
             }
 
-        # 2 - Se crea una instancia de la clase FacturaElectronica para generarla
+        # Se crea una instancia de la clase FacturaElectronica para generarla
         new_invoice = ElectronicInvoice(invoice_name, config[1], naming_series)
 
-        # Se valida y construye la peticion para INFILE
+        # Se valida y construye la peticion para INFILE en formato JSON
         build_inv = new_invoice.build_invoice()
         if not build_inv.get('status'):  # True/False
             return {
@@ -1301,7 +1306,7 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
                 'title': _('Datos necesarios para generar factura no procesados')
             }
 
-        # INFILE valida y firma la peticion
+        # INFILE valida y firma los datos de la peticion (La peticion se convierte a XML)
         sign_inv = new_invoice.sign_invoice()
         if not sign_inv.get('status'):  # True/False
             return {
@@ -1328,6 +1333,7 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
             }
 
         # Se valida la respuesta del FEL
+        # En esta fase se valida si hay errores en la respuesta por parte FEL
         res_validate = new_invoice.response_validator()
         if not res_validate.get('status'):  # True/False
             return {
@@ -1368,13 +1374,13 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
             }
 
     except Exception:
-        frappe.throw(_(f"Error al generar la factura electrónica: {frappe.get_traceback()}"))
+        frappe.throw(_(f"Error al generar la factura electrónica. Mas detalles en el siguiente log: <hr> {frappe.get_traceback()}"))
         return
 
 
 def msg_generator(details):
-    """Generador de mensajes, todos los generadores de docs electronicos comparten la misma
-    estructura de respuestas
+    """Generador de mensajes server side, todos los generadores de docs electronicos comparten la misma
+    estructura de respuestas, por lo que se puede reutilizar esta funcion
 
     Args:
         details (dict): detalles operacion de cada fase de la generacion de docs electronicos
@@ -1423,3 +1429,12 @@ def fel_generator(doctype, docname, type_doc):
 
     else:
         return {'status': False}
+
+
+@frappe.whitelist()
+def save_items(items):
+    import json
+    items_ok = json.loads(items)
+    with open('items.json', 'w') as f:
+        f.write(json.dumps(items_ok, indent=2, default=str))
+    return ':D'

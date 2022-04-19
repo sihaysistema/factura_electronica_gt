@@ -2,6 +2,7 @@
  "actions": [],
  "autoname": "CONFIG-FAC.#####",
  "creation": "2017-09-20 23:27:25.276704",
+ "description": "Doctype para guardar las configuraciones y credenciales para generar facturas electronicas",
  "doctype": "DocType",
  "document_type": "Setup",
  "editable_grid": 1,
@@ -85,7 +86,10 @@
   "enviado_por",
   "otras_configuraciones_section",
   "descripcion_item",
-  "fecha_y_tiempo_documento_electronica"
+  "fecha_y_tiempo_documento_electronica",
+  "configuration_for_item_rows_section",
+  "group_by_item_code_uom",
+  "promediar_precio"
  ],
  "fields": [
   {
@@ -590,12 +594,33 @@
    "fieldtype": "Link",
    "label": "Parent Company",
    "options": "Company"
+  },
+  {
+   "collapsible": 1,
+   "description": "Configure aqu\u00ed el comportamiento que desee para las filas de productos en la generaci\u00f3n de documentos electr\u00f3nicos",
+   "fieldname": "configuration_for_item_rows_section",
+   "fieldtype": "Section Break",
+   "label": "Configuration for item rows"
+  },
+  {
+   "default": "0",
+   "description": "Marque este campo si desea que se <b>agrupen las filas de productos por c\u00f3digo y UOM</b>. Aplica para facturas con muchas filas, ejemplo: 70 filas de productos.",
+   "fieldname": "group_by_item_code_uom",
+   "fieldtype": "Check",
+   "label": "Agrupar productos por codigo y unidad de medida?"
+  },
+  {
+   "default": "0",
+   "description": "Marque este campo si desea que se promedie el precio a los productos agrupados, funcionara solo si el campo <code>Agrupar productos por codigo y unidad de medida?</code> se encuentra marcado.",
+   "fieldname": "promediar_precio",
+   "fieldtype": "Check",
+   "label": "Promediar precio?"
   }
  ],
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2022-04-08 16:58:01.915969",
+ "modified": "2022-04-15 00:00:07.389433",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
@@ -639,7 +664,6 @@
    "write": 1
   }
  ],
- "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "track_changes": 1,

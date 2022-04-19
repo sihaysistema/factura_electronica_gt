@@ -96,7 +96,7 @@ function btn_validator(frm) {
 function btn_fel_generator(frm, msg) {
   const { type_doc, show_btn } = msg;
 
-  // console.log("El tipo de doc es", type_doc);
+  console.log("El tipo de doc es", type_doc);
   // console.log("Status btn", show_btn);
 
   if (!type_doc) {
@@ -267,10 +267,10 @@ function generar_boton_factura(tipo_factura, frm) {
   frm
     .add_custom_button(__(tipo_factura), function () {
       // frm.reload(); permite hacer un refresh de todo el documento
-      frm.reload_doc();
-      let serie_de_factura = frm.doc.name;
-      // Guarda la url actual
-      let mi_url = window.location.href;
+      // frm.reload_doc();
+      // let serie_de_factura = frm.doc.name;
+      // // Guarda la url actual
+      // let mi_url = window.location.href;
       frappe.call({
         method: "factura_electronica.fel_api.fel_generator",
         args: {
@@ -281,13 +281,15 @@ function generar_boton_factura(tipo_factura, frm) {
         // El callback recibe como parametro el dato retornado por el script python del lado del servidor
         // para validar si se genero correctamente la factura electronica
         callback: function ({ message }) {
-          console.log(message);
+          // console.log(message);
           if (message.status === true && message.uuid) {
             // Crea una nueva url con el nombre del documento actualizado
-            let url_nueva = mi_url.replace(serie_de_factura, message.serie_fel);
-            // Asigna la nueva url a la ventana actual
-            window.location.assign(url_nueva);
-            // Recarga la pagina
+            // let url_nueva = mi_url.replace(serie_de_factura, message.serie_fel);
+            // // Asigna la nueva url a la ventana actual
+            // window.location.assign(url_nueva);
+            // // Recarga la pagina
+            // Redirecciona a la nueva url
+            frappe.set_route(`/app/sales-invoice/${message.serie_fel}`);
             frm.reload_doc();
           }
         },

@@ -2,17 +2,20 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
+import json
 
 import frappe
 from frappe import _
 from frappe.utils import flt
 
-from factura_electronica.utils.utilities_facelec import get_currency_precision
 from factura_electronica.api import get_special_tax
-
+from factura_electronica.fel_api import validate_config_fel
+from factura_electronica.utils.utilities_facelec import get_currency_precision_facelec  # get_currency_precision,
 
 # NOTA IMPORTANTE: Las funciones comparten la misma logica sin embargo se mantiene separado y codigo
 # repetido para no dependen der una sola funcion y estar listo a cualquier cosa repentina que pidan
+# tambien se mantiene repetido ya que hay campos que no comparten el mismo nombre entre doctypes
+# tomando en cuenta a usuarios legacy
 
 
 @frappe.whitelist()
@@ -24,10 +27,12 @@ def sales_invoice_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Sales Invoice", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
+
+        config = validate_config_fel(invoice_data.company)[1]
+        PRECISION = get_currency_precision_facelec(config)
 
         # Limpiando campos para casos de duplicacion de facturas
         invoice_data.cae_factura_electronica = ""
@@ -147,6 +152,13 @@ def sales_invoice_calculator(invoice_name):
         invoice_data_to_totals.shs_total_otros_imp_incl = flt(sum([x.total for x in invoice_data_to_totals.shs_otros_impuestos]), PRECISION)
         invoice_data_to_totals.save(ignore_permissions=True)
 
+        # Tras haber generado todos los calculos necesarios, se valida si en config facelec esta habilitada la opcion de
+        # agrupar items
+        opt = frappe.db.get_value('Configuracion Factura Electronica', {'name': config}, 'group_by_item_code_uom')
+        if opt == 1:
+            items_overview('Sales Invoice', 'Sales Invoice Item', invoice_name, invoice_data.company,
+                           PRECISION, this_company_sales_tax_var, config)
+
     except Exception as e:
         msg_err = _('Por favor verifique que cada item en la Factura de Venta se encuentren configurados adecuadamente. En el caso de productos de combustible \
             deben tener una cuenta de ingreso, gasto, monto configurado y cuenta de impuestos ingreso, gasto.\
@@ -165,7 +177,7 @@ def delivery_note_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
+        # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Delivery Note", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -272,7 +284,7 @@ def purchase_invoice_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
+        # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Purchase Invoice", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -414,7 +426,7 @@ def purchase_order_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
+        # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Purchase Order", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -521,7 +533,7 @@ def purchase_receipt_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
+        # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Purchase Receipt", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -628,7 +640,7 @@ def sales_order_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
+        # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Sales Order", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -735,7 +747,7 @@ def sales_quotation_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
+        # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Quotation", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -871,7 +883,7 @@ def supplier_quotation_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
+        # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Supplier Quotation", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -967,3 +979,68 @@ def supplier_quotation_calculator(invoice_name):
         frappe.msgprint(msg=_(f'{msg_err} <hr> <code>{frappe.get_traceback()} <br> {e}</code>'),
                         title=_('Calculos no generados correctamente'), indicator='red',
                         raise_exception=1)
+
+
+def items_overview(doctype, child_table, docname, company, precision, tax_amt, config):
+    # Se obtienen los productos de la factura para ser agrupados
+    agrupar = 'item_code, uom, facelec_is_service, facelec_is_good, factelecis_fuel'
+    fields_dt = ['item_code', 'item_name', 'description', 'SUM(qty) AS qty', 'SUM(amount) AS amount',
+                 'uom', 'facelec_three_digit_uom_code', 'uom',
+                 'facelec_is_service', 'facelec_is_good', 'factelecis_fuel']
+
+    items_dt = frappe.db.get_list(child_table, filters={'parent': docname, 'parenttype': doctype},
+                                  fields=fields_dt, group_by=agrupar)
+
+    if not items_dt:
+        return
+
+    # Para evitar duplicidad se eliminan las referencias y se vuelven a crear
+    # Aplica para casos de duplicar/enmendar
+    frappe.db.delete('Item Overview', {
+        'parent': docname,
+        'parenttype': doctype,
+    })
+
+    # rate * qty = amount ---> amount / qty = rate
+    for row in items_dt:
+        row.update({
+            'rate': row.get('amount') / row.get('qty', 1),
+        })
+
+        special_tax = get_special_tax(row.get('item_code'), company)
+
+        items_overview = frappe.new_doc('Item Overview')
+        items_overview.parent = docname
+        items_overview.parenttype = doctype
+        items_overview.parentfield = 'items_overview'
+        items_overview.item_code = row.get('item_code')
+        items_overview.item_name = row.get('item_name')
+        items_overview.description = row.get('description')
+        items_overview.qty = row.get('qty')
+        items_overview.three_digit_uom = row.get('three_digit_uom')
+        items_overview.rate = flt(row.get('rate'), precision)
+        items_overview.amount = flt(row.get('amount'), precision)
+        items_overview.tax_rate_per_uom = special_tax.get('facelec_tax_rate_per_uom', 0)
+        items_overview.other_tax_amount = items_overview.tax_rate_per_uom * items_overview.qty
+
+        items_overview.insert()
+
+        # Insertar los valores en los campos de la tabla hija
+        # frappe.get_doc({
+        #     'doctype': 'Item Overview',
+        #     'parent': docname,
+        #     'parenttype': doctype,
+        #     'parentfield': 'items_overview',
+        #     'item_code': row.get('item_code'),
+        #     'item_name': row.get('item_name'),
+        #     'description': row.get('description'),
+        #     'qty': row.get('qty'),
+        #     'three_digit_uom': row.get('facelec_three_digit_uom_code'),
+        #     'rate': flt(row.get('rate'), precision),
+        #     'amount': flt(row.get('amount'), precision),
+        #     'tax_rate_per_uom': special_tax.get('facelec_tax_rate_per_uom', 0),
+        #     'other_tax_amount': special_tax.get('facelec_other_tax_amount', 0),
+        # })
+
+    with open('items-agrupados.json', 'w') as f:
+        f.write(json.dumps(items_dt, indent=2))

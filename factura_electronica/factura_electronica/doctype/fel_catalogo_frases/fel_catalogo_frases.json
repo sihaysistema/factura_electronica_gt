@@ -51,7 +51,7 @@
   }
  ],
  "links": [],
- "modified": "2021-08-22 20:48:11.282682",
+ "modified": "2022-04-14 17:27:13.790432",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "FEL Catalogo Frases",
@@ -92,7 +92,6 @@
    "write": 1
   }
  ],
- "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "track_changes": 1

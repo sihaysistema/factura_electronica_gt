@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "format:COMBINATION-{###}",
+ "autoname": "COMBINATION-.###",
  "creation": "2021-08-10 21:45:01.653786",
  "description": "Tabla para configurar series, que permite asignar tipo de documentos segun SAT ASL, Factura Electronica FEL. Aplica para Facturas de venta",
  "doctype": "DocType",
@@ -31,7 +31,7 @@
   }
  ],
  "links": [],
- "modified": "2021-08-22 20:48:58.675036",
+ "modified": "2022-04-14 17:28:03.678993",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Combination Of Phrases",

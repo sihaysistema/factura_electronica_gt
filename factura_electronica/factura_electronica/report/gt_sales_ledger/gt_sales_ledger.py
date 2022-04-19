@@ -9,7 +9,7 @@ import json
 import frappe
 import pandas as pd
 from frappe import _
-from frappe.utils import flt, get_site_name, now
+from frappe.utils import flt, now
 from frappe.utils.file_manager import save_file
 
 from factura_electronica.factura_electronica.report.gt_sales_ledger.queries import (sales_invoices, sales_invoices_monthly,
@@ -82,7 +82,8 @@ def execute(filters=None):
                 df_inv = pd.DataFrame.from_dict(json.loads(json.dumps(invoices_db, default=str)))
                 data = calculate_total(df_inv, columns_data_db, filters, 'quarter')
 
-            if not data: return columns, []
+            if not data:
+                return columns, []
 
             # Debug: datos de reporte
             # with open("res-gt-sales-ledger.json", 'w') as f:
@@ -92,7 +93,7 @@ def execute(filters=None):
 
         else:
             return [], []
-    except:
+    except Exception:
         frappe.msgprint(
             msg=f"{_('If the error persists please report it. Details:')} <br><hr> <code>{frappe.get_traceback()}</code>",
             title=_('Uncompleted Task'), indicator='red'
@@ -387,7 +388,8 @@ def process_data_db(filters, data_db):
     try:
         # Si no hay data retornada por la base de datos, retorna una lista vacia
         # para no mostrar error por falta de datos
-        if not data_db: return []
+        if not data_db:
+            return []
 
         # Definicion de columnas con valores numericos
         columns = ['total', 'amount', 'fuel_iva', 'goods_iva', 'net_amount', 'net_fuel', 'sales_of_goods', 'sales_of_services', 'services_iva']
@@ -401,7 +403,7 @@ def process_data_db(filters, data_db):
         #     return sales_invoice_grouper(invoices, filters)
 
         # Se obtiene el dominio configurado para armar la url
-        site_erp = get_site_name(frappe.local.site)
+        # site_erp = get_site_name(frappe.local.site)
 
         # Los datos se cargan a un df
         df_inv = pd.DataFrame.from_dict(invoices)
@@ -411,10 +413,10 @@ def process_data_db(filters, data_db):
 
         return calculate_total(df_inv, columns, filters, 'customer')
 
-    except:
+    except Exception:
         frappe.msgprint(
-            msg=f'No se encontraron facturas con item configurados como Bien, Servicio o Combustible',
-            title=_(f'No hay datos disponibles'),
+            msg='No se encontraron facturas con item configurados como Bien, Servicio o Combustible',
+            title=_('No hay datos disponibles'),
             raise_exception=True
         )
         return []
@@ -478,10 +480,10 @@ def sales_invoice_grouper(invoices, filters):
 
         return grouped_dict
 
-    except:
+    except Exception:
         frappe.msgprint(
             msg=f'Detalle del error <br><hr> <code>{frappe.get_traceback()}</code>',
-            title=_(f'No se pudo agrupar correctamente la data'),
+            title=_('No se pudo agrupar correctamente la data'),
             raise_exception=True
         )
 

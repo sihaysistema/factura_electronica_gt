@@ -1,4 +1,4 @@
-# Copyright (c) 2020, Si Hay Sistema and contributors
+# Copyright (c) 2022, Si Hay Sistema and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
@@ -13,7 +13,8 @@ import xmltodict
 from frappe import _
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
-from factura_electronica.utils.utilities_facelec import get_currency_precision_facelec, remove_html_tags
+from factura_electronica.utils.utilities_facelec import (create_folder, get_currency_precision_facelec, remove_html_tags,
+                                                         save_json_file)
 
 
 class ElectronicInvoice:
@@ -22,13 +23,12 @@ class ElectronicInvoice:
         Constructor de la clase, las propiedades iniciadas como privadas
 
         Args:
-            invoice_code (str): Serie origianl de la factura
+            invoice_code (str): Serie original de la factura
             conf_name (str): Nombre configuracion para factura electronica
         """
         self.__invoice_code = invoice_code
         self.__config_name = conf_name
         self.__naming_serie = naming_series
-        self.__log_error = []
         self.__precision = get_currency_precision_facelec(conf_name)
         self.__default_address = False
         self.__tiene_adenda = False
@@ -891,8 +891,6 @@ class ElectronicInvoice:
                 #                'detalles_errores': str(self.__response_ok['descripcion_errores'])}
         except Exception:
             return {'status': False, 'description': 'No se pudo validar la respuesta enviada por INFILE', 'error': frappe.get_traceback()}
-            # return False, {'status': 'ERROR VALIDACION', 'numero_errores': 1,
-            #                'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
 
     def save_answers(self):
         """
@@ -938,16 +936,29 @@ class ElectronicInvoice:
                 # Guarda el documento firmado encriptado en base64
                 # decodedBytes = str(self.__response_ok['xml_certificado']) # base64.b64decode(self.__response_ok['xml_certificado'])
                 # decodedStr = str(decodedBytes, "utf-8")
-                resp_fel.xml_certificado = str(self.__xml_string)  # json.dumps(self.__doc_firmado, indent=2) # decodedStr
+                # NOTA: OJO: Pueden hacer archivos, data que supera la capacidad del campo en la DB
+                # por lo que queda desactivado el guardado de este campo
+                # resp_fel.xml_certificado = str(self.__xml_string)  # json.dumps(self.__doc_firmado, indent=2) # decodedStr
                 resp_fel.enviado = str(self.__start_datetime)
                 resp_fel.recibido = str(self.__end_datetime)
 
                 resp_fel.save(ignore_permissions=True)
 
+                # Una vez guarda la respuesta, se adjunta el .json de la peticion para mantener un registro de lo que se envia
+                # NOTA: para ver la peticion original hay que convertir el json a XML, se guarda en json por su facil
+                # manipulacion
+                content_f = json.dumps(self.__base_peticion, default=str)
+                # Si no existe el fonder contender, se crea
+                fel_folder_container = create_folder('EnviosFEL')
+                # Si no existe el folder para almacenar los json, se crea
+                fel_folder = create_folder('FACT_FEL', fel_folder_container)
+                # Se guarda el archivo json y quedara como adjunto al registro anteriormente creado
+                save_json_file(f'{self.__response_ok["uuid"]}.json', content_f, 'Envio FEL', resp_fel.name, fel_folder, 1)
+
             return {'status': True, 'description': 'OK', 'error': ''}
 
         except Exception:
-            return {'status': False, 'description': f'No se pudo guardar la respuesta para la factura {self.__invoice_code}',
+            return {'status': False, 'description': f'No se pudo guardar la respuesta de la factura {self.__invoice_code} en Envios FEL',
                     'error': frappe.get_traceback()}
 
     def upgrade_records(self):
