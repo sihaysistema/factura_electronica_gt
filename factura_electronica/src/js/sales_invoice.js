@@ -71,7 +71,7 @@ function sales_invoice_calc(frm) {
       invoice_name: frm.doc.name,
     },
     freeze: true,
-    freeze_message: __("Calculating") + " 📄📄📄",
+    freeze_message: __("Calculating"),
     callback: (r) => {
       frm.reload_doc();
     },
@@ -622,7 +622,9 @@ function dependency_validator(frm) {
       },
       400
     );
+    return false;
   }
+  return true;
 }
 
 /* Factura de Ventas-------------------------------------------------------------------------------------------------- */
@@ -683,6 +685,52 @@ frappe.ui.form.on("Sales Invoice", {
           }
         },
       });
+    }
+  },
+  group_items_btn(frm) {
+    // Solo si el doc ya esta guardado
+    if (!frm.doc.__unsaved && !frm.doc.__islocal && frm.doc.docstatus == 0) {
+      if (dependency_validator(frm) == true) {
+        frappe
+          .call("factura_electronica.utils.calculator.items_overview", {
+            doctype: frm.doc.doctype,
+            child_table: "Sales Invoice Item",
+            docname: frm.doc.name,
+            company: frm.doc.company,
+            tax_amt: frm.doc.taxes[0].rate,
+          })
+          .then(() => {
+            frm.reload_doc();
+            frappe.show_alert(
+              {
+                message: __("Productos agrupados"),
+                indicator: "green",
+              },
+              2
+            );
+          });
+      }
+    }
+  },
+  remove_grouped_items_btn(frm) {
+    // Solo si el doc ya esta guardado
+    if (!frm.doc.__unsaved && !frm.doc.__islocal && frm.doc.docstatus == 0) {
+      console.log("removiendo");
+      frappe
+        .call("factura_electronica.utils.calculator.remove_items_overview", {
+          doctype: frm.doc.doctype,
+          parent: frm.doc.name,
+        })
+        .then(() => {
+          frm.reload_doc();
+          frappe.show_alert(
+            {
+              message: __("Productos agrupados removidos"),
+              indicator: "yellow",
+            },
+            2
+          );
+        });
     }
   },
 });

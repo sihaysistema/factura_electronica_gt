@@ -2,6 +2,21 @@
  {
   "docstatus": 0,
   "doctype": "Catalog Of Taxable Units",
+  "factor": 0.12,
+  "modified": "2021-02-02 14:57:00.157047",
+  "name": "Tasa 12.00%",
+  "operates_over_box": "MontoGravable",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "short_name": "IVA 12%",
+  "tax": "IVA",
+  "taxable_unit_code": "1",
+  "taxable_unit_name": "Tasa 12.00%"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Catalog Of Taxable Units",
   "factor": 0.0,
   "modified": "2021-02-02 14:59:23.205676",
   "name": "Tasa 0",
@@ -583,20 +598,5 @@
   "tax": null,
   "taxable_unit_code": null,
   "taxable_unit_name": "No Aplicable"
- },
- {
-  "docstatus": 0,
-  "doctype": "Catalog Of Taxable Units",
-  "factor": 0.12,
-  "modified": "2021-02-02 14:57:00.157047",
-  "name": "Tasa 12.00%",
-  "operates_over_box": "MontoGravable",
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "short_name": "IVA 12%",
-  "tax": "IVA",
-  "taxable_unit_code": "1",
-  "taxable_unit_name": "Tasa 12.00%"
  }
 ]
