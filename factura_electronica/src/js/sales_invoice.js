@@ -65,18 +65,24 @@ function generar_tabla_html(frm) {
  * @param {Object} frm - Propiedades del Doctype
  */
 function sales_invoice_calc(frm) {
-  frappe.call({
-    method: "factura_electronica.utils.calculator.sales_invoice_calculator",
-    args: {
-      invoice_name: frm.doc.name,
-    },
-    freeze: true,
-    freeze_message: __("Calculating"),
-    callback: (r) => {
+  frappe
+    .call({
+      method: "factura_electronica.utils.calculator.sales_invoice_calculator",
+      args: {
+        invoice_name: frm.doc.name,
+      },
+      freeze: true,
+      freeze_message: __("Calculating"),
+    })
+    .then(({ message }) => {
       frm.reload_doc();
-    },
-  });
-  frm.reload_doc();
+      // Si la agrupacion esta activada
+      // group_items_to_facelec(frm);
+    });
+  // .then((r) => {
+  //   // Recarga el doc para reflejar los cambios
+  //   frm.reload_doc();
+  // });
 }
 
 // Valida que tipo de boton generador fel debe aparecer
@@ -627,28 +633,87 @@ function dependency_validator(frm) {
   return true;
 }
 
+function group_items_to_facelec(frm) {
+  if (!frm.doc.__unsaved && !frm.doc.__islocal && frm.doc.docstatus == 0) {
+    if (dependency_validator(frm) == true) {
+      frappe
+        .call({
+          method: "factura_electronica.utils.calculator.items_overview",
+          args: {
+            doctype: frm.doc.doctype,
+            child_table: "Sales Invoice Item",
+            docname: frm.doc.name,
+            company: frm.doc.company,
+            tax_amt: frm.doc.taxes[0].rate,
+          },
+          freeze: true,
+          freeze_message: __("Grouping"),
+        })
+        .then(({ message }) => {
+          if (message == false) {
+            frappe.show_alert(
+              {
+                message: __("Para poder agrupar productos, debe guardar el documento"),
+                indicator: "red",
+              },
+              4
+            );
+          } else {
+            frm.reload_doc();
+            frappe.show_alert(
+              {
+                message: __("Productos agrupados"),
+                indicator: "green",
+              },
+              2
+            );
+          }
+        });
+    }
+  } else {
+    frappe.show_alert(
+      {
+        message: __("Para poder agrupar productos, debe guardar el documento"),
+        indicator: "red",
+      },
+      4
+    );
+  }
+}
+
+function calc_row_discount(frm, cdt, cdn) {
+  // console.log("calculos desc por fila");
+  let row = frappe.get_doc(cdt, cdn);
+  // Se calcula el descuento por fila
+  row.facelec_row_discount = row.facelec_discount_amount * row.qty;
+  frm.refresh_field("items");
+}
+
 /* Factura de Ventas-------------------------------------------------------------------------------------------------- */
 frappe.ui.form.on("Sales Invoice", {
   // Cuando se carga por primera vez una factura se asegura que active o no el redondeo
   // de decimales dependiendo de la configucion
-  setup(frm) {
-    if (frm.doc.docstatus == 0) {
-      frappe.call("factura_electronica.utils.utilities_facelec.get_rounding_config").then(({ message }) => {
-        frm.set_value("disable_rounded_total", message);
-        frm.refresh_field("disable_rounded_total");
-      });
-    }
-  },
+  setup(frm) {},
   // Se ejecuta cuando se renderiza el doctype
   onload_post_render: function (frm, cdt, cdn) {
     // clean_fields(frm);
   },
   // Se ejecuta despues de guardar el doctype
   after_save: function (frm, cdt, cdn) {
+    // Calculos de impuestos con python
     sales_invoice_calc(frm);
   },
   // Se ejecuta cuando hay alguna actualizacion de datos en el doctype
   refresh: function (frm, cdt, cdn) {
+    // FIX temporal, el ERP no desactiva correctamente el redondeo de decimales
+    // para resolverlo se desactiva automaticamente segun la configuracion
+    if (frm.doc.docstatus == 0) {
+      frappe.call("factura_electronica.utils.utilities_facelec.get_rounding_config").then(({ message }) => {
+        frm.set_value("disable_rounded_total", message);
+        frm.refresh_field("disable_rounded_total");
+      });
+    }
+
     if (frm.doc.docstatus != 0) {
       // btn_generator(frm);
       btn_validator(frm);
@@ -687,30 +752,10 @@ frappe.ui.form.on("Sales Invoice", {
       });
     }
   },
+  // Agrupacion manual de productos
   group_items_btn(frm) {
     // Solo si el doc ya esta guardado
-    if (!frm.doc.__unsaved && !frm.doc.__islocal && frm.doc.docstatus == 0) {
-      if (dependency_validator(frm) == true) {
-        frappe
-          .call("factura_electronica.utils.calculator.items_overview", {
-            doctype: frm.doc.doctype,
-            child_table: "Sales Invoice Item",
-            docname: frm.doc.name,
-            company: frm.doc.company,
-            tax_amt: frm.doc.taxes[0].rate,
-          })
-          .then(() => {
-            frm.reload_doc();
-            frappe.show_alert(
-              {
-                message: __("Productos agrupados"),
-                indicator: "green",
-              },
-              2
-            );
-          });
-      }
-    }
+    group_items_to_facelec(frm);
   },
   remove_grouped_items_btn(frm) {
     // Solo si el doc ya esta guardado
@@ -775,5 +820,27 @@ frappe.ui.form.on("Sales Invoice Item", {
     row.stock_qty = calcu;
     row.amount = calcu * a;
     frm.refresh_field("items");
+
+    calc_row_discount(frm, cdt, cdn);
+  },
+  facelec_discount_amount: function (frm, cdt, cdn) {
+    let row = frappe.get_doc(cdt, cdn);
+    let new_rate = row.rate - row.facelec_discount_amount;
+    row.rate = new_rate;
+    frm.refresh_field("items");
+
+    calc_row_discount(frm, cdt, cdn);
+  },
+  qty: function (frm, cdt, cdn) {
+    calc_row_discount(frm, cdt, cdn);
+  },
+  rate: function (frm, cdt, cdn) {
+    // Si hay algun cambio en el precio se vuelve a establecer a 0 el descuento
+    let row = frappe.get_doc(cdt, cdn);
+    row.facelec_discount_amount = 0;
+    row.facelec_row_discount = 0;
+    frm.refresh_field("items");
+
+    calc_row_discount(frm, cdt, cdn);
   },
 });

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-#  Si Hay Sistema and Contributors 2020
+#  Si Hay Sistema and Contributors 2022
 from __future__ import unicode_literals
-from . import __version__ as app_version
+# from . import __version__ as app_version
 
 """
 en-US: Make sure all fields that are coming from another branch and the new fields you require are added to the fixtures
@@ -326,7 +326,9 @@ def fill_fixtures():
                     "Item Default-facelec_uom_tax_included_in_price", "Item-facelec_fuel_note",
                     "Company-facelec_name_of_owner", "Sales Invoice-facelec_custom_message_br", "Sales Invoice-facelec_adenda",
                     "Sales Invoice-items_overview", "Sales Invoice-facelec_items_overview", "Sales Invoice-group_items",
-                    "Sales Invoice-remove_grouped_items_btn", "Sales Invoice-group_items_btn",
+                    "Sales Invoice-remove_grouped_items_btn", "Sales Invoice-group_items_btn", "Sales Invoice Item-electronic_invoice_discount",
+                    "Sales Invoice Item-facelec_discount_amount", "Sales Invoice Item-col_break_facelec_discount",
+                    "Sales Invoice Item-facelec_discount_account", "Sales Invoice Item-facelec_row_discount",
                 ]
             ]
         ]

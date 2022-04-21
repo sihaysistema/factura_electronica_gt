@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 
-import json
+# import json
 
 import frappe
 from frappe import _
@@ -18,6 +18,8 @@ from factura_electronica.utils.utilities_facelec import get_currency_precision, 
 # tambien se mantiene repetido ya que hay campos que no comparten el mismo nombre entre doctypes
 # tomando en cuenta a usuarios legacy
 
+PRECISION = get_currency_precision()  # decimales configuracion en el sistema
+
 
 @frappe.whitelist()
 def sales_invoice_calculator(invoice_name):
@@ -28,8 +30,7 @@ def sales_invoice_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
-
+        # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Sales Invoice", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -170,7 +171,7 @@ def delivery_note_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
+        # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Delivery Note", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -277,7 +278,7 @@ def purchase_invoice_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
+        # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Purchase Invoice", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -419,7 +420,7 @@ def purchase_order_calculator(invoice_name):
     """
 
     try:
-        PRECISION = get_currency_precision()
+        # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Purchase Order", invoice_name)
         items = invoice_data.items
         taxes_inv = invoice_data.taxes
@@ -976,6 +977,12 @@ def supplier_quotation_calculator(invoice_name):
 
 @frappe.whitelist()
 def remove_items_overview(doctype, parent):
+    """Elimina las referencias de items agrupados a X factura
+
+    Args:
+        doctype (str): Sales Invoice/Purchase Invoice
+        parent (str): name PK
+    """
     frappe.db.delete('Item Overview', {
         'parent': parent,
         'parenttype': doctype,
@@ -998,116 +1005,120 @@ def items_overview(doctype, child_table, docname, company, tax_amt):
         tax_amt (float): tasa iva (12)
     """
 
-    config = validate_config_fel(company)[1]
-    precision = get_currency_precision_facelec(config)
+    try:
+        config = validate_config_fel(company)[1]
+        # El usuario puede definir el numero de decimales a usar en la generacion de docs electronicos
+        # independiente del numero de decimales del sistema
+        precision = get_currency_precision_facelec(config)
 
-    this_company_sales_tax_var = flt(tax_amt, precision)
+        this_company_sales_tax_var = flt(tax_amt, precision)
 
-    # Se obtienen los productos de la factura agrupados
-    agrupar = 'item_code, uom, facelec_is_service, facelec_is_good, factelecis_fuel'
-    fields_dt = ['item_code', 'item_name', 'description', 'SUM(qty) AS qty', 'SUM(amount) AS amount',
-                 'uom', 'facelec_three_digit_uom_code', 'uom', 'conversion_factor', 'stock_qty',
-                 'facelec_is_service', 'facelec_is_good', 'factelecis_fuel']
+        # Se obtienen los productos de la factura agrupados
+        agrupar = 'item_code, uom, facelec_is_service, facelec_is_good, factelecis_fuel, conversion_factor'
+        fields_dt = ['item_code', 'item_name', 'description', 'SUM(qty) AS qty', 'SUM(amount) AS amount',
+                     'AVG(rate) AS rate', 'uom', 'facelec_three_digit_uom_code', 'uom', 'conversion_factor',
+                     'stock_qty', 'facelec_is_service', 'facelec_is_good', 'factelecis_fuel']
 
-    items_dt = frappe.db.get_list(child_table, filters={'parent': docname, 'parenttype': doctype},
-                                  fields=fields_dt, group_by=agrupar)
+        items_dt = frappe.db.get_list(child_table, filters={'parent': docname, 'parenttype': doctype},
+                                      fields=fields_dt, group_by=agrupar)
 
-    if not items_dt:  # Si no hay datos no se hace nada
-        return
+        if not items_dt:  # Si no hay datos no se hace nada
+            return False
 
-    # Para evitar duplicidad se eliminan las referencias y se vuelven a crear
-    # Aplica para casos de duplicar/enmendar docs cancelados
-    remove_items_overview(doctype, docname)
+        # Para evitar duplicidad se eliminan las referencias y se vuelven a crear
+        # Aplica para casos de duplicar/enmendar docs cancelados
+        remove_items_overview(doctype, docname)
 
-    # ? * qty = amount ---> amount / qty = rate
-    for row in items_dt:
-        row.update({
-            'rate': flt(row.get('amount'), precision) / flt(row.get('qty', 1), precision),  # encontramos la incognita
-        })
+        # ? * qty = amount ---> amount / qty = rate
+        for row in items_dt:
+            row.update({
+                'qty': flt(row.get('amount'), precision) / flt(row.get('rate', 1), precision)  # encontramos la incognita
+            })
 
-        # Calculos sobre los montos ya agrupados
-        amount_minus_excise_tax_ok = 0
-        other_tax_amount = 0
-        net_fuel = 0
-        net_services = 0
-        net_goods = 0
-        tax_for_this_row = 0
-        conversion_fact = 1
-        special_tax = get_special_tax(row.get('item_code'), company)
-
-        # Por cada fila iterada se creara una nueva fila en la tabla Item Overview
-        # con sus respectivos calculos
-        item_o = frappe.new_doc('Item Overview')
-        item_o.parent = docname
-        item_o.parenttype = doctype
-        item_o.parentfield = 'items_overview'
-        item_o.item_code = row.get('item_code')
-        item_o.item_name = row.get('item_name')
-        item_o.description = row.get('description')
-        item_o.qty = flt(row.get('qty'), precision)
-        item_o.rate = flt(row.get('rate'), precision)
-        item_o.amount = flt(row.get('amount'), precision)
-        item_o.tax_rate_per_uom = special_tax.get('facelec_tax_rate_per_uom', 0)
-        item_o.uom = row.get('uom')
-        item_o.three_digit_uom = row.get('three_digit_uom')
-        item_o.conversion_factor = row.get('conversion_factor')
-        item_o.stock_qty = row.get('stock_qty')
-        item_o.is_service = row.get('facelec_is_service')
-        item_o.is_good = row.get('facelec_is_good')
-        item_o.is_fuel = row.get('factelecis_fuel')
-
-        if row.get('conversion_factor') == 0:
-            other_tax_amount = flt(item_o.tax_rate_per_uom * item_o.qty * conversion_fact, precision)
-
-        if row.get('conversion_factor') > 0:
-            other_tax_amount = flt(item_o.tax_rate_per_uom * item_o.qty * item_o.conversion_factor, precision)
-
-        item_o.other_tax_amount = other_tax_amount
-
-        amount_minus_excise_tax_ok = flt((item_o.qty * item_o.rate) - item_o.qty * item_o.tax_rate_per_uom, precision)
-        item_o.amount_minus_excise_tax = amount_minus_excise_tax_ok
-
-        if (item_o.is_fuel):
+            # Calculos sobre los montos ya agrupados
+            amount_minus_excise_tax_ok = 0
+            other_tax_amount = 0
+            net_fuel = 0
             net_services = 0
             net_goods = 0
-            net_fuel = flt(item_o.amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), precision)
+            tax_for_this_row = 0
+            conversion_fact = 1
+            special_tax = get_special_tax(row.get('item_code'), company)
 
-            item_o.net_fuel_amount = net_fuel
-            item_o.net_goods_amount = net_goods
-            item_o.net_services_amount = net_services
+            # Por cada fila iterada se creara una nueva fila en la tabla Item Overview
+            # con sus respectivos calculos
+            item_o = frappe.new_doc('Item Overview')
+            item_o.parent = docname
+            item_o.parenttype = doctype
+            item_o.parentfield = 'items_overview'
+            item_o.item_code = row.get('item_code')
+            item_o.item_name = row.get('item_name')
+            item_o.description = row.get('description')
+            item_o.qty = flt(row.get('qty'), PRECISION)  # usa la cantidad de decimales del sistema
+            item_o.rate = flt(row.get('rate'), precision)
+            item_o.amount = flt(row.get('amount'), precision)
+            item_o.tax_rate_per_uom = special_tax.get('facelec_tax_rate_per_uom', 0)
+            item_o.uom = row.get('uom')
+            item_o.three_digit_uom = row.get('facelec_three_digit_uom_code')
+            item_o.conversion_factor = row.get('conversion_factor')
+            item_o.stock_qty = row.get('stock_qty')
+            item_o.is_service = row.get('facelec_is_service')
+            item_o.is_good = row.get('facelec_is_good')
+            item_o.is_fuel = row.get('factelecis_fuel')
 
-            tax_for_this_row = flt(item_o.net_fuel_amount * (this_company_sales_tax_var / 100), precision)
-            item_o.sales_tax_for_this_row = tax_for_this_row
+            if row.get('conversion_factor') == 0:
+                other_tax_amount = flt(item_o.tax_rate_per_uom * item_o.qty * conversion_fact, precision)
 
-        tax_for_this_row = 0
-        if (item_o.is_good):
-            net_services = 0
-            net_fuel = 0
-            net_goods = flt(item_o.amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), precision)
+            if row.get('conversion_factor') > 0:
+                other_tax_amount = flt(item_o.tax_rate_per_uom * item_o.qty * item_o.conversion_factor, precision)
 
-            item_o.net_fuel_amount = net_fuel
-            item_o.net_goods_amount = net_goods
-            item_o.net_services_amount = net_services
+            item_o.other_tax_amount = other_tax_amount
 
-            tax_for_this_row = flt(item_o.net_goods_amount * (this_company_sales_tax_var / 100), precision)
-            item_o.sales_tax_for_this_row = tax_for_this_row
+            amount_minus_excise_tax_ok = flt((item_o.qty * item_o.rate) - item_o.qty * item_o.tax_rate_per_uom, precision)
+            item_o.amount_minus_excise_tax = amount_minus_excise_tax_ok
 
-        tax_for_this_row = 0
-        if (item_o.is_service):
-            net_goods = 0
-            net_fuel = 0
-            net_services = flt(item_o.amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), precision)
+            if (item_o.is_fuel):
+                net_services = 0
+                net_goods = 0
+                net_fuel = flt(item_o.amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), precision)
 
-            item_o.net_fuel_amount = net_fuel
-            item_o.net_goods_amount = net_goods
-            item_o.net_services_amount = net_services
+                item_o.net_fuel_amount = net_fuel
+                item_o.net_goods_amount = net_goods
+                item_o.net_services_amount = net_services
 
-            tax_for_this_row = flt(item_o.net_services_amount * (this_company_sales_tax_var / 100), precision)
-            item_o.sales_tax_for_this_row = tax_for_this_row
+                tax_for_this_row = flt(item_o.net_fuel_amount * (this_company_sales_tax_var / 100), precision)
+                item_o.sales_tax_for_this_row = tax_for_this_row
 
-        item_o.insert()
+            tax_for_this_row = 0
+            if (item_o.is_good):
+                net_services = 0
+                net_fuel = 0
+                net_goods = flt(item_o.amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), precision)
 
-    with open('items-agrupados.json', 'w') as f:
-        f.write(json.dumps(items_dt, indent=2))
+                item_o.net_fuel_amount = net_fuel
+                item_o.net_goods_amount = net_goods
+                item_o.net_services_amount = net_services
 
-    return 'Registros insertados'
+                tax_for_this_row = flt(item_o.net_goods_amount * (this_company_sales_tax_var / 100), precision)
+                item_o.sales_tax_for_this_row = tax_for_this_row
+
+            tax_for_this_row = 0
+            if (item_o.is_service):
+                net_goods = 0
+                net_fuel = 0
+                net_services = flt(item_o.amount_minus_excise_tax / (1 + (this_company_sales_tax_var / 100)), precision)
+
+                item_o.net_fuel_amount = net_fuel
+                item_o.net_goods_amount = net_goods
+                item_o.net_services_amount = net_services
+
+                tax_for_this_row = flt(item_o.net_services_amount * (this_company_sales_tax_var / 100), precision)
+                item_o.sales_tax_for_this_row = tax_for_this_row
+
+            item_o.insert()
+
+    except Exception as e:
+        msg_err = _('Producto no se agruparon correctamente, verifique que exista una configuracion valida para factura electronica')
+        frappe.msgprint(msg=_(f'{msg_err} <hr> <code>{frappe.get_traceback()} <br> {e}</code>'),
+                        title=_('Productos no agrupados'), indicator='red',
+                        raise_exception=1)
