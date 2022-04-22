@@ -329,6 +329,7 @@ def fill_fixtures():
                     "Sales Invoice-remove_grouped_items_btn", "Sales Invoice-group_items_btn", "Sales Invoice Item-electronic_invoice_discount",
                     "Sales Invoice Item-facelec_discount_amount", "Sales Invoice Item-col_break_facelec_discount",
                     "Sales Invoice Item-facelec_discount_account", "Sales Invoice Item-facelec_row_discount",
+                    "Sales Invoice-facelec_total_items_overview",
                 ]
             ]
         ]

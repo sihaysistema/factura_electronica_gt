@@ -987,6 +987,7 @@ def remove_items_overview(doctype, parent):
         'parent': parent,
         'parenttype': doctype,
     })
+    frappe.db.set_value(doctype, parent, 'facelec_total_items_overview', 0)
 
 
 @frappe.whitelist()
@@ -1030,6 +1031,7 @@ def items_overview(doctype, child_table, docname, company, tax_amt):
         remove_items_overview(doctype, docname)
 
         # ? * qty = amount ---> amount / qty = rate
+        total = 0
         for row in items_dt:
             row.update({
                 'qty': flt(row.get('amount'), precision) / flt(row.get('rate', 1), precision)  # encontramos la incognita
@@ -1061,7 +1063,7 @@ def items_overview(doctype, child_table, docname, company, tax_amt):
             item_o.uom = row.get('uom')
             item_o.three_digit_uom = row.get('facelec_three_digit_uom_code')
             item_o.conversion_factor = row.get('conversion_factor')
-            item_o.stock_qty = row.get('stock_qty')
+            # item_o.stock_qty = row.get('stock_qty')
             item_o.is_service = row.get('facelec_is_service')
             item_o.is_good = row.get('facelec_is_good')
             item_o.is_fuel = row.get('factelecis_fuel')
@@ -1115,7 +1117,11 @@ def items_overview(doctype, child_table, docname, company, tax_amt):
                 tax_for_this_row = flt(item_o.net_services_amount * (this_company_sales_tax_var / 100), precision)
                 item_o.sales_tax_for_this_row = tax_for_this_row
 
-            item_o.insert()
+            total += item_o.amount
+            item_o.save(ignore_permissions=True)
+
+        # Se actualiza el total de los productos que fueron agrupados
+        frappe.db.set_value(doctype, docname, 'facelec_total_items_overview', total)
 
     except Exception as e:
         msg_err = _('Producto no se agruparon correctamente, verifique que exista una configuracion valida para factura electronica')

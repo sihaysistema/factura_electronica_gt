@@ -296,8 +296,9 @@ function generar_boton_factura(tipo_factura, frm) {
             // // Recarga la pagina
             // Redirecciona a la nueva url
             frappe.set_route(`/app/sales-invoice/${message.serie_fel}`);
+            frm.reload_doc();
+            location.reload();
           }
-          frm.reload_doc();
         },
       });
     })

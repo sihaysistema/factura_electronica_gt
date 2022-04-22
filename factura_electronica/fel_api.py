@@ -1392,17 +1392,20 @@ def msg_generator(details):
     if details.get('error'):
         msg_with_errors = f'{details.get("description")} <strong>{_("Si la falla persiste reporte este mensaje")} \
             </strong> {_("Mas detalles en el siguiente log:")} <br> <br> <code>{details.get("error")}</code>'
-        frappe.msgprint(msg=msg_with_errors, title=details.get('title'), indicator=details.get('indicator'), is_minimizable=1)
+        frappe.msgprint(msg=msg_with_errors, title=details.get('title'), indicator=details.get('indicator'),
+                        is_minimizable=True, wide=True)
         return details
 
     # Mensajes o Advertencias
     if not details.get('status') and not details.get('error'):
-        frappe.msgprint(msg=details.get('description'), title=details.get('title'), indicator=details.get('indicator'))
+        frappe.msgprint(msg=details.get('description'), title=details.get('title'), indicator=details.get('indicator'),
+                        is_minimizable=True, wide=True)
         return details
 
     # Si la respuesta es exitosa
     if details.get('status'):
-        frappe.msgprint(msg=details.get('description'), title=details.get('title'), indicator=details.get('indicator'))
+        frappe.msgprint(msg=details.get('description'), title=details.get('title'), indicator=details.get('indicator'),
+                        is_minimizable=True, wide=True)
         return details
 
 

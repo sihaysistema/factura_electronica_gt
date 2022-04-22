@@ -44,7 +44,8 @@ class ElectronicInvoice:
         try:
             # Definicion campos a consultar de la DB
             fields_sales_invoice = ['posting_date', 'posting_time', 'currency', 'company', 'company_address', 'nit_face_customer',
-                                    'customer_address', 'customer_name', 'total_taxes_and_charges', 'grand_total', 'facelec_adenda']
+                                    'customer_address', 'customer_name', 'total_taxes_and_charges', 'grand_total', 'facelec_adenda',
+                                    'facelec_total_items_overview']
 
             fields_config = ['fecha_y_tiempo_documento_electronica', 'usar_datos_prueba', 'nombre_empresa_prueba',
                              'is_it_an_establishment', 'parent_company', 'is_individual', 'facelec_name_of_owner',
@@ -458,6 +459,23 @@ class ElectronicInvoice:
             i_fel = {}  # Guardara la seccion de items ok
             items_ok = []  # Guardara todos los items OK
 
+            # Obtenemos los impuesto cofigurados para x compañia en la factura (IVA)
+            self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__invoice_code},
+                                                     fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
+
+            self.__items_group = frappe.db.get_values('Item Overview', filters={'parent': self.__invoice_code},
+                                                      fieldname=['item_code', 'item_name', 'description', 'qty', 'rate',
+                                                                 'amount', 'uom', 'three_digit_uom', 'conversion_factor',
+                                                                 'tax_rate_per_uom', 'other_tax_amount', 'amount_minus_excise_tax',
+                                                                 'sales_tax_for_this_row', 'net_goods_amount', 'net_services_amount',
+                                                                 'net_fuel_amount', 'is_service', 'is_good', 'is_fuel'],
+                                                      order_by='idx', as_dict=True) or []
+
+            # Si hay productos agrupados se procesan, si no se continua con la generacion normal
+            self.len_group_i = len(self.__items_group)
+            if self.len_group_i > 0:
+                return self.process_grouped_item()
+
             # Obtenemos los items de la factura
             self.__dat_items = frappe.db.get_values('Sales Invoice Item', filters={'parent': self.__invoice_code},
                                                     fieldname=['item_name', 'qty', 'item_code', 'description',
@@ -475,10 +493,6 @@ class ElectronicInvoice:
 
             # Configuracion para obtener descripcion de item de Item Name o de Descripcion (segun user)
             switch_item_description = self.__config_facelec.descripcion_item
-
-            # Obtenemos los impuesto cofigurados para x compañia en la factura (IVA)
-            self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__invoice_code},
-                                                     fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
 
             # Verificamos la cantidad de items
             longitems = len(self.__dat_items)
@@ -605,6 +619,129 @@ class ElectronicInvoice:
             msg_ei = _('Los productos no fueron procesados, por favor verifique que los productos esten configurados para Factura Electronica e intente nuevamente.')
             return {'status': False, 'description': msg_ei, 'error': frappe.get_traceback()}
 
+    def process_grouped_item(self):
+        try:
+            i_fel = {}  # Guardara la seccion de items ok
+            items_ok = []  # Guardara todos los items OK
+            # Configuracion para obtener descripcion de item de Item Name o de Descripcion (segun user)
+            switch_item_description = self.__config_facelec.descripcion_item
+
+            # Verificamos la cantidad de items
+            longitems = len(self.__items_group)
+            apply_oil_tax = False
+
+            contador = 0  # Utilizado para enumerar las lineas en factura electronica
+
+            # Si existe un solo item a facturar la iteracion se hara una vez, si hay mas lo contrario mas iteraciones
+            for i in range(0, longitems):
+                obj_item = {}  # por fila
+                net_amt = 0  # Neto por fila
+
+                # Is Service, Is Good.  Si Is Fuel = Is Good. Si Is Exempt = Is Good.
+                if cint(self.__items_group[i]['is_service']) == 1:
+                    obj_item["@BienOServicio"] = 'S'
+                    net_amt = flt(self.__items_group[i]['net_services_amount'], self.__precision)
+
+                elif cint(self.__items_group[i]['is_good']) == 1:
+                    obj_item["@BienOServicio"] = 'B'
+                    net_amt = flt(self.__items_group[i]['net_goods_amount'], self.__precision)
+
+                elif cint(self.__items_group[i]['is_fuel']) == 1:
+                    obj_item["@BienOServicio"] = 'B'
+                    apply_oil_tax = True
+                    net_amt = flt(self.__items_group[i]['net_fuel_amount'], self.__precision)
+
+                precio_uni = 0
+                precio_item = 0
+
+                # En los items agrupados no se manejaran descueontos
+                desc_item_fila = 0
+
+                # Precio unitario, (sin aplicarle descuento)
+                # Al precio unitario se le suma el descuento que genera ERP, ya que es neceario enviar precio sin descuentos,
+                # en las operaciones restantes es neceario
+                # (Precio Unitario - Monto IDP) + Descuento --> se le resta el IDP ya que viene incluido en el precio
+                precio_uni = flt((self.__items_group[i]['rate'] - self.__items_group[i].get('tax_rate_per_uom', 0)) + desc_item_fila,
+                                 self.__precision)
+
+                precio_item = flt(precio_uni * self.__items_group[i]['qty'], self.__precision)
+
+                desc_fila = 0
+                desc_fila = flt(self.__items_group[i]['qty'] * desc_item_fila, self.__precision)
+
+                contador += 1
+                description_to_item = self.__items_group[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__items_group[i]['description']
+
+                obj_item["@NumeroLinea"] = contador
+                obj_item["dte:Cantidad"] = float(self.__items_group[i]['qty'])
+                obj_item["dte:UnidadMedida"] = self.__items_group[i]['three_digit_uom']
+                obj_item["dte:Descripcion"] = remove_html_tags(description_to_item)  # description
+                obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
+                obj_item["dte:Precio"] = flt(precio_item, self.__precision)  # Correcto según el esquema XML
+                obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
+
+                # Generacion seccion de impuestos
+                obj_item["dte:Impuestos"] = {}
+                obj_item["dte:Impuestos"]["dte:Impuesto"] = [
+                    {
+                        "dte:NombreCorto": self.__taxes_fact[0]['tax_name'],
+                        "dte:CodigoUnidadGravable": self.__taxes_fact[0]['taxable_unit_code'],
+                        "dte:MontoGravable": net_amt,  # net_amount
+                        "dte:MontoImpuesto": flt(net_amt * (self.__taxes_fact[0]['rate']/100),
+                                                 self.__precision)
+                    }
+                ]
+
+                if apply_oil_tax:  # Si es combustible => IDP
+                    # Agregamos los impuestos
+                    # IVA e IDP
+                    nombre_corto = frappe.db.get_value('Item', {'name': self.__items_group[i]['item_code']}, 'tax_name')
+                    codigo_uni_gravable = frappe.db.get_value('Item', {'name': self.__items_group[i]['item_code']}, 'taxable_unit_code')
+
+                    if (not nombre_corto) or (not codigo_uni_gravable):
+                        msg_ee = _("Los productos de tipo combustible no se encuentran configurados correctamente, corregir en Doctype Producto e \
+                            intentar nuevamente.")
+                        return {'status': False, 'description': msg_ee, 'error': ''}
+
+                    obj_item["dte:Impuestos"]["dte:Impuesto"].append(
+                        {
+                            # IDP
+                            "dte:NombreCorto": nombre_corto,
+                            "dte:CodigoUnidadGravable": codigo_uni_gravable,
+                            "dte:CantidadUnidadesGravables": float(self.__items_group[i]['qty']),  # net_amount
+                            "dte:MontoImpuesto": flt(self.__items_group[i]['other_tax_amount'], self.__precision)
+                        }
+                    )
+
+                obj_item["dte:Total"] = flt(self.__items_group[i]['amount'], self.__precision)
+
+                # Reseteamos el status
+                apply_oil_tax = False
+
+                # TODO:
+                # TURISMO HOSPEDAJE
+                # TURISMO PASAJES
+                # TIMBRE DE PRENSA
+                # BOMBEROS
+                # TASA MUNICIPAL
+                # BEBIDAS ALCOHOLICAS
+                # TABACO
+                # CEMENTO
+                # BEBIDAS NO ALCOHOLICAS
+                # TARIFA PORTUARIA
+
+                items_ok.append(obj_item)
+
+            i_fel = {"dte:Item": items_ok}
+            self.__d_items = i_fel
+
+            return {'status': True, 'description': 'OK', 'error': ''}
+
+        except Exception:
+            msg_ei = _('Los productos agrupados no fueron procesados, por favor verifique que los productos esten configurados para Factura Electronica e intente nuevamente.\
+                si la falla persiste genere una factura sin agrupar productos')
+            return {'status': False, 'description': msg_ei, 'error': frappe.get_traceback()}
+
     def totals(self):
         """
         Funcion encargada de realizar totales de los impuestos sobre la factura
@@ -615,6 +752,9 @@ class ElectronicInvoice:
         """
 
         try:
+            if self.len_group_i > 0:
+                return self.total_grouped_items()
+
             is_idp = False
             gran_tot = 0
             total_idp = 0
@@ -626,40 +766,69 @@ class ElectronicInvoice:
                     is_idp = True
                     total_idp += flt(i['facelec_other_tax_amount'], self.__precision)
 
-            # Escenario PETROLEO
-            if is_idp:
-                self.__d_totales = {
-                    "dte:TotalImpuestos": {
-                        "dte:TotalImpuesto": [
-                            {
-                                "@NombreCorto": self.__taxes_fact[0]['tax_name'],  # "IVA",
-                                "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
-                            },
-                            {
-                                "@NombreCorto": "PETROLEO",  # VALOR FIJO PARA COMBUSTIBLES
-                                "@TotalMontoImpuesto": abs(flt(total_idp, self.__precision))
-                            }
-                        ]
-                    },
-                    "dte:GranTotal": flt(self.__doc_inv.grand_total, self.__precision)
-                }
+            self.__d_totales = {
+                "dte:TotalImpuestos": {
+                    "dte:TotalImpuesto": [{
+                        "@NombreCorto": self.__taxes_fact[0]['tax_name'],  # "IVA",
+                        "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
+                    }]
+                },
+                "dte:GranTotal": flt(self.__doc_inv.grand_total, self.__precision)
+            }
 
-            # ESCENARIO IVA
-            else:
-                self.__d_totales = {
-                    "dte:TotalImpuestos": {
-                        "dte:TotalImpuesto": {
-                            "@NombreCorto": self.__taxes_fact[0]['tax_name'],  # "IVA",
-                            "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
-                        }
-                    },
-                    "dte:GranTotal": flt(self.__doc_inv.grand_total, self.__precision)
-                }
+            # Escenario PETROLEO (Si hay algun producto con IDP)
+            if is_idp:
+                self.__d_totales["dte:TotalImpuestos"]["dte:TotalImpuesto"].append(
+                    {
+                        "@NombreCorto": "PETROLEO",  # VALOR FIJO PARA COMBUSTIBLES
+                        "@TotalMontoImpuesto": abs(flt(total_idp, self.__precision))
+                    }
+                )
+
             return {'status': True, 'description': 'OK', 'error': ''}
 
         except Exception:
             msg_tot = _('La seccion de totales no pudo ser generada, por favor verifique que la plantilla de impuestos este configurada correctamente\
                 e intente de nuevo.')
+            return {'status': False, 'description': msg_tot, 'error': frappe.get_traceback()}
+
+    def total_grouped_items(self):
+        try:
+            is_idp = False
+            gran_tot = 0
+            total_idp = 0
+
+            # Por cada fila se obtiene el total de IVA e IDP en caso exista
+            for i in self.__items_group:
+                gran_tot += flt(i['sales_tax_for_this_row'], self.__precision)
+                if cint(i['is_fuel']) == 1:
+                    is_idp = True
+                    total_idp += flt(i['other_tax_amount'], self.__precision)
+
+            self.__d_totales = {
+                "dte:TotalImpuestos": {
+                    "dte:TotalImpuesto": [{
+                        "@NombreCorto": self.__taxes_fact[0]['tax_name'],  # "IVA",
+                        "@TotalMontoImpuesto": abs(flt(gran_tot, self.__precision))
+                    }]
+                },
+                "dte:GranTotal": flt(self.__doc_inv.facelec_total_items_overview, self.__precision)
+            }
+
+            # Escenario PETROLEO (Si hay algun producto con IDP)
+            if is_idp:
+                self.__d_totales["dte:TotalImpuestos"]["dte:TotalImpuesto"].append(
+                    {
+                        "@NombreCorto": "PETROLEO",  # VALOR FIJO PARA COMBUSTIBLES
+                        "@TotalMontoImpuesto": abs(flt(total_idp, self.__precision))
+                    }
+                )
+
+            return {'status': True, 'description': 'OK', 'error': ''}
+
+        except Exception:
+            msg_tot = _('La seccion de totales de productos agrupados no pudo ser generada, por favor verifique que la plantilla de impuestos \
+                este configurada correctamente e intente de nuevo.')
             return {'status': False, 'description': msg_tot, 'error': frappe.get_traceback()}
 
     def adendas(self):
@@ -960,6 +1129,10 @@ class ElectronicInvoice:
 
                 if frappe.db.exists('Otros Impuestos Factura Electronica', {'parent': serie_fac_original}):
                     frappe.db.sql('''UPDATE `tabOtros Impuestos Factura Electronica` SET parent=%(name)s
+                                    WHERE parent=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+
+                if frappe.db.exists('Item Overview', {'parent': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabItem Overview` SET parent=%(name)s
                                     WHERE parent=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
 
                 # Pago programado, si existe
