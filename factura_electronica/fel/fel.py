@@ -59,7 +59,7 @@ class ElectronicInvoice:
             # 1 Valida y construye por partes el XML desde un dict
             status_validate = self.validate()  # True/False
 
-            if status_validate.get('status'):
+            if status_validate.get('status'):  # True/False
                 # 2 - Asignacion y creacion base peticion para luego ser convertida a XML
                 self.__base_peticion = {
                     "dte:GTDocumento": {
@@ -85,10 +85,11 @@ class ElectronicInvoice:
                     }
                 }
 
-                if self.__tiene_adenda:
+                if self.__tiene_adenda:  # True/False
                     self.__base_peticion['dte:GTDocumento']['dte:SAT']['dte:Adenda'] = self.__adendas
 
-                # USAR SOLO PARA DEBUG (XML y JSON): Los archivos al tener el mismo nombre en cada generacion, se sobreescriben
+                # USAR SOLO PARA DEBUG (XML y JSON):
+                # Los archivos al tener el mismo nombre en cada generacion, se sobreescriben en cada generacion
                 with open('PREVIEW-FACTURA-FEL.xml', 'w') as f:
                     f.write(xmltodict.unparse(self.__base_peticion, pretty=True))
 
@@ -105,10 +106,11 @@ class ElectronicInvoice:
 
     def validate(self):
         """
-        Funcion encargada de validar la data que construye la peticion a INFILE,
-        Si existe por lo menos un error retornara la descripcion con dicho error
+        Metodo encargado de validar y generar cada seccion que constituye el XML para la peticion
+        Si existe algun error retorna el status y el problema para ser solucionado
+
         Returns:
-            tuple: True/False, msj, msj
+            dict: msg status
         """
 
         # Validacion y generacion seccion datos generales
@@ -154,15 +156,16 @@ class ElectronicInvoice:
         """
         Construye la seccion datos generales que incluye, codigo de moneda, Fecha y Hora de emision
         Tipo de factura
+
         Returns:
-            tuple: Primera posicion True/False, Segunda posicion descripcion msj
+            dict: msg status
         """
 
         try:
             if self.__config_facelec.fecha_y_tiempo_documento_electronica == 'Fecha y tiempo de peticion a INFILE':
                 ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
 
-            else:  # Se usa fecha y tiempo en de la factura
+            else:  # Se usa fecha y tiempo de la factura (posting_date, posting_time)
                 date_invoice_inv = str(self.__doc_inv.posting_date)
                 ok_time = str(self.__doc_inv.posting_time)
                 ok_datetime = f'{date_invoice_inv}T{datetime.datetime.strptime(ok_time.split(".")[0], "%H:%M:%S").time()}'
@@ -179,11 +182,8 @@ class ElectronicInvoice:
             return {'status': True, 'description': 'OK', 'error': ''}
 
         except Exception:
-            # return False, f'Error en obtener data para datos generales :\n {str(frappe.get_traceback())}'
             msg_gen = _('No se obtuvo la data para generar la sección datos generales, verifique que la configuración de facelec este completa')
-            return {'status': False,
-                    'description': msg_gen,
-                    'error': frappe.get_traceback()}
+            return {'status': False, 'description': msg_gen, 'error': frappe.get_traceback()}
 
     def sender(self):
         """
@@ -191,7 +191,7 @@ class ElectronicInvoice:
         entidad que emite la factura
 
         Returns:
-            tuple: True/False, msj, msj
+            dict: msg status
         """
 
         try:
@@ -214,7 +214,7 @@ class ElectronicInvoice:
             if not dat_direccion:
                 status_sender = False
                 msg_e.append(f'{_("No se encontro ninguna direccion para la compania")} {self.dat_compania.company_name}, \
-                            {_("verifica que exista una, con data en los campos")} Direccion Linea 1, Direccion de correo electronico, \
+                            {_("verifica que exista una, con datos en sus campos")} Direccion Linea 1, Direccion de correo electronico, \
                                 Codigo Postal, Departamento, Ciudad, Pais e intente de nuevo')
 
             # LA ENTIDAD EMISORA SI O SI DEBE TENER ESTOS DATOS :D
@@ -227,7 +227,7 @@ class ElectronicInvoice:
                                      , {_("por favor asignarle un valor e intentar de nuevo")}')
 
             # Si en configuracion de factura electronica esta seleccionada la opcion de usar datos de prueba
-            # SE APLICAN LAS CREDENCIALES DE PRUEBAS
+            # SE APLICAN DATOS DE LAS CREDENCIALES DE PRUEBAS
             if self.__config_facelec.usar_datos_prueba == 1:
                 nom_comercial = self.__config_facelec.nombre_empresa_prueba
 
@@ -294,11 +294,11 @@ class ElectronicInvoice:
         """
         Validacion y generacion datos de Receptor (cliente)
         NOTA: Si no hay datos de clientes, se usaran datos default
+
         Returns:
-            tuple: True/False, msj, msj
+            dict: msg status
         """
 
-        # Intentara obtener data de direccion cliente
         try:
             customer_addr = frappe.db.get_value('Address', filters={'name': self.__doc_inv.customer_address},
                                                 fieldname=['address_line1', 'email_id', 'pincode', 'county',
@@ -315,7 +315,8 @@ class ElectronicInvoice:
                 'pais': 'GT'
             }
 
-            if not customer_addr:  # Si no hay direccion registrada
+            # SI NO HAY UNA DIRECCION DE CLIENTE, SE USARA LOS DATOS DEFAULT
+            if not customer_addr:
                 self.__default_address = True
                 datos_default = {
                     'email': self.__config_facelec.correo_copia,
@@ -358,6 +359,7 @@ class ElectronicInvoice:
                         }
                     }
 
+            # SI HAY UNA DIRECCION DE CLIENTE
             else:
                 self.__default_address = False
 
@@ -402,8 +404,9 @@ class ElectronicInvoice:
         """
         debe indicarse los regímenes y textos especiales que son requeridos en los DTE,
         de acuerdo a la afiliación del contribuyente y tipo de operación.
+
         Returns:
-            boolean: True/False
+            dict: msg status
         """
 
         try:
@@ -417,7 +420,7 @@ class ElectronicInvoice:
                                                   fieldname=['tipo_frase', 'codigo_de_escenario'], as_dict=1)
 
             if not phrases_to_doc:
-                return False, 'Ocurrio un problema, no se encontro ninguna combinación de frases para generar la factura \
+                return False, 'No se encontro ninguna combinación de frases para generar la factura \
                               por favor cree una y configurela en Configuración Factura Electrónica'
 
             # Si hay mas de una frase
@@ -443,16 +446,17 @@ class ElectronicInvoice:
             return {'status': True, 'description': 'OK', 'error': ''}
 
         except Exception:
-            msg_phr = _('No se pudo obtener las frases para la factura, por favor configure una combinación de frases y asignelo a la serie en configuracion de factura electronica \
-                e intente de nuevo')
+            msg_phr = _('No se lograron obtener las frases para la factura, por favor configure una combinación de frases y \
+                asignelo a la serie en configuracion de factura electronica e intente de nuevo')
             return {'status': False, 'description': msg_phr,
                     'error': frappe.get_traceback()}
 
     def items(self):
         """
         Procesa todos los items de la factura aplicando calculos necesarios para la SAT
+
         Returns:
-            tuple: True/False, msj, msj
+            dict: msg status
         """
 
         try:
@@ -463,6 +467,7 @@ class ElectronicInvoice:
             self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__invoice_code},
                                                      fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
 
+            # Si hay productos agrupados
             self.__items_group = frappe.db.get_values('Item Overview', filters={'parent': self.__invoice_code},
                                                       fieldname=['item_code', 'item_name', 'description', 'qty', 'rate',
                                                                  'amount', 'uom', 'three_digit_uom', 'conversion_factor',
@@ -620,15 +625,25 @@ class ElectronicInvoice:
             return {'status': False, 'description': msg_ei, 'error': frappe.get_traceback()}
 
     def process_grouped_item(self):
+        """En el escenario de facturas con demasiadas lineas de productos las facturas PDF electronicas se generan con muchas
+        paginas, para evitar eso las filas de productos se agrupan por codigo, uom. La agrupacion la debe hacer el usuario
+        segun lo necesite.
+
+        OJO: En los items agrupados no se manejan descuentos
+
+        Returns:
+            dict: msg status
+        """
         try:
             i_fel = {}  # Guardara la seccion de items ok
             items_ok = []  # Guardara todos los items OK
+
             # Configuracion para obtener descripcion de item de Item Name o de Descripcion (segun user)
             switch_item_description = self.__config_facelec.descripcion_item
 
-            # Verificamos la cantidad de items
+            # Cantidad de productos a facturar
             longitems = len(self.__items_group)
-            apply_oil_tax = False
+            apply_oil_tax = False  # Flag para saber si es combustible
 
             contador = 0  # Utilizado para enumerar las lineas en factura electronica
 
@@ -654,7 +669,7 @@ class ElectronicInvoice:
                 precio_uni = 0
                 precio_item = 0
 
-                # En los items agrupados no se manejaran descueontos
+                # En los items agrupados no se manejaran descuentos
                 desc_item_fila = 0
 
                 # Precio unitario, (sin aplicarle descuento)
@@ -673,7 +688,7 @@ class ElectronicInvoice:
                 description_to_item = self.__items_group[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__items_group[i]['description']
 
                 obj_item["@NumeroLinea"] = contador
-                obj_item["dte:Cantidad"] = float(self.__items_group[i]['qty'])
+                obj_item["dte:Cantidad"] = float(self.__items_group[i]['qty'])  # Se envia con todos los decimales
                 obj_item["dte:UnidadMedida"] = self.__items_group[i]['three_digit_uom']
                 obj_item["dte:Descripcion"] = remove_html_tags(description_to_item)  # description
                 obj_item["dte:PrecioUnitario"] = flt(precio_uni, self.__precision)
@@ -681,6 +696,7 @@ class ElectronicInvoice:
                 obj_item["dte:Descuento"] = flt(desc_fila, self.__precision)
 
                 # Generacion seccion de impuestos
+                # IVA
                 obj_item["dte:Impuestos"] = {}
                 obj_item["dte:Impuestos"]["dte:Impuesto"] = [
                     {
@@ -692,9 +708,8 @@ class ElectronicInvoice:
                     }
                 ]
 
-                if apply_oil_tax:  # Si es combustible => IDP
-                    # Agregamos los impuestos
-                    # IVA e IDP
+                # Si es combustible => Se agrega el IDP
+                if apply_oil_tax:
                     nombre_corto = frappe.db.get_value('Item', {'name': self.__items_group[i]['item_code']}, 'tax_name')
                     codigo_uni_gravable = frappe.db.get_value('Item', {'name': self.__items_group[i]['item_code']}, 'taxable_unit_code')
 
@@ -715,7 +730,7 @@ class ElectronicInvoice:
 
                 obj_item["dte:Total"] = flt(self.__items_group[i]['amount'], self.__precision)
 
-                # Reseteamos el status
+                # Reseteamos el status, para validar el siguiente item en cola
                 apply_oil_tax = False
 
                 # TODO:
@@ -748,10 +763,12 @@ class ElectronicInvoice:
         y grand total
 
         Returns:
-            tuple: True/False, msj, msj
+            dict: msg status
         """
 
         try:
+            # Si hay productos agrupados, se calculan los totales de los impuestos
+            # sobre ellos
             if self.len_group_i > 0:
                 return self.total_grouped_items()
 
@@ -793,12 +810,17 @@ class ElectronicInvoice:
             return {'status': False, 'description': msg_tot, 'error': frappe.get_traceback()}
 
     def total_grouped_items(self):
+        """Calcula el total de los impuestos sobre los productos agrupados
+
+        Returns:
+            dict: msg status
+        """
         try:
             is_idp = False
             gran_tot = 0
             total_idp = 0
 
-            # Por cada fila se obtiene el total de IVA e IDP en caso exista
+            # Por cada fila se obtiene el de IVA e IDP en caso exista
             for i in self.__items_group:
                 gran_tot += flt(i['sales_tax_for_this_row'], self.__precision)
                 if cint(i['is_fuel']) == 1:
@@ -834,8 +856,9 @@ class ElectronicInvoice:
     def adendas(self):
         """Funcion encargada de generar adendas a la factura en caso existan
         NOTA: Solo se acepta una adenda por factura por lo que la info se toma de un campo de la factura
+
         Returns:
-            tuple: bool, msg
+            dict: msg status
         """
         try:
             self.__description_adenda = self.__doc_inv.facelec_adenda or ''
@@ -856,8 +879,9 @@ class ElectronicInvoice:
     def sign_invoice(self):
         """
         Funcion encargada de solicitar firma para archivo XML
+
         Returns:
-            tuple: True/False, msj, msj
+            dict: msg status
         """
 
         try:
@@ -928,11 +952,10 @@ class ElectronicInvoice:
         Funcion encargada de solicitar factura electronica al Web Service de INFILE
 
         Returns:
-            tuple: True/False, msj, msj
+            dict: msg status
         """
 
         try:
-            # data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
             nit_company = str(frappe.db.get_value('Company', {'name': self.__doc_inv.company}, 'nit_face_company').replace('-', '')).upper().strip()
 
             url = self.__config_facelec.url_dte
@@ -955,8 +978,8 @@ class ElectronicInvoice:
             }
 
             # DEBUG: Para ver que datos se estan enviando al Web Service
-            # with open("peticion-fel.json", "w") as file:
-            #     file.write(json.dumps(req_dte, indent=2))
+            with open("peticion-fel.json", "w") as file:
+                file.write(json.dumps(req_dte, indent=2))
 
             self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
             self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
@@ -973,35 +996,29 @@ class ElectronicInvoice:
     def response_validator(self):
         """
         Funcion encargada de verificar las respuestas de INFILE-SAT
+
         Returns:
-            tuple: True/False, msj, msj
+            dict: msg status
         """
 
         try:
             # Verifica que no existan errores
             if self.__response_ok['resultado'] and (self.__response_ok['cantidad_errores'] == 0):
                 # # Se encarga de guardar las respuestas de INFILE-SAT esto para llevar registro
-                self.__end_datetime = get_datetime()
                 status_saved = self.save_answers()
 
                 # Al primer error encontrado retornara un detalle con el mismo
                 if not status_saved:
                     return status_saved
-                    # return {'status': 'ERROR', 'detalles_errores': status_saved, 'numero_errores':1}
 
                 return {'status': True, 'description': 'OK', 'error': '',
                         'numero_autorizacion': self.__response_ok['uuid'],
                         'serie': self.__response_ok['serie'], 'numero': self.__response_ok['numero']}
 
-                # return True, {'status': 'OK', 'numero_autorizacion': self.__response_ok['uuid'],
-                #               'serie': self.__response_ok['serie'], 'numero': self.__response_ok['numero']}
-
             else:
                 return {'status': False, 'description': self.__response_ok['descripcion'],
                         'error': self.__response_ok['descripcion_errores']}
 
-                # return False, {'status': 'ERROR', 'numero_errores': str(self.__response_ok['cantidad_errores']),
-                #                'detalles_errores': str(self.__response_ok['descripcion_errores'])}
         except Exception:
             return {'status': False, 'description': 'No se pudo validar la respuesta enviada por INFILE', 'error': frappe.get_traceback()}
 
@@ -1014,6 +1031,8 @@ class ElectronicInvoice:
         """
 
         try:
+            self.__end_datetime = get_datetime()
+
             # Valida que no se haya guardado con anterioridad
             if not frappe.db.exists('Envio FEL', {'name': self.__response_ok['uuid']}):
                 resp_fel = frappe.new_doc("Envio FEL")
@@ -1077,6 +1096,7 @@ class ElectronicInvoice:
         """
         Funcion encargada de actualizar todos los doctypes enlazados a la factura original, con
         la serie generada para factura electronica
+
         Returns:
             tuple: True/False, msj, msj
         """

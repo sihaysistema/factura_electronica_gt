@@ -1,15 +1,15 @@
 {
   "factura_electronica/js/facelec.min.js": [
-    "src/js/facelec.js",
-    "src/js/sales_invoice.js",
-    "src/js/delivery_note.js",
-    "src/js/sales_order.js",
-    "src/js/sales_quotation.js",
-    "src/js/purchase_invoice.js",
-    "src/js/purchase_receipt.js",
-    "src/js/purchase_order.js",
-    "src/js/supplier_quotation.js",
-    "src/js/goalSeek.js",
-    "src/js/sales_invoice_actions.js"
+    "frontend/js/facelec.js",
+    "frontend/js/sales_invoice.js",
+    "frontend/js/delivery_note.js",
+    "frontend/js/sales_order.js",
+    "frontend/js/sales_quotation.js",
+    "frontend/js/purchase_invoice.js",
+    "frontend/js/purchase_receipt.js",
+    "frontend/js/purchase_order.js",
+    "frontend/js/supplier_quotation.js",
+    "frontend/js/goalSeek.js",
+    "frontend/js/sales_invoice_actions.js"
   ]
 }

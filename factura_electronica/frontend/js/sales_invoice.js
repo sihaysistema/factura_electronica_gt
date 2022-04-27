@@ -61,7 +61,8 @@ function generar_tabla_html(frm) {
 
 /**
  * @summary Calculador de montos para generar documentos electronicos
- * Se ejecuta despues de guardar los datos en la DB
+ * Se ejecuta despues de guardar los datos en la DB. Se hace para tomar en cuenta
+ * a aquellos usuarios que tienen computadoras con bajos recursos
  * @param {Object} frm - Propiedades del Doctype
  */
 function sales_invoice_calc(frm) {
@@ -74,18 +75,16 @@ function sales_invoice_calc(frm) {
       freeze: true,
       freeze_message: __("Calculating"),
     })
-    .then(({ message }) => {
+    .then(() => {
       frm.reload_doc();
-      // Si la agrupacion esta activada
-      // group_items_to_facelec(frm);
     });
   // .then((r) => {
-  //   // Recarga el doc para reflejar los cambios
-  //   frm.reload_doc();
   // });
 }
-
-// Valida que tipo de boton generador fel debe aparecer
+/**
+ * @summary Valida que tipo de boton se debe generar segun los datos de la factura
+ * @param {frm}
+ */
 function btn_validator(frm) {
   frappe.call({
     method: "factura_electronica.fel_api.btn_validator",
@@ -98,12 +97,14 @@ function btn_validator(frm) {
     },
   });
 }
-
+/**
+ * @summary Genera X botones para generar documentos electronicos
+ * @param {object} frm
+ */
 function btn_fel_generator(frm, msg) {
   const { type_doc, show_btn } = msg;
 
   console.log("El tipo de doc es", type_doc);
-  // console.log("Status btn", show_btn);
 
   if (!type_doc) {
     // Si no hay dato no se muestra ningun btn generador
@@ -146,6 +147,9 @@ function btn_fel_generator(frm, msg) {
       pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
     }
   }
+
+  // Factura Excenta: NOTA DEBEMOS TENER CREDENCIALES PARA UNA COMPANIA QUE NECESITE ESO
+
   // Anulador de docs
   if (type_doc === "anulador_si") {
     if (show_btn == false) {
@@ -266,40 +270,39 @@ function btn_canceller(frm) {
 /**
  * @summary Generador boton para FEL normal
  *
- * @param {*} tipo_factura
- * @param {*} frm
+ * @param {string} tipo_factura
+ * @param {Object} frm
  */
 function generar_boton_factura(tipo_factura, frm) {
   frm
     .add_custom_button(__(tipo_factura), function () {
-      // frm.reload(); permite hacer un refresh de todo el documento
-      // frm.reload_doc();
-      // let serie_de_factura = frm.doc.name;
-      // // Guarda la url actual
-      // let mi_url = window.location.href;
-      frappe.call({
-        method: "factura_electronica.fel_api.fel_generator",
-        args: {
-          doctype: frm.doc.doctype,
-          docname: frm.doc.name,
-          type_doc: "factura_fel",
-        },
-        // El callback recibe como parametro el dato retornado por el script python del lado del servidor
-        // para validar si se genero correctamente la factura electronica
-        callback: function ({ message }) {
-          // console.log(message);
-          if (message.status === true && message.uuid) {
-            // Crea una nueva url con el nombre del documento actualizado
-            // let url_nueva = mi_url.replace(serie_de_factura, message.serie_fel);
-            // // Asigna la nueva url a la ventana actual
-            // window.location.assign(url_nueva);
-            // // Recarga la pagina
-            // Redirecciona a la nueva url
-            frappe.set_route(`/app/sales-invoice/${message.serie_fel}`);
-            frm.reload_doc();
-            location.reload();
-          }
-        },
+      frappe.confirm("Desea generar una Factura Electronica?", () => {
+        frappe
+          .call({
+            method: "factura_electronica.fel_api.fel_generator",
+            args: {
+              doctype: frm.doc.doctype,
+              docname: frm.doc.name,
+              type_doc: "factura_fel",
+            },
+          })
+          .then(({ message }) => {
+            if (message.status === true && message.uuid) {
+              // Redirecciona a la nueva url
+              frappe.set_route(`/app/sales-invoice/${message.serie_fel}`);
+              location.reload();
+              frm.reload_doc();
+
+              // Se muestra un mensaje
+              frappe.show_alert(
+                {
+                  message: __(`Factura Electronica generada con exito. Nueva serie <strong>${message.serie_fel}</strong>`),
+                  indicator: "green",
+                },
+                10
+              );
+            }
+          });
       });
     })
     .addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
@@ -634,7 +637,13 @@ function dependency_validator(frm) {
   return true;
 }
 
+/**
+ * @summary Agrupa las filas de productos, por codigo de producto, uom para el escenario de facturas con demasidas
+ * aplica cuando se quieren generar facturas electronicas con pocas paginas PDF
+ * @param {frm}
+ */
 function group_items_to_facelec(frm) {
+  // Solo si el doc ya se encuentra guardado
   if (!frm.doc.__unsaved && !frm.doc.__islocal && frm.doc.docstatus == 0) {
     if (dependency_validator(frm) == true) {
       frappe
@@ -682,6 +691,12 @@ function group_items_to_facelec(frm) {
   }
 }
 
+/**
+ * @summary Calcula el descuento por fila
+ * @param {frm}
+ * @param {cdt}
+ * @param {cdn}
+ */
 function calc_row_discount(frm, cdt, cdn) {
   // console.log("calculos desc por fila");
   let row = frappe.get_doc(cdt, cdn);
@@ -692,8 +707,6 @@ function calc_row_discount(frm, cdt, cdn) {
 
 /* Factura de Ventas-------------------------------------------------------------------------------------------------- */
 frappe.ui.form.on("Sales Invoice", {
-  // Cuando se carga por primera vez una factura se asegura que active o no el redondeo
-  // de decimales dependiendo de la configucion
   setup(frm) {},
   // Se ejecuta cuando se renderiza el doctype
   onload_post_render: function (frm, cdt, cdn) {
@@ -716,7 +729,6 @@ frappe.ui.form.on("Sales Invoice", {
     }
 
     if (frm.doc.docstatus != 0) {
-      // btn_generator(frm);
       btn_validator(frm);
     }
   },
@@ -761,7 +773,6 @@ frappe.ui.form.on("Sales Invoice", {
   remove_grouped_items_btn(frm) {
     // Solo si el doc ya esta guardado
     if (!frm.doc.__unsaved && !frm.doc.__islocal && frm.doc.docstatus == 0) {
-      console.log("removiendo");
       frappe
         .call("factura_electronica.utils.calculator.remove_items_overview", {
           doctype: frm.doc.doctype,

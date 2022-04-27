@@ -2,7 +2,6 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-from unicodedata import name
 from xml.sax import parseString
 
 import frappe
@@ -1128,10 +1127,9 @@ def generate_exchange_invoice_si(invoice_code: str, naming_series: str) -> tuple
 # ------------------------------------------------------------------------------------------------------------
 @frappe.whitelist()
 def validate_config_fel(company):
-    """Valida y retorna que configuracion se encuentra activa para la compañia/sucursal
+    """Valida y retorna que configuracion se encuentra activa para la compañia/establecimiento
 
     Args:
-        naming_serie (str): serie utilizada en el doc
         company (str): nombre de la compañia en el doc
 
     Returns:
@@ -1148,6 +1146,7 @@ def validate_config_fel(company):
         return False, f'No existe ninguna configuracion para la compañia {company}'
 
     if list_config.get('count') == 1:
+        # status/nombre de la config valida
         return True, list_config.get('name')
 
 
@@ -1277,7 +1276,7 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
                 'title': _('Factura ya generada como FEL')
             }
 
-        # Validacion de configuracion correcta
+        # 2 - VALIDACION CONFIGURACION VALIDA (PUEDE HABER 1 POR COMPANY)
         config = validate_config_fel(company)
         if not config[0]:
             return {
@@ -1290,10 +1289,10 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
                 'title': _('Factura Electronica No Configurada')
             }
 
-        # Se crea una instancia de la clase FacturaElectronica para generarla
+        # 3 - Se crea una instancia de la clase FacturaElectronica para generarla
         new_invoice = ElectronicInvoice(invoice_name, config[1], naming_series)
 
-        # Se valida y construye la peticion para INFILE en formato JSON
+        # 4 - Se valida y construye la peticion para INFILE en formato JSON
         build_inv = new_invoice.build_invoice()
         if not build_inv.get('status'):  # True/False
             return {
@@ -1306,7 +1305,7 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
                 'title': _('Datos necesarios para generar factura no procesados')
             }
 
-        # INFILE valida y firma los datos de la peticion (La peticion se convierte a XML)
+        # 5 - INFILE valida y firma los datos de la peticion (La peticion se convierte a XML)
         sign_inv = new_invoice.sign_invoice()
         if not sign_inv.get('status'):  # True/False
             return {
@@ -1319,7 +1318,7 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
                 'title': _('Datos no validados por INFILE')
             }
 
-        # Con la peticion firmada y validada, se solicita la generacion del FEL
+        # 6 - Con la peticion firmada y validada, se solicita la generacion del FEL
         req_inv = new_invoice.request_electronic_invoice()
         if not req_inv.get('status'):  # True/False
             return {
@@ -1332,7 +1331,7 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
                 'title': _('Factura Electronica No Generada')
             }
 
-        # Se valida la respuesta del FEL
+        # 7 - Se valida la respuesta del FEL
         # En esta fase se valida si hay errores en la respuesta por parte FEL
         res_validate = new_invoice.response_validator()
         if not res_validate.get('status'):  # True/False
@@ -1346,7 +1345,7 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
                 'title': _('Datos Recibidos por INFILE no validos')
             }
 
-        # Si la generacion con INFILE fue exitosa, se actualizan las referencia en el ERP
+        # 8 - Si la generacion con INFILE fue exitosa, se actualizan las referencia en el ERP
         upgrade_inv = new_invoice.upgrade_records()
         if not upgrade_inv.get('status'):  # True/False
             return {
@@ -1359,7 +1358,7 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
                 'title': _('Referencias de la factura no fueron actualizadas por completo')
             }
 
-        # Si la ejecucion llega a este punto, es decir que todas las fases se ejecutaron correctamente, se genera una respuesta positiva
+        # 9 - Si la ejecucion llega a este punto, es decir que todas las fases se ejecutaron correctamente, se genera una respuesta positiva
         if upgrade_inv.get('status') and upgrade_inv.get('uuid'):
             msg_ok = f'Factura Electronica generada correctamente con codigo UUID {upgrade_inv.get("uuid")}\
                 y serie {upgrade_inv.get("serie")}'
@@ -1380,7 +1379,8 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
 
 def msg_generator(details):
     """Generador de mensajes server side, todos los generadores de docs electronicos comparten la misma
-    estructura de respuestas, por lo que se puede reutilizar esta funcion
+    estructura de respuestas, por lo que se puede reutilizar esta funcion para mostrarlos mensajes
+    al usuario.
 
     Args:
         details (dict): detalles operacion de cada fase de la generacion de docs electronicos
@@ -1404,8 +1404,8 @@ def msg_generator(details):
 
     # Si la respuesta es exitosa
     if details.get('status'):
-        frappe.msgprint(msg=details.get('description'), title=details.get('title'), indicator=details.get('indicator'),
-                        is_minimizable=True, wide=True)
+        # frappe.msgprint(msg=details.get('description'), title=details.get('title'), indicator=details.get('indicator'),
+        #                 is_minimizable=True, wide=True)
         return details
 
 
@@ -1432,12 +1432,3 @@ def fel_generator(doctype, docname, type_doc):
 
     else:
         return {'status': False}
-
-
-@frappe.whitelist()
-def save_items(items):
-    import json
-    items_ok = json.loads(items)
-    with open('items.json', 'w') as f:
-        f.write(json.dumps(items_ok, indent=2, default=str))
-    return ':D'
