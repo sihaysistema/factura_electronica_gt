@@ -554,30 +554,37 @@ function btn_journal_entry_retention(frm) {
  * @param {*} frm
  */
 function btn_exchange_invoice(frm) {
-  cur_frm.clear_custom_buttons(); // Limpia otros customs buttons para generar uno nuevo
   frm
     .add_custom_button(__("Generar Factura Cambiaria FEL"), function () {
-      frappe.call({
-        method: "factura_electronica.fel_api.generate_exchange_invoice_si",
-        args: {
-          invoice_code: frm.doc.name,
-          naming_series: frm.doc.naming_series,
-        },
-        callback: function (data) {
-          console.log(data.message);
-          let serie_de_factura = frm.doc.name;
-          // Guarda la url actual
-          let mi_url = window.location.href;
+      frappe.confirm("Desea generar una Factura Electronica Cambiaria?", () => {
+        frappe.call({
+          // method: "factura_electronica.fel_api.generate_exchange_invoice_si",
+          method: "factura_electronica.fel_api.fel_generator",
+          args: {
+            doctype: frm.doc.doctype,
+            docname: frm.doc.name,
+            type_doc: "cambiaria",
+          },
+          callback: function ({ message }) {
+            if (message.status === true && message.uuid) {
+              // Redirecciona a la nueva url
+              frappe.set_route(`/app/sales-invoice/${message.serie_fel}`);
+              location.reload();
+              frm.reload_doc();
 
-          if (data.message[0] === true) {
-            // Crea una nueva url con el nombre del documento actualizado
-            let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
-            // Asigna la nueva url a la ventana actual
-            window.location.assign(url_nueva);
-            // Recarga la pagina
-            frm.reload_doc();
-          }
-        },
+              // Se muestra un mensaje
+              frappe.show_alert(
+                {
+                  message: __(
+                    `Factura Electronica Cambiaria generada con exito. Nueva serie <strong>${message.serie_fel}</strong>`
+                  ),
+                  indicator: "green",
+                },
+                10
+              );
+            }
+          },
+        });
       });
     })
     .addClass("btn-primary");
@@ -675,7 +682,7 @@ function group_items_to_facelec(frm) {
                 message: __("Productos agrupados"),
                 indicator: "green",
               },
-              2
+              4
             );
           }
         });

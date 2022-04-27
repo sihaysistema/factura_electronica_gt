@@ -31,6 +31,7 @@ class ElectronicInvoice:
         self.__precision = get_currency_precision_facelec(conf_name)
         self.__default_address = False
         self.__tiene_adenda = False
+        self.__start_datetime = get_datetime()
 
     def build_invoice(self):
         """
@@ -38,7 +39,7 @@ class ElectronicInvoice:
         para ser firmado certificado por la SAT y finalmente generar factura electronica
 
         Returns:
-            tuple: True/False, msj, msj
+            dict: msg status
         """
 
         try:
@@ -52,7 +53,6 @@ class ElectronicInvoice:
                              'afiliacion_iva', 'correo_copia', 'descripcion_item', 'url_firma', 'alias', 'es_anulacion',
                              'llave_pfx', 'url_dte', 'llave_ws']
 
-            self.__start_datetime = get_datetime()
             self.__doc_inv = frappe.db.get_value('Sales Invoice', self.__invoice_code, fields_sales_invoice, as_dict=1)
             self.__config_facelec = frappe.db.get_value('Configuracion Factura Electronica', self.__config_name, fields_config, as_dict=1)
 

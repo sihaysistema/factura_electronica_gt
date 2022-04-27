@@ -11,7 +11,7 @@ from factura_electronica.controllers.journal_entry_special import JournalEntrySp
 from factura_electronica.fel.canceller import CancelDocument
 from factura_electronica.fel.credit_note import ElectronicCreditNote
 from factura_electronica.fel.debit_note import ElectronicDebitNote
-from factura_electronica.fel.exchange_invoice import PurchaseExchangeInvoice, SalesExchangeInvoice
+from factura_electronica.fel.exchange_invoice import SalesExchangeInvoice
 from factura_electronica.fel.export_invoice import ExportInvoice
 from factura_electronica.fel.fel import ElectronicInvoice
 from factura_electronica.fel.fel_exempt import ExemptElectronicInvoice
@@ -1377,6 +1377,133 @@ def api_generate_sales_invoice_fel(invoice_name, company, naming_series):
         return
 
 
+@frappe.whitelist()
+def api_generate_exchange_invoice_fel(invoice_name, company, naming_series):
+    """Generador de Factura Electronica Cambiaria para Facturas de Venta
+
+    Args:
+        invoice_name (str): `name` de la factura
+        company (str): nombre de la compañia
+        naming_series (str): serie utilizada para la factura
+
+    Returns:
+        dict: estado de la operacion
+    """
+    try:
+        # 1 - VALIDACION EXISTENCIA DE FACTURA EN ENVIOS FEL: PARA EVITAR DUPLICIDAD EN CASO SE DE EL ESCENARIO
+        status_invoice = check_invoice_records(invoice_name)
+        if status_invoice[0]:
+            return {
+                'status': False,
+                'description': f'{_("La factura ya se encuentra generada como FEL con codigo UUID")} <strong>{status_invoice[1]}</strong>',
+                'uuid': status_invoice[1],
+                'serie_fel': status_invoice[2],
+                'indicator': 'yellow',
+                'error': '',
+                'title': _('Factura ya generada como FEL')
+            }
+
+        # 2 - VALIDACION CONFIGURACION VALIDA (PUEDE HABER 1 POR COMPANY)
+        config = validate_config_fel(company)
+        if not config[0]:
+            return {
+                'status': False,
+                'description': _('No se encontro una configuracion valida de FACELEC para la empresa'),
+                'uuid': '',
+                'serie_fel': '',
+                'indicator': 'yellow',
+                'error': '',
+                'title': _('Factura Electronica No Configurada')
+            }
+
+        # 3 - Se crea una instancia de la clase FacturaElectronica para generarla
+        new_invoice = SalesExchangeInvoice(invoice_name, config[1], naming_series)
+
+        # 4 - Se valida y construye la peticion para INFILE en formato JSON
+        build_inv = new_invoice.build_invoice()
+        if not build_inv.get('status'):  # True/False
+            return {
+                'status': False,
+                'description': build_inv.get('description'),
+                'uuid': '',
+                'serie_fel': '',
+                'error': build_inv.get('error'),
+                'indicator': 'red',
+                'title': _('Datos necesarios para generar factura no procesados')
+            }
+
+        # 5 - INFILE valida y firma los datos de la peticion (La peticion se convierte a XML)
+        sign_inv = new_invoice.sign_invoice()
+        if not sign_inv.get('status'):  # True/False
+            return {
+                'status': False,
+                'description': sign_inv.get('description'),
+                'uuid': '',
+                'serie_fel': '',
+                'error': sign_inv.get('error'),
+                'indicator': 'red',
+                'title': _('Datos no validados por INFILE')
+            }
+
+        # 6 - Con la peticion firmada y validada, se solicita la generacion del FEL
+        req_inv = new_invoice.request_electronic_invoice()
+        if not req_inv.get('status'):  # True/False
+            return {
+                'status': False,
+                'description': req_inv.get('description'),
+                'uuid': '',
+                'serie_fel': '',
+                'error': req_inv.get('error'),
+                'indicator': 'red',
+                'title': _('Factura Electronica No Generada')
+            }
+
+        # 7 - Se valida la respuesta del FEL
+        # En esta fase se valida si hay errores en la respuesta por parte FEL
+        res_validate = new_invoice.response_validator()
+        if not res_validate.get('status'):  # True/False
+            return {
+                'status': False,
+                'description': res_validate.get('description'),
+                'uuid': '',
+                'serie_fel': '',
+                'error': res_validate.get('error'),
+                'indicator': 'red',
+                'title': _('Datos Recibidos por INFILE no validos')
+            }
+
+        # 8 - Si la generacion con INFILE fue exitosa, se actualizan las referencia en el ERP
+        upgrade_inv = new_invoice.upgrade_records()
+        if not upgrade_inv.get('status'):  # True/False
+            return {
+                'status': False,
+                'description': upgrade_inv.get('description'),
+                'uuid': '',
+                'serie_fel': '',
+                'error': upgrade_inv.get('error'),
+                'indicator': 'red',
+                'title': _('Referencias de la factura no fueron actualizadas por completo')
+            }
+
+        # 9 - Si la ejecucion llega a este punto, es decir que todas las fases se ejecutaron correctamente, se genera una respuesta positiva
+        if upgrade_inv.get('status') and upgrade_inv.get('uuid'):
+            msg_ok = f'Factura Electronica generada correctamente con codigo UUID {upgrade_inv.get("uuid")}\
+                y serie {upgrade_inv.get("serie")}'
+            return {
+                'status': True,
+                'description': msg_ok,
+                'uuid': upgrade_inv.get('uuid'),
+                'serie_fel': upgrade_inv.get('serie'),
+                'indicator': 'green',
+                'error': '',
+                'title': _('Factura Electronica Cambiaria Generada')
+            }
+
+    except Exception:
+        frappe.throw(_(f"Error al generar la factura electrónica cambiaria. Mas detalles en el siguiente log: <hr> {frappe.get_traceback()}"))
+        return
+
+
 def msg_generator(details):
     """Generador de mensajes server side, todos los generadores de docs electronicos comparten la misma
     estructura de respuestas, por lo que se puede reutilizar esta funcion para mostrarlos mensajes
@@ -1426,9 +1553,13 @@ def fel_generator(doctype, docname, type_doc):
     company = frappe.db.get_value(doctype, {'name': docname}, 'company')
 
     if doctype == 'Sales Invoice':
-        if type_doc == 'factura_fel':
+        if type_doc == 'factura_fel':  # Factura Normal
             fel_si = api_generate_sales_invoice_fel(docname, company, naming_series)
             return msg_generator(fel_si)
+
+        if type_doc == 'cambiaria':  # Factura Cambiaria
+            exchange_invoice = api_generate_exchange_invoice_fel(docname, company, naming_series)
+            return msg_generator(exchange_invoice)
 
     else:
         return {'status': False}
