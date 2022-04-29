@@ -846,54 +846,6 @@ def generate_exempt_electronic_invoice(invoice_code, naming_series):
 # FIN FACTURAS EXENTAS DE IMPUESTOS
 
 
-# CANCELADOR DE DOCUMENTOS ELECTRONICOS FEL
-@frappe.whitelist()
-def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='Sales Invoice'):
-    """Anulador de docs electronicos FEL
-
-    Args:
-        invoice_name ([type]): [description]
-        document (str, optional): [description]. Defaults to 'Sales Invoice'.
-    """
-
-    status_config = validate_configuration()
-
-    if status_config[0] == True:
-        cancel_invoice = CancelDocument(invoice_name, status_config[1], reason_cancelation, document)
-
-        status_req = cancel_invoice.validate_requirements()
-        if not status_req[0]:
-            frappe.msgprint(status_req[1])
-            return
-
-        status_build = cancel_invoice.build_request()
-        if not status_build[0]:
-            frappe.msgprint(f'Petición no generada: No se encontraron los datos necesarios, por favor asegurese de tener los datos necesarios para compania y cliente')
-            return
-
-        status_firma = cancel_invoice.sign_invoice()
-        if not status_firma[0]:
-            frappe.msgprint(status_firma[1])
-            return
-
-        status_process = cancel_invoice.request_cancel()
-        if not status_process[0]:
-            frappe.msgprint(status_process[1])
-            return
-
-        status_validador_res = cancel_invoice.response_validator()
-        if not status_validador_res[0]:
-            frappe.msgprint(f'Anulacion de documento electronico no se pudo completar, encontrara mas detalle en el siguiente log {str(status_validador_res[1])}')
-            return str(status_validador_res[1])
-        else:
-            frappe.msgprint('Documento electronico anulado con Exito, presione el boton ver PDF Documento Electronico')
-            return
-
-    else:
-        frappe.msgprint(status_config[1])
-        return
-
-
 @frappe.whitelist()
 def is_valid_to_fel(doctype, docname):
     """
@@ -1509,6 +1461,111 @@ def api_generate_exchange_invoice_fel(invoice_name, company, naming_series):
     except Exception:
         frappe.throw(_(f"Error al generar la factura electrónica cambiaria. Mas detalles en el siguiente log: <hr> {frappe.get_traceback()}"))
         return
+
+
+@frappe.whitelist()
+def fel_doc_canceller(company, invoice_name, reason_cancelation='Anulación', document='Sales Invoice'):
+    """Anulador de documentos electronicos
+
+    Args:
+        company (str): company
+        invoice_name (str): PK de la factura
+        reason_cancelation (str, optional): Razon de anulacion de doc. Defaults to 'Anulación'.
+        document (str, optional): Sales Invoice/Purchase Invoice. Defaults to 'Sales Invoice'.
+
+    Returns:
+        dict: _description_
+    """
+    config = validate_config_fel(company)
+    if not config[0]:
+        return {
+            'status': False,
+            'description': _('No se encontro una configuracion valida de FACELEC para la empresa'),
+            'uuid': '',
+            'serie_fel': '',
+            'indicator': 'yellow',
+            'error': '',
+            'title': _('Factura Electronica No Configurada')
+        }
+
+    cancel_invoice = CancelDocument(invoice_name, config[1], reason_cancelation, document)
+
+    # Se validan los requerimientos para anular X documento
+    status_req = cancel_invoice.validate_requirements()
+    if not status_req.get('status'):
+        return {
+            'status': False,
+            'description': status_req.get('description'),
+            'uuid': '',
+            'serie_fel': '',
+            'indicator': 'yellow',
+            'error': '',
+            'title': _('Documento Electronico No Anulado')
+        }
+
+    # Se construye la peticion para anular X documento
+    status_build = cancel_invoice.build_request()
+    if not status_build.get('status'):
+        return {
+            'status': False,
+            'description': status_build.get('description'),
+            'uuid': '',
+            'serie_fel': '',
+            'indicator': 'red',
+            'error': status_build.get('error'),
+            'title': _('Peticion XML no generada')
+        }
+
+    # Se firma y valida la peticion
+    status_firma = cancel_invoice.sign_invoice()
+    if not status_firma.get('status'):
+        return {
+            'status': False,
+            'description': status_firma.get('description'),
+            'uuid': '',
+            'serie_fel': '',
+            'indicator': 'red',
+            'error': status_firma.get('error'),
+            'title': _('Documento No Validado y Firmado')
+        }
+
+    # Se anula el documento
+    status_process = cancel_invoice.request_cancel()
+    if not status_process.get('status'):
+        return {
+            'status': False,
+            'description': status_process.get('description'),
+            'uuid': '',
+            'serie_fel': '',
+            'indicator': 'red',
+            'error': status_process.get('error'),
+            'title': _('Peticion no completada')
+        }
+
+    # Se validan las posibles respuestas
+    status_validador_res = cancel_invoice.response_validator()
+    if not status_validador_res.get('status'):
+        return {
+            'status': False,
+            'description': status_validador_res.get('description'),
+            'uuid': '',
+            'serie_fel': '',
+            'indicator': 'red',
+            'error': status_validador_res.get('error'),
+            'title': _('Respuesta de INFILE no valida')
+        }
+
+    # Si el doc se anula correctamente
+    else:
+        return {
+            'status': True,
+            'description': _('Documento anulado, presione boton para ver PDF'),
+            'uuid': '',
+            'serie_fel': '',
+            'indicator': 'green',
+            'error': '',
+            'title': _('Documento Anulado Correctamente')
+        }
 
 
 def msg_generator(details):

@@ -6,7 +6,7 @@ console.log("Se cargo exitosamente la aplicación de Factura Electrónica");
  * guardar hasta que se ingrese uno correcto, esto permite no tener errores con
  * INFILE y tener los datos correctos.
  */
-export function valNit(nit, cus_supp, frm) {
+function valNit(nit, cus_supp, frm) {
   var nit_validado;
   if (nit === "C/F" || nit === "c/f") {
     frm.enable_save(); // Activa y Muestra el boton guardar de Sales Invoice
@@ -514,3 +514,54 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
     return variant_fields;
   },
 });
+
+/**
+ * @summary Generador de mensajes para el usuario
+ * @param {Object} frm - frm doctype
+ * @param {Object} msg - detalles msg del backend
+ * @param {string} redirect_dt - doctype
+ * @param {string} redirect_dn - name
+ */
+function msg_generator(frm, msg, redirect_dt, redirect_dn) {
+  // Si hay errores en el mensaje
+  if (msg.status == false && msg.error) {
+    let msg_error = `${msg.description}. Si la falla persiste reporte este mensaje con soporte técnico.
+    Mas detalles en el siguiente log: <hr> <code>${msg.error}</code>`;
+
+    frappe.msgprint({
+      title: msg.title,
+      indicator: msg.indicator,
+      message: msg_error,
+    });
+  }
+
+  // Si hay advertencias en el mensaje
+  if (msg.status == false && !msg.error) {
+    frappe.msgprint({
+      title: msg.title,
+      indicator: msg.indicator,
+      message: msg.description,
+    });
+  }
+
+  // Si el mensaje es exitoso
+  if (msg.status == true) {
+    // Si se genero un nuevo doc electronico
+    if (msg.uuid && redirect_dt && redirect_dn) {
+      frappe.set_route("Form", redirect_dt, redirect_dn);
+      location.reload();
+      frm.reload_doc();
+
+      // Si la anulacion fue exitosa
+    } else {
+      frappe.msgprint({
+        title: msg.title,
+        indicator: msg.indicator,
+        message: msg.description,
+      });
+      frm.reload_doc();
+    }
+  }
+}
+
+export { valNit, msg_generator };

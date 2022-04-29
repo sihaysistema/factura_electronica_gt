@@ -4,6 +4,7 @@
  */
 
 // import { valNit } from "./facelec.js";
+import { msg_generator } from "./facelec.js";
 import { goalSeek } from "./goalSeek.js";
 
 /**
@@ -215,54 +216,48 @@ function special_tax(frm) {
 }
 
 /**
- * @summary Generador boton para anular documentos electronicos
+ * @summary Generador de boton para anular documentos electronicos
  *
  * @param {*} frm
  */
 function btn_canceller(frm) {
   cur_frm.clear_custom_buttons();
   frm
-    .add_custom_button(__("Electronic Document Canceller"), function () {
+    .add_custom_button(__("Anular Documento Electronico"), function () {
       // Permite hacer confirmaciones
-      frappe.confirm(
-        __("Are you sure to cancel the current electronic document?"),
-        () => {
-          let d = new frappe.ui.Dialog({
-            title: __("Electronic Document Canceller"),
-            fields: [
-              {
-                label: __("Reason for cancellation?"),
-                fieldname: "reason_cancelation",
-                fieldtype: "Data",
-                reqd: 1,
-              },
-            ],
-            primary_action_label: __("Submit"),
-            primary_action(values) {
-              frappe.call({
-                method: "factura_electronica.fel_api.invoice_canceller",
-                args: {
-                  invoice_name: frm.doc.name,
-                  reason_cancelation: values.reason_cancelation || "Anulación",
-                  document: "Sales Invoice",
-                },
-                callback: function (data) {
-                  // console.log(data.message);
-                  frm.reload_doc();
-                },
-              });
-
-              d.hide();
+      frappe.confirm(__("Esta seguro de Anular este documento electronico?"), () => {
+        let d = new frappe.ui.Dialog({
+          title: __("Anulador de documentos electronicos"),
+          fields: [
+            {
+              label: __("Razon de la Anulacion?"),
+              fieldname: "reason_cancelation",
+              fieldtype: "Data",
+              reqd: 1,
             },
-          });
+          ],
+          primary_action_label: __("Submit"),
+          primary_action(values) {
+            frappe.call({
+              method: "factura_electronica.fel_api.fel_doc_canceller",
+              args: {
+                company: frm.doc.company,
+                invoice_name: frm.doc.name,
+                reason_cancelation: values.reason_cancelation || "Anulación",
+                document: "Sales Invoice",
+              },
+              callback: function ({ message }) {
+                console.log(message);
+                msg_generator(frm, message);
+              },
+            });
 
-          d.show();
-        },
-        () => {
-          // action to perform if No is selected
-          // console.log('Selecciono NO')
-        }
-      );
+            d.hide();
+          },
+        });
+
+        d.show();
+      });
     })
     .addClass("btn-danger");
 }
@@ -673,7 +668,7 @@ function group_items_to_facelec(frm) {
                 message: __("Para poder agrupar productos, debe guardar el documento"),
                 indicator: "red",
               },
-              4
+              5
             );
           } else {
             frm.reload_doc();
@@ -682,7 +677,7 @@ function group_items_to_facelec(frm) {
                 message: __("Productos agrupados"),
                 indicator: "green",
               },
-              4
+              5
             );
           }
         });
@@ -736,6 +731,7 @@ frappe.ui.form.on("Sales Invoice", {
     }
 
     if (frm.doc.docstatus != 0) {
+      // Solo si esta validado
       btn_validator(frm);
     }
   },
@@ -792,7 +788,7 @@ frappe.ui.form.on("Sales Invoice", {
               message: __("Productos agrupados removidos"),
               indicator: "yellow",
             },
-            2
+            5
           );
         });
     }
