@@ -1154,6 +1154,13 @@ def validate_config_fel(company):
 def btn_validator(doctype, docname):
     """Valida que tipo de boton se deben mostrar en la factura segun la serie y configuracion
         NOTA: La validacion se hace en backend para obtener datos sin manipulacion
+
+    Args:
+        doctype (str): doctype name
+        docname (str): PK name
+
+    Returns:
+        dict: status
     """
     # FACT, FACTEXP, NCRED, FESP, NDEB, CANCEL
     doc = frappe.get_doc(doctype, {'name': docname})
@@ -1558,8 +1565,37 @@ def fel_generator(doctype, docname, type_doc):
             return msg_generator(fel_si)
 
         if type_doc == 'cambiaria':  # Factura Cambiaria
-            exchange_invoice = api_generate_exchange_invoice_fel(docname, company, naming_series)
-            return msg_generator(exchange_invoice)
+            exchange_inv = api_generate_exchange_invoice_fel(docname, company, naming_series)
+            return msg_generator(exchange_inv)
 
     else:
         return {'status': False}
+
+
+@frappe.whitelist()
+def generate_access_number(doc, event):
+    """
+    Genera numero de acceso para facturas cambiarias, si y solo si
+    el documento esta usando una serie valida, el valor generado es independiente
+    de INFILE pero es requerido ya que solo funciona para referencia
+    """
+    try:
+        # Si es una factura cambiaria
+        is_valid = btn_validator(doc.doctype, doc.name)
+        if is_valid.get('type_doc') == 'cambiaria':
+            # Crea un nuevo registro en 'Access Number FCAM' con ref a la factura
+            # desde donde se esta generando
+            doc_access = frappe.new_doc('Access Number FCAM')
+            doc_access.reference = doc.name
+            doc_access.type = doc.doctype
+            doc_access.save(ignore_permissions=True)
+
+            invoice = frappe.get_doc(doc.doctype, doc.name)
+            invoice.access_number_fel = doc_access.name
+            invoice.save(ignore_permissions=True)  # .reload()
+            invoice.reload()
+
+            return doc_access.name
+    except Exception:
+        with open("error-camb.txt", "w") as f:
+            f.write(str(frappe.get_traceback()))

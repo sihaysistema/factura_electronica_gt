@@ -178,7 +178,7 @@ class SalesExchangeInvoice:
 
             self.__d_general = {
                 "@CodigoMoneda": self.__doc_inv.currency,
-                "@NumeroAcceso": self.__doc_inv.access_number_fel.split('-')[1],  # se usa como rastreo a la factura original requerido por la SAT
+                "@NumeroAcceso": self.__doc_inv.access_number_fel.split('-')[2],  # se usa como rastreo a la factura original requerido por la SAT
                 # "@FechaHoraEmision": str(self.date_invoice)+'T'+str(self.time_invoice),  #f'{self.date_invoice}T{str(self.time_invoice)}',
                 # #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
                 "@FechaHoraEmision": ok_datetime,
@@ -866,14 +866,15 @@ class SalesExchangeInvoice:
         """
         try:
             payment_schedule = frappe.db.get_values('Payment Schedule', filters={'parent': self.__invoice_code},
-                                                    fieldname=['idx', 'due_date', 'payment_amount'], as_dict=1)
+                                                    fieldname=['idx', 'due_date', 'payment_amount', 'facelec_credit_amount'],
+                                                    order_by='idx', as_dict=1)
 
             abonos = []
             for payment in payment_schedule:
                 abonos.append({
                     "cfc:NumeroAbono": payment.get('idx'),
                     "cfc:FechaVencimiento": payment.get('due_date'),
-                    "cfc:MontoAbono": payment.get('payment_amount'),
+                    "cfc:MontoAbono": payment.get('facelec_credit_amount'),
                 })
 
             self.__d_complement = {

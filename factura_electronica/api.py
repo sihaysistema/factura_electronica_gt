@@ -12,7 +12,7 @@ import xmltodict
 from frappe import _
 from frappe.utils import get_site_name
 
-from factura_electronica.fel_api import api_interface, is_valid_to_fel  # Aplica para facturas de VENTA POS
+from factura_electronica.fel_api import api_interface  # Aplica para facturas de VENTA POS
 from factura_electronica.utils.facelec_db import actualizarTablas as actualizartb
 from factura_electronica.utils.facelec_db import guardar_factura_electronica as guardar
 from factura_electronica.utils.facelec_generator import construir_xml
@@ -599,34 +599,6 @@ def pos_calculations(doc, event):
 
     except:
         frappe.msgprint(f'Mas detalles en el siguiente log {frappe.get_traceback()}', title="Error ejecución calculos Factura Electronica", raise_exception=1)
-
-
-@frappe.whitelist()
-def generate_access_number(doc, event):
-    """
-    Genera numero de acceso para facturas cambiarias, si y solo si
-    el documento esta usando una serie valida, el valor generado es independiente
-    de INFILE pero requerido solo funciona para referencia
-    """
-    try:
-        is_valid = is_valid_to_fel(doc.doctype, doc.name)
-        if is_valid[0] == 'FCAM' and is_valid[1] == 'valido' and is_valid[2] == True:
-            # Crea un nuevo registro en 'Access Number FCAM' con ref a la factura
-            # desde donde se esta generando
-            doc_access = frappe.new_doc('Access Number FCAM')
-            doc_access.reference = doc.name
-            doc_access.type = doc.doctype
-            doc_access.save(ignore_permissions=True)
-
-            invoice = frappe.get_doc(doc.doctype, doc.name)
-            invoice.access_number_fel = doc_access.name
-            invoice.save(ignore_permissions=True)  # .reload()
-            invoice.reload()
-
-            return doc_access.name
-    except:
-        with open("error-camb.txt", "w") as f:
-            f.write(str(frappe.get_traceback()))
 
 
 @frappe.whitelist()

@@ -46,4 +46,6 @@ LGPL V3
 
 Electronic Invoice support for Guatemala - Factura Electronica de Guatemala
 
-
+# Disclaimer
+> We are not responsible for mishandling or misconfiguration of the application.
+> If you need support write us at m.m@sihaysistema.com

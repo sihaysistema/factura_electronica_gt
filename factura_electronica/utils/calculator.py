@@ -10,7 +10,7 @@ from frappe import _
 from frappe.utils import flt
 
 from factura_electronica.api import get_special_tax
-from factura_electronica.fel_api import validate_config_fel
+from factura_electronica.fel_api import validate_config_fel, btn_validator
 from factura_electronica.utils.utilities_facelec import get_currency_precision, get_currency_precision_facelec
 
 # NOTA IMPORTANTE: Las funciones comparten la misma logica sin embargo se mantiene separado y codigo
@@ -22,7 +22,7 @@ PRECISION = get_currency_precision()  # decimales configuracion en el sistema
 
 
 @frappe.whitelist()
-def sales_invoice_calculator(invoice_name):
+def sales_invoice_calculator(invoice_name):  # invoice_name
     """Calculador montos, impuestos necesarios para generar docs electronicos
 
     Args:
@@ -32,8 +32,8 @@ def sales_invoice_calculator(invoice_name):
     try:
         # PRECISION = get_currency_precision()
         invoice_data = frappe.get_doc("Sales Invoice", invoice_name)
-        items = invoice_data.items
-        taxes_inv = invoice_data.taxes
+        config = validate_config_fel(invoice_data.company)[1]
+        precision_facelec = get_currency_precision_facelec(config)
 
         # Limpiando campos para casos de duplicacion de facturas
         invoice_data.cae_factura_electronica = ""
@@ -48,6 +48,29 @@ def sales_invoice_calculator(invoice_name):
         invoice_data.facelec_record_number = ""
         invoice_data.facelec_record_value = ""
         invoice_data.access_number_fel = ""
+
+        # Si la factura es cambiaria se genera un numero de acceso
+        # El numero de acceso es numero de referencia que necesita INFILE
+        # por cada factura cambiaria se genera uno diferente de 1 a 999,999,999,999
+        is_valid = btn_validator(invoice_data.doctype, invoice_data.name)
+
+        if is_valid.get('type_doc') == 'cambiaria':
+            # Crea un nuevo registro en 'Access Number FCAM' con ref a la factura
+            # desde donde se esta generando
+            doc_access = frappe.new_doc('Access Number FCAM')
+            doc_access.reference = invoice_data.name
+            doc_access.type = invoice_data.doctype
+            doc_access.save(ignore_permissions=True)
+
+            invoice_data.access_number_fel = doc_access.name
+
+        # Se obtienen los pagos programados son necesarios para este tipo de doc
+        payments = invoice_data.payment_schedule or []
+        for payment in payments:
+            payment.facelec_credit_amount = flt(invoice_data.grand_total, precision_facelec) * (payment.invoice_portion / 100)
+
+        items = invoice_data.items
+        taxes_inv = invoice_data.taxes
 
         this_company_sales_tax_var = 0
         if len(taxes_inv) > 0:
