@@ -62,7 +62,7 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                 UPDATE `tabGL Entry` SET debit=%(nuevo_monto)s, debit_in_account_currency=%(nuevo_monto)s
                 WHERE voucher_no=%(serie_original)s AND party_type=%(tipo)s AND party=%(customer_n)s
             ''', {'nuevo_monto': total, 'serie_original': invoice_name, 'tipo': 'Customer',
-                  'customer_n': str(data_gl_entry[0]['customer_name'])})
+                  'customer_n': str(data_gl_entry[0]['customer'])})
 
             # Valor Neto Iva
             # NOTE: OJO: IMPORTANTE: SOLO SE DEBEN ACTUALIZAR LAS CUENTAS DE IMPUESTO ESPECIAL NET
@@ -88,7 +88,7 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                         WHERE voucher_no=%(serie_original)s AND against=%(customer_n)s AND cost_center IS NOT NULL
                         AND account=%(acc_to_update)s
                     ''', {'nuevo_monto': flt(net_fuel.get('net_fuel'), PRECISION_CALC),
-                          'customer_n': str(data_gl_entry[0]['customer_name']),
+                          'customer_n': str(data_gl_entry[0]['customer']),
                           'serie_original': invoice_name, 'acc_to_update': update_this.get('income_account')})
 
             # Valor Iva
@@ -118,7 +118,7 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                 debit=0, debit_in_account_currency=0
                 WHERE voucher_no=%(serie_original)s AND party_type=%(tipo)s AND party=%(customer_n)s
             ''', {'nuevo_monto': abs(total), 'serie_original': invoice_name, 'tipo': 'Customer',
-                  'customer_n': str(data_gl_entry[0]['customer_name'])})
+                  'customer_n': str(data_gl_entry[0]['customer'])})
 
             # Valor Neto Iva
             # NOTE: OJO: IMPORTANTE: SOLO SE DEBEN ACTUALIZAR LAS CUENTAS DE IMPUESTO ESPECIAL NET
@@ -145,7 +145,7 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                         WHERE voucher_no=%(serie_original)s AND against=%(customer_n)s AND cost_center IS NOT NULL
                         AND account=%(acc_to_update)s
                     ''', {'nuevo_monto': abs(flt(net_fuel.get('net_fuel'), PRECISION_CALC)),
-                          'customer_n': str(data_gl_entry[0]['customer_name']),
+                          'customer_n': str(data_gl_entry[0]['customer']),
                           'serie_original': invoice_name, 'acc_to_update': update_this.get('income_account')})
 
             # Valor Iva
@@ -308,7 +308,8 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type, is_retu
                 # Obtiene datos de Sales Invoice
                 data_gl_entry = frappe.db.get_values('Sales Invoice', filters={'name': invoice_name},
                                                      fieldname=['company', 'customer_name', 'party_account_currency',
-                                                                'posting_date', 'total', 'shs_total_otros_imp_incl'], as_dict=1)
+                                                                'posting_date', 'total', 'shs_total_otros_imp_incl',
+                                                                'customer'], as_dict=1)
                 # Obtiene el valor de iva utilizado en la factura de venta normalmente 12
                 tax_rate = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': invoice_name},
                                                 fieldname=['rate', 'account_head'], as_dict=1)
@@ -317,7 +318,8 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type, is_retu
                 # Obtiene datos de Purchase Invoice
                 data_gl_entry = frappe.db.get_values('Purchase Invoice', filters={'name': invoice_name},
                                                      fieldname=['company', 'supplier_name', 'party_account_currency',
-                                                                'posting_date', 'total', 'shs_pi_total_otros_imp_incl'], as_dict=1)
+                                                                'posting_date', 'total', 'shs_pi_total_otros_imp_incl',
+                                                                'supplier'], as_dict=1)
                 # Obtiene el valor de iva utilizado en la factura normalmente 12
                 tax_rate = frappe.db.get_values('Purchase Taxes and Charges', filters={'parent': invoice_name},
                                                 fieldname=['rate', 'account_head', 'cost_center'], as_dict=1)
@@ -339,23 +341,23 @@ def add_gl_entry_other_special_tax(invoice_name, accounts, invoice_type, is_retu
                         new_gl_entry_tax.account = account_n
 
                         if invoice_type == 'Sales Invoice' and is_return == 0:
-                            new_gl_entry_tax.against = data_gl_entry[0]['customer_name']
+                            new_gl_entry_tax.against = data_gl_entry[0]['customer']
                             new_gl_entry_tax.credit_in_account_currency = account_names[account_n]
                             new_gl_entry_tax.credit = account_names[account_n]
 
                         if invoice_type == 'Sales Invoice' and is_return == 1:
-                            new_gl_entry_tax.against = data_gl_entry[0]['customer_name']
+                            new_gl_entry_tax.against = data_gl_entry[0]['customer']
                             new_gl_entry_tax.debit_in_account_currency = abs(account_names[account_n])
                             new_gl_entry_tax.debit = abs(account_names[account_n])
 
                         if invoice_type == 'Purchase Invoice' and is_return == 0:
-                            new_gl_entry_tax.against = data_gl_entry[0]['supplier_name']
+                            new_gl_entry_tax.against = data_gl_entry[0]['supplier']
                             new_gl_entry_tax.debit_in_account_currency = account_names[account_n]
                             new_gl_entry_tax.debit = account_names[account_n]
                             new_gl_entry_tax.cost_center = tax_rate[0]['cost_center']
 
                         if invoice_type == 'Purchase Invoice' and is_return == 1:
-                            new_gl_entry_tax.against = data_gl_entry[0]['supplier_name']
+                            new_gl_entry_tax.against = data_gl_entry[0]['supplier']
                             new_gl_entry_tax.credit_in_account_currency = abs(account_names[account_n])
                             new_gl_entry_tax.credit = abs(account_names[account_n])
                             new_gl_entry_tax.cost_center = tax_rate[0]['cost_center']

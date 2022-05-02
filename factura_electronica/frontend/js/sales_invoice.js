@@ -200,6 +200,8 @@ function special_tax(frm) {
         En el caso de purchase_invoice.js el valor del argumento debe de ser: invoice_type: "Purchase Invoice"
         */
       },
+      freeze: true,
+      freeze_message: __("Calculating"),
       // El callback se ejecuta tras finalizar la ejecucion del script python del lado
       // del servidor
       callback: function () {
@@ -707,6 +709,43 @@ function calc_row_discount(frm, cdt, cdn) {
   frm.refresh_field("items");
 }
 
+/**
+ * It takes a form object as an argument and returns a discount amount
+ * @param frm - The form object.
+ */
+function discount_acc(frm) {
+  const discounts = [];
+  const items_acc = frm.doc.items || [];
+
+  let insert_acc = false;
+  items_acc.forEach((item) => {
+    if (item.facelec_discount_amount > 0 && item.facelec_discount_account) {
+      insert_acc = true;
+
+      discounts.push({
+        account: item.facelec_discount_account,
+        amount: item.facelec_discount_amount,
+        cost_center: item.cost_center,
+      });
+    }
+  });
+
+  if (insert_acc) {
+    frappe.call({
+      method: "factura_electronica.utils.calculator.discount_register",
+      args: {
+        inv_name: frm.doc.name,
+        accounts: discounts,
+      },
+      freeze: true,
+      freeze_message: __("Registrando Descuentos"),
+      callback: function ({ message }) {
+        console.log(message);
+      },
+    });
+  }
+}
+
 /* Factura de Ventas-------------------------------------------------------------------------------------------------- */
 frappe.ui.form.on("Sales Invoice", {
   setup(frm) {},
@@ -721,6 +760,12 @@ frappe.ui.form.on("Sales Invoice", {
   },
   // Se ejecuta cuando hay alguna actualizacion de datos en el doctype
   refresh: function (frm, cdt, cdn) {
+    frm
+      .add_custom_button(__("DESCUENTOS"), function () {
+        discount_acc(frm);
+      })
+      .addClass("btn-primary");
+
     // FIX temporal, el ERP no desactiva correctamente el redondeo de decimales
     // para resolverlo se desactiva automaticamente segun la configuracion
     if (frm.doc.docstatus == 0) {
@@ -747,6 +792,7 @@ frappe.ui.form.on("Sales Invoice", {
   on_submit: function (frm, cdt, cdn) {
     // Ocurre cuando se presione el boton validar.
     special_tax(frm);
+    // discount_acc(frm);
   },
   naming_series: function (frm, cdt, cdn) {
     // Aplica solo para FS
@@ -854,6 +900,7 @@ frappe.ui.form.on("Sales Invoice Item", {
     let row = frappe.get_doc(cdt, cdn);
     row.facelec_discount_amount = 0;
     row.facelec_row_discount = 0;
+    row.facelec_discount_account = "";
     frm.refresh_field("items");
 
     calc_row_discount(frm, cdt, cdn);
