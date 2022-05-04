@@ -1619,11 +1619,15 @@ def fel_generator(doctype, docname, type_doc):
     if doctype == 'Sales Invoice':
         if type_doc == 'factura_fel':  # Factura Normal
             fel_si = api_generate_sales_invoice_fel(docname, company, naming_series)
-            return msg_generator(fel_si)
+            return fel_si
 
         if type_doc == 'cambiaria':  # Factura Cambiaria
             exchange_inv = api_generate_exchange_invoice_fel(docname, company, naming_series)
-            return msg_generator(exchange_inv)
+            return exchange_inv
+
+        if type_doc == 'nota_credito':  # Factura Cambiaria
+            credit_note = api_generate_exchange_invoice_fel(docname, company, naming_series)
+            return credit_note
 
     else:
         return {'status': False}

@@ -522,7 +522,7 @@ frappe.ui.form.CustomerQuickEntryForm = frappe.ui.form.QuickEntryForm.extend({
  * @param {string} redirect_dt - doctype
  * @param {string} redirect_dn - name
  */
-function msg_generator(frm, msg, redirect_dt, redirect_dn) {
+function msg_generator(frm, msg, redirect_dt) {
   // Si hay errores en el mensaje
   if (msg.status == false && msg.error) {
     let msg_error = `${msg.description}. Si la falla persiste reporte este mensaje con soporte técnico.
@@ -547,12 +547,21 @@ function msg_generator(frm, msg, redirect_dt, redirect_dn) {
   // Si el mensaje es exitoso
   if (msg.status == true) {
     // Si se genero un nuevo doc electronico
-    if (msg.uuid && redirect_dt && redirect_dn) {
-      frappe.set_route("Form", redirect_dt, redirect_dn);
+    if (msg.uuid && redirect_dt && msg.serie_fel) {
+      frappe.set_route("Form", redirect_dt, msg.serie_fel);
+      // frappe.set_route(`/app/sales-invoice/${message.serie_fel}`);
       location.reload();
       frm.reload_doc();
 
-      // Si la anulacion fue exitosa
+      frappe.show_alert(
+        {
+          message: __(`Documento Electronico generado con exito. Nueva serie <strong>${msg.serie_fel}</strong>`),
+          indicator: "green",
+        },
+        10
+      );
+
+      // Aplica si es una anulacion
     } else {
       frappe.msgprint({
         title: msg.title,

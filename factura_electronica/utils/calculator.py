@@ -1156,49 +1156,62 @@ def items_overview(doctype, child_table, docname, company, tax_amt):
 
 @frappe.whitelist()
 def discount_register(inv_name, accounts):
-    acc = json.loads(accounts)
-    fields_inv = ['company', 'party_account_currency', 'grand_total', 'customer', 'posting_date',
-                  'debit_to']
-    inv_data = frappe.db.get_value('Sales Invoice', inv_name, fields_inv, as_dict=1)
+    """Registra los descuentos de las filas de productos de Sales Invoice en GL Entry
 
-    with open('acc_desc.json', 'w') as f:
-        f.write(json.dumps(acc, indent=2))
+    Args:
+        inv_name (str): PK
+        accounts (list): Lista de cuentas de descuento y detalles
+    """
 
-    df_acc = pd.DataFrame(acc)
-    to_insert = df_acc.groupby(['account', 'cost_center']).sum().reset_index().to_dict(orient='records')
-    total_discount = sum([x.get('amount') for x in to_insert])
+    try:
+        acc = json.loads(accounts)
 
-    if frappe.db.exists('GL Entry', {'voucher_no': inv_name}):
+        if len(acc) == 0:
+            return
 
-        # Cada cuenta de descuento se inserta en GL Entry
-        for acc_desc in to_insert:
-            if not frappe.db.exists('GL Entry', {'account': acc_desc.get('account'), 'voucher_no': inv_name}):
-                new_gl_entry_tax = frappe.new_doc("GL Entry")
-                new_gl_entry_tax.fiscal_year = frappe.defaults.get_user_default("fiscal_year")
-                new_gl_entry_tax.docstatus = 1
-                new_gl_entry_tax.voucher_no = inv_name
-                new_gl_entry_tax.company = inv_data.company
-                new_gl_entry_tax.voucher_type = 'Sales Invoice'
-                new_gl_entry_tax.is_advance = 'No'
-                new_gl_entry_tax.remarks = 'No Remarks'
-                new_gl_entry_tax.account_currency = inv_data.party_account_currency
-                new_gl_entry_tax.account = acc_desc.get('account')
-                new_gl_entry_tax.cost_center = acc_desc.get('cost_center')
+        fields_inv = ['company', 'party_account_currency', 'grand_total', 'customer', 'posting_date',
+                      'debit_to']
+        inv_data = frappe.db.get_value('Sales Invoice', inv_name, fields_inv, as_dict=1)
 
-                new_gl_entry_tax.against = inv_data.customer
-                new_gl_entry_tax.debit_in_account_currency = acc_desc.get('amount')
-                new_gl_entry_tax.debit = acc_desc.get('amount')
+        df_acc = pd.DataFrame(acc)
+        to_insert = df_acc.groupby(['account', 'cost_center']).sum().reset_index().to_dict(orient='records')
+        total_discount = sum([x.get('amount') for x in to_insert])
 
-                new_gl_entry_tax.is_opening = 'No'
-                new_gl_entry_tax.posting_date = inv_data.posting_date
+        if frappe.db.exists('GL Entry', {'voucher_no': inv_name}):
 
-                new_gl_entry_tax.insert(ignore_permissions=True)
+            # Cada cuenta de descuento se inserta en GL Entry
+            for acc_desc in to_insert:
+                if not frappe.db.exists('GL Entry', {'account': acc_desc.get('account'), 'voucher_no': inv_name}):
+                    new_gl_entry_tax = frappe.new_doc("GL Entry")
+                    new_gl_entry_tax.fiscal_year = frappe.defaults.get_user_default("fiscal_year")
+                    new_gl_entry_tax.docstatus = 1
+                    new_gl_entry_tax.voucher_no = inv_name
+                    new_gl_entry_tax.company = inv_data.company
+                    new_gl_entry_tax.voucher_type = 'Sales Invoice'
+                    new_gl_entry_tax.is_advance = 'No'
+                    new_gl_entry_tax.remarks = 'No Remarks'
+                    new_gl_entry_tax.account_currency = inv_data.party_account_currency
+                    new_gl_entry_tax.account = acc_desc.get('account')
+                    new_gl_entry_tax.cost_center = acc_desc.get('cost_center')
 
-        new_amount = inv_data.grand_total - total_discount
+                    new_gl_entry_tax.against = inv_data.customer
+                    new_gl_entry_tax.debit_in_account_currency = acc_desc.get('amount')
+                    new_gl_entry_tax.debit = acc_desc.get('amount')
 
-        # Se actualiza el total (se restan los descuentos) -> de la cuenta por cobrar
-        frappe.db.sql(f"""UPDATE `tabGL Entry` SET debit={new_amount}, debit_in_account_currency={new_amount}
-            WHERE voucher_no='{inv_name}' AND party_type='Customer' AND party='{inv_data.customer}'
-        """)
+                    new_gl_entry_tax.is_opening = 'No'
+                    new_gl_entry_tax.posting_date = inv_data.posting_date
 
-    return 'ok'
+                    new_gl_entry_tax.insert(ignore_permissions=True)
+
+            new_amount = flt(inv_data.grand_total - total_discount, PRECISION)
+
+            # Se actualiza el total (se restan los descuentos) -> de la cuenta por cobrar
+            frappe.db.sql(f"""UPDATE `tabGL Entry` SET debit={new_amount}, debit_in_account_currency={new_amount}
+                WHERE voucher_no='{inv_name}' AND party_type='Customer' AND party='{inv_data.customer}'
+            """)
+
+    except Exception as e:
+        msg_err = _('Los descuentos no se registraron correctamente, por favor valide que cada fila de producto tenga una cuenta de descuento')
+        frappe.msgprint(msg=_(f'{msg_err} <hr> <code>{frappe.get_traceback()} <br> {e}</code>'),
+                        title=_('Descuentos no registrados'), indicator='red',
+                        raise_exception=1)
