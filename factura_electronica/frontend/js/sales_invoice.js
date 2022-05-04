@@ -248,6 +248,8 @@ function btn_canceller(frm) {
                 reason_cancelation: values.reason_cancelation || "Anulación",
                 document: "Sales Invoice",
               },
+              freeze: true,
+              freeze_message: __("Anulando Documento FEL"),
               callback: function ({ message }) {
                 msg_generator(frm, message);
               },
@@ -281,6 +283,8 @@ function generar_boton_factura(tipo_factura, frm) {
               docname: frm.doc.name,
               type_doc: "factura_fel",
             },
+            freeze: true,
+            freeze_message: __("Generando Factura Electronica FEL"),
           })
           .then(({ message }) => {
             msg_generator(frm, message, "Sales Invoice");
@@ -350,28 +354,20 @@ function btn_credit_note(frm) {
           ],
           primary_action_label: __("Submit"),
           primary_action(values) {
-            let serie_de_factura = frm.doc.name;
-            // Guarda la url actual
-            let mi_url = window.location.href;
-
             frappe.call({
-              method: "factura_electronica.fel_api.generate_credit_note",
+              method: "factura_electronica.fel_api.fel_generator",
               args: {
-                invoice_code: frm.doc.name,
-                naming_series: frm.doc.naming_series,
-                reference_inv: frm.doc.return_against,
+                doctype: frm.doc.doctype,
+                docname: frm.doc.name,
+                type_doc: "nota_credito",
+                docname_ref: frm.doc.return_against,
                 reason: values.reason_adjust,
               },
-              callback: function (data) {
-                console.log(data.message);
-                if (data.message[0] === true) {
-                  // Crea una nueva url con el nombre del documento actualizado
-                  let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
-                  // Asigna la nueva url a la ventana actual
-                  window.location.assign(url_nueva);
-                  // Recarga la pagina
-                  frm.reload_doc();
-                }
+              freeze: true,
+              freeze_message: __("Generando Nota de Credito FEL"),
+              callback: function ({ message }) {
+                console.log(message);
+                msg_generator(frm, message, "Sales Invoice");
               },
             });
 
@@ -541,6 +537,8 @@ function btn_exchange_invoice(frm) {
             docname: frm.doc.name,
             type_doc: "cambiaria",
           },
+          freeze: true,
+          freeze_message: __("Generando Factura Cambiaria FEL"),
           callback: function ({ message }) {
             msg_generator(frm, message, "Sales Invoice");
           },
@@ -622,6 +620,7 @@ function group_items_to_facelec(frm) {
             docname: frm.doc.name,
             company: frm.doc.company,
             tax_amt: frm.doc.taxes[0].rate,
+            is_return: frm.doc.is_return,
           },
           freeze: true,
           freeze_message: __("Grouping"),
@@ -716,6 +715,15 @@ frappe.ui.form.on("Sales Invoice", {
   // Se ejecuta cuando se renderiza el doctype
   onload_post_render: function (frm, cdt, cdn) {
     // clean_fields(frm);
+    if (frm.doc.is_return == 1 && frm.doc.docstatus == 0) {
+      // NOTA: EL CONTROLADOR DE NOTAS DE CREDITO MAPEA LOS CAMPOS CON NOMBRE QTY DEBEN TENER UN VALOR NEGATIVO
+      // ESTE METODO SETEA LOS CAMPOS DE QTY A NEGATIVO YA QUE NO SE HACE POR DEFAULT
+      let items_group = frm.doc.items_overview || [];
+      items_group.forEach((item) => {
+        frappe.model.set_value("Item Overview", item.name, "qty", item.qty * -1);
+      });
+      frm.refresh_field("items_overview");
+    }
   },
   // Se ejecuta despues de guardar el doctype
   after_save: function (frm, cdt, cdn) {

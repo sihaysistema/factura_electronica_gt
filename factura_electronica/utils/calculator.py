@@ -1080,7 +1080,7 @@ def items_overview(doctype, child_table, docname, company, tax_amt):
             item_o.item_code = row.get('item_code')
             item_o.item_name = row.get('item_name')
             item_o.description = row.get('description')
-            item_o.qty = flt(row.get('qty'), PRECISION)  # usa la cantidad de decimales del sistema
+            item_o.qty = flt(row.get('qty'), PRECISION)
             item_o.rate = flt(row.get('rate'), precision)
             item_o.amount = flt(row.get('amount'), precision)
             item_o.tax_rate_per_uom = special_tax.get('facelec_tax_rate_per_uom', 0)

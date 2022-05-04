@@ -18,20 +18,20 @@ from factura_electronica.utils.utilities_facelec import (create_folder, get_curr
 
 
 class ElectronicCreditNote:
-    def __init__(self, invoice_code, inv_credit_note, conf_name, naming_series, reason):
+    def __init__(self, credit_note_name, inv_original, conf_name, naming_series, reason):
         """__init__
         Constructor de la clase, las propiedades iniciadas como privadas
         Args:
             invoice_code (str): Serie original de la factura
             conf_name (str): Nombre configuracion para factura electronica
         """
-        self.__invoice_code = invoice_code  # Serie original de la factura FEL
-        self.__inv_credit_note = inv_credit_note  # PK `name` de la nota de credito generada sobre la factura original
+        self.__invoice_origin = inv_original  # Serie original de la factura FEL
+        self.__inv_credit_note = credit_note_name  # PK `name` de la nota de credito generada sobre la factura original
         self.__config_name = conf_name
         self.__naming_serie = naming_series
         self.__reason = reason
         self.__precision = get_currency_precision_facelec(conf_name)
-        self.__default_address = False
+        self.__default_address = False  # bandera para indicar que se uso datos direccion default
         self.__tiene_adenda = False
         self.__start_datetime = get_datetime()
 
@@ -55,7 +55,7 @@ class ElectronicCreditNote:
                              'afiliacion_iva', 'correo_copia', 'descripcion_item', 'url_firma', 'alias', 'es_anulacion',
                              'llave_pfx', 'url_dte', 'llave_ws']
 
-            self.__doc_inv = frappe.db.get_value('Sales Invoice', self.__invoice_code, fields_sales_invoice, as_dict=1)
+            self.__doc_inv = frappe.db.get_value('Sales Invoice', self.__inv_credit_note, fields_sales_invoice, as_dict=1)
             self.__config_facelec = frappe.db.get_value('Configuracion Factura Electronica', self.__config_name, fields_config, as_dict=1)
 
             # 1 Valida y construye por partes el XML desde un dict
@@ -412,11 +412,11 @@ class ElectronicCreditNote:
             items_ok = []  # Guardara todos los items OK
 
             # Obtenemos los impuesto cofigurados para x compañia en la factura (IVA)
-            self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__invoice_code},
+            self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__inv_credit_note},
                                                      fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
 
             # Si hay productos agrupados
-            self.__items_group = frappe.db.get_values('Item Overview', filters={'parent': self.__invoice_code},
+            self.__items_group = frappe.db.get_values('Item Overview', filters={'parent': self.__inv_credit_note},
                                                       fieldname=['item_code', 'item_name', 'description', 'qty', 'rate',
                                                                  'amount', 'uom', 'three_digit_uom', 'conversion_factor',
                                                                  'tax_rate_per_uom', 'other_tax_amount', 'amount_minus_excise_tax',
@@ -430,7 +430,7 @@ class ElectronicCreditNote:
                 return self.process_grouped_item()
 
             # Obtenemos los items de la factura
-            self.__dat_items = frappe.db.get_values('Sales Invoice Item', filters={'parent': self.__invoice_code},
+            self.__dat_items = frappe.db.get_values('Sales Invoice Item', filters={'parent': self.__inv_credit_note},
                                                     fieldname=['item_name', 'qty', 'item_code', 'description',
                                                                'net_amount', 'base_net_amount', 'discount_percentage',
                                                                'discount_amount', 'price_list_rate', 'net_rate',
@@ -810,7 +810,7 @@ class ElectronicCreditNote:
             bool: estado de operacion
         """
         try:
-            datos_fel_invoice = frappe.db.get_value('Envio FEL', filters={'serie_para_factura': self.__invoice_code},
+            datos_fel_invoice = frappe.db.get_value('Envio FEL', filters={'serie_para_factura': self.__invoice_origin},
                                                     fieldname=['uuid', 'numero', 'serie', 'fecha'], as_dict=1)
             fecha_procesada = str(datos_fel_invoice.fecha).split('T')[0]
 
@@ -945,7 +945,7 @@ class ElectronicCreditNote:
 
             url = self.__config_facelec.url_dte
             user = self.__config_facelec.alias
-            ident = self.__invoice_code  # identificador
+            ident = self.__invoice_origin  # identificador
             llave = self.__config_facelec.llave_ws
             correo_copia = self.__config_facelec.correo_copia
 
@@ -1027,7 +1027,7 @@ class ElectronicCreditNote:
                 resp_fel.fecha = self.__response_ok['fecha']
                 resp_fel.origen = self.__response_ok['origen']
                 resp_fel.descripcion = self.__response_ok['descripcion']
-                resp_fel.serie_factura_original = self.__invoice_code
+                resp_fel.serie_factura_original = self.__inv_credit_note
                 # resp_fel.serie_para_factura = 'FACELEC-'+str(self.__response_ok['numero'])
                 resp_fel.serie_para_factura = str(self.__response_ok['serie']).replace('*', '')+str(self.__response_ok['numero'])
 
@@ -1074,7 +1074,7 @@ class ElectronicCreditNote:
             return {'status': True, 'description': 'OK', 'error': ''}
 
         except Exception:
-            return {'status': False, 'description': f'No se pudo guardar la respuesta de la factura {self.__invoice_code} en Envios FEL',
+            return {'status': False, 'description': f'No se pudo guardar la respuesta de la factura {self.__inv_credit_note} en Envios FEL',
                     'error': frappe.get_traceback()}
 
     def upgrade_records(self):
@@ -1087,9 +1087,9 @@ class ElectronicCreditNote:
         """
 
         # Verifica que exista un documento en la tabla Envio FEL con el nombre de la serie original
-        if frappe.db.exists('Envio FEL', {'serie_factura_original': self.__invoice_code}):
+        if frappe.db.exists('Envio FEL', {'serie_factura_original': self.__inv_credit_note}):
             factura_guardada = frappe.db.get_values('Envio FEL',
-                                                    filters={'serie_factura_original': self.__invoice_code},
+                                                    filters={'serie_factura_original': self.__inv_credit_note},
                                                     fieldname=['numero', 'serie', 'uuid'], as_dict=1)
             # Esta seccion se encarga de actualizar la serie, con una nueva que es serie y numero
             # buscara en las tablas donde exista una coincidencia actualizando con la nueva serie
@@ -1102,7 +1102,7 @@ class ElectronicCreditNote:
                 # factura que lo generó.
                 # serieFEL = str(factura_guardada[0]['serie'] + '-' + factura_guardada[0]['numero'])
                 # serie_fac_original: Guarda la serie original de la factura.
-                serie_fac_original = self.__invoice_code
+                serie_fac_original = self.__inv_credit_note
 
                 # Actualizacion de tablas que son modificadas directamente.
                 # 01 - tabSales Invoice: actualizacion con datos correctos
@@ -1241,9 +1241,9 @@ class ElectronicCreditNote:
                 # Si los datos se Guardan correctamente, se retornara la serie, que sera capturado por api.py
                 # para luego ser capturado por javascript, se utilizara para recargar la url con los cambios correctos
                 if self.__default_address:
-                    frappe.msgprint(_('Factura generada exitosamente, sin embargo se sugiere configurar correctamente la dirección del cliente, \
+                    frappe.msgprint(_('Nota de Credito generada exitosamente, sin embargo se sugiere configurar correctamente la dirección del cliente, \
                         ya que se usaron datos default. Haga clic <a href="#List/Address/List"><b>Aquí</b></a> para configurarlo si lo desea.'))
                 # Se utilizara el UUID como clave para orquestar el resto de las apps que lo necesiten
                 # return True, factura_guardada[0]['uuid']
-                return {'status': True, 'description': 'Factura generada exitosamente',
+                return {'status': True, 'description': 'Nota de Credito generada exitosamente',
                         'uuid': factura_guardada[0]['uuid'], 'serie': serieFEL}

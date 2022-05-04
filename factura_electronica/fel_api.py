@@ -1568,6 +1568,133 @@ def fel_doc_canceller(company, invoice_name, reason_cancelation='Anulación', do
         }
 
 
+@frappe.whitelist()
+def api_generate_credit_note_fel(credit_note_name, company, naming_series, inv_original, reason):
+    """Generador de Notas de Credito para Facturas de Venta
+
+    Args:
+        invoice_name (str): `name` de la factura
+        company (str): nombre de la compañia
+        naming_series (str): serie utilizada para la factura
+
+    Returns:
+        dict: estado de la operacion
+    """
+    try:
+        # 1 - VALIDACION EXISTENCIA DE FACTURA EN ENVIOS FEL: PARA EVITAR DUPLICIDAD EN CASO SE DE EL ESCENARIO
+        status_invoice = check_invoice_records(inv_original)
+        if not status_invoice[0]:  # Se debe realizar sobre un doc ya generado
+            return {
+                'status': False,
+                'description': _("Para generar una nota de credito FEL es necesario hacerlo sobre una factura electronica ya generada"),
+                'uuid': '',
+                'serie_fel': '',
+                'indicator': 'yellow',
+                'error': '',
+                'title': _('Nota de credito FEL no generada')
+            }
+
+        # 2 - VALIDACION CONFIGURACION VALIDA (PUEDE HABER 1 POR COMPANY)
+        config = validate_config_fel(company)
+        if not config[0]:
+            return {
+                'status': False,
+                'description': _('No se encontro una configuracion valida de FACELEC para la empresa'),
+                'uuid': '',
+                'serie_fel': '',
+                'indicator': 'yellow',
+                'error': '',
+                'title': _('Factura Electronica No Configurada')
+            }
+
+        # 3 - Se crea una instancia de la clase ElectronicCreditNote para generarla
+        new_cred_note = ElectronicCreditNote(credit_note_name, inv_original, config[1], naming_series, reason)
+
+        # 4 - Se valida y construye la peticion para INFILE en formato JSON
+        build_inv = new_cred_note.build_invoice()
+        if not build_inv.get('status'):  # True/False
+            return {
+                'status': False,
+                'description': build_inv.get('description'),
+                'uuid': '',
+                'serie_fel': '',
+                'error': build_inv.get('error'),
+                'indicator': 'red',
+                'title': _('Datos necesarios para generar factura no procesados')
+            }
+
+        # 5 - INFILE valida y firma los datos de la peticion (La peticion se convierte a XML)
+        sign_inv = new_cred_note.sign_invoice()
+        if not sign_inv.get('status'):  # True/False
+            return {
+                'status': False,
+                'description': sign_inv.get('description'),
+                'uuid': '',
+                'serie_fel': '',
+                'error': sign_inv.get('error'),
+                'indicator': 'red',
+                'title': _('Datos no validados por INFILE')
+            }
+
+        # 6 - Con la peticion firmada y validada, se solicita la generacion del FEL
+        req_inv = new_cred_note.request_electronic_invoice()
+        if not req_inv.get('status'):  # True/False
+            return {
+                'status': False,
+                'description': req_inv.get('description'),
+                'uuid': '',
+                'serie_fel': '',
+                'error': req_inv.get('error'),
+                'indicator': 'red',
+                'title': _('Factura Electronica No Generada')
+            }
+
+        # 7 - Se valida la respuesta del FEL
+        # En esta fase se valida si hay errores en la respuesta por parte FEL
+        res_validate = new_cred_note.response_validator()
+        if not res_validate.get('status'):  # True/False
+            return {
+                'status': False,
+                'description': res_validate.get('description'),
+                'uuid': '',
+                'serie_fel': '',
+                'error': res_validate.get('error'),
+                'indicator': 'red',
+                'title': _('Datos Recibidos por INFILE no validos')
+            }
+
+        # 8 - Si la generacion con INFILE fue exitosa, se actualizan las referencia en el ERP
+        upgrade_inv = new_cred_note.upgrade_records()
+        if not upgrade_inv.get('status'):  # True/False
+            return {
+                'status': False,
+                'description': upgrade_inv.get('description'),
+                'uuid': '',
+                'serie_fel': '',
+                'error': upgrade_inv.get('error'),
+                'indicator': 'red',
+                'title': _('Referencias de la factura no fueron actualizadas por completo')
+            }
+
+        # 9 - Si la ejecucion llega a este punto, es decir que todas las fases se ejecutaron correctamente, se genera una respuesta positiva
+        if upgrade_inv.get('status') and upgrade_inv.get('uuid'):
+            msg_ok = f'Factura Electronica generada correctamente con codigo UUID {upgrade_inv.get("uuid")}\
+                y serie {upgrade_inv.get("serie")}'
+            return {
+                'status': True,
+                'description': msg_ok,
+                'uuid': upgrade_inv.get('uuid'),
+                'serie_fel': upgrade_inv.get('serie'),
+                'indicator': 'green',
+                'error': '',
+                'title': _('Factura Electronica Cambiaria Generada')
+            }
+
+    except Exception:
+        frappe.throw(_(f"Error al generar la factura electrónica cambiaria. Mas detalles en el siguiente log: <hr> {frappe.get_traceback()}"))
+        return
+
+
 def msg_generator(details):
     """Generador de mensajes server side, todos los generadores de docs electronicos comparten la misma
     estructura de respuestas, por lo que se puede reutilizar esta funcion para mostrarlos mensajes
@@ -1601,7 +1728,7 @@ def msg_generator(details):
 
 
 @frappe.whitelist()
-def fel_generator(doctype, docname, type_doc):
+def fel_generator(doctype, docname, type_doc, docname_ref="", reason=""):
     """Valida que tipo de doc electronico se debe generar
 
     Args:
@@ -1625,8 +1752,8 @@ def fel_generator(doctype, docname, type_doc):
             exchange_inv = api_generate_exchange_invoice_fel(docname, company, naming_series)
             return exchange_inv
 
-        if type_doc == 'nota_credito':  # Factura Cambiaria
-            credit_note = api_generate_exchange_invoice_fel(docname, company, naming_series)
+        if type_doc == 'nota_credito':  # Nota de Credito
+            credit_note = api_generate_credit_note_fel(docname, company, naming_series, docname_ref, reason)
             return credit_note
 
     else:

@@ -550,16 +550,16 @@ function msg_generator(frm, msg, redirect_dt) {
     if (msg.uuid && redirect_dt && msg.serie_fel) {
       frappe.set_route("Form", redirect_dt, msg.serie_fel);
       // frappe.set_route(`/app/sales-invoice/${message.serie_fel}`);
-      location.reload();
-      frm.reload_doc();
 
       frappe.show_alert(
         {
           message: __(`Documento Electronico generado con exito. Nueva serie <strong>${msg.serie_fel}</strong>`),
           indicator: "green",
         },
-        10
+        5
       );
+      location.reload();
+      // frm.reload_doc();
 
       // Aplica si es una anulacion
     } else {
