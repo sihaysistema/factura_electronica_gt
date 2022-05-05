@@ -3,7 +3,8 @@
  * For license information, please see license.txt
  */
 
-import { valNit } from "./facelec.js";
+// import { valNit } from "./facelec.js";
+import { msg_generator } from "./facelec.js";
 import { goalSeek } from "./goalSeek.js";
 
 /* Purchase Invoice (Factura de Compra) ------------------------------------------------------------------------------------------------------- */
@@ -368,36 +369,22 @@ function btn_factura_especial(frm) {
   cur_frm.clear_custom_buttons();
   frm
     .add_custom_button(__("GENERAR FACTURA ESPECIAL ELECTRONICA FEL"), function () {
-      frappe.confirm(
-        __("Are you sure you want to proceed to generate a Electronic Special Invoice?"),
-        () => {
-          let serie_de_factura = frm.doc.name;
-          // Guarda la url actual
-          let mi_url = window.location.href;
-          frappe.call({
-            method: "factura_electronica.fel_api.generate_special_invoice",
-            args: {
-              invoice_code: frm.doc.name,
-              naming_series: frm.doc.naming_series,
-            },
-            callback: function (r) {
-              // console.log(r.message);
-              if (r.message[0] === true) {
-                // Crea una nueva url con el nombre del documento actualizado
-                let url_nueva = mi_url.replace(serie_de_factura, r.message[1]);
-                // Asigna la nueva url a la ventana actual
-                window.location.assign(url_nueva);
-                // Recarga la pagina
-                frm.reload_doc();
-              }
-            },
-          });
-        },
-        () => {
-          // action to perform if No is selected
-          // console.log('Selecciono NO')
-        }
-      );
+      frappe.confirm(__("Are you sure you want to proceed to generate a Electronic Special Invoice?"), () => {
+        frappe.call({
+          method: "factura_electronica.fel_api.fel_generator",
+          args: {
+            doctype: frm.doc.doctype,
+            docname: frm.doc.name,
+            type_doc: "factura_especial",
+          },
+          freeze: true,
+          freeze_message: __("Generando Factura Especial FEL"),
+          callback: function ({ message }) {
+            // console.log(r.message);
+            msg_generator(frm, message, "Purchase Invoice");
+          },
+        });
+      });
     })
     .addClass("btn-warning");
 }

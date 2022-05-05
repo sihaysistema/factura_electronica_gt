@@ -47,7 +47,7 @@ class ElectronicSpecialInvoice:
             fields_sales_invoice = ['company', 'shipping_address', 'facelec_nit_fproveedor',
                                     'supplier_address', 'supplier_name', 'total_taxes_and_charges',
                                     'grand_total', 'net_total', 'currency', 'credit_to',
-                                    'conversion_rate', 'contact_person']
+                                    'conversion_rate', 'contact_person', 'posting_date', 'posting_time']
 
             fields_config = ['fecha_y_tiempo_documento_electronica', 'usar_datos_prueba', 'nombre_empresa_prueba',
                              'is_it_an_establishment', 'parent_company', 'is_individual', 'facelec_name_of_owner',
@@ -174,7 +174,7 @@ class ElectronicSpecialInvoice:
                 # "@FechaHoraEmision": str(self.date_invoice)+'T'+str(self.time_invoice),  #f'{self.date_invoice}T{str(self.time_invoice)}',
                 # #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
                 "@FechaHoraEmision": ok_datetime,
-                "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
+                "@Tipo": frappe.db.get_value('Serial Configuration For Purchase Invoice', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
             }
 
@@ -431,7 +431,7 @@ class ElectronicSpecialInvoice:
 
         try:
             # Obtiene el nombre de la combinacion configurada para la serie
-            combination_name = frappe.db.get_value('Configuracion Series FEL',
+            combination_name = frappe.db.get_value('Serial Configuration For Purchase Invoice',
                                                    {'parent': self.__config_name,
                                                     'serie': self.__naming_serie}, 'combination_of_phrases')
 
@@ -440,8 +440,9 @@ class ElectronicSpecialInvoice:
                                                   fieldname=['tipo_frase', 'codigo_de_escenario'], as_dict=1)
 
             if not phrases_to_doc:
-                return False, 'No se encontro ninguna combinación de frases para generar la factura \
-                              por favor cree una y configurela en Configuración Factura Electrónica'
+                msg_phr = _('No se encontro ninguna combinación de frases para generar la factura \
+                              por favor cree una y configurela en Configuración Factura Electrónica')
+                return {'status': False, 'description': msg_phr, 'error': ''}
 
             # Si hay mas de una frase
             if len(phrases_to_doc) > 1:
@@ -486,6 +487,8 @@ class ElectronicSpecialInvoice:
             # Obtenemos los impuesto cofigurados para x compañia en la factura (IVA)
             self.__taxes_fact = frappe.db.get_values('Purchase Taxes and Charges', filters={'parent': self.__invoice_code},
                                                      fieldname=['facelec_tax_name', 'facelec_taxable_unit_code', 'rate'], as_dict=True)
+
+            self.iva_rate = self.__taxes_fact[0]['rate']
 
             # Obtenemos los items de la factura
             self.__dat_items = frappe.db.get_values('Purchase Invoice Item', filters={'parent': self.__invoice_code},
@@ -616,7 +619,7 @@ class ElectronicSpecialInvoice:
 
             # Por cada fila se obtiene el total de IVA e IDP en caso exista
             for i in self.__dat_items:
-                gran_tot += flt(i['facelec_sales_tax_for_this_row'], self.__precision)
+                gran_tot += flt(i['facelec_p_sales_tax_for_this_row'], self.__precision)
 
             self.__d_totales = {
                 "dte:TotalImpuestos": {
@@ -643,9 +646,9 @@ class ElectronicSpecialInvoice:
             tuple: [description]
         """
         try:
-            self.net_total = self.dat_fac.net_total
-            self.company = self.dat_fac.company
-            self.grand_total_invoice = self.dat_fac.grand_total
+            self.net_total = self.__doc_inv.net_total
+            self.company = self.__doc_inv.company
+            self.grand_total_invoice = self.__doc_inv.grand_total
 
             # NOTE: TODO: AGREGAR IF IS ES MENOR A Q2,500, DEBE EXISTIR EN ESCENARIO DE RETENCIONES
             ISR = 0
