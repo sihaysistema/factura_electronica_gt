@@ -711,7 +711,7 @@ function purchase_invoice_calc(frm) {
       invoice_name: frm.doc.name,
     },
     freeze: true,
-    freeze_message: __("Calculating") + " 📄📄📄",
+    freeze_message: __("Ejecutando Calculos..."),
     callback: (r) => {
       frm.reload_doc();
       // console.log("Purchase Invoice Calculated", r.message);
@@ -768,42 +768,23 @@ function special_pi_tax(frm) {
  */
 function btn_pi_generator(frm) {
   frappe.call({
-    method: "factura_electronica.fel_api.is_valid_to_fel",
+    method: "factura_electronica.fel_api.btn_validator",
     args: {
       doctype: frm.doc.doctype,
       docname: frm.doc.name,
     },
-    callback: function (data) {
-      // ESCENARIO BOTON ANULADOR
-      if (data.message[1] === "anulador" && data.message[2]) {
-        // validaor para mostrar u ocultar btn anulador tras generacion
-        frappe
-          .call("factura_electronica.api.btn_activator", {
-            electronic_doc: "anulador_de_facturas_ventas_fel",
-          })
-          .then((r) => {
-            if (r.message) {
-              // Si la anulacion electronica ya fue realizada, se mostrara boton para ver pdf doc anulado
-              frappe
-                .call("factura_electronica.api.invoice_exists", {
-                  uuid: frm.doc.numero_autorizacion_fel,
-                })
-                .then((r2) => {
-                  if (r2.message) {
-                    cur_frm.clear_custom_buttons();
-                    pdf_electronic_doc(frm);
-                  } else {
-                    // SI no aplica lo anterior se muestra btn para anular doc
-                    btn_pi_canceller(frm);
-                    pdf_electronic_doc(frm);
-                  }
-                });
-            }
-          });
+    callback: function ({ message }) {
+      const { type_doc, show_btn } = message;
+
+      console.log("Tipo de Doc: ", type_doc, "Mostrar Boton: ", show_btn);
+
+      if (!type_doc) {
+        // Si no hay dato no se muestra ningun btn generador
+        return;
       }
 
-      // ESCENARIO BOTON FACTURA ESPECIAL
-      if (data.message[0] == "FESP" && data.message[1]) {
+      // Factura Especial
+      if (type_doc === "factura_especial") {
         btn_factura_especial(frm);
         if (frm.doc.numero_autorizacion_fel) {
           cur_frm.clear_custom_buttons();
@@ -812,11 +793,27 @@ function btn_pi_generator(frm) {
         }
       }
 
-      // ESCENARIO BOTON  NOTA DE DEBITO
-      if (data.message[0] == "NDEB" && data.message[1]) {
+      // Nota de Debito
+      if (type_doc === "nota_debito") {
         btn_debit_note(frm);
         if (frm.doc.numero_autorizacion_fel) {
           cur_frm.clear_custom_buttons();
+          pdf_electronic_doc(frm);
+        }
+      }
+
+      // Anulador de docs
+      if (type_doc === "anulador_pi") {
+        if (show_btn == false) {
+          // Si ya esta cancelada
+          // Si ya se genero se muestra el btn para ver pdf
+          if (frm.doc.numero_autorizacion_fel) {
+            cur_frm.clear_custom_buttons();
+            pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
+          }
+        }
+        if (show_btn == true) {
+          btn_pi_canceller(frm);
           pdf_electronic_doc(frm);
         }
       }
@@ -920,5 +917,42 @@ frappe.ui.form.on("Purchase Invoice Item", {
     frappe.model.set_value(row.doctype, row.name, "amount", flt(calcu * a));
 
     frm.refresh_field("items");
+
+    pi_calc_row_discount(frm, cdt, cdn);
+  },
+  facelec_discount_amount: function (frm, cdt, cdn) {
+    let row = frappe.get_doc(cdt, cdn);
+    let new_rate = row.rate - row.facelec_discount_amount;
+    row.rate = new_rate;
+    frm.refresh_field("items");
+
+    pi_calc_row_discount(frm, cdt, cdn);
+  },
+  qty: function (frm, cdt, cdn) {
+    pi_calc_row_discount(frm, cdt, cdn);
+  },
+  rate: function (frm, cdt, cdn) {
+    // Si hay algun cambio en el precio se vuelve a establecer a 0 el descuento
+    let row = frappe.get_doc(cdt, cdn);
+    row.facelec_discount_amount = 0;
+    row.facelec_row_discount = 0;
+    row.facelec_discount_account = "";
+    frm.refresh_field("items");
+
+    pi_calc_row_discount(frm, cdt, cdn);
   },
 });
+
+/**
+ * @summary Calcula el descuento por fila
+ * @param {frm}
+ * @param {cdt}
+ * @param {cdn}
+ */
+function pi_calc_row_discount(frm, cdt, cdn) {
+  // console.log("calculos desc por fila");
+  let row = frappe.get_doc(cdt, cdn);
+  // Se calcula el descuento por fila
+  row.facelec_row_discount = row.facelec_discount_amount * row.qty;
+  frm.refresh_field("items");
+}
