@@ -251,7 +251,7 @@ class CancelDocument:
 
             else:
                 return {'status': False, 'description': 'Documento no pudo ser anulado',
-                        'error': self.__response_ok['descripcion_errores']}
+                        'error': str(self.__response_ok['descripcion_errores'])}
         except Exception:
             return {'status': False, 'description': 'La respuesta de INFILE no se pudo validar', 'error': frappe.get_traceback()}
 
