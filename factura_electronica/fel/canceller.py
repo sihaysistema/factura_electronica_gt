@@ -92,8 +92,11 @@ class CancelDocument:
             }
 
             # USAR SOLO PARA DEBUG:
-            # with open('cancelador.json', 'w') as f:
-            #     f.write(json.dumps(self.__base_peticion, indent=2))
+            with open('PREVIEW-ANULADOR.xml', 'w') as f:
+                f.write(xmltodict.unparse(self.__base_peticion, pretty=True))
+
+            with open('PREVIEW-ANULADOR.json', 'w') as f:
+                f.write(json.dumps(self.__base_peticion, default=str))
 
             return {'status': True, 'description': 'OK', 'error': ''}
 

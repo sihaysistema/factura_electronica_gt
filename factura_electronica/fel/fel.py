@@ -1017,7 +1017,7 @@ class ElectronicInvoice:
 
             else:
                 return {'status': False, 'description': self.__response_ok['descripcion'],
-                        'error': self.__response_ok['descripcion_errores']}
+                        'error': str(self.__response_ok['descripcion_errores'])}
 
         except Exception:
             return {'status': False, 'description': 'No se pudo validar la respuesta enviada por INFILE', 'error': frappe.get_traceback()}

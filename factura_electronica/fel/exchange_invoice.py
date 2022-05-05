@@ -257,7 +257,7 @@ class SalesExchangeInvoice:
                 # Si la compañia esta configurada como establecimiento (sucursal), se usa el nombre de la compañia configurada
                 if self.__config_facelec.is_it_an_establishment:
                     nombre_emisor = self.__config_facelec.parent_company
-                    nom_comercial = nombre_emisor
+                    nom_comercial = self.__config_facelec.parent_company
 
                 # Si la compania es de un propietario (INDIVIDUAL): se usa el nombre del propietario
                 elif self.__config_facelec.is_individual:
@@ -1067,7 +1067,7 @@ class SalesExchangeInvoice:
 
             else:
                 return {'status': False, 'description': self.__response_ok['descripcion'],
-                        'error': self.__response_ok['descripcion_errores']}
+                        'error': str(self.__response_ok['descripcion_errores'])}
 
         except Exception:
             return {'status': False, 'description': 'No se pudo validar la respuesta enviada por INFILE', 'error': frappe.get_traceback()}

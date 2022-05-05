@@ -100,6 +100,7 @@ function btn_validator(frm) {
     },
   });
 }
+
 /**
  * @summary Genera X botones para generar documentos electronicos
  * @param {object} frm
@@ -228,7 +229,7 @@ function btn_canceller(frm) {
   frm
     .add_custom_button(__("Anular Documento Electronico"), function () {
       // Permite hacer confirmaciones
-      frappe.confirm(__("Esta seguro de Anular este documento electronico?"), () => {
+      frappe.confirm(__("Desea Anular este documento electronico?"), () => {
         let d = new frappe.ui.Dialog({
           title: __("Anulador de documentos electronicos"),
           fields: [
@@ -367,7 +368,7 @@ function btn_credit_note(frm) {
               freeze: true,
               freeze_message: __("Generando Nota de Credito FEL"),
               callback: function ({ message }) {
-                console.log(message);
+                // console.log(message);
                 msg_generator(frm, message, "Sales Invoice");
               },
             });
@@ -531,7 +532,6 @@ function btn_exchange_invoice(frm) {
     .add_custom_button(__("Generar Factura Cambiaria FEL"), function () {
       frappe.confirm("Desea generar una Factura Electronica Cambiaria?", () => {
         frappe.call({
-          // method: "factura_electronica.fel_api.generate_exchange_invoice_si",
           method: "factura_electronica.fel_api.fel_generator",
           args: {
             doctype: frm.doc.doctype,

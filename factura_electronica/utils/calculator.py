@@ -66,6 +66,8 @@ def sales_invoice_calculator(invoice_name):  # invoice_name
             invoice_data.access_number_fel = doc_access.name
 
         # Se obtienen los pagos programados son necesarios para este tipo de doc
+        # NOTA: LA SUMA DE LOS PAGOS DEBE SER IGUAL AL TOTAL DE LA FACTURA SEGUN LOS DECIMALES QUE ESCOJA
+        # EL USUARIO
         payments = invoice_data.payment_schedule or []
         for payment in payments:
             payment.facelec_credit_amount = flt(invoice_data.grand_total, precision_facelec) * (payment.invoice_portion / 100)
