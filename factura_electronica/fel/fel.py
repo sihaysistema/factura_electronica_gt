@@ -250,7 +250,7 @@ class ElectronicInvoice:
                 # Si la compañia esta configurada como establecimiento (sucursal), se usa el nombre de la compañia configurada
                 if self.__config_facelec.is_it_an_establishment:
                     nombre_emisor = self.__config_facelec.parent_company
-                    nom_comercial = nombre_emisor
+                    nom_comercial = self.__config_facelec.parent_company
 
                 # Si la compania es de un propietario (INDIVIDUAL): se usa el nombre del propietario
                 elif self.__config_facelec.is_individual:

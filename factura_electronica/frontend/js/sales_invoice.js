@@ -83,6 +83,7 @@ function sales_invoice_calc(frm) {
       }
     });
 }
+
 /**
  * @summary Valida que tipo de boton se debe generar segun los datos de la factura
  * @param {frm}
@@ -698,6 +699,7 @@ function discount_acc(frm) {
       args: {
         inv_name: frm.doc.name,
         accounts: discounts,
+        is_return: frm.doc.is_return,
       },
       async: false,
       freeze: true,
