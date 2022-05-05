@@ -330,6 +330,9 @@ def fill_fixtures():
                     "Sales Invoice Item-facelec_discount_amount", "Sales Invoice Item-col_break_facelec_discount",
                     "Sales Invoice Item-facelec_discount_account", "Sales Invoice Item-facelec_row_discount",
                     "Sales Invoice-facelec_total_items_overview", "Payment Schedule-facelec_credit_amount",
+                    "Purchase Invoice Item-electronica_invoice_discount", "Purchase Invoice Item-facelec_discount_amount",
+                    "Purchase Invoice Item-facelec_row_discount", "Purchase Invoice Item-facelec_discount_account",
+                    "Purchase Invoice Item-col_br_discount_facelec",
                 ]
             ]
         ]

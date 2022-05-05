@@ -894,6 +894,9 @@ def is_valid_to_fel(doctype, docname):
 
 
 # ------------------------------------------------------------------------------------------------------------
+# REFACTOR OK
+# ------------------------------------------------------------------------------------------------------------
+
 @frappe.whitelist()
 def validate_config_fel(company):
     """Valida y retorna que configuracion se encuentra activa para la compañia/establecimiento
