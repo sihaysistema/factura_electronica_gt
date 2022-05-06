@@ -308,25 +308,14 @@ function btn_export_invoice(frm) {
   frm
     .add_custom_button(__("Generar Factura Exportacion FEL"), function () {
       frappe.call({
-        method: "factura_electronica.fel_api.api_interface_export",
+        method: "factura_electronica.fel_api.fel_generator",
         args: {
-          invoice_code: frm.doc.name,
-          naming_series: frm.doc.naming_series,
+          doctype: frm.doc.doctype,
+          docname: frm.doc.name,
+          type_doc: "exportacion",
         },
-        callback: function (data) {
-          // console.log(data.message);
-          let serie_de_factura = frm.doc.name;
-          // Guarda la url actual
-          let mi_url = window.location.href;
-
-          if (data.message[0] === true) {
-            // Crea una nueva url con el nombre del documento actualizado
-            let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
-            // Asigna la nueva url a la ventana actual
-            window.location.assign(url_nueva);
-            // Recarga la pagina
-            frm.reload_doc();
-          }
+        callback: function ({ message }) {
+          msg_generator(frm, message, "Sales Invoice");
         },
       });
     })

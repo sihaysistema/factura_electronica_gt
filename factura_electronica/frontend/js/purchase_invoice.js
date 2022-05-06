@@ -389,6 +389,7 @@ function btn_factura_especial(frm) {
     .addClass("btn-warning");
 }
 
+// NOTA: REVISAR ESTA FUNCIONALIDAD CON UN CONTADOR
 /**
  * Agrega un boton para generar especificamente polizas contables para facturas especiales
  *
@@ -491,58 +492,43 @@ function btn_debit_note(frm) {
   frm
     .add_custom_button(__("GENERAR NOTA DE DEBITO ELECTRONICA FEL"), function () {
       // Permite hacer confirmaciones
-      frappe.confirm(
-        __("Are you sure you want to proceed to generate a electronic debit note?"),
-        () => {
-          let d = new frappe.ui.Dialog({
-            title: __("Generate Electronic Debit Note"),
-            fields: [
-              {
-                label: __("Reason Adjusment?"),
-                fieldname: "reason_adjust",
-                fieldtype: "Data",
-                reqd: 1,
-              },
-            ],
-            primary_action_label: __("Submit"),
-            primary_action(values) {
-              let serie_de_factura = frm.doc.name;
-              // Guarda la url actual
-              let mi_url = window.location.href;
-
-              frappe.call({
-                method: "factura_electronica.fel_api.generate_debit_note",
-                args: {
-                  invoice_code: frm.doc.name,
-                  naming_series: frm.doc.naming_series,
-                  uuid_purch_inv: frm.doc.bill_no,
-                  date_inv_origin: frm.doc.bill_date,
-                  reason: values.reason_adjust,
-                },
-                callback: function (r) {
-                  console.log(r.message);
-                  if (r.message[0] === true) {
-                    // Crea una nueva url con el nombre del documento actualizado
-                    let url_nueva = mi_url.replace(serie_de_factura, r.message[1]);
-                    // Asigna la nueva url a la ventana actual
-                    window.location.assign(url_nueva);
-                    // Recarga la pagina
-                    frm.reload_doc();
-                  }
-                },
-              });
-
-              d.hide();
+      frappe.confirm(__("Are you sure you want to proceed to generate a electronic debit note?"), () => {
+        let d = new frappe.ui.Dialog({
+          title: __("Generate Electronic Debit Note"),
+          fields: [
+            {
+              label: __("Reason Adjusment?"),
+              fieldname: "reason_adjust",
+              fieldtype: "Data",
+              reqd: 1,
             },
-          });
+          ],
+          primary_action_label: __("Submit"),
+          primary_action(values) {
+            frappe.call({
+              method: "factura_electronica.fel_api.fel_generator",
+              args: {
+                doctype: frm.doc.doctype,
+                docname: frm.doc.name,
+                type_doc: "nota_debito",
+                reason: values.reason_adjust,
+                uuid_purch_inv: frm.doc.bill_no,
+                date_inv_origin: frm.doc.bill_date,
+              },
+              freeze: true,
+              freeze_message: __("Generando Nota de Debito FEL"),
+              callback: function ({ message }) {
+                console.log(message);
+                msg_generator(frm, message, "Purchase Invoice");
+              },
+            });
 
-          d.show();
-        },
-        () => {
-          // action to perform if No is selected
-          // console.log("Selecciono NO");
-        }
-      );
+            d.hide();
+          },
+        });
+
+        d.show();
+      });
     })
     .addClass("btn-primary");
   // FIN BOTON NOTA DE DEBITO
@@ -591,45 +577,41 @@ function btn_pi_canceller(frm) {
   frm
     .add_custom_button(__("CANCEL DOCUMENT FEL"), function () {
       // Permite hacer confirmaciones
-      frappe.confirm(
-        __("Are you sure to cancel the current electronic document?"),
-        () => {
-          let d = new frappe.ui.Dialog({
-            title: __("Cancel electronic document"),
-            fields: [
-              {
-                label: __("Reason for cancellation?"),
-                fieldname: "reason_cancelation",
-                fieldtype: "Data",
-                reqd: 1,
-              },
-            ],
-            primary_action_label: __("Submit"),
-            primary_action(values) {
-              frappe.call({
-                method: "factura_electronica.fel_api.invoice_canceller",
-                args: {
-                  invoice_name: frm.doc.name,
-                  reason_cancelation: values.reason_cancelation || "Anulación",
-                  document: "Purchase Invoice",
-                },
-                callback: function (data) {
-                  console.log(data.message);
-                  // frm.reload_doc();
-                },
-              });
-
-              d.hide();
+      frappe.confirm(__("Are you sure to cancel the current electronic document?"), () => {
+        let d = new frappe.ui.Dialog({
+          title: __("Cancel electronic document"),
+          fields: [
+            {
+              label: __("Reason for cancellation?"),
+              fieldname: "reason_cancelation",
+              fieldtype: "Data",
+              reqd: 1,
             },
-          });
+          ],
+          primary_action_label: __("Submit"),
+          primary_action(values) {
+            frappe.call({
+              method: "factura_electronica.fel_api.fel_doc_canceller",
+              args: {
+                company: frm.doc.company,
+                invoice_name: frm.doc.name,
+                reason_cancelation: values.reason_cancelation || "Anulación",
+                document: "Purchase Invoice",
+              },
+              freeze: true,
+              freeze_message: __("Anulando Documento Electronico FEL"),
+              callback: function (data) {
+                console.log(data.message);
+                // frm.reload_doc();
+              },
+            });
 
-          d.show();
-        },
-        () => {
-          // action to perform if No is selected
-          // console.log('Selecciono NO')
-        }
-      );
+            d.hide();
+          },
+        });
+
+        d.show();
+      });
     })
     .addClass("btn-danger");
 }
@@ -776,7 +758,9 @@ function btn_pi_generator(frm) {
         if (frm.doc.numero_autorizacion_fel) {
           cur_frm.clear_custom_buttons();
           pdf_electronic_doc(frm);
-          btn_poliza_factura_especial(frm);
+
+          // nota: revisar este generador con un contador
+          // btn_poliza_factura_especial(frm);
         }
       }
 
