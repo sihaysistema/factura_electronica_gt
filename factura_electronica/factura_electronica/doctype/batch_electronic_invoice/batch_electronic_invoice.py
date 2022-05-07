@@ -11,8 +11,9 @@ import json
 
 from factura_electronica.fel_api import generate_electronic_invoice
 
+
 class BatchElectronicInvoice(Document):
-	pass
+    pass
 
 
 def batch_generator(invoice_list):
@@ -43,7 +44,7 @@ def batch_generator(invoice_list):
 
         return True, batch_created.name
 
-    except:
+    except Exception:
         return False, str(frappe.get_traceback())
 
 
@@ -102,7 +103,7 @@ def electronic_invoices_batch(invoice_list, doc_name, doct):
                 status_elec_invoice = generate_electronic_invoice(invoice_code, naming_serie)
 
                 # time.sleep(0.5)
-                if status_elec_invoice[0] == False:
+                if not status_elec_invoice[0]:
                     log_invoices.append({
                         'status': False,
                         'invoice': invoice_code,
@@ -122,7 +123,7 @@ def electronic_invoices_batch(invoice_list, doc_name, doct):
         # return doc_name
         frappe.msgprint(msg=_('You will find more details in the log'), title=_('Processed batch'), indicator='green')
 
-    except:
+    except Exception:
         frappe.msgprint(_(str(frappe.get_traceback())))
 
 
@@ -144,7 +145,7 @@ def verify_validated_invoices(invoices):
 
     if len(invoice_list) > 0:
         for invoice in invoice_list:
-            if not frappe.db.exists('Sales Invoice', {'name': invoice.get('invoice'), 'docstatus':1}):
+            if not frappe.db.exists('Sales Invoice', {'name': invoice.get('invoice'), 'docstatus': 1}):
                 return False
 
         return True

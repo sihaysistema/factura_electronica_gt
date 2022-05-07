@@ -18,6 +18,7 @@ from factura_electronica.fel.fel_exempt import ExemptElectronicInvoice
 from factura_electronica.fel.special_invoice import ElectronicSpecialInvoice
 
 # !USAR SOLO PARA COSAS RELACIONADAS CON FEL :)
+# DOCUMENTACION OFICIAL https://portal.sat.gob.gt/portal/documentacion-tecnica-del-regimen-fel/
 
 
 # INICIO FEL NORMAL

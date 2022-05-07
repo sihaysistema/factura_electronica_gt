@@ -17,7 +17,7 @@ function clean_fields(frm) {
   // Funcionalidad evita copiar CAE cuando se duplica una factura
   // LIMPIA/CLEAN, permite limpiar los campos cuando se duplica una factura
   if (frm.doc.status === "Draft" || frm.doc.docstatus == 0) {
-    console.log("LImpiando campos");
+    // console.log("LImpiando campos");
     frm.set_value("cae_factura_electronica", "");
     frm.set_value("serie_original_del_documento", "");
     frm.set_value("numero_autorizacion_fel", "");

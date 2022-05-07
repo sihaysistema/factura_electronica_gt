@@ -30,11 +30,11 @@ def batch_generator_api(invoices):
         status_invoices = batch_generator(valid_invoices)
 
         if status_invoices[0]:
-            frappe.msgprint(_(f'Lote generado con exito, puedes verlo <a href="#Form/Batch%20Electronic%20Invoice/{status_invoices[1]}" target="_blank"><b>aqui</b></a>'))
+            frappe.msgprint(_(f'Lote generado con exito, puedes verlo <a href="/app/batch-electronic-invoice/{status_invoices[1]}" target="_blank"><b>aqui</b></a>'))
         else:
             frappe.msgprint(_(f'Lote no pudo se creado, mas detalles en el siguiente log: {status_invoices[1]}'))
 
-    except:
+    except Exception:
         frappe.msgprint(_(f'Lote no pudo ser creado, mas detalles en el siguiente log: {frappe.get_traceback()}'))
 
 
