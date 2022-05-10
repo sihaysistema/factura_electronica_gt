@@ -604,13 +604,15 @@
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2022-05-04 22:52:36.212255",
+ "modified": "2022-05-10 17:52:30.282244",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
