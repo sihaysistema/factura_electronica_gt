@@ -34,6 +34,8 @@ For installation details, features and more information please visit the [wiki](
 ## Installation
 Currently, this application is only available for self-deployed instances of ERPNext. Source code will be proposed for merging into the core in a more generalized manner for supporting other countries regional requirements by mid-jun 2018.
 
+## Disclaimer
+> **Nos nos hacemos responsables por el mal manejo o configuracion del app, uselo bajo su propio riesgo. Recuerde primero probar el app en un ambiente de pruebas.**
 
 
 ## Electronic Invoice App
