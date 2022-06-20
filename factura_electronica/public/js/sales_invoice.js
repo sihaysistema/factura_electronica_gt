@@ -164,6 +164,15 @@ function btn_generator(frm) {
           pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
         }
       }
+
+      // SI APLICA EL ESCENARIO MUESTRA EL BOTON PARA Generación de Facturas Electrónicas Pequeño Contribuyente FEPQ - Normal Type
+      if (r.message[0] === "FPEQ" && r.message[1] === "valido" && r.message[2]) {
+        btn_small_contributor(__("Factura Electrónica FPEQ"), frm);
+        if (frm.doc.numero_autorizacion_fel) {
+          cur_frm.clear_custom_buttons();
+          pdf_button_fel(frm.doc.numero_autorizacion_fel, frm);
+        }
+      }
     },
   });
   // FIN BOTONES GENERADORES DOCS ELECTRONICOS
@@ -641,6 +650,44 @@ function dependency_validator(frm) {
       400
     );
   }
+}
+
+/**
+ * @summary Generador boton para FEL normal
+ *
+ * @param {*} tipo_factura
+ * @param {*} frm
+ */
+function btn_small_contributor(tipo_factura, frm) {
+  frm
+    .add_custom_button(__(tipo_factura), function () {
+      // frm.reload(); permite hacer un refresh de todo el documento
+      frm.reload_doc();
+      let serie_de_factura = frm.doc.name;
+      // Guarda la url actual
+      let mi_url = window.location.href;
+      frappe.call({
+        method: "factura_electronica.fel_api.electronic_invoice_small_contributor",
+        args: {
+          invoice_code: frm.doc.name,
+          naming_series: frm.doc.naming_series,
+        },
+        // El callback recibe como parametro el dato retornado por el script python del lado del servidor
+        // para validar si se genero correctamente la factura electronica
+        callback: function (data) {
+          // console.log(data.message);
+          if (data.message[0] === true) {
+            // Crea una nueva url con el nombre del documento actualizado
+            let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
+            // Asigna la nueva url a la ventana actual
+            window.location.assign(url_nueva);
+            // Recarga la pagina
+            frm.reload_doc();
+          }
+        },
+      });
+    })
+    .addClass("btn-primary"); //NOTA: Se puede crear una clase para el boton CSS
 }
 
 /* Factura de Ventas-------------------------------------------------------------------------------------------------- */

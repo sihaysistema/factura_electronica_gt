@@ -42,9 +42,9 @@ class CancelDocument:
             tuple: bool/status
         """
         self.info_invoice = frappe._dict(frappe.db.get_value(self.__doctype,
-                                        {'name': self.__invoice_code},
-                                        ['numero_autorizacion_fel', 'tax_id',
-                                         'naming_series', 'company'], as_dict=True))
+                                         {'name': self.__invoice_code},
+                                         ['numero_autorizacion_fel', 'tax_id',
+                                          'naming_series', 'company'], as_dict=True))
 
         if not frappe.db.exists('Envio FEL', {'name': str(self.info_invoice.numero_autorizacion_fel)}):
             return False, 'UUID de documento electronico no valido, no se encontro guardado en base de datos, si desea generar una cancelacion antes debe haber generado factura electronica FEL'
@@ -93,9 +93,9 @@ class CancelDocument:
             # with open('cancelador.json', 'w') as f:
             #     f.write(json.dumps(self.__base_peticion, indent=2))
 
-            return True,'OK build'
+            return True, 'OK build'
 
-        except:
+        except Exception:
             return False, str(frappe.get_traceback())
 
     def sign_invoice(self):
@@ -113,36 +113,35 @@ class CancelDocument:
             # Usar solo para debug
             with open('PREVIEW-ANULADOR.xml', 'w') as f:
                 f.write(self.__xml_string)
-        except:
+        except Exception:
             return False, 'La peticion no se pudo convertir a XML. Si la falla persiste comunicarse con soporte'
 
         try:
             # To base64: Convierte a base64, para enviarlo en la peticion
             self.__encoded_bytes = base64.b64encode(self.__xml_string.encode("utf-8"))
             self.__encoded_str = str(self.__encoded_bytes, "utf-8")
-        except:
+        except Exception:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
-
 
         # Generamos la peticion para firmar
         try:
             url = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                     {'name': self.__config_name}, 'url_firma')).strip()
+                                          {'name': self.__config_name}, 'url_firma')).strip()
 
             alias = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                       {'name': self.__config_name}, 'alias')).strip()
+                                            {'name': self.__config_name}, 'alias')).strip()
 
-            anulacion = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                           {'name': self.__config_name}, 'es_anulacion')).strip()
+            # anulacion = str(frappe.db.get_value('Configuracion Factura Electronica',
+            #                                     {'name': self.__config_name}, 'es_anulacion')).strip()
 
             self.__llave = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                              {'name': self.__config_name}, 'llave_pfx')).strip()
+                                                   {'name': self.__config_name}, 'llave_pfx')).strip()
 
             self.__data_a_firmar = {
-                "llave": self.__llave, # LLAVE
+                "llave": self.__llave,  # LLAVE
                 "archivo": str(self.__encoded_str),  # En base64
-                "alias": alias, # USUARIO
-                "es_anulacion": 'S' # "N" si es certificacion y "S" si es anulacion
+                "alias": alias,  # USUARIO
+                "es_anulacion": 'S'  # "N" si es certificacion y "S" si es anulacion
             }
 
             # DEBUGGING WRITE JSON PETITION TO SITES FOLDER
@@ -160,7 +159,7 @@ class CancelDocument:
             #      f.write(json.dumps(self.__doc_firmado, indent=2))
 
             # Si la respuesta es true
-            if self.__doc_firmado.get('resultado') == True:
+            if self.__doc_firmado.get('resultado'):
                 # Guardamos en privado el documento firmado y encriptado
                 self.__encrypted = self.__doc_firmado.get('archivo')
 
@@ -170,7 +169,7 @@ class CancelDocument:
             else:  # Si ocurre un error retornamos la descripcion del error por INFILE
                 return False, self.__doc_firmado.get('descripcion')
 
-        except:
+        except Exception:
             return False, 'Ocurrio un problema al tratar de firmar documento para peticion Documento Electronico, mas detalles en: '+str(frappe.get_traceback())
 
     def request_cancel(self):
@@ -182,7 +181,7 @@ class CancelDocument:
         """
 
         try:
-            data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
+            # data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
 
             url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_de_anulacion')
             user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
@@ -212,7 +211,7 @@ class CancelDocument:
 
             return True, 'OK request'
 
-        except:
+        except Exception:
             return False, 'Ocurrio un problema con la peticion para factura electronica, asegure de tener uan configuracion completa para Factura Electronica, mas detalles en: '+str(frappe.get_traceback())
 
     def response_validator(self):
@@ -225,11 +224,11 @@ class CancelDocument:
 
         try:
             # Verifica que no existan errores
-            if self.__response_ok['resultado'] == True and self.__response_ok['cantidad_errores'] == 0:
+            if self.__response_ok['resultado'] is True and self.__response_ok['cantidad_errores'] == 0:
                 status_saved = self.save_answers()
 
                 # Al primer error encontrado retornara un detalle con el mismo
-                if status_saved[0] == False:
+                if status_saved[0] is False:
                     return False, status_saved
 
                 return True, {'status': 'OK'}
@@ -237,8 +236,8 @@ class CancelDocument:
             else:
                 return False, {'status': 'ERROR', 'numero_errores': str(self.__response_ok['cantidad_errores']),
                                'detalles_errores': str(self.__response_ok['descripcion_errores'])}
-        except:
-            return False, {'status': 'ERROR VALIDACION', 'numero_errores':1,
+        except Exception:
+            return False, {'status': 'ERROR VALIDACION', 'numero_errores': 1,
                            'detalles_errores': 'Error al tratar de validar la respuesta de INFILE-SAT: '+str(frappe.get_traceback())}
 
     def save_answers(self):
@@ -257,7 +256,6 @@ class CancelDocument:
 
             return True, 'OK answers'
 
-        except:
+        except Exception:
             return False, f'Ocurrio un problema al tratar de guardar la respuesta para la factura {self.__invoice_code}, \
                             Mas detalles en: {str(frappe.get_traceback())}'
-

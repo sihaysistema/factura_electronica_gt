@@ -18,6 +18,7 @@ from factura_electronica.fel.export_invoice import ExportInvoice
 from factura_electronica.fel.fel import ElectronicInvoice
 from factura_electronica.fel.fel_exempt import ExemptElectronicInvoice
 from factura_electronica.fel.special_invoice import ElectronicSpecialInvoice
+from factura_electronica.fel.fel_small_contributor import SmallContributor
 
 # !USAR SOLO PARA COSAS RELACIONADAS CON FEL :)
 
@@ -495,6 +496,144 @@ def generate_special_invoice(invoice_code, naming_series):
         return False, str(frappe.get_traceback())
 
 
+# Generar factura electronica de pequeño contribuyente
+@frappe.whitelist()
+def electronic_invoice_small_contributor(invoice_code, naming_series):
+    """
+    Usar Para uso interno con otras apps hechas con frappe framework,
+    destinada a ser consumida con frappe.call
+    llamara a las funciones necesarias para generar factura electronica
+    manejando los estados para mostrarlos amigablemente en Front-End
+
+    Args:
+        invoice_code (str): Name original de la factura
+        naming_series (str): Serie de factura
+
+    Returns:
+        tuple, msgprint: (True/False, mensaje ok/descripcion error) usado para javascript,
+        el msgprint es para mostrar un mensaje a usuario
+    """
+
+    try:
+        # Guarda el estado de la funcion encargada de aplicar la generacion de factura electronica
+        state_of = generate_electronic_invoice_small_contributor(invoice_code, naming_series)
+        if not state_of[0]:
+            if type(state_of[1]) is dict:
+                frappe.msgprint(msg=_(f'{state_of[1]}'),
+                                title=_('Proceso no completado'), indicator='red')
+                return False, state_of[1]
+
+            else:
+                frappe.msgprint(msg=_(f'{state_of[1]}'),
+                                title=_('Proceso no completado'), indicator='red')
+                return False, state_of[1]
+
+        # Si el proceso es OK
+        if type(state_of[1]) is dict:
+            new_serie = frappe.db.get_value('Envio FEL', {'name': state_of[1]["msj"]}, 'serie_para_factura')
+            frappe.msgprint(msg=_(f'Factura Electronica generada con UUID <b>{state_of[1]["msj"]}</b>'),
+                            title=_('Proceso completado exitosamente'), indicator='green')
+
+            return True, str(new_serie)
+
+        else:
+            new_serie = frappe.db.get_value('Envio FEL', {'name': state_of[1]}, 'serie_para_factura')
+            frappe.msgprint(msg=_(f'Factura Electronica generada con UUID <b>{state_of[1]}</b>'),
+                            title=_('Proceso completado exitosamente'), indicator='green')
+
+            return True, str(new_serie)
+
+    except Exception:
+        frappe.msgprint(
+            _(f'Ocurrio un problme al tratar de generar Factura Electronicas, mas detalles en el siguiente log: {frappe.get_traceback()}'))
+        return False, 'An error occurred in the process of generating an electronic invoice'
+
+
+# Generador de factura electronica de pequeño contribuyente
+def generate_electronic_invoice_small_contributor(invoice_code, naming_series):
+    """
+    Llama a la clase y sus metodos encargados de generar factura electronica de pequeño contribuyente,
+    validando primero los requisitos para que se posible la generacion
+
+    1. Valida si hay configuracion valida para generar factura electronica de pequeño contribuyente
+    2. valida la serie a utilizar
+    3. valida que no exista una anterior ya generada
+    4. Crea una instancia para construir facelec
+    4.1 Construye la estructura general para la peticion en JSON
+    4.2 La estrucutra JSON se convierte a XML para firmarla con la SAT
+    4.3 Si la firma es exitosa se solicita la generacion de facelec
+    4.4 Se validan las respuestas
+    4.5 Actualiza todas las tablas de la base de datos donde existe referencia a la
+    factura que se solicito como electronica, con la nueva serie brindada por la SAT
+
+
+    Args:
+        invoice_code (str): Name original de la factura
+        naming_series (str): Serie usada en factura
+
+    Returns:
+        tuple: True/False, msj, msj
+    """
+    try:
+        # PASO 1: VALIDA SI HAY CONFIGURACION VALIDA PARA GENERAR FACTURA ELECTRONICA DE PEQUEÑO CONTRIBUYENTE
+        status_config = validate_configuration()
+
+        if not status_config[0]:
+            return status_config
+
+        # PASO 1.1: VALIDA LA SERIE A UTILIZAR PARA LA FACTURA A GENERAR
+        if not frappe.db.exists('Configuracion Series FEL', {'parent': str(status_config[1]), 'serie': str(naming_series)}):
+            return False, 'La serie utilizada en la factura no se encuentra configurada para Factura de pequeño contribuyente \
+                            Por favor agreguela en Series Fel de Configuracion Factura Electronica, y vuelva a intentar'
+
+        # PASO 2: VALIDA QUE NO EXISTA UNA ANTERIOR YA GENERADA
+        status_invoice = check_invoice_records(str(invoice_code))
+        if status_invoice[0]:
+            return False, f'La factura se encuentra registrada como ya generada, puedes validar los detalles en \
+                            Envios FEL, con codigo UUID {status_invoice[1]}'
+
+        # PASO 3: CREA UNA INSTANCIA PARA CONSTRUIR Factura de pequeño contribuyente
+        # PASO 3.1: NUEVA INSTANCIA DE FACTURA DE PEQUEÑO CONTRIBUYENTE
+        new_invoice = SmallContributor(invoice_code, status_config[1], naming_series)
+
+        # PASO 3.2 - VALIDA LOS DATOS NECESARIOS PARA CONSTRUIR EL XML
+        status = new_invoice.build_invoice()
+        if not status[0]:  # Si la construccion de la peticion es False
+            return False, f'Ocurrio un problema al tratar de generar la petición JSON, mas detalle en: {status[1]}'
+
+        # PASO 4: FIRMA CERTIFICADA Y ENCRIPTADA
+        # En este paso se convierte de JSON a XML y se codifica en base64
+        status_firma = new_invoice.sign_invoice()
+        if not status_firma[0]:  # Si no se firma correctamente
+            return False, f'Ocurrio un problema al tratar de firmar la petición, vericar tener la url correcta para \
+                firmas en Configuracion Factura Electrónica mas detalle en: {status_firma[1]}'
+
+        # PASO 5: SOLICITAMOS FACTURA ELECTRONICA
+        status_facelec = new_invoice.request_electronic_invoice()
+        if not status_facelec[0]:
+            return False, f'Ocurrio un problema al tratar de generar factura electronica, mas detalles en: {status_facelec[1]}'
+
+        # PASO 6: VALIDAMOS LAS RESPUESTAS Y GUARDAMOS EL RESULTADO POR INFILE
+        # Las respuestas en este paso no son de gran importancia ya que las respuestas ok, seran guardadas
+        # automaticamente si todo va bien, aqui se retornara cualquier error que ocurra en la fase
+        status_res = new_invoice.response_validator()
+        if (status_res[1]['status'] == 'ERROR') or (status_res[1]['status'] == 'ERROR VALIDACION'):
+            return status_res  # return tuple
+
+        # PASO 7: ACTUALIZAMOS REGISTROS DE LA BASE DE DATOS
+        status_upgrade = new_invoice.upgrade_records()
+        if not status_upgrade[0]:
+            return status_upgrade
+
+        # SI cumple con exito el flujo de procesos se retorna una tupla, en ella va
+        # el UUID y la nueva serie para la factura
+        return True, status_upgrade[1]
+
+
+    except Exception:
+        return False, str(frappe.get_traceback())
+
+
 def validate_configuration():
     """
     Verifica que exista una configuracion valida para generar Factura electronica
@@ -860,7 +999,7 @@ def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='S
 
     status_config = validate_configuration()
 
-    if status_config[0] == True:
+    if status_config[0]:
         cancel_invoice = CancelDocument(invoice_name, status_config[1], reason_cancelation, document)
 
         status_req = cancel_invoice.validate_requirements()
@@ -870,7 +1009,7 @@ def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='S
 
         status_build = cancel_invoice.build_request()
         if not status_build[0]:
-            frappe.msgprint(f'Petición no generada: No se encontraron los datos necesarios, por favor asegurese de tener los datos necesarios para compania y cliente')
+            frappe.msgprint('Petición no generada: No se encontraron los datos necesarios, por favor asegurese de tener los datos necesarios para compania y cliente')
             return
 
         status_firma = cancel_invoice.sign_invoice()
@@ -906,7 +1045,6 @@ def is_valid_to_fel(doctype, docname):
         doctype (str): Nombre doctype
         docname (str): Nombre del doc
     """
-
     # FACT, FACTEXP, NCRED, FESP, NDEB, CANCEL
     status_list = ['Credit Note Issued', 'Debit Note Issued', 'Return']
     stat = validate_configuration()
@@ -923,7 +1061,8 @@ def is_valid_to_fel(doctype, docname):
     # DOCTYPE SALES INVOICE
     # Condiciones para FEL Sales Invoice -> FEL Normal
     if (docinv.doctype == 'Sales Invoice') and (docinv.docstatus == 1) and (docinv.status not in status_list) and \
-        (not docinv.is_it_an_international_invoice):
+            (not docinv.is_it_an_international_invoice):
+
         # Validacion de serie
         val_serie_fel = frappe.db.exists('Configuracion Series FEL', {'parent': config_name, 'serie': docinv.naming_series,
                                                                       'codigo_incoterm': ['==', '']})
@@ -933,6 +1072,7 @@ def is_valid_to_fel(doctype, docname):
             values = frappe.db.get_values('Configuracion Series FEL',
                                           filters={'parent': config_name, 'serie': docinv.naming_series},
                                           fieldname=['tipo_documento'], as_dict=1)
+
             return values[0]['tipo_documento'], 'valido', True
         else:
             return _('Serie de factura no configurada, por favor agregarla y \
