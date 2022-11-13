@@ -118,7 +118,12 @@ class ElectronicCreditNote:
         status_receiver = self.receiver()
         if status_receiver[0] == False:
             return status_receiver
-
+        
+        # Validacion y generacion seccion frases
+        status_phrases = self.phrases()
+        if status_phrases[0] == False:
+            return status_phrases
+        
         # Validacion y generacion seccion items
         status_items = self.items()
         if status_items == False:
@@ -374,6 +379,52 @@ class ElectronicCreditNote:
 
         except:
             return False, 'Error no se puede completar la operacion por: '+str(frappe.get_traceback())
+    def phrases(self):
+        """
+        debe indicarse los regímenes y textos especiales que son requeridos en los DTE,
+        de acuerdo a la afiliación del contribuyente y tipo de operación.
+        Returns:
+            boolean: True/False
+        """
+
+        try:
+            # Obtiene el nombre de la combinacion configurada para la serie
+            combination_name = frappe.db.get_value('Configuracion Series FEL',
+                                                   {'parent': self.__config_name,
+                                                    'serie': self.__naming_serie}, 'combination_of_phrases')
+
+            # Obtiene las combinaciones de frases a usar en la factura
+            phrases_to_doc = frappe.db.get_values('FEL Combinations', filters={'parent': combination_name},
+                                                  fieldname=['tipo_frase', 'codigo_de_escenario'], as_dict=1)
+
+            if not phrases_to_doc:
+                return False, 'Ocurrio un problema, no se encontro ninguna combinación de frases para generar la factura \
+                              por favor cree una y configurela en Configuración Factura Electrónica'
+
+            # Si hay mas de una frase
+            if len(phrases_to_doc) > 1:
+                self.__d_frases = {
+                    "dte:Frase": []
+                }
+
+                for f in phrases_to_doc:
+                    self.__d_frases["dte:Frase"].append({
+                        "@CodigoEscenario": f.get("codigo_de_escenario"),
+                        "@TipoFrase": f.get("tipo_frase")[:1]
+                    })
+            # Si solo hay una frase
+            else:
+                self.__d_frases = {
+                    "dte:Frase": {
+                        "@CodigoEscenario": phrases_to_doc[0].get("codigo_de_escenario"),
+                        "@TipoFrase": phrases_to_doc[0].get("tipo_frase")[:1]
+                    }
+                }
+
+            return True, 'OK'
+
+        except:
+            return False, 'Error, no se puedo obtener valor de Codigo Escenario y Tipo Frase'
 
     def items(self):
         """
