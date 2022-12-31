@@ -31,30 +31,19 @@ jenv = {
 # en-US: Includes the .js, .css in the desk.html header, for automatic loading.
 # include js, css files in header of desk.html
 # app_include_css = "/assets/factura_electronica/css/factura_electronica.css"
-app_include_js = ["/assets/factura_electronica/js/facelec.min.js", 
-                  "/assets/factura_electronica/js/facelec.js",
-                  "/assets/factura_electronica/js/delivery_note.js",
-                  "/assets/factura_electronica/js/sales_quotation.js",
-                  "/assets/factura_electronica/js/purchase_invoice.js",
-                  "/assets/factura_electronica/js/purchase_order.js",
-                  "/assets/factura_electronica/js/supplier_quotation.js",
-                  "/assets/factura_electronica/js/goalSeek.js",
-                  "/assets/factura_electronica/js/sales_invoice_actions.js",
-                  "/assets/factura_electronica/js/purchase_receipt.js",
-                  "/assets/factura_electronica/js/sales_order.js",
-                  "/assets/factura_electronica/js/sales_invoice.js"]
-web_include_js = ["/assets/factura_electronica/js/facelec.min.js", 
-                  "/assets/factura_electronica/js/facelec.js",
-                  "/assets/factura_electronica/js/delivery_note.js",
-                  "/assets/factura_electronica/js/sales_quotation.js",
-                  "/assets/factura_electronica/js/purchase_invoice.js",
-                  "/assets/factura_electronica/js/purchase_order.js",
-                  "/assets/factura_electronica/js/supplier_quotation.js",
-                  "/assets/factura_electronica/js/goalSeek.js",
-                  "/assets/factura_electronica/js/sales_invoice_actions.js",
-                  "/assets/factura_electronica/js/purchase_receipt.js",
-                  "/assets/factura_electronica/js/sales_order.js",
-                  "/assets/factura_electronica/js/sales_invoice.js"]
+app_include_js = "/factura_electronica/public/js/facelec.min.js" 
+app_include_js =  "/assets/factura_electronica/js/facelec.js"
+app_include_js =  "/assets/factura_electronica/js/delivery_note.js"
+app_include_js =  "/assets/factura_electronica/js/sales_quotation.js"
+app_include_js =  "/assets/factura_electronica/js/purchase_invoice.js"
+app_include_js =  "/assets/factura_electronica/js/purchase_order.js"
+app_include_js =  "/assets/factura_electronica/js/supplier_quotation.js"
+app_include_js =  "/assets/factura_electronica/js/goalSeek.js"
+app_include_js =  "/assets/factura_electronica/js/sales_invoice_actions.js"
+app_include_js =  "/assets/factura_electronica/js/purchase_receipt.js"
+app_include_js =  "/assets/factura_electronica/js/sales_order.js"
+app_include_js =  "/assets/factura_electronica/js/sales_invoice.js"
+
 
 # include js, css files in header of web template
 # web_include_css = "/assets/factura_electronica/css/factura_electronica.css"
