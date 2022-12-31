@@ -42,8 +42,7 @@ app_include_js = ["/assets/factura_electronica/js/facelec.min.js",
                   "/assets/factura_electronica/js/sales_invoice_actions.js",
                   "/assets/factura_electronica/js/purchase_receipt.js",
                   "/assets/factura_electronica/js/sales_order.js",
-                  "/assets/factura_electronica/js/sales_invoice.js",
-                  "/assets/factura_electronica/js/qrcode.min.js"]
+                  "/assets/factura_electronica/js/sales_invoice.js"]
 web_include_js = ["/assets/factura_electronica/js/facelec.min.js", 
                   "/assets/factura_electronica/js/facelec.js",
                   "/assets/factura_electronica/js/delivery_note.js",
@@ -55,8 +54,7 @@ web_include_js = ["/assets/factura_electronica/js/facelec.min.js",
                   "/assets/factura_electronica/js/sales_invoice_actions.js",
                   "/assets/factura_electronica/js/purchase_receipt.js",
                   "/assets/factura_electronica/js/sales_order.js",
-                  "/assets/factura_electronica/js/sales_invoice.js",
-                  "/assets/factura_electronica/js/qrcode.min.js"]
+                  "/assets/factura_electronica/js/sales_invoice.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/factura_electronica/css/factura_electronica.css"
