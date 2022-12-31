@@ -12,17 +12,7 @@ app_icon = "octicon octicon-desktop-download"
 app_color = "#112C5E"
 app_email = "m.monroyc22@gmail.com"
 app_license = "GNU General Public License (v3)"
-app_include_js = {"public/js/facelec.js",
-        "public/js/sales_invoice.js",
-        "public/js/delivery_note.js",
-        "public/js/sales_order.js",
-        "public/js/sales_quotation.js",
-        "public/js/purchase_invoice.js",
-        "public/js/purchase_receipt.js",
-        "public/js/purchase_order.js",
-        "public/js/supplier_quotation.js",
-        "public/js/goalSeek.js",
-        "public/js/sales_invoice_actions.js"}
+
 # es-GT: Indica la existencia de campos a la medida para agregar a la instalación estandar de ERPNext
 # en-US: Indicates the existense of custom fields to add to existing ERPNext installation
 # fixtures = ["Custom Field", "Tax Category"]
@@ -41,7 +31,19 @@ jenv = {
 # en-US: Includes the .js, .css in the desk.html header, for automatic loading.
 # include js, css files in header of desk.html
 # app_include_css = "/assets/factura_electronica/css/factura_electronica.css"
-app_include_js = ["/assets/factura_electronica/js/facelec.min.js", "/assets/factura_electronica/js/qrcode.min.js"]
+app_include_js = ["/assets/factura_electronica/js/facelec.min.js", 
+                  "/assets/factura_electronica/js/facelec.js",
+                  "/assets/factura_electronica/js/delivery_note.js",
+                  "/assets/factura_electronica/js/sales_quotation.js",
+                  "/assets/factura_electronica/js/purchase_invoice.js",
+                  "/assets/factura_electronica/js/purchase_order.js",
+                  "/assets/factura_electronica/js/supplier_quotation.js",
+                  "/assets/factura_electronica/js/goalSeek.js",
+                  "/assets/factura_electronica/js/sales_invoice_actions.js",
+                  "/assets/factura_electronica/js/purchase_receipt.js",
+                  "/assets/factura_electronica/js/sales_order.js",
+                  "/assets/factura_electronica/js/sales_invoice.js",
+                  "/assets/factura_electronica/js/qrcode.min.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/factura_electronica/css/factura_electronica.css"
