@@ -32,7 +32,7 @@ jenv = {
 # include js, css files in header of desk.html
 # app_include_css = "/assets/factura_electronica/css/factura_electronica.css"
 app_include_js = ["/assets/factura_electronica/js/facelec.min.js", "/assets/factura_electronica/js/public/facelec.js",
-        "/apps/factura_electronica_gt/factura_electronica/js/public/sales_invoice.js",
+        "/assets/factura_electronica/js/sales_invoice.js",
         "/assets/factura_electronica/js/public/delivery_note.js",
         "/assets/factura_electronica/js/public/sales_order.js",
         "/assets/factura_electronica/js/public/sales_quotation.js",
