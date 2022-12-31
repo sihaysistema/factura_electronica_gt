@@ -12,6 +12,17 @@ app_icon = "octicon octicon-desktop-download"
 app_color = "#112C5E"
 app_email = "m.monroyc22@gmail.com"
 app_license = "GNU General Public License (v3)"
+app_include_js = {"public/js/facelec.js",
+        "public/js/sales_invoice.js",
+        "public/js/delivery_note.js",
+        "public/js/sales_order.js",
+        "public/js/sales_quotation.js",
+        "public/js/purchase_invoice.js",
+        "public/js/purchase_receipt.js",
+        "public/js/purchase_order.js",
+        "public/js/supplier_quotation.js",
+        "public/js/goalSeek.js",
+        "public/js/sales_invoice_actions.js"}
 # es-GT: Indica la existencia de campos a la medida para agregar a la instalación estandar de ERPNext
 # en-US: Indicates the existense of custom fields to add to existing ERPNext installation
 # fixtures = ["Custom Field", "Tax Category"]
