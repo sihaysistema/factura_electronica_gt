@@ -572,8 +572,7 @@ function pdf_electronic_doc(frm) {
      window.open(
        "https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" + frm.doc.numero_autorizacion_fel
      );
-   })
-   .addClass("btn-primary");
+   });
 }
 
 /**
