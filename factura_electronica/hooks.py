@@ -17,10 +17,10 @@ app_license = "GNU General Public License (v3)"
 # fixtures = ["Custom Field", "Tax Category"]
 
 fixtures = fill_fixtures()
-jenv = {
+jinja = {
     "methods": [
-        'currency_in_words:factura_electronica.currency_in_words',
-        'fel_qr_svg:factura_electronica.fel.qrcode.create_fel_svg_qrcode'
+        'factura_electronica.currency_in_words',
+        'factura_electronica.fel.qrcode.create_fel_svg_qrcode'
     ]
 }
 
