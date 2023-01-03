@@ -3,8 +3,8 @@
 * For license information, please see license.txt
 */
 
-import { valNit } from "facelec.js";
-import { goalSeek } from "goalSeek.js";
+import { valNit } from "./facelec.js";
+import { goalSeek } from "./goalSeek.js";
 
 /* Purchase Invoice (Factura de Compra) ------------------------------------------------------------------------------------------------------- */
 
