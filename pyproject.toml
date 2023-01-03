@@ -1,0 +1,13 @@
+[project]
+name = "factura_electronica"
+authors = [
+    { name = "SHS", email = "m.monroy123ap@gmail.com"}
+]
+description = "Aplicacion para la generacion de facturas electronicas en guatemala."
+requires-python = ">=3.10"
+readme = "README.md"
+dynamic = ["version"]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
