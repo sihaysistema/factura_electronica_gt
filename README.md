@@ -1,6 +1,6 @@
 **es-GT:**
 
-**Disponible para `version-13` de Frappe/ERPNext**
+**Disponible para `version-14` de Frappe/ERPNext**
 
 ## App Factura Electronica
 
@@ -30,9 +30,6 @@ For installation details, features and more information please visit the [wiki](
 **es-GT**
 ## Instalación
 
-**en-US:**
-## Installation
-Currently, this application is only available for self-deployed instances of ERPNext. Source code will be proposed for merging into the core in a more generalized manner for supporting other countries regional requirements by mid-jun 2018.
 
 ## Disclaimer
 > **Nos nos hacemos responsables por el mal manejo o configuracion del app, uselo bajo su propio riesgo. Recuerde primero probar el app en un ambiente de pruebas.**
