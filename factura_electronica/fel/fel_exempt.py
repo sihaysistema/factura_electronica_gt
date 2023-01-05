@@ -439,7 +439,7 @@ class ExemptElectronicInvoice:
                                                         'facelec_is_good', 'factelecis_fuel', 'facelec_si_is_exempt',
                                                         'facelec_other_tax_amount', 'facelec_three_digit_uom_code',
                                                         'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
-                                                        'facelec_gt_tax_net_services_amt'], order_by='idx', as_dict=True)
+                                                        'facelec_gt_tax_net_services_amt'], order_by='-idx', as_dict=True)
 
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
