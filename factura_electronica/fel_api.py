@@ -925,8 +925,7 @@ def is_valid_to_fel(doctype, docname):
     if (docinv.doctype == 'Sales Invoice') and (docinv.docstatus == 1) and (docinv.status not in status_list) and \
         (not docinv.is_it_an_international_invoice):
         # Validacion de serie
-        val_serie_fel = frappe.db.exists('Configuracion Series FEL', {'parent': config_name, 'serie': docinv.naming_series,
-                                                                      'codigo_incoterm': ['==', '']})
+        val_serie_fel = frappe.db.exists('Configuracion Series FEL', {'parent': config_name, 'serie': docinv.naming_series})
         active = frappe.db.exists('Configuracion Factura Electronica', {'name': config_name, 'factura_venta_fel': 1})
 
         if val_serie_fel and active:

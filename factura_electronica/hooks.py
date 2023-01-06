@@ -17,10 +17,10 @@ app_license = "GNU General Public License (v3)"
 # fixtures = ["Custom Field", "Tax Category"]
 
 fixtures = fill_fixtures()
-jenv = {
+jinja = {
     "methods": [
-        'currency_in_words:factura_electronica.currency_in_words',
-        'fel_qr_svg:factura_electronica.fel.qrcode.create_fel_svg_qrcode'
+        'factura_electronica.currency_in_words',
+        'factura_electronica.fel.qrcode.create_fel_svg_qrcode'
     ]
 }
 
@@ -30,7 +30,7 @@ jenv = {
 # en-US: Includes the .js, .css in the desk.html header, for automatic loading.
 # include js, css files in header of desk.html
 # app_include_css = "/assets/factura_electronica/css/factura_electronica.css"
-app_include_js = ["/assets/factura_electronica/js/facelec.min.js", "/assets/factura_electronica/js/qrcode.min.js"]
+app_include_js = ["factura_electronica.bundle.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/factura_electronica/css/factura_electronica.css"

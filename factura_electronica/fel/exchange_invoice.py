@@ -436,7 +436,7 @@ class SalesExchangeInvoice:
                                                         'facelec_other_tax_amount', 'facelec_three_digit_uom_code',
                                                         'facelec_gt_tax_net_fuel_amt', 'facelec_gt_tax_net_goods_amt',
                                                         'facelec_gt_tax_net_services_amt', 'facelec_is_discount',
-                                                        'facelec_tax_rate_per_uom'], order_by='idx', as_dict=True)
+                                                        'facelec_tax_rate_per_uom'], order_by='idx asc', as_dict=True)
 
             # Configuracion para obtener descripcion de item de Item Name o de Descripcion (segun user)
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')

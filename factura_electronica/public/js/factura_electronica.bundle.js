@@ -1,0 +1,10 @@
+import './facelec';
+import './sales_invoice';
+import './sales_order';
+import './sales_quotation';
+import './purchase_invoice';
+import './purchase_receipt';
+import './purchase_order';
+import './supplier_quotation';
+import './goalSeek';
+import './sales_invoice_actions';
