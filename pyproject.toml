@@ -11,6 +11,12 @@ dependencies = [
     # Core dependencies
     "numinwords",
     "numpy",
+    "pandas",
+    "reportlab",
+    "frappe",
+    "xmltodict",
+    "pyopenssl",
+    "xlsxwriter",
 ]
 
 
