@@ -9,7 +9,8 @@ readme = "README.md"
 dynamic = ["version"]
 dependencies = [
     # Core dependencies
-    "numinwords"
+    "numinwords",
+    "numpy",
 ]
 
 
