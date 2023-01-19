@@ -14,7 +14,7 @@ from xml.sax.saxutils import escape
 import frappe
 import pandas as pd
 from frappe import _
-from frappe.core.doctype.file.file import create_new_folder
+# from frappe.core.doctype.file.file import create_new_folder
 # from frappe.model.naming import make_autoname
 from frappe.utils import cint, flt, get_site_name, now
 from frappe.utils.file_manager import save_file
@@ -205,8 +205,8 @@ def create_folder(folder, parent="Home"):
     """Make sure the folder exists and return it's name."""
     new_folder_name = "/".join([parent, folder])
 
-    if not frappe.db.exists("File", new_folder_name):
-        create_new_folder(folder, parent)
+   # if not frappe.db.exists("File", new_folder_name):
+      #  create_new_folder(folder, parent)
 
     return new_folder_name
 
