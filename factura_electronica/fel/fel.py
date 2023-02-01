@@ -1054,6 +1054,15 @@ class ElectronicInvoice:
                     frappe.db.sql('''UPDATE `tabRepost Item Valuation` SET voucher_no=%(name)s
                                      WHERE voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
 
+                # UPDATE Repost Item valuations
+                if frappe.db.exists('Payment Ledger Entry', {'voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabPayment Ledger Entry` SET voucher_no=%(name)s
+                                     WHERE voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+                # UPDATE Repost Item valuations
+                if frappe.db.exists('Payment Ledger Entry', {'against_voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabPayment Ledger Entry` SET against_voucher_no=%(name)s
+                                     WHERE against_voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+
                 frappe.db.commit()
 
             except:
