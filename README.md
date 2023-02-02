@@ -32,7 +32,7 @@ For installation details, features and more information please visit the [wiki](
 
 
 ## Disclaimer
-> **Nos nos hacemos responsables por el mal manejo o configuracion del app, uselo bajo su propio riesgo. Recuerde primero probar el app en un ambiente de pruebas.**
+> **No nos hacemos responsables por el mal manejo o configuracion del app, uselo bajo su propio riesgo. Recuerde primero probar el app en un ambiente de pruebas.**
 
 
 ## Electronic Invoice App
