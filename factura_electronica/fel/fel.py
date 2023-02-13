@@ -222,7 +222,8 @@ class ElectronicInvoice:
                                                    {'name': self.__config_name}, 'nombre_empresa_prueba')
             # Aplica Si los datos son para producción
             else:
-                nom_comercial = dat_compania[0]['company_name']  # must be company_name, do not use trade name
+                nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
+                                                   {'name': self.__config_name}, 'nombre_Comercial')  # must be company_name, do not use trade name
                 #Nombre Emisor
                 nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'nombre_Emisor')
 
@@ -230,8 +231,7 @@ class ElectronicInvoice:
                 if frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'is_individual'):
                     nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'facelec_name_of_owner')
                 else:
-                    nombre_emisor = dat_compania[0]['company_name']
-
+                    nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'nombre_Emisor')
             # Asignacion data
             self.__d_emisor = {
                 "@AfiliacionIVA": frappe.db.get_value('Configuracion Factura Electronica',
