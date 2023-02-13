@@ -18,6 +18,7 @@
   "usar_datos_prueba",
   "nombre_empresa_prueba",
   "nombre_Emisor",
+  "nombre_Comercial",
   "documentos_electronicos_section",
   "factura_venta_fel",
   "nota_credito_fel",
@@ -423,11 +424,16 @@
    "fieldtype": "Data",
    "label": "Nombre empresa prueba"
   },
-  {
+  {"description": "Nombre del Emisor - Nombre requerido INFILE",
     "fieldname": "nombre_Emisor",
     "fieldtype": "Data",
     "label": "Nombre emisor"
    },
+   {"description": "Nombre Comercial",
+   "fieldname": "nombre_Comercial",
+   "fieldtype": "Data",
+   "label": "Nombre Comercial"
+  },
   {
    "description": "FEL: URL para anular documentos",
    "fieldname": "url_de_anulacion",
