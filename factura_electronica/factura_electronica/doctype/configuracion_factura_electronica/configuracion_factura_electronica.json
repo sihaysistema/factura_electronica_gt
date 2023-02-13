@@ -17,6 +17,7 @@
   "facelec_name_of_owner",
   "usar_datos_prueba",
   "nombre_empresa_prueba",
+  "nombre_Emisor",
   "documentos_electronicos_section",
   "factura_venta_fel",
   "nota_credito_fel",
@@ -422,6 +423,11 @@
    "fieldtype": "Data",
    "label": "Nombre empresa prueba"
   },
+  {
+    "fieldname": "nombre_Emisor",
+    "fieldtype": "Data",
+    "label": "Nombre emisor"
+   },
   {
    "description": "FEL: URL para anular documentos",
    "fieldname": "url_de_anulacion",
