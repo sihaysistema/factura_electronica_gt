@@ -220,23 +220,18 @@ class ElectronicInvoice:
                                   {'name': self.__config_name}, 'usar_datos_prueba') == 1:
                 nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
                                                    {'name': self.__config_name}, 'nombre_empresa_prueba')
-
-                # Si la compania es de un propietario
-                if frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'is_individual'):
-                    nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'facelec_name_of_owner')
-                else:
-                    nombre_emisor = nom_comercial
-
             # Aplica Si los datos son para producción
             else:
-                nom_comercial = dat_compania[0]['company_name']  # must be company_name, do not use trade name
+                nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
+                                                   {'name': self.__config_name}, 'nombre_Comercial')  # must be company_name, do not use trade name
+                #Nombre Emisor
+                nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'nombre_Emisor')
 
                 # Si la compania es de un propietario
                 if frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'is_individual'):
                     nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'facelec_name_of_owner')
                 else:
-                    nombre_emisor = dat_compania[0]['company_name']
-
+                    nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'nombre_Emisor')
             # Asignacion data
             self.__d_emisor = {
                 "@AfiliacionIVA": frappe.db.get_value('Configuracion Factura Electronica',
@@ -1048,6 +1043,20 @@ class ElectronicInvoice:
                 if frappe.db.exists('Invoice Declaration', {'link_name': serie_fac_original, 'link_doctype': 'Sales Invoice'}):
                     frappe.db.sql('''UPDATE `tabInvoice Declaration` SET link_name=%(name)s
                                      WHERE link_name=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+                                     
+                 # UPDATE Repost Item valuations
+                if frappe.db.exists('Repost Item Valuation', {'voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabRepost Item Valuation` SET voucher_no=%(name)s
+                                     WHERE voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+
+                # UPDATE Repost Item valuations
+                if frappe.db.exists('Payment Ledger Entry', {'voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabPayment Ledger Entry` SET voucher_no=%(name)s
+                                     WHERE voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+                # UPDATE Repost Item valuations
+                if frappe.db.exists('Payment Ledger Entry', {'against_voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabPayment Ledger Entry` SET against_voucher_no=%(name)s
+                                     WHERE against_voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
 
                 frappe.db.commit()
 

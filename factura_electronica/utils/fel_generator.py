@@ -272,8 +272,10 @@ class FacturaElectronicaFEL:
                                                              {'name': self.nombre_config}, 'codigo_establecimiento'),  #"1",
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
                 "@NITEmisor": (dat_compania[0]['nit_face_company']).replace('-', ''),
-                "@NombreComercial": dat_compania[0]['company_name'],
-                "@NombreEmisor": dat_compania[0]['company_name'],
+                "@NombreComercial": frappe.db.get_value('Configuracion Factura Electronica',
+                                                             {'name': self.__config_name}, 'nombre_Comercial'),
+                "@NombreEmisor": frappe.db.get_value('Configuracion Factura Electronica',
+                                                             {'name': self.__config_name}, 'nombre_Emisor'),
                 "dte:DireccionEmisor": {
                     "dte:Direccion": dat_direccion[0]['address_line1'],
                     "dte:CodigoPostal": dat_direccion[0]['pincode'],
