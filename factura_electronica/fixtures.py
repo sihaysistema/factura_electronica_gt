@@ -44,6 +44,7 @@ def fill_fixtures():
                     "Delivery Note-shs_dn_nit",
                     "Sales Invoice-es_nota_de_debito",
                     "Sales Invoice-es_extempta",
+                    "Sales Invoice-es_dpi",
                     "Item-facelec_three_digit_uom",
                     "Sales Invoice-facelec_factura_asociada",
                     "Customer-nit_face_customer",
