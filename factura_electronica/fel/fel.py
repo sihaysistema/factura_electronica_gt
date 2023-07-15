@@ -338,6 +338,21 @@ class ElectronicInvoice:
                             "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
                         }
                     }
+              # aqui va el if del CUI. tengo que averiguar como evaluar un check en la factura per se. lo importante es que el __d_receptor este con el switch TipoEspecial="CUI"
+              #  if: 
+              #      self.__d_receptor = {
+              #          "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
+              #          "@IDReceptor": str((self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper().strip(),  # NIT
+              #          "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+              #          "@Tipoespecial": str('CUI'), 
+              #          "dte:DireccionReceptor": {
+              #              "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
+              #              "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
+               #             "dte:Municipio": dat_direccion[0].get('county', datos_default.get('municipio')),
+               #             "dte:Departamento": dat_direccion[0].get('state', datos_default.get('departamento')),
+              #              "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
+              #          }
+              #      }
                 else:
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
