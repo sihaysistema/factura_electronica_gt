@@ -53,6 +53,7 @@ class ElectronicInvoice:
                         "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 2
                         "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",                       
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@Version": "0.1",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
