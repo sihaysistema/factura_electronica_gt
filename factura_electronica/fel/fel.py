@@ -344,7 +344,7 @@ class ElectronicInvoice:
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
                         "@IDReceptor": str((self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper().strip(),  # NIT
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
-                        "@Tipoespecial": str('CUI'), 
+                        "@TipoEspecial": str('CUI'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
