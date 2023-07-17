@@ -239,7 +239,7 @@ frappe.ui.form.on("Sales Order", {
     // es-GT: Este muestra el IVA que se calculo por medio de nuestra aplicación.
     var discount_amount_net_value = frm.doc.discount_amount / (1 + cur_frm.doc.taxes[0].rate / 100);
 
-    if (discount_amount_net_value == NaN || discount_amount_net_value == undefined) {
+    if (isNaN(discount_amount_net_value) || discount_amount_net_value == undefined) {
     } else {
       discount_amount_tax_value = discount_amount_net_value * (cur_frm.doc.taxes[0].rate / 100);
       frm.doc.shs_so_total_iva = frm.doc.shs_so_total_iva - discount_amount_tax_value;

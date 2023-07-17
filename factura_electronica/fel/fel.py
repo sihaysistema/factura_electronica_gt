@@ -51,8 +51,9 @@ class ElectronicInvoice:
                 self.__base_peticion = {
                     "dte:GTDocumento": {
                         "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 2
-                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
+                        "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",                       
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@Version": "0.1",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
@@ -330,6 +331,20 @@ class ElectronicInvoice:
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
                         "@IDReceptor": str((self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper().strip(),  # NIT => CF
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "dte:DireccionReceptor": {
+                            "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
+                            "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
+                            "dte:Municipio": dat_direccion[0].get('county', datos_default.get('municipio')),
+                            "dte:Departamento": dat_direccion[0].get('state', datos_default.get('departamento')),
+                            "dte:Pais": frappe.db.get_value('Country', {'name': dat_direccion[0]['country']}, 'code').upper() or 'GT'
+                        }
+                    }
+                elif frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'es_dpi') == True:
+                    self.__d_receptor = {
+                        "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
+                        "@IDReceptor": str((self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper().strip(),  # NIT
+                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@TipoEspecial": str('CUI'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
