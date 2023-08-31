@@ -37,7 +37,6 @@ def fill_fixtures():
                     "Purchase Order-facelec_po_nit",
                     "Supplier Quotation-shs_spq_nit",
                     "Purchase Invoice-es_factura_especial",
-                    "Sales Invoice-appointment",
                     "Sales Taxes and Charges-taxable_unit_code",
                     "Purchase Receipt-facelec_nit_prproveedor",
                     "Sales Order-shs_so_nit",
