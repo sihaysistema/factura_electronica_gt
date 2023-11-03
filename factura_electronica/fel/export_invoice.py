@@ -306,8 +306,9 @@ class ExportInvoice:
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
                         # NIT => CF
-                        "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']), #(self.dat_fac[0]['nit_face_customer']).replace('/', ''),
+                        "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper().strip(), #(self.dat_fac[0]['nit_face_customer']).replace('/', ''),
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -320,8 +321,9 @@ class ExportInvoice:
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
                         # NIT
-                        "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']),  # str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),
+                        "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper().strip(),  # str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -340,7 +342,7 @@ class ExportInvoice:
                         # NIT => CF
                         "@IDReceptor": str((self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper().strip(),  # (self.dat_fac[0]['nit_face_customer']).replace('/', ''),
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
-                        "@Tipoespecial": str('EXT'), 
+                        "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
@@ -355,7 +357,7 @@ class ExportInvoice:
                         # NIT
                         "@IDReceptor": str((self.dat_fac[0]['nit_face_customer']).replace('/', '').replace('-', '')).upper().strip(),  # str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
-                        "@Tipoespecial": str('EXT'), 
+                        "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
