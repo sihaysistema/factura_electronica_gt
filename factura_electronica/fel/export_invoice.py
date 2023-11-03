@@ -244,7 +244,7 @@ class ExportInvoice:
                                                       {'name': self.__config_name}, 'afiliacion_iva'),
                 "@CodigoEstablecimiento": dat_direccion[0]['facelec_establishment'],
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
-                "@NITEmisor": str((dat_compania[0]['nit_face_company']).replace('-', '')).upper().strip(),
+                "@NITEmisor": str((dat_compania[0]['nit_face_company']),
                 "@NombreComercial": nom_comercial,
                 "@NombreEmisor": nombre_emisor,
                 "dte:DireccionEmisor": {
