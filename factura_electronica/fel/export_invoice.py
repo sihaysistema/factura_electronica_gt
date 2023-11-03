@@ -269,8 +269,6 @@ class ExportInvoice:
         """
         Validacion y generacion datos de Receptor (cliente)
 
-        NOTA: EN EL CASO DE CLIENTES EXPORTACION, SU NIT SE ESTABLECE COMO CF
-
         Returns:
             tuple: True/False, msj, msj
         """
