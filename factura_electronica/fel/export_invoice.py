@@ -306,7 +306,7 @@ class ExportInvoice:
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
                         # NIT => CF
-                        "@IDReceptor": str((self.dat_fac[0]['nit_face_customer']), #(self.dat_fac[0]['nit_face_customer']).replace('/', ''),
+                        "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']), #(self.dat_fac[0]['nit_face_customer']).replace('/', ''),
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
