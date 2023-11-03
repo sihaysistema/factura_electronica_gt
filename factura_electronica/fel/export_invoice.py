@@ -340,6 +340,7 @@ class ExportInvoice:
                         # NIT => CF
                         "@IDReceptor": 'CF',  # (self.dat_fac[0]['nit_face_customer']).replace('/', ''),
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@Tipoespecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
@@ -354,6 +355,7 @@ class ExportInvoice:
                         # NIT
                         "@IDReceptor": 'CF',  # str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@Tipoespecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
