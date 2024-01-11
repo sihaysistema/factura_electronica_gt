@@ -1,6 +1,6 @@
 **es-GT:**
 
-**Disponible para `version-14` de Frappe/ERPNext**
+**Disponible para `version-15` de Frappe/ERPNext**
 
 ## App Factura Electronica
 
