@@ -244,7 +244,7 @@ class ExportInvoice:
                                                       {'name': self.__config_name}, 'afiliacion_iva'),
                 "@CodigoEstablecimiento": dat_direccion[0]['facelec_establishment'],
                 "@CorreoEmisor": dat_direccion[0]['email_id'],
-                "@NITEmisor": str((dat_compania[0]['nit_face_company']).replace('-', '')).upper().strip(),
+                "@NITEmisor": dat_compania[0]['nit_face_company'],
                 "@NombreComercial": nom_comercial,
                 "@NombreEmisor": nombre_emisor,
                 "dte:DireccionEmisor": {
@@ -268,8 +268,6 @@ class ExportInvoice:
     def receiver(self):
         """
         Validacion y generacion datos de Receptor (cliente)
-
-        NOTA: EN EL CASO DE CLIENTES EXPORTACION, SU NIT SE ESTABLECE COMO CF
 
         Returns:
             tuple: True/False, msj, msj
@@ -308,8 +306,9 @@ class ExportInvoice:
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
                         # NIT => CF
-                        "@IDReceptor": 'CF', #(self.dat_fac[0]['nit_face_customer']).replace('/', ''),
+                        "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']), #(self.dat_fac[0]['nit_face_customer']).replace('/', ''),
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -322,8 +321,9 @@ class ExportInvoice:
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
                         # NIT
-                        "@IDReceptor": 'CF',  # str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),
+                        "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']),  # str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -340,8 +340,9 @@ class ExportInvoice:
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
                         # NIT => CF
-                        "@IDReceptor": 'CF',  # (self.dat_fac[0]['nit_face_customer']).replace('/', ''),
+                        "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']),  # (self.dat_fac[0]['nit_face_customer']).replace('/', ''),
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
@@ -354,8 +355,9 @@ class ExportInvoice:
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
                         # NIT
-                        "@IDReceptor": 'CF',  # str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),
+                        "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']),  # str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),
                         "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
@@ -722,7 +724,7 @@ class ExportInvoice:
 
         try:
             data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
-            nit_company = (str(frappe.db.get_value('Company', {'name': self.dat_fac[0]['company']}, 'nit_face_company')).replace('-', '')).upper().strip()
+            nit_company = frappe.db.get_value('Company', {'name': self.dat_fac[0]['company']}, 'nit_face_company')
 
             url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
             user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
@@ -984,6 +986,19 @@ class ExportInvoice:
                 if frappe.db.exists('Invoice Declaration', {'link_name': serie_fac_original, 'link_doctype': 'Sales Invoice'}):
                     frappe.db.sql('''UPDATE `tabInvoice Declaration` SET link_name=%(name)s
                                      WHERE link_name=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+                 # UPDATE Repost Item valuations
+                if frappe.db.exists('Repost Item Valuation', {'voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabRepost Item Valuation` SET voucher_no=%(name)s
+                                     WHERE voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+
+                # UPDATE Repost Item valuations
+                if frappe.db.exists('Payment Ledger Entry', {'voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabPayment Ledger Entry` SET voucher_no=%(name)s
+                                     WHERE voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+                # UPDATE Repost Item valuations
+                if frappe.db.exists('Payment Ledger Entry', {'against_voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabPayment Ledger Entry` SET against_voucher_no=%(name)s
+                                     WHERE against_voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})   
 
                 frappe.db.commit()
 
