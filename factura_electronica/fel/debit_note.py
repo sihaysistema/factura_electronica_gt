@@ -990,6 +990,19 @@ class ElectronicDebitNote:
                 if frappe.db.exists('Invoice Declaration', {'link_name': serie_fac_original, 'link_doctype': 'Purchase Invoice'}):
                     frappe.db.sql('''UPDATE `tabInvoice Declaration` SET link_name=%(name)s
                                      WHERE link_name=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+                                                      # UPDATE Repost Item valuations
+                if frappe.db.exists('Repost Item Valuation', {'voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabRepost Item Valuation` SET voucher_no=%(name)s
+                                     WHERE voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+
+                # UPDATE Repost Item valuations
+                if frappe.db.exists('Payment Ledger Entry', {'voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabPayment Ledger Entry` SET voucher_no=%(name)s
+                                     WHERE voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original})
+                # UPDATE Repost Item valuations
+                if frappe.db.exists('Payment Ledger Entry', {'against_voucher_no': serie_fac_original}):
+                    frappe.db.sql('''UPDATE `tabPayment Ledger Entry` SET against_voucher_no=%(name)s
+                                     WHERE against_voucher_no=%(serieFa)s''', {'name': serieFEL, 'serieFa': serie_fac_original}) 
 
                 frappe.db.commit()
 
