@@ -23,14 +23,6 @@ frappe.query_reports["GT Journal"] = {
             }
         },
         {
-            "fieldname":"tipo_poliza",
-            "label":__("Tipo Póliza"),
-            "fieldtype":"Link",
-            "options":"Tipo Poliza"
-            // "default":"",
-            // "reqd":1
-        },
-        {
             "fieldname":"from_date",
             "label":__("From Date"),
             "fieldtype":"Date",

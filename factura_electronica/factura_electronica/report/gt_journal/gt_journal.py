@@ -35,12 +35,6 @@ def get_columns():
             "width": 100
         },
         {
-            "label": _("Póliza"),
-            "fieldname": "poliza",
-            "fieldtype": "Data",
-            "width": 250
-        },
-        {
             "label": _("Explicación"),
             "fieldname": "explicacion",
             "fieldtype": "Data",
@@ -87,17 +81,8 @@ def get_all_data(filters):
     # --------- EMPTY ROW ----------
     data = []
 
-    if filters.tipo_poliza:  # Whether or not a filter is applied
-        journal_entries = frappe.db.sql('''SELECT name, total_debit, total_credit, posting_date, tipo_poliza
-                                        FROM `tabJournal Entry`
-                                        WHERE posting_date BETWEEN %(fecha_inicio)s
-                                        AND %(fecha_final)s AND company=%(compa)s AND tipo_poliza=%(tipo_poliza)s''',
-                                        {'fecha_inicio': str(filters.from_date),
-                                            'fecha_final': str(filters.to_date),
-                                            'compa': str(filters.company),
-                                            'tipo_poliza': str(filters.tipo_poliza)}, as_dict=True)
-    else:
-        journal_entries = frappe.db.sql('''SELECT name, total_debit, total_credit, posting_date, tipo_poliza
+    
+    journal_entries = frappe.db.sql('''SELECT name, total_debit, total_credit, posting_date
                                         FROM `tabJournal Entry`
                                         WHERE posting_date BETWEEN %(fecha_inicio)s
                                         AND %(fecha_final)s AND company=%(compa)s''',
@@ -108,8 +93,7 @@ def get_all_data(filters):
     # For each Journal Entry, obtain and prepare the accounts that belong to it.
     for je in journal_entries:
         data_d = {
-            "fecha": "<b>Tipo póliza</b>",
-            "poliza": "<b>{}</b>".format(je['tipo_poliza'] or '')
+            "fecha": "<b>Tipo póliza</b>"
         }
         data.append(data_d)
 

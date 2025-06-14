@@ -52,11 +52,7 @@
         {%= frappe.datetime.str_to_user(filters.to_date) %}
     </h5>
 
-    {% if (filters.tipo_poliza) { %}
-    <p class="customColor"> {%= __("Tipo póliza") %} <span>:</span> {%= filters.tipo_poliza %}</p>
-    {% } else { %}
-    <p class="customColor"> {%= __("Tipo póliza: TODOS LOS TIPOS") %}</p>
-    {% } %}
+ 
 
     <p class="customColor"> {%= __("Detalle: Sumario de pólizas por tipo") %} </p>
 

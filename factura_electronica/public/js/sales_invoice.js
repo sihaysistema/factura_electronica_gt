@@ -155,6 +155,14 @@ function btn_generator(frm) {
           pdf_credit_note(frm);
         }
       }
+      // SI APLICA EL ESCENARIO MUESTRA EL BOTON PARA Generación Nota abono Electronica
+      if (r.message[0] === "NABN" && r.message[1] === "valido" && r.message[2]) {
+        btn_nota_abono(frm);
+        if (frm.doc.numero_autorizacion_fel) {
+          cur_frm.clear_custom_buttons();
+          pdf_nota_abono(frm);
+        }
+      }
 
       // SI APLICA EL ESCENARIO MUESTRA EL BOTON PARA  Generación Factura Cambiaria
       if (r.message[0] === "FCAM" && r.message[1] === "valido" && r.message[2]) {
@@ -417,6 +425,69 @@ function btn_credit_note(frm) {
     })
     .addClass("btn-primary");
 }
+/**
+ * @summary Render para boton notas de abono electronicas
+ *
+ * @param {*} frm
+ */
+function btn_nota_abono(frm) {
+  cur_frm.clear_custom_buttons();
+  frm
+    .add_custom_button(__("GENERAR NOTA DE ABONO"), function () {
+      // Permite hacer confirmaciones
+      frappe.confirm(
+        __("Proceder con la generacion del la nota de abono?"),
+        () => {
+          let d = new frappe.ui.Dialog({
+            title: __("Generar nota de abono"),
+            fields: [
+              {
+                label: __("Inserte la razon del ajuste"),
+                fieldname: "reason_adjust",
+                fieldtype: "Data",
+                reqd: 1,
+              },
+            ],
+            primary_action_label: __("Submit"),
+            primary_action(values) {
+              let serie_de_factura = frm.doc.name;
+              // Guarda la url actual
+              let mi_url = window.location.href;
+              frappe.call({
+                method: "factura_electronica.fel_api.generate_nota_abono",
+                args: {
+                  invoice_code: frm.doc.name,
+                  naming_series: frm.doc.naming_series,
+                  reason: values.reason_adjust,
+                },
+                callback: function (data) {
+                  console.log(data.message);
+                  if (data.message[0] === true) {
+                    // Crea una nueva url con el nombre del documento actualizado
+                    let url_nueva = mi_url.replace(serie_de_factura, data.message[1]);
+                    // Asigna la nueva url a la ventana actual
+                    window.location.assign(url_nueva);
+                    // Recarga la pagina
+                    frm.reload_doc();
+                  }
+                },
+              });
+
+              d.hide();
+            },
+          });
+
+          d.show();
+        },
+        () => {
+          // action to perform if No is selected
+          // console.log('Selecciono NO')
+        }
+      );
+    })
+    .addClass("btn-primary");
+}
+//aqui termina la nota de abono
 
 /**
  * @summary Generador de boton para factura exenta de impuestos
@@ -623,6 +694,21 @@ function pdf_credit_note(frm) {
     .addClass("btn-primary");
 }
 
+/**
+ * @summary Generador de boton para visualizar pdf nota abono electronica
+ *
+ * @param {*} frm
+ */
+function pdf_nota_abono(frm) {
+  cur_frm.clear_custom_buttons();
+  frm
+    .add_custom_button(__("VER PDF NOTA ABONO ELECTRONICA"), function () {
+      window.open(
+        "https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid=" + frm.doc.numero_autorizacion_fel
+      );
+    })
+    .addClass("btn-primary");
+}
 /**
  * @summary Valida que existan los datos minimos necesarios para realizar calculos correctamente
  * @param {Object} frm
