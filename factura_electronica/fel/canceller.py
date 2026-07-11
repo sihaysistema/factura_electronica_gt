@@ -64,7 +64,8 @@ class CancelDocument:
             # Momento en que se esta anulando la factura
             issue_date = frappe.db.get_value('Envio FEL', {'name': self.info_invoice.numero_autorizacion_fel}, 'fecha')
 
-            self.__base_peticion = {
+            if frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'es_dpi') == 1:
+                self.__base_peticion = {
                 "dte:GTAnulacionDocumento": {
                     "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
                     "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
@@ -84,6 +85,31 @@ class CancelDocument:
                                 "@NITEmisor": self.tax_id_company,
                                 "@NumeroDocumentoAAnular": self.info_invoice.numero_autorizacion_fel
                             }
+                        }
+                    }
+                }
+            }
+            else:
+                self.__base_peticion = {
+                "dte:GTAnulacionDocumento": {
+                    "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
+                    "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                    "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
+                    "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                    "@Version": "0.1",
+                    "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                    "dte:SAT": {
+                        "dte:AnulacionDTE": {
+                            "@ID": "DatosCertificados",
+                            "dte:DatosGenerales": {
+                                "@FechaEmisionDocumentoAnular": str(issue_date),  # "2020-03-04T00:00:00-06:00",
+                                "@FechaHoraAnulacion": str(nowdate())+'T'+str(nowtime().rpartition('.')[0]),  # "2020-04-21T00:00:00-06:00",
+                                "@ID": "DatosAnulacion",
+                                "@IDReceptor": str(self.info_invoice.tax_id).replace('-', '').replace('/', '').upper().strip(),
+                                "@MotivoAnulacion": "Anulación",
+                                "@NITEmisor": self.tax_id_company,
+                                "@NumeroDocumentoAAnular": self.info_invoice.numero_autorizacion_fel
+                                }
                         }
                     }
                 }

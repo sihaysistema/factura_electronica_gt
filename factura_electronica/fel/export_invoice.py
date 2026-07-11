@@ -184,7 +184,7 @@ class ExportInvoice:
             # De la factura obtenemos la compañia y direccion compañia emisora
             self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__invoice_code},
                                                 fieldname=['company', 'company_address', 'nit_face_customer',
-                                                           'customer_address', 'customer_name', 'total_taxes_and_charges',
+                                                           'customer_address', 'customer', 'total_taxes_and_charges',
                                                            'grand_total', 'customer'], as_dict=1)
             if len(self.dat_fac) == 0:
                 return False, f'''No se encontro ninguna factura con serie: {self.__invoice_code}.\
@@ -307,7 +307,7 @@ class ExportInvoice:
                         "@CorreoReceptor": datos_default.get('email'),
                         # NIT => CF
                         "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']), #(self.dat_fac[0]['nit_face_customer']).replace('/', ''),
-                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@NombreReceptor": str(self.dat_fac[0]["customer"]),
                         "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
@@ -322,7 +322,7 @@ class ExportInvoice:
                         "@CorreoReceptor": datos_default.get('email'),
                         # NIT
                         "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']),  # str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),
-                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@NombreReceptor": str(self.dat_fac[0]["customer"]),
                         "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
@@ -341,7 +341,7 @@ class ExportInvoice:
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
                         # NIT => CF
                         "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']),  # (self.dat_fac[0]['nit_face_customer']).replace('/', ''),
-                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@NombreReceptor": str(self.dat_fac[0]["customer"]),
                         "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
@@ -356,7 +356,7 @@ class ExportInvoice:
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
                         # NIT
                         "@IDReceptor": str(self.dat_fac[0]['nit_face_customer']),  # str(self.dat_fac[0]['nit_face_customer']).replace('-', ''),
-                        "@NombreReceptor": str(self.dat_fac[0]["customer_name"]),
+                        "@NombreReceptor": str(self.dat_fac[0]["customer"]),
                         "@TipoEspecial": str('EXT'), 
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
@@ -619,10 +619,10 @@ class ExportInvoice:
                         "@xmlns:cex": "http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0",
                         "@Version": "1",
                         "@xsi:schemaLocation": "http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0 C:\\Users\\Nadir\\Desktop\\SAT_FEL_FINAL_V1\\Esquemas\\GT_Complemento_Exportaciones-0.1.0.xsd",
-                        "cex:NombreConsignatarioODestinatario": str(self.dat_fac[0]["customer_name"]),
+                        "cex:NombreConsignatarioODestinatario": str(self.dat_fac[0]["customer"]),
                         "cex:DireccionConsignatarioODestinatario": str(dat_direccion[0].get('address_line1'))[:70],  # solo acepta 70 digitos
                         "cex:CodigoConsignatarioODestinatario": codigo_consignatario_comprador,
-                        "cex:NombreComprador": str(self.dat_fac[0]["customer_name"]),
+                        "cex:NombreComprador": str(self.dat_fac[0]["customer"]),
                         "cex:CodigoComprador": codigo_comprador,
                         "cex:OtraReferencia": "EXPORTACION",
                         "cex:INCOTERM": codigo_incoterm,

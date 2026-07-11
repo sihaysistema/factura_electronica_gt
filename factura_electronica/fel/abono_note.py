@@ -32,7 +32,9 @@ class ElectronicAbonoNote:
             items (list): Lista de items
         """
         self.__actual_inv_name = actual_inv_name
+        self.__inv_credit_note = actual_inv_name
         self.__invoice_code = invoice_code  # HACE REFERENCIA A LA FACT FEL
+        self.__config_name = invoice_code # IN FEL API THIS ARG IS THE CONFIG NAME
         self.__naming_serie = naming_series
         self.__log_error = []
         self.__precision = get_currency_precision()
@@ -112,7 +114,6 @@ class ElectronicAbonoNote:
             self.__d_emisor = {
                 "@AfiliacionIVA": "GEN",
                 "@CodigoEstablecimiento": dat_direccion[0]['facelec_establishment'],
-                "@CorreoEmisor": dat_direccion[0]['email_id'],
                 "@NITEmisor": str((dat_compania[0]['nit_face_company']).replace('-', '')).upper().strip(),
                 "@NombreComercial": nom_comercial,
                 "@NombreEmisor": nombre_emisor,
@@ -139,31 +140,87 @@ class ElectronicAbonoNote:
 
         # Intentara obtener data de direccion cliente
         try:
-            dat_direccion = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['customer_address']},
-                                                 fieldname=['address_line1', 'email_id', 'pincode',
-                                                            'state', 'city', 'country'], as_dict=1)    
-        # Datos del receptor
+            # Datos del receptor
             self.receptor_data = frappe.db.get_values('Address', filters={'name': self.dat_fac[0]['customer_address']},
                                                  fieldname=['address_line1', 'email_id', 'pincode',
                                                             'state', 'city', 'country'], as_dict=1)
-            # NOTE: se quitara esta validacion para permitir usar valores default en caso no exista una direccion
-            # o campos especificacion de direccion
-            # if len(dat_direccion) == 0:
-            #     return False, f'''No se encontro ninguna direccion para el cliente {self.dat_fac[0]["customer_name"]}.\
-            #                       Por favor asigna un direccion y vuelve a intentarlo'''
 
-            # # Validacion data direccion cliente
-            # for dire in dat_direccion[0]:
-            #     if dat_direccion[0][dire] is None or dat_direccion[0][dire] is '':
-            #         return False, '''No se puede completar la operacion ya que el campo {} de la direccion del cliente {} no\
-            #                          tiene data, por favor asignarle un valor e intentar de nuevo \
-            #                       '''.format(str(dire), self.dat_fac[0]["customer_name"])
+            if len(self.receptor_data) == 0:
+                direccion = "CIUDAD"
+                codigo_postal = "01001"
+                municipio = "GUATEMALA"
+                departamento = "GUATEMALA"
+                pais = "GT"
+            else:
+                rec_data = self.receptor_data[0]
+                direccion = rec_data.get('address_line1') or "CIUDAD"
+                codigo_postal = rec_data.get('pincode') or "01001"
+                municipio = rec_data.get('city') or "GUATEMALA"
+                departamento = rec_data.get('state') or "GUATEMALA"
+                pais_code = frappe.db.get_value('Country', {'name': rec_data.get('country')}, 'code') if rec_data.get('country') else "GT"
+                pais = pais_code.upper() if pais_code else "GT"
 
-        # Items de la nota
+            nit_receptor = str(self.dat_fac[0].get('nit_face_customer', 'CF')).replace('/', '').replace('-', '').upper().strip()
+            if not nit_receptor:
+                nit_receptor = "CF"
+
+            self.__d_receptor = {
+                "@IDReceptor": nit_receptor,
+                "@NombreReceptor": self.dat_fac[0]['customer_name'],
+                "dte:DireccionReceptor": {
+                    "dte:Direccion": direccion,
+                    "dte:CodigoPostal": codigo_postal,
+                    "dte:Municipio": municipio,
+                    "dte:Departamento": departamento,
+                    "dte:Pais": pais
+                }
+            }
+
             return True, 'OK'
 
         except:
-            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.__inv_credit_note, str(frappe.get_traceback()))
+            return False, 'No se pudo obtener data de los items en la factura {}, Error: {}'.format(self.__actual_inv_name, str(frappe.get_traceback()))
+
+    def phrases(self):
+        """
+        debe indicarse los regímenes y textos especiales que son requeridos en los DTE,
+        de acuerdo a la afiliación del contribuyente y tipo de operación.
+        Returns:
+            boolean: True/False
+        """
+        try:
+            combination_name = frappe.db.get_value('Configuracion Series FEL',
+                                                   {'parent': self.__config_name,
+                                                    'serie': self.__naming_serie}, 'combination_of_phrases')
+
+            phrases_to_doc = frappe.db.get_values('FEL Combinations', filters={'parent': combination_name},
+                                                  fieldname=['tipo_frase', 'codigo_de_escenario'], as_dict=1)
+
+            if not phrases_to_doc:
+                return False, 'Ocurrio un problema, no se encontro ninguna combinación de frases para generar la factura \
+                              por favor cree una y configurela en Configuración Factura Electrónica'
+
+            if len(phrases_to_doc) > 1:
+                self.__d_frases = {
+                    "dte:Frase": []
+                }
+                for f in phrases_to_doc:
+                    self.__d_frases["dte:Frase"].append({
+                        "@CodigoEscenario": f.get("codigo_de_escenario"),
+                        "@TipoFrase": f.get("tipo_frase")[:1]
+                    })
+            else:
+                self.__d_frases = {
+                    "dte:Frase": {
+                        "@CodigoEscenario": phrases_to_doc[0].get("codigo_de_escenario"),
+                        "@TipoFrase": phrases_to_doc[0].get("tipo_frase")[:1]
+                    }
+                }
+
+            return True, 'OK'
+
+        except:
+            return False, 'Error, no se puedo obtener valor de Codigo Escenario y Tipo Frase'
 
     def items(self):
         """
@@ -174,10 +231,9 @@ class ElectronicAbonoNote:
         """
 
         try:
-            i_fel = {}  # Guardara la seccion de items ok
             items_ok = []  # Guardara todos los items OK
     
-            self.items = rappe.db.get_values('Sales Invoice Item', filters={'parent': str(self.__inv_credit_note)},
+            self.__dat_items = frappe.db.get_values('Sales Invoice Item', filters={'parent': str(self.__inv_credit_note)},
                                              fieldname=['item_name', 'qty', 'item_code', 'description',
                                                         'net_amount', 'base_net_amount', 'discount_percentage',
                                                         'discount_amount', 'price_list_rate', 'net_rate',
@@ -192,130 +248,49 @@ class ElectronicAbonoNote:
 
             switch_item_description = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'descripcion_item')
 
-            # Obtenemos los impuesto cofigurados para x compañia en la factura
-            self.__taxes_fact = frappe.db.get_values('Sales Taxes and Charges', filters={'parent': self.__inv_credit_note},
-                                                     fieldname=['tax_name', 'taxable_unit_code', 'rate'], as_dict=True)
-
-            # Verificamos la cantidad de items
             longitems = len(self.__dat_items)
-            apply_oil_tax = False
 
             if longitems != 0:
-                contador = 0  # Utilizado para enumerar las lineas en factura electronica
+                contador = 0
 
-                # Si existe un solo item a facturar la iteracion se hara una vez, si hay mas lo contrario mas iteraciones
                 for i in range(0, longitems):
-                    obj_item = {}  # por fila
+                    obj_item = {}
 
-                    # detalle_stock = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'is_stock_item')
-                    # # Validacion de Bien o Servicio, en base a detalle de stock
-                    # if (int(detalle_stock) == 0):
-                    #     obj_item["@BienOServicio"] = 'S'
-
-                    # if (int(detalle_stock) == 1):
-                    #     obj_item["@BienOServicio"] = 'B'
-                     # Is Service, Is Good.  Si Is Fuel = Is Good. Si Is Exempt = Is Good.
                     if cint(self.__dat_items[i]['facelec_is_service']) == 1:
                         obj_item["@BienOServicio"] = 'S'
-
                     elif cint(self.__dat_items[i]['facelec_is_good']) == 1:
                         obj_item["@BienOServicio"] = 'B'
-
                     elif cint(self.__dat_items[i]['factelecis_fuel']) == 1:
                         obj_item["@BienOServicio"] = 'B'
-                        apply_oil_tax = True
-
                     elif cint(self.__dat_items[i]['facelec_si_is_exempt']) == 1:
+                        obj_item["@BienOServicio"] = 'B'
+                    else:
                         obj_item["@BienOServicio"] = 'B'
 
                     desc_item_fila = 0
                     if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
                         desc_item_fila = self.__dat_items[i]['discount_amount']
 
-                    if apply_oil_tax == True:
-                        precio_uni = 0
-                        precio_item = 0
-                        desc_fila = 0
+                    precio_uni = flt(self.__dat_items[i]['rate'] + desc_item_fila, self.__precision)
+                    precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
+                    desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
 
-                        # Logica para validacion si aplica Descuento
-                        desc_item_fila = 0
-                        if cint(self.__dat_items[i]['facelec_is_discount']) == 1:
-                            desc_item_fila = self.__dat_items[i]['discount_amount']
+                    contador += 1
+                    description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
 
-                        # Precio unitario, (sin aplicarle descuento)
-                        # Al precio unitario se le suma el descuento que genera ERP, ya que es neceario enviar precio sin descuentos, en las operaciones restantes es neceario
-                        # (Precio Unitario - Monto IDP) + Descuento
-                        precio_uni = flt((self.__dat_items[i]['rate'] - self.__dat_items[i]['facelec_tax_rate_per_uom']) + desc_item_fila, self.__precision)
+                    obj_item["@NumeroLinea"] = str(contador)
+                    obj_item["dte:Cantidad"] = "{:.2f}".format(abs(float(self.__dat_items[i]['qty'])))
+                    obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
+                    obj_item["dte:Descripcion"] = remove_html_tags(description_to_item)
+                    obj_item["dte:PrecioUnitario"] = "{:.2f}".format(flt(abs(precio_uni), self.__precision))
+                    obj_item["dte:Precio"] = "{:.2f}".format(flt(abs(precio_item), self.__precision))
+                    obj_item["dte:Descuento"] = "{:.2f}".format(flt(abs(desc_fila), self.__precision))
+                    obj_item["dte:Total"] = "{:.2f}".format(abs(flt(self.__dat_items[i]['amount'], self.__precision)))
 
-                        precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
-
-                        desc_fila = 0
-                        desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
-
-                        contador += 1
-                        description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
-
-                        obj_item["@NumeroLinea"] = contador
-                        obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
-                        obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
-                        obj_item["dte:Descripcion"] = remove_html_tags(description_to_item)  # description
-                        obj_item["dte:PrecioUnitario"] = abs(flt(precio_uni, self.__precision))
-                        obj_item["dte:Precio"] = abs(flt(precio_item, self.__precision)) # Correcto según el esquema XML)
-                        obj_item["dte:Descuento"] = abs(flt(desc_fila, self.__precision))
-
-                        # Agregamos los impuestos
-                        # IVA e IDP
-                        nombre_corto = str(frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'tax_name'))
-                        codigo_uni_gravable = frappe.db.get_value('Item', {'name': self.__dat_items[i]['item_code']}, 'taxable_unit_code')
-
-                        obj_item["dte:Impuestos"] = {}
-                        obj_item["dte:Impuestos"]["dte:Impuesto"] = [
-                            {
-                                "dte:NombreCorto": self.__taxes_fact[0]['tax_name'],
-                                "dte:CodigoUnidadGravable": self.__taxes_fact[0]['taxable_unit_code'],
-                                "dte:MontoGravable": abs(flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'], self.__precision)),  # net_amount
-                                "dte:MontoImpuesto": abs(flt(self.__dat_items[i]['facelec_gt_tax_net_fuel_amt'] * (self.__taxes_fact[0]['rate']/100), self.__precision))
-                            },
-                            {
-                                "dte:NombreCorto": nombre_corto,
-                                "dte:CodigoUnidadGravable": codigo_uni_gravable,
-                                "dte:CantidadUnidadesGravables": abs(float(self.__dat_items[i]['qty'])),
-                                "dte:MontoImpuesto": abs(flt(self.__dat_items[i]['facelec_other_tax_amount'], self.__precision))
-                            }
-                        ]
-
-                        obj_item["dte:Total"] = abs(flt(self.__dat_items[i]['amount'], self.__precision))
-
-                    else:
-                        # Calculo precio unitario
-                        precio_uni = 0
-                        precio_uni = flt(self.__dat_items[i]['rate'] + desc_item_fila, self.__precision)
-
-                        # Calculo precio item
-                        precio_item = 0
-                        precio_item = flt(precio_uni * self.__dat_items[i]['qty'], self.__precision)
-
-                        # Calculo descuento item
-                        desc_fila = 0
-                        # desc_fila = abs(float('{0:.3f}'.format(abs(self.__dat_items[i]['price_list_rate'] * self.__dat_items[i]['qty']) - abs(float(self.__dat_items[i]['amount'])))))
-                        desc_fila = flt(self.__dat_items[i]['qty'] * desc_item_fila, self.__precision)
-
-                        contador += 1
-                        description_to_item = self.__dat_items[i]['item_name'] if switch_item_description == "Nombre de Item" else self.__dat_items[i]['description']
-
-                        obj_item["@NumeroLinea"] = contador
-                        obj_item["dte:Cantidad"] = abs(float(self.__dat_items[i]['qty']))
-                        obj_item["dte:UnidadMedida"] = self.__dat_items[i]['facelec_three_digit_uom_code']
-                        obj_item["dte:Descripcion"] = remove_html_tags(description_to_item)  #  self.__dat_items[i]['item_name']  # description
-                        obj_item["dte:PrecioUnitario"] = flt(abs(precio_uni), self.__precision)
-                        obj_item["dte:Precio"] = flt(abs(precio_item), self.__precision)
-                        obj_item["dte:Total"] = abs(flt(self.__dat_items[i]['amount'], self.__precision))
-
-                    apply_oil_tax = False
                     items_ok.append(obj_item)
 
-            i_fel = {"dte:Item": items_ok}
-            self.__d_items = i_fel
+            self.__d_items = {"dte:Item": items_ok}
+            self.__gran_total = sum(abs(flt(item['amount'], self.__precision)) for item in self.__dat_items) if longitems != 0 else 0.0
             return True, 'OK'
 
         except:
@@ -341,59 +316,21 @@ class ElectronicAbonoNote:
                         "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
                         "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                        "@Version": "0.1",
+                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {
                                 "@ID": "DatosCertificados",
                                 "dte:DatosEmision": {
                                     "@ID": "DatosEmision",
-                                    "dte:DatosGenerales": {
-                                        "@CodigoMoneda": self.__d_emisor.get('CodigoMoneda', 'GTQ'),
-                                        "@FechaHoraEmision": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S-06:00"),
-                                        "@Tipo": "NABN"
-                                    },
-                                    "dte:Emisor": {
-                                        "@AfiliacionIVA": self.__d_emisor.get('AfiliacionIVA', 'GEN'),
-                                        "@CodigoEstablecimiento": self.__d_emisor.get('CodigoEstablecimiento', '1'),
-                                        "@NITEmisor": self.__d_emisor.get('NITEmisor', '9000000000K'),
-                                        "@NombreComercial": self.__d_emisor.get('NombreComercial', 'INFILE, SOCIEDAD ANONIMA'),
-                                        "@NombreEmisor": self.__d_emisor.get('NombreEmisor', 'INFILE, SOCIEDAD ANONIMA'),
-                                        "dte:DireccionEmisor": {
-                                            "dte:Direccion": self.__d_emisor.get('Direccion', 'CUIDAD'),
-                                            "dte:CodigoPostal": self.__d_emisor.get('CodigoPostal', '01010'),
-                                            "dte:Municipio": self.__d_emisor.get('Municipio', 'GUATEMALA'),
-                                            "dte:Departamento": self.__d_emisor.get('Departamento', 'GUATEMALA'),
-                                            "dte:Pais": self.__d_emisor.get('Pais', 'GT')
-                                        }
-                                    },
-                                    "dte:Receptor": {
-                                        "@IDReceptor": self.receptor_data.get('IDReceptor', 'CF'),
-                                        "@NombreReceptor": self.receptor_data.get('NombreReceptor', 'CONSUMIDOR FINAL'),
-                                        "dte:DireccionReceptor": {
-                                            "dte:Direccion": self.receptor_data.get('Direccion', 'CUIDAD'),
-                                            "dte:CodigoPostal": self.receptor_data.get('CodigoPostal', '01010'),
-                                            "dte:Municipio": self.receptor_data.get('Municipio', 'GUATEMALA'),
-                                            "dte:Departamento": self.receptor_data.get('Departamento', 'GUATEMALA'),
-                                            "dte:Pais": self.receptor_data.get('Pais', 'GT')
-                                        }
-                                    },
-                                    "dte:Items": {
-                                        "dte:Item": [
-                                            {
-                                                "@BienOServicio": item.get('BienOServicio', 'B'),
-                                                "@NumeroLinea": str(index + 1),
-                                                "dte:Cantidad": "{:.2f}".format(item.get('Cantidad', 1.00)),
-                                                "dte:UnidadMedida": item.get('UnidadMedida', 'UNI'),
-                                                "dte:Descripcion": item.get('Descripcion', 'SIN DESCRIPCION'),
-                                                "dte:PrecioUnitario": "{:.2f}".format(item.get('PrecioUnitario', 0.00)),
-                                                "dte:Precio": "{:.2f}".format(item.get('Precio', 0.00)),
-                                                "dte:Descuento": "{:.2f}".format(item.get('Descuento', 0.00)),
-                                                "dte:Total": "{:.2f}".format(item.get('Total', 0.00))
-                                            } for index, item in enumerate(self.items)
-                                        ]
-                                    },
+                                    "dte:DatosGenerales": self.__d_general,
+                                    "dte:Emisor": self.__d_emisor,
+                                    "dte:Receptor": self.__d_receptor,
+                                    "dte:Frases": self.__d_frases,
+                                    "dte:Items": self.__d_items,
                                     "dte:Totales": {
-                                        "dte:GranTotal": "{:.2f}".format(sum(item.get('Total', 0.00) for item in self.items))
+                                        "dte:GranTotal": "{:.2f}".format(self.__gran_total)
                                     }
                                 }
                             }
@@ -420,8 +357,38 @@ class ElectronicAbonoNote:
         Returns:
             tuple: True/False, mensaje de validación
         """
-        # Aquí puedes agregar tus validaciones personalizadas
+        status_data_gen = self.general_data()
+        if status_data_gen[0] == False:
+            return status_data_gen
+
+        status_sender = self.sender()
+        if status_sender[0] == False:
+            return status_sender
+
+        status_receiver = self.receiver()
+        if status_receiver[0] == False:
+            return status_receiver
+
+        status_phrases = self.phrases()
+        if status_phrases[0] == False:
+            return status_phrases
+
+        status_items = self.items()
+        if status_items[0] == False:
+            return status_items
+
         return True, "Validación exitosa"
+
+    def general_data(self):
+        try:
+            self.__d_general = {
+                "@CodigoMoneda": "GTQ",
+                "@FechaHoraEmision": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S-06:00"),
+                "@Tipo": "NABN"
+            }
+            return True, 'OK'
+        except:
+            return False, 'Error al obtener general_data'
 
     def sign_invoice(self):
         """

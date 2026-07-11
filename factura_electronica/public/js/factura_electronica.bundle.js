@@ -1,5 +1,6 @@
 import './facelec';
 import './sales_invoice';
+import './pos_invoice';
 import './sales_order';
 import './sales_quotation';
 import './purchase_invoice';
