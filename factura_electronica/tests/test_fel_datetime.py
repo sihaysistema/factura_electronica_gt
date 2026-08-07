@@ -27,13 +27,13 @@ def _ensure_frappe_stub():
     frappe.log_error = MagicMock()
     utils = types.ModuleType("frappe.utils")
 
-    def get_system_timezone():
+    def get_time_zone():
         return "America/Guatemala"
 
     def now_datetime():
         return datetime.datetime(2026, 8, 7, 12, 0, 0)
 
-    utils.get_system_timezone = get_system_timezone
+    utils.get_time_zone = get_time_zone
     utils.now_datetime = now_datetime
     frappe.utils = utils
     sys.modules["frappe"] = frappe
