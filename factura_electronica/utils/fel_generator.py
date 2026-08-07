@@ -4,6 +4,7 @@ import frappe
 from frappe import _
 from datetime import datetime
 from factura_electronica.utils.utilities_facelec import normalizar_texto
+from factura_electronica.utils.fel_datetime import get_fecha_hora_now
 import json, xmltodict
 import base64
 import requests
@@ -220,7 +221,7 @@ class FacturaElectronicaFEL:
         try:
             self.d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'currency'),
-                "@FechaHoraEmision": str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
+                "@FechaHoraEmision": get_fecha_hora_now(),  # ISO with system TZ offset
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.nombre_config}, 'tipo_documento')  # 'FACT'  #self.serie_facelec_fel TODO: Poder usar todas las disponibles
             }
         except:
