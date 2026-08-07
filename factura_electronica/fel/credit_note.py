@@ -13,6 +13,7 @@ import xmltodict
 from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
+from factura_electronica.utils.fel_datetime import MODE_CREACION, get_fecha_hora_emision
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 # Una nota de crédito es un documento comercial emitido por
@@ -158,11 +159,14 @@ class ElectronicCreditNote:
         """
 
         try:
-            # NOTA: LA FECHA Y HORA DE EMISION A USAR ES DE LA FACTURA ELECTRONICA FEL ORIGINAL, SOBRE LA CUAL
-            # SE ESTA HACIENDO LA NOTA DE CREDITO
-            date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_date')
-            ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_time'))
-            ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
+            # Credit note builders historically use posting of the NCRE document
+            # (not petition time), with system TZ offset for SAT.
+            ok_datetime = get_fecha_hora_emision(
+                config_name=self.__config_name,
+                invoice_name=self.__inv_credit_note,
+                doctype='Sales Invoice',
+                mode=MODE_CREACION,
+            )
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'currency'),

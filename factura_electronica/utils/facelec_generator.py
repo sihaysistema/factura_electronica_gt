@@ -4,6 +4,7 @@ import frappe
 from frappe import _
 from datetime import datetime
 from factura_electronica.utils.utilities_facelec import normalizar_texto
+from factura_electronica.utils.fel_datetime import format_datetime_with_offset
 import json, xmltodict
 
 
@@ -236,11 +237,12 @@ def construir_xml(serie_original_factura, nombre_del_cliente, prefijo_serie, ser
         # en-US: Use the same format as Date Document, in case the document status
         # is active this field will not be taken into account, since it goes hand in
         # hand with document status because it can be canceled
-        fechaAnulacionTag_Value = str((sales_invoice[0]['creation']).isoformat())
+        # Legacy GFACE path: keep creation wall time, always include TZ offset
+        fechaAnulacionTag_Value = format_datetime_with_offset(sales_invoice[0]['creation'])
 
         # es-GT: Formato de fechas = "2013-10-10T00:00:00.000-06:00"
         # en-US: Format of dates = "2013-10-10T00: 00: 00.000-06: 00"
-        fechaDocumentoTag_Value = str((sales_invoice[0]['creation']).isoformat())
+        fechaDocumentoTag_Value = format_datetime_with_offset(sales_invoice[0]['creation'])
 
         importeBrutoTag_Value = abs(float(sales_invoice[0]['net_total']))
         importeDescuentoTag_Value = abs(float(sales_invoice[0]['discount_amount']))

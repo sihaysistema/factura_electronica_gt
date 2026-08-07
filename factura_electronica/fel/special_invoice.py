@@ -13,6 +13,7 @@ import xmltodict
 from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
+from factura_electronica.utils.fel_datetime import get_fecha_hora_emision
 from factura_electronica.utils.formulas import apply_formula_isr
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
@@ -148,16 +149,11 @@ class ElectronicSpecialInvoice:
         """
 
         try:
-            # Configurado por usuario
-            opt_config = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
-
-            if opt_config == 'Fecha y tiempo de peticion a INFILE':
-                ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
-
-            else:
-                date_invoice_inv = frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_date')
-                ok_time = str(frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_time'))
-                ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
+            ok_datetime = get_fecha_hora_emision(
+                config_name=self.__config_name,
+                invoice_name=self.__invoice_code,
+                doctype='Purchase Invoice',
+            )
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'currency'),
