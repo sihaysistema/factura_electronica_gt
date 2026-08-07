@@ -49,3 +49,7 @@ LGPL V3
 Electronic Invoice support for Guatemala - Factura Electronica de Guatemala
 
 
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch targets, public security hygiene, and the **4-year issue** policy.
