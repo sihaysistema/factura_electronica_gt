@@ -16,6 +16,7 @@ import frappe
 from frappe import _, _dict
 from frappe.utils import cint, flt
 
+from factura_electronica.utils.fel_datetime import get_fecha_hora_emision
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 # NOTA IMPORTANTE: NO DESARROLADA POR COMPLETO, SE NECESITAN CREDENCIALES DE PRUEBAS
@@ -156,10 +157,16 @@ class ExemptElectronicInvoice:
         try:
             self.date_invoice = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date'))
 
+            ok_datetime = get_fecha_hora_emision(
+                config_name=self.__config_name,
+                invoice_name=self.__invoice_code,
+                doctype='Sales Invoice',
+            )
+
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
                 # "@FechaHoraEmision": str(self.date_invoice)+'T'+str(self.time_invoice),  #f'{self.date_invoice}T{str(self.time_invoice)}',  #str(datetime.datetime.now().replace(microsecond=0).isoformat()),  # "2018-11-01T16:33:47Z",
-                "@FechaHoraEmision": str(nowdate())+'T'+str(nowtime().rpartition('.')[0]),  # Se usa la data al momento de crear a infile
+                "@FechaHoraEmision": ok_datetime,  # Se usa la data al momento de crear a infile
                 "@Tipo": frappe.db.get_value('Configuracion Series FEL', {'parent': self.__config_name, 'serie': self.__naming_serie},
                                              'tipo_documento')
             }

@@ -13,6 +13,7 @@ import xmltodict
 from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
+from factura_electronica.utils.fel_datetime import get_fecha_hora_now
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 
 
@@ -77,7 +78,7 @@ class CancelDocument:
                             "@ID": "DatosCertificados",
                             "dte:DatosGenerales": {
                                 "@FechaEmisionDocumentoAnular": str(issue_date),  # "2020-03-04T00:00:00-06:00",
-                                "@FechaHoraAnulacion": str(nowdate())+'T'+str(nowtime().rpartition('.')[0]),  # "2020-04-21T00:00:00-06:00",
+                                "@FechaHoraAnulacion": get_fecha_hora_now(),  # "2020-04-21T00:00:00-06:00",
                                 "@ID": "DatosAnulacion",
                                 "@IDReceptor": str(self.info_invoice.tax_id).replace('-', '').replace('/', '').upper().strip(),
                                 "@MotivoAnulacion": "Anulación",
