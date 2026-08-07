@@ -15,30 +15,61 @@ import datetime
 import re
 
 import frappe
-from frappe.utils import get_system_timezone, now_datetime
+from frappe.utils import now_datetime
 
 # Configuracion Factura Electronica options (must match DocType Select)
 MODE_PETICION = "Fecha y tiempo de peticion a INFILE"
 MODE_CREACION = "Fecha y tiempo creacion documento"
 
 # ISO with offset, no microseconds, no trailing Z
+# Accept +HH:MM / -HH:MM (preferred) and compact +HHMM (legacy formatters)
 _OFFSET_RE = re.compile(
-    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$"
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2}|[+-]\d{4})$"
 )
+
+
+def get_system_tz_name():
+    """
+    System timezone name for the site.
+
+    Frappe v13 exposes get_time_zone(); newer versions also have
+    get_system_timezone(). Prefer the v13 API first (Fogliasana is v13).
+    """
+    try:
+        from frappe.utils import get_time_zone
+
+        return get_time_zone()
+    except Exception:
+        pass
+    try:
+        from frappe.utils import get_system_timezone
+
+        return get_system_timezone()
+    except Exception:
+        pass
+    try:
+        return frappe.db.get_system_setting("time_zone") or "America/Guatemala"
+    except Exception:
+        return "America/Guatemala"
 
 
 def get_tzinfo(tz_name=None):
     """
     Return a tzinfo for the ERPNext system timezone (or the given name).
 
-    Prefers zoneinfo (Py3.9+), falls back to pytz, then fixed -06:00 for
-    America/Guatemala only as last resort.
+    Order tuned for Frappe v13 / Python 3.6 (pytz first), then zoneinfo (3.9+),
+    then fixed -06:00 for America/Guatemala as last resort.
     """
     if not tz_name:
-        try:
-            tz_name = get_system_timezone()
-        except Exception:
-            tz_name = "America/Guatemala"
+        tz_name = get_system_tz_name()
+
+    # Frappe v13 / Python 3.6 sites ship pytz
+    try:
+        import pytz
+
+        return pytz.timezone(str(tz_name))
+    except Exception:
+        pass
 
     try:
         from zoneinfo import ZoneInfo
@@ -47,23 +78,19 @@ def get_tzinfo(tz_name=None):
     except Exception:
         pass
 
-    try:
-        import pytz
-
-        return pytz.timezone(str(tz_name))
-    except Exception:
-        pass
-
     # Last resort: Guatemala has no DST
     if str(tz_name) in ("America/Guatemala", "Guatemala", "CST6"):
-        return datetime.timezone(datetime.timedelta(hours=-6), name="America/Guatemala")
+        return datetime.timezone(datetime.timedelta(hours=-6))
 
     # Unknown TZ without zoneinfo/pytz: keep wall time labeled as UTC offset 0
     # (better than raising mid-certify; still prefer fixing deps)
-    frappe.log_error(
-        title="FEL datetime: timezone fallback",
-        message="Could not resolve tzinfo for {0}; using fixed +00:00".format(tz_name),
-    )
+    try:
+        frappe.log_error(
+            title="FEL datetime: timezone fallback",
+            message="Could not resolve tzinfo for {0}; using fixed +00:00".format(tz_name),
+        )
+    except Exception:
+        pass
     return datetime.timezone.utc
 
 
@@ -77,6 +104,23 @@ def _localize(naive_dt, tzinfo):
         return tzinfo.localize(naive_dt)
 
     return naive_dt.replace(tzinfo=tzinfo)
+
+
+def _isoformat_with_offset(aware_dt):
+    """
+    ISO-8601 with numeric offset, no microseconds.
+
+    Avoids isoformat(timespec=...) which is Python 3.7+ only (Fogliasana is 3.6).
+    Normalizes compact ±HHMM to ±HH:MM for SAT-friendly strings.
+    """
+    text = aware_dt.replace(microsecond=0).isoformat()
+    if text.endswith("Z"):
+        return text[:-1] + "+00:00"
+    # Python/pytz usually already yields -06:00; compact form → insert colon
+    m = re.search(r"([+-])(\d{2})(\d{2})$", text)
+    if m and ":" not in text[-6:]:
+        text = text[: m.start()] + "{0}{1}:{2}".format(m.group(1), m.group(2), m.group(3))
+    return text
 
 
 def format_datetime_with_offset(dt, tz_name=None):
@@ -93,12 +137,7 @@ def format_datetime_with_offset(dt, tz_name=None):
         dt = datetime.datetime.combine(dt, datetime.time(0, 0, 0))
 
     aware = _localize(dt.replace(microsecond=0), tzinfo)
-    # isoformat() yields +HH:MM or -HH:MM for fixed offsets / zoneinfo
-    text = aware.isoformat(timespec="seconds")
-    # Guard against accidental Z from UTC-only paths when tz is UTC
-    if text.endswith("Z"):
-        text = text[:-1] + "+00:00"
-    return text
+    return _isoformat_with_offset(aware)
 
 
 def combine_posting_datetime(posting_date, posting_time):
