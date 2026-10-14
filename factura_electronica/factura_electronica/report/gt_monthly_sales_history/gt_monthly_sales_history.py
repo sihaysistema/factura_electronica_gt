@@ -20,8 +20,9 @@ Promedio
     A history year with no submitted sales invoices is omitted from the
     divisor. Its cells still show 0.00. A month with no invoices inside a
     year that does have invoices counts as 0 and stays in the divisor, because
-    the ledger total for that month is zero. If none of the five years have
-    invoices, Promedio is 0.00.
+    the ledger total for that month is zero. If none of the selected years
+    have invoices, Promedio is 0.00. "Years to compare" chooses how many
+    years before the selected year are shown (5, 4, 3 or 2; default 5).
 
     The Total row sums the twelve displayed monthly cells (including Promedio)
     so the columns add down. That footer can differ by a few cents from one
@@ -70,7 +71,8 @@ def execute(filters=None):
         return [], []
 
     selected_year = parse_year(filters.get("year"))
-    years = history_years(selected_year)
+    years_to_compare = parse_years_to_compare(filters.get("years_to_compare"))
+    years = history_years(selected_year, years_to_compare)
     currency = company_currency(company)
 
     # Full calendar years. The ledger monthly query filters by YYYYMM, so this
@@ -83,7 +85,7 @@ def execute(filters=None):
         "to_date": "{0}-12-31".format(years[-1]),
     }))
 
-    data = build_history(selected_year, ledger_rows)
+    data = build_history(selected_year, ledger_rows, years_to_compare)
     for row in data:
         row["currency"] = currency
 
@@ -113,11 +115,32 @@ def parse_year(value):
     return year
 
 
-def history_years(selected_year):
-    """Five calendar years before ``selected_year`` (year-5 .. year-1)."""
+def parse_years_to_compare(value):
+    """How many years before the selector to show. Empty means 5."""
 
+    if value in (None, ""):
+        return HISTORY_SPAN
+
+    try:
+        span = int(value)
+    except (TypeError, ValueError):
+        span = None
+
+    if span not in (2, 3, 4, 5):
+        frappe.throw(_("Years to compare must be 5, 4, 3 or 2"))
+
+    return span
+
+
+def history_years(selected_year, years_to_compare=HISTORY_SPAN):
+    """The ``years_to_compare`` calendar years before ``selected_year``.
+
+    2026 with 5 is 2021..2025. 2026 with 3 is 2023, 2024, 2025.
+    """
+
+    span = int(years_to_compare)
     selected_year = int(selected_year)
-    return [selected_year - offset for offset in range(HISTORY_SPAN, 0, -1)]
+    return [selected_year - offset for offset in range(span, 0, -1)]
 
 
 def year_fieldname(year):
@@ -158,14 +181,15 @@ def get_columns(years):
     return columns
 
 
-def build_history(selected_year, ledger_rows):
+def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN):
     """Pivot GT Sales Ledger monthly totals into 12 month rows plus Total.
 
     ``ledger_rows`` is the list returned by ``sales_invoices_monthly``:
     ``month_repo``, ``year_repo`` and ``total`` (already summed in SQL).
+    Only the ``years_to_compare`` years before ``selected_year`` become columns.
     """
 
-    years = history_years(selected_year)
+    years = history_years(selected_year, years_to_compare)
     raw_totals = {}
     years_with_data = set()
 
@@ -210,7 +234,7 @@ def build_history(selected_year, ledger_rows):
 
 
 def average_month(values, years, years_with_data):
-    """Average of the five history years, skipping years with no invoices.
+    """Average of the selected history years, skipping years with no invoices.
 
     ``values`` are the already-rounded month cells (what the grid shows).
     The average is rounded half up to 2 decimals from those cells, so v13 and
