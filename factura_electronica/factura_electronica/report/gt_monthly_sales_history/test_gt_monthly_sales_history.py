@@ -99,6 +99,12 @@ class TestHistoryLayout(TestCase):
         self.assertEqual(history_years(2026), [2021, 2022, 2023, 2024, 2025])
         self.assertEqual(history_years(2025), [2020, 2021, 2022, 2023, 2024])
 
+    def test_years_to_compare_shortens_the_window(self):
+        self.assertEqual(history_years(2026, 4), [2022, 2023, 2024, 2025])
+        self.assertEqual(history_years(2026, 3), [2023, 2024, 2025])
+        self.assertEqual(history_years(2026, 2), [2024, 2025])
+        self.assertEqual(history_years(2025, 3), [2022, 2023, 2024])
+
     def test_twelve_spanish_months_and_a_total_row(self):
         rows = build_history(2026, [])
         self.assertEqual([row["mes"] for row in rows], list(SPANISH_MONTHS) + [TOTAL_LABEL])
@@ -123,6 +129,27 @@ class TestHistoryLayout(TestCase):
         )
         self.assertEqual(len(visible), 7)
         self.assertEqual(len(rows), 13)
+
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.sales_invoices_monthly",
+        return_value=[],
+    )
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.company_currency",
+        return_value="GTQ",
+    )
+    def test_column_labels_follow_years_to_compare(self, _currency, _query):
+        columns, rows = execute({
+            "company": "Acme",
+            "year": "2026",
+            "years_to_compare": "3",
+        })
+        visible = [column["label"] for column in columns if not column.get("hidden")]
+        self.assertEqual(visible, ["Mes", "2023", "2024", "2025", "Promedio"])
+        self.assertEqual(len(rows), 13)
+        self.assertNotIn("y_2022", rows[0])
 
 
 class TestLedgerTotals(TestCase):
@@ -172,6 +199,36 @@ class TestLedgerTotals(TestCase):
             {"year_repo": 2025, "month_repo": 2, "total": 1},
         ])
         self.assertEqual(rows[0]["promedio"], 25.03)
+
+    def test_promedio_averages_only_the_selected_years(self):
+        # 2022 is outside a 3-year window ending in 2025, so 100 is not a column.
+        # 2024 has invoices, but not in January, so January counts as 0.
+        rows = build_history(2026, [
+            {"year_repo": 2022, "month_repo": 1, "total": 100},
+            {"year_repo": 2023, "month_repo": 1, "total": 40},
+            {"year_repo": 2024, "month_repo": 6, "total": 10},
+            {"year_repo": 2025, "month_repo": 1, "total": 30},
+        ], 3)
+        enero = rows[0]
+        self.assertEqual(enero["y_2023"], 40.0)
+        self.assertEqual(enero["y_2024"], 0.0)
+        self.assertEqual(enero["y_2025"], 30.0)
+        self.assertNotIn("y_2022", enero)
+        self.assertEqual(enero["promedio"], 23.33)
+        total = rows[-1]
+        self.assertEqual(total["y_2023"], 40.0)
+        self.assertEqual(total["y_2024"], 10.0)
+        self.assertEqual(total["y_2025"], 30.0)
+        self.assertNotIn("y_2022", total)
+
+    def test_empty_year_inside_a_shorter_span_is_left_out_of_the_average(self):
+        rows = build_history(2026, [
+            {"year_repo": 2025, "month_repo": 1, "total": 80},
+        ], 2)
+        enero = rows[0]
+        self.assertEqual(enero["y_2024"], 0.0)
+        self.assertEqual(enero["y_2025"], 80.0)
+        self.assertEqual(enero["promedio"], 80.0)
 
     def test_all_five_years_are_averaged_when_each_has_invoices(self):
         rows = build_history(2026, [
@@ -244,6 +301,28 @@ class TestExecuteUsesSalesLedgerQuery(TestCase):
     )
     @patch(
         "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.company_currency",
+        return_value="GTQ",
+    )
+    def test_query_range_follows_years_to_compare(self, _currency, query):
+        cases = (
+            ("4", "2022-01-01", "2025-12-31"),
+            ("3", "2023-01-01", "2025-12-31"),
+            (2, "2024-01-01", "2025-12-31"),
+        )
+        for span, start, end in cases:
+            execute({"company": "Acme GT", "year": 2026, "years_to_compare": span})
+            filters = query.call_args[0][0]
+            self.assertEqual(filters.from_date, start)
+            self.assertEqual(filters.to_date, end)
+
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.sales_invoices_monthly",
+        return_value=[],
+    )
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
         "gt_monthly_sales_history.default_company",
         return_value="Default Co",
     )
@@ -262,6 +341,11 @@ class TestExecuteUsesSalesLedgerQuery(TestCase):
     def test_invalid_year_is_rejected(self):
         with self.assertRaises(Exception):
             execute({"company": "Acme", "year": "nope"})
+
+    def test_invalid_years_to_compare_is_rejected(self):
+        for value in ("1", "6", "nope", 0):
+            with self.assertRaises(Exception):
+                execute({"company": "Acme", "year": 2026, "years_to_compare": value})
 
     def test_missing_company_returns_nothing(self):
         with patch(
