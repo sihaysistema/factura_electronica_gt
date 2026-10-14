@@ -20,6 +20,14 @@ frappe.query_reports["GT Monthly Sales History"] = {
       default: String(new Date().getFullYear()),
       reqd: 1,
     },
+    {
+      fieldname: "years_to_compare",
+      label: __("Years to compare"),
+      fieldtype: "Select",
+      options: "5\n4\n3\n2",
+      default: "5",
+      reqd: 1,
+    },
   ],
 };
 
