@@ -163,6 +163,16 @@ class TestLedgerTotals(TestCase):
         # (100 + 0 + 200 + 300) / 4. 2021 is left out; January 2023 counts as 0.
         self.assertEqual(enero["promedio"], 150.0)
 
+    def test_promedio_rounds_half_up_from_the_displayed_cells(self):
+        # 100.10 / 4 = 25.025. Half-up keeps v13 and v15 on 25.03.
+        rows = build_history(2026, [
+            {"year_repo": 2022, "month_repo": 1, "total": "100.10"},
+            {"year_repo": 2023, "month_repo": 2, "total": 1},
+            {"year_repo": 2024, "month_repo": 2, "total": 1},
+            {"year_repo": 2025, "month_repo": 2, "total": 1},
+        ])
+        self.assertEqual(rows[0]["promedio"], 25.03)
+
     def test_all_five_years_are_averaged_when_each_has_invoices(self):
         rows = build_history(2026, [
             {"year_repo": 2021, "month_repo": 3, "total": 10},
