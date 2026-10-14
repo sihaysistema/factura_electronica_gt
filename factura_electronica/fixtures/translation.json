@@ -2958,5 +2958,21 @@
   "parenttype": null,
   "source_text": "Applies only for production.",
   "translated_text": "Aplica solo para modo producci\u00f3n."
+ },
+ {
+  "context": null,
+  "contributed": 0,
+  "contribution_docname": null,
+  "contribution_status": "",
+  "docstatus": 0,
+  "doctype": "Translation",
+  "language": "es",
+  "modified": "2026-10-14 00:00:00.000000",
+  "name": "b8e4c1a902",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "source_text": "GT Monthly Sales History",
+  "translated_text": "Historial Mensual de Ventas GT"
  }
 ]

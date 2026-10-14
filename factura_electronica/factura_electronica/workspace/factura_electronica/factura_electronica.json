@@ -61,6 +61,15 @@
   {
    "hidden": 0,
    "is_query_report": 1,
+   "label": "GT Monthly Sales History",
+   "link_to": "GT Monthly Sales History",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
    "label": "GT Journal",
    "link_to": "GT Journal",
    "link_type": "Report",
