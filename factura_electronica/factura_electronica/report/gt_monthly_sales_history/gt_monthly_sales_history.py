@@ -213,13 +213,19 @@ def average_month(values, years, years_with_data):
     """Average of the five history years, skipping years with no invoices.
 
     ``values`` are the already-rounded month cells (what the grid shows).
+    The average is rounded half up to 2 decimals from those cells, so v13 and
+    v15 ``flt`` do not disagree by a cent on values such as 100.10 / 4.
     """
 
     included = [year for year in years if year in years_with_data]
     if not included:
         return 0.0
 
-    return flt(sum(values[year] for year in included) / len(included), PRECISION)
+    from decimal import Decimal, ROUND_HALF_UP
+
+    total = sum((Decimal(str(values[year])) for year in included), Decimal("0"))
+    average = (total / Decimal(len(included))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return flt(average, PRECISION)
 
 
 def _to_decimal(value):
