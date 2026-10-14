@@ -423,7 +423,7 @@ def fill_fixtures():
                     "Is it an international invoice?", "Type of Expense for Tax purposes", "Net Goods Amount", "Net Services Amount",
                     "Net Fuel Amount", "Excise tax calculation", "Three digit UOM code as requested by Infile",
                     "Purchase and Sales Ledger Tax Declaration", "VAT Payable and Receivable Conciliation",
-                    "GT General Ledger", "GT Purchase Ledger", "GT Sales Ledger", "GT Journal",
+                    "GT General Ledger", "GT Purchase Ledger", "GT Sales Ledger", "GT Monthly Sales History", "GT Journal",
                     "Tax Retention Guatemala", "VAT Declaration", "Batch Electronic Invoice", "Batch Status",
                     "Purchase and Sales Ledger Tax Declaration Report", "Supplier Invoice Prefix", "Supplier Invoice Number",
                     "Account for Excise Tax", "CREDIT NOTE FEL", "Are you sure you want to proceed to generate a credit note?",
