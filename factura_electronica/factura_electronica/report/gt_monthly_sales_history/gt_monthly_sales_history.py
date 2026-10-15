@@ -24,10 +24,16 @@ Promedio
     have invoices, Promedio is 0.00. "Years to compare" chooses how many
     years before the selected year are shown (5, 4, 3 or 2; default 5).
 
-    The Total row sums the twelve displayed monthly cells (including Promedio)
-    so the columns add down. That footer can differ by a few cents from one
-    GT Sales Ledger total run over a whole year, because the ledger rounds the
-    full-period sum once and this footer sums already-rounded months.
+    After Promedio, one more column shows the selected year itself (label is
+    that year, for example 2026). It uses the same monthly ledger total.
+    Months with no sales yet are 0.00. That column is on the Total row and
+    is not part of Promedio.
+
+    The Total row sums the twelve displayed monthly cells (including Promedio
+    and the selected year) so the columns add down. That footer can differ
+    by a few cents from one GT Sales Ledger total run over a whole year,
+    because the ledger rounds the full-period sum once and this footer sums
+    already-rounded months.
 """
 
 from __future__ import unicode_literals
@@ -75,21 +81,21 @@ def execute(filters=None):
     years = history_years(selected_year, years_to_compare)
     currency = company_currency(company)
 
-    # Full calendar years. The ledger monthly query filters by YYYYMM, so this
-    # range is exactly the months that a GT Sales Ledger Monthly run would
-    # include for each of those years.
+    # History years plus the selected year. The ledger monthly query filters
+    # by YYYYMM, so this range is exactly the months a GT Sales Ledger Monthly
+    # run would include for each of those years.
     ledger_rows = sales_invoices_monthly(frappe._dict({
         "company": company,
         "company_currency": currency,
         "from_date": "{0}-01-01".format(years[0]),
-        "to_date": "{0}-12-31".format(years[-1]),
+        "to_date": "{0}-12-31".format(selected_year),
     }))
 
     data = build_history(selected_year, ledger_rows, years_to_compare)
     for row in data:
         row["currency"] = currency
 
-    return get_columns(years), data
+    return get_columns(years, selected_year), data
 
 
 def default_company():
@@ -147,7 +153,17 @@ def year_fieldname(year):
     return "y_{0}".format(int(year))
 
 
-def get_columns(years):
+def year_column(year):
+    return {
+        "label": str(int(year)),
+        "fieldname": year_fieldname(year),
+        "fieldtype": "Currency",
+        "options": "currency",
+        "width": 120,
+    }
+
+
+def get_columns(years, selected_year):
     columns = [{
         "label": "Mes",
         "fieldname": "mes",
@@ -156,13 +172,7 @@ def get_columns(years):
     }]
 
     for year in years:
-        columns.append({
-            "label": str(year),
-            "fieldname": year_fieldname(year),
-            "fieldtype": "Currency",
-            "options": "currency",
-            "width": 120,
-        })
+        columns.append(year_column(year))
 
     columns.append({
         "label": "Promedio",
@@ -171,6 +181,8 @@ def get_columns(years):
         "options": "currency",
         "width": 130,
     })
+    # The selected year is shown, and it is not one of the Promedio inputs.
+    columns.append(year_column(selected_year))
     columns.append({
         "label": _("Currency"),
         "fieldname": "currency",
@@ -186,9 +198,11 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN):
 
     ``ledger_rows`` is the list returned by ``sales_invoices_monthly``:
     ``month_repo``, ``year_repo`` and ``total`` (already summed in SQL).
-    Only the ``years_to_compare`` years before ``selected_year`` become columns.
+    The ``years_to_compare`` years before ``selected_year`` are the history
+    columns. ``selected_year`` is its own column after Promedio.
     """
 
+    selected_year = int(selected_year)
     years = history_years(selected_year, years_to_compare)
     raw_totals = {}
     years_with_data = set()
@@ -220,7 +234,10 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN):
             amount = month_total(year, month_index)
             row[year_fieldname(year)] = amount
             values[year] = amount
+        # ``years`` is the history window only, so the selected year stays
+        # out of Promedio even when that year has invoices.
         row["promedio"] = average_month(values, years, years_with_data)
+        row[year_fieldname(selected_year)] = month_total(selected_year, month_index)
         rows.append(row)
 
     total_row = {"mes": TOTAL_LABEL}
@@ -229,6 +246,10 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN):
             sum(row[year_fieldname(year)] for row in rows), PRECISION
         )
     total_row["promedio"] = flt(sum(row["promedio"] for row in rows), PRECISION)
+    selected_field = year_fieldname(selected_year)
+    total_row[selected_field] = flt(
+        sum(row[selected_field] for row in rows), PRECISION
+    )
     rows.append(total_row)
     return rows
 
