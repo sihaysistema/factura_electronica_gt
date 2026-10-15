@@ -331,7 +331,7 @@ def generate_nota_abono(invoice_code, naming_series):
     try:
         actual_inv_name = invoice_code
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
-        status_config = validate_configuration()
+        status_config = validate_configuration(_company_for('Sales Invoice', invoice_code))
 
         if status_config[0] == False:
             return status_config
