@@ -28,6 +28,12 @@ FIXTURE = os.path.join(
 
 
 def execute():
+    # Frappe v13 corre patches.txt antes de sincronizar el modelo, así que
+    # las columnas nuevas todavía no existen. Sincronizar esta app las crea
+    # (en v15 el sync global ya ocurrió y esta llamada no cambia nada).
+    from frappe.model.sync import sync_for
+
+    sync_for("factura_electronica")
     seed_official_certificadores()
     backfill_infile_links()
 
