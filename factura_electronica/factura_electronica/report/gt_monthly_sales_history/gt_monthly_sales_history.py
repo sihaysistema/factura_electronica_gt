@@ -29,6 +29,12 @@ Promedio
     Months with no sales yet are 0.00. That column is on the Total row and
     is not part of Promedio.
 
+    Diferencia is that selected-year amount minus Promedio (negative when
+    the month is under the average). "% vs Promedio" is
+    (selected - Promedio) / Promedio * 100, blank when Promedio is 0.
+    On the Total row, Diferencia is the selected-year total minus the
+    Promedio total, and the percent is computed from those two totals.
+
     The Total row sums the twelve displayed monthly cells (including Promedio
     and the selected year) so the columns add down. That footer can differ
     by a few cents from one GT Sales Ledger total run over a whole year,
@@ -184,6 +190,20 @@ def get_columns(years, selected_year):
     # The selected year is shown, and it is not one of the Promedio inputs.
     columns.append(year_column(selected_year))
     columns.append({
+        "label": "Diferencia",
+        "fieldname": "diferencia",
+        "fieldtype": "Currency",
+        "options": "currency",
+        "width": 130,
+    })
+    columns.append({
+        "label": "% vs Promedio",
+        "fieldname": "vs_promedio",
+        "fieldtype": "Percent",
+        "precision": 2,
+        "width": 140,
+    })
+    columns.append({
         "label": _("Currency"),
         "fieldname": "currency",
         "fieldtype": "Link",
@@ -238,6 +258,7 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN):
         # out of Promedio even when that year has invoices.
         row["promedio"] = average_month(values, years, years_with_data)
         row[year_fieldname(selected_year)] = month_total(selected_year, month_index)
+        apply_variance(row, selected_year)
         rows.append(row)
 
     total_row = {"mes": TOTAL_LABEL}
@@ -250,8 +271,44 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN):
     total_row[selected_field] = flt(
         sum(row[selected_field] for row in rows), PRECISION
     )
+    # From the two totals, not from a sum of the monthly percents.
+    apply_variance(total_row, selected_year)
     rows.append(total_row)
     return rows
+
+
+def apply_variance(row, selected_year):
+    """Diferencia and % vs Promedio for one month or for the Total row."""
+
+    selected_amount = row[year_fieldname(selected_year)]
+    promedio = row["promedio"]
+    row["diferencia"] = month_difference(selected_amount, promedio)
+    row["vs_promedio"] = percent_vs_promedio(selected_amount, promedio)
+
+
+def month_difference(selected, promedio):
+    """Selected-year amount minus Promedio, rounded half up to 2 decimals."""
+
+    from decimal import ROUND_HALF_UP, Decimal
+
+    difference = (_to_decimal(selected) - _to_decimal(promedio)).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+    return flt(difference, PRECISION)
+
+
+def percent_vs_promedio(selected, promedio):
+    """Percent change versus Promedio. Blank when Promedio is 0."""
+
+    promedio_amount = _to_decimal(promedio)
+    if promedio_amount == 0:
+        return None
+
+    from decimal import ROUND_HALF_UP, Decimal
+
+    ratio = ((_to_decimal(selected) - promedio_amount) / promedio_amount) * Decimal("100")
+    rounded = ratio.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return flt(rounded, PRECISION)
 
 
 def average_month(values, years, years_with_data):

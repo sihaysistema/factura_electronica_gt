@@ -125,9 +125,9 @@ class TestHistoryLayout(TestCase):
         visible = [column for column in columns if not column.get("hidden")]
         self.assertEqual(
             [column["label"] for column in visible],
-            ["Mes", "2021", "2022", "2023", "2024", "2025", "Promedio", "2026"],
+            ["Mes", "2021", "2022", "2023", "2024", "2025", "Promedio", "2026", "Diferencia", "% vs Promedio"],
         )
-        self.assertEqual(len(visible), 8)
+        self.assertEqual(len(visible), 10)
         self.assertEqual(len(rows), 13)
         self.assertEqual(rows[0]["y_2026"], 0.0)
 
@@ -148,7 +148,10 @@ class TestHistoryLayout(TestCase):
             "years_to_compare": "3",
         })
         visible = [column["label"] for column in columns if not column.get("hidden")]
-        self.assertEqual(visible, ["Mes", "2023", "2024", "2025", "Promedio", "2026"])
+        self.assertEqual(
+            visible,
+            ["Mes", "2023", "2024", "2025", "Promedio", "2026", "Diferencia", "% vs Promedio"],
+        )
         self.assertEqual(len(rows), 13)
         self.assertNotIn("y_2022", rows[0])
         self.assertEqual(rows[0]["y_2026"], 0.0)
@@ -278,8 +281,42 @@ class TestLedgerTotals(TestCase):
         junio = rows[5]
         self.assertEqual(junio["y_2026"], -15.0)
         self.assertEqual(junio["promedio"], 0.0)
+        self.assertEqual(enero["diferencia"], -59.87)
+        self.assertEqual(enero["vs_promedio"], -59.87)
+        self.assertEqual(junio["diferencia"], -15.0)
+        self.assertIsNone(junio["vs_promedio"])
         total = rows[-1]
         self.assertEqual(total["y_2026"], 25.13)
+        self.assertEqual(total["promedio"], 100.0)
+        self.assertEqual(total["diferencia"], -74.87)
+        self.assertEqual(total["vs_promedio"], -74.87)
+
+    def test_percent_is_blank_when_promedio_is_zero_and_rounds_half_up(self):
+        rows = build_history(2026, [
+            {"year_repo": 2025, "month_repo": 1, "total": 3},
+            {"year_repo": 2026, "month_repo": 1, "total": 1},
+            {"year_repo": 2026, "month_repo": 2, "total": 10},
+        ], 2)
+        # History window is 2024 (empty) and 2025. January Promedio is 3.
+        # (1 - 3) / 3 * 100 = -66.666... -> -66.67
+        enero = rows[0]
+        self.assertEqual(enero["promedio"], 3.0)
+        self.assertEqual(enero["y_2026"], 1.0)
+        self.assertEqual(enero["diferencia"], -2.0)
+        self.assertEqual(enero["vs_promedio"], -66.67)
+        # February has no history invoices in a year that has data, so
+        # Promedio is 0 and the percent stays blank. 10 / 3 would be wrong.
+        febrero = rows[1]
+        self.assertEqual(febrero["y_2026"], 10.0)
+        self.assertEqual(febrero["promedio"], 0.0)
+        self.assertEqual(febrero["diferencia"], 10.0)
+        self.assertIsNone(febrero["vs_promedio"])
+        total = rows[-1]
+        self.assertEqual(total["y_2026"], 11.0)
+        self.assertEqual(total["promedio"], 3.0)
+        self.assertEqual(total["diferencia"], 8.0)
+        # (11 - 3) / 3 * 100 = 266.666... -> 266.67, not the sum of monthly percents.
+        self.assertEqual(total["vs_promedio"], 266.67)
 
 
 class TestExecuteUsesSalesLedgerQuery(TestCase):
