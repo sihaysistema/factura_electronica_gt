@@ -29,7 +29,43 @@ frappe.query_reports["GT Monthly Sales History"] = {
       reqd: 1,
     },
   ],
+  formatter: function (value, row, column, data, default_formatter) {
+    if (column && column.fieldname === "vs_promedio") {
+      var percent = gt_monthly_sales_history_format_percent(value);
+      return gt_monthly_sales_history_colorize(percent, value);
+    }
+    var formatted = default_formatter(value, row, column, data);
+    if (column && column.fieldname === "diferencia") {
+      return gt_monthly_sales_history_colorize(formatted, value);
+    }
+    return formatted;
+  },
 };
+
+function gt_monthly_sales_history_format_percent(value) {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+  var number = Number(value);
+  if (isNaN(number)) {
+    return "";
+  }
+  var negative = number < 0;
+  var text = Math.abs(number).toFixed(2);
+  return "<div style='text-align: right'>" + (negative ? "-" : "") + text + "%</div>";
+}
+
+function gt_monthly_sales_history_colorize(html, value) {
+  if (!html) {
+    return html;
+  }
+  var number = Number(value);
+  if (isNaN(number) || number === 0) {
+    return html;
+  }
+  var color = number > 0 ? "green" : "red";
+  return "<span style='color:" + color + "'>" + html + "</span>";
+}
 
 function gt_monthly_sales_history_year_options() {
   var current = new Date().getFullYear();
