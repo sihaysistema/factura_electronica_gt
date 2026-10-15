@@ -225,8 +225,8 @@ def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
     """
     try:
         actual_inv_name = invoice_code
-        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA LA COMPAÑIA DE LA FACTURA
-        status_config = validate_configuration(_company_for('Sales Invoice', invoice_code))
+        # La nota de crédito sigue al certificador que emitió la factura original.
+        status_config = configuration_for_original_document('Sales Invoice', reference_inv)
 
         if status_config[0] == False:
             return status_config
@@ -596,19 +596,42 @@ def generate_special_invoice(invoice_code, naming_series):
         return False, str(frappe.get_traceback())
 
 
-def validate_configuration(company=None):
+def validate_configuration(company=None, certificador=None, configuracion=None):
     """
-    Verifica que la compañía tenga exactamente una configuración FEL activa.
+    Configuración FEL para un documento nuevo.
+
+    Una sola activa se usa tal cual. Si hay varias, se usa el certificador
+    predeterminado. configuracion obliga a usar esa configuración activa.
 
     Args:
         company (str): Compañía del documento (Sales Invoice, Purchase Invoice, etc.)
+        certificador (str): Limita la búsqueda a ese certificador.
+        configuracion (str): Nombre de configuración explícita.
 
     Returns:
         tuple: (True, name) o (False, mensaje en español)
     """
     from factura_electronica.utils.fel_config import get_active_config_for_company
 
-    result = get_active_config_for_company(company)
+    result = get_active_config_for_company(
+        company, certificador=certificador, configuracion=configuracion
+    )
+    if result.get("ok"):
+        return (True, result.get("name"))
+    return (False, result.get("message"))
+
+
+def configuration_for_original_document(doctype, name):
+    """Configuración del Envio FEL original, para anular o dar seguimiento.
+
+    No usa la configuración activa ni el certificador predeterminado.
+
+    Returns:
+        tuple: (True, name) o (False, mensaje en español)
+    """
+    from factura_electronica.utils.fel_config import resolve_original_configuration
+
+    result = resolve_original_configuration(doctype, name)
     if result.get("ok"):
         return (True, result.get("name"))
     return (False, result.get("message"))
@@ -958,7 +981,8 @@ def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='S
         document (str, optional): [description]. Defaults to 'Sales Invoice'.
     """
 
-    status_config = validate_configuration(_company_for(document, invoice_name))
+    # La anulación sale por el certificador del Envio FEL original, no por el predeterminado.
+    status_config = configuration_for_original_document(document, invoice_name)
 
     if status_config[0] == True:
         cancel_invoice = CancelDocument(invoice_name, status_config[1], reason_cancelation, document)
@@ -996,6 +1020,15 @@ def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='S
         return
 
 
+def _configuration_for_fel_action(docinv):
+    """Configuración del documento: la original si es anulación o nota de crédito."""
+    if docinv.doctype in ("Sales Invoice", "Purchase Invoice") and docinv.docstatus == 2 and docinv.get("numero_autorizacion_fel"):
+        return configuration_for_original_document(docinv.doctype, docinv.name)
+    if docinv.doctype == "Sales Invoice" and docinv.get("is_return") and docinv.get("return_against"):
+        return configuration_for_original_document("Sales Invoice", docinv.return_against)
+    return validate_configuration(docinv.get("company"))
+
+
 @frappe.whitelist()
 def is_valid_to_fel(doctype, docname):
     """
@@ -1010,7 +1043,7 @@ def is_valid_to_fel(doctype, docname):
     # FACT, FACTEXP, NCRED, FESP, NDEB, CANCEL
     status_list = ['Credit Note Issued', 'Debit Note Issued', 'Return']
     docinv = frappe.get_doc(doctype, docname)
-    stat = validate_configuration(docinv.get('company'))
+    stat = _configuration_for_fel_action(docinv)
 
     if stat[0] == True:
         config_name = stat[1]

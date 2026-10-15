@@ -6,6 +6,16 @@ frappe.ui.form.on('Configuracion Factura Electronica', {
     // en-US # Upon form refresh
     // es-GT # Al crear el formulario
     setup: function (frm) {
+        // Un certificador deshabilitado no se ofrece en configuraciones nuevas.
+        // El enlace ya guardado sigue visible en el campo.
+        frm.set_query('certificador', function () {
+            return {
+                filters: {
+                    disabled: 0
+                }
+            };
+        });
+
         // en-US # Call the python method indicated
         // es-GT # Llame al modulo python indicado
 
@@ -51,6 +61,26 @@ frappe.ui.form.on('Configuracion Factura Electronica', {
             }
         });
 
+    },
+
+    certificador: function (frm) {
+        if (!frm.doc.certificador) {
+            return;
+        }
+        frappe.db.get_doc('Certificador FEL', frm.doc.certificador).then(function (cert) {
+            if (!frm.doc.url_firma && cert.url_firma) {
+                frm.set_value('url_firma', cert.url_firma);
+            }
+            if (!frm.doc.url_dte && cert.url_dte) {
+                frm.set_value('url_dte', cert.url_dte);
+            }
+            if (!frm.doc.url_de_anulacion && cert.url_anulacion) {
+                frm.set_value('url_de_anulacion', cert.url_anulacion);
+            }
+            if (!frm.doc.url_descarga_pdf && cert.url_pdf) {
+                frm.set_value('url_descarga_pdf', cert.url_pdf);
+            }
+        });
     }
 });
 

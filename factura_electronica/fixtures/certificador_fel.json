@@ -1,0 +1,200 @@
+[
+ {
+  "doctype": "Certificador FEL",
+  "name": "AINNOVA",
+  "razon_social": "AINNOVA S.A.",
+  "nit": "5640773-4",
+  "nombre_comercial": "Guatefacturas",
+  "sitio_web": "https://www.guatefacturas.com",
+  "fecha_autorizacion_sat": "2018-11-23",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "CCG",
+  "razon_social": "CÁMARA DE COMERCIO DE GUATEMALA",
+  "nit": "351598",
+  "nombre_comercial": "Cámara de Comercio de Guatemala",
+  "sitio_web": "https://www.ccg.gt",
+  "fecha_autorizacion_sat": "2021-02-24",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "CARI",
+  "razon_social": "CARI LATINOAMÉRICA, S.A.",
+  "nit": "96941243",
+  "nombre_comercial": "CARI",
+  "sitio_web": "https://www.cari.lat",
+  "fecha_autorizacion_sat": "2022-11-22",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "COFIDI",
+  "razon_social": "COFIDI, S.A.",
+  "nit": "62469045",
+  "nombre_comercial": "COFIDI",
+  "sitio_web": "https://www.cofidi.com.gt",
+  "fecha_autorizacion_sat": "2019-07-03",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "GUATEMEL",
+  "razon_social": "COMERCIALIZADORA GUATEMALTECA MAYORISTA DE ELECTRICIDAD, S.A.",
+  "nit": "37156616",
+  "nombre_comercial": "Guatemel",
+  "sitio_web": "https://portal.fel.guatemel.com.gt",
+  "fecha_autorizacion_sat": "2020-02-21",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "CONTAP",
+  "razon_social": "CONTAP, S.A.",
+  "nit": "98978802",
+  "nombre_comercial": "Facturas.gt",
+  "sitio_web": "https://www.facturas.gt",
+  "fecha_autorizacion_sat": "2020-04-30",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "CORPOSISTEMAS",
+  "razon_social": "CORPOSISTEMAS, S.A.",
+  "nit": "108151654",
+  "nombre_comercial": "Corposistemas",
+  "sitio_web": "https://www.corposistemasgt.com",
+  "fecha_autorizacion_sat": "2021-04-06",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "DIGIFACT",
+  "razon_social": "DIGIFACT SERVICIOS, S. A.",
+  "nit": "77454820",
+  "nombre_comercial": "Digifact",
+  "sitio_web": "https://www.digifact.com.gt",
+  "fecha_autorizacion_sat": "2019-08-23",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "EFORCON",
+  "razon_social": "FORMULARIOS CONTINUOS DE CENTRO AMERICA, S A.",
+  "nit": "4150686",
+  "nombre_comercial": "eForcon",
+  "sitio_web": "https://www.eforcon.com",
+  "fecha_autorizacion_sat": "2019-11-20",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "G4S",
+  "razon_social": "G4S DOCUMENTA, S. A.",
+  "nit": "60010207",
+  "nombre_comercial": "Documenta",
+  "sitio_web": "https://www.documenta.com.gt",
+  "fecha_autorizacion_sat": "2019-03-11",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "GOM",
+  "razon_social": "GOM SOLUTIONS, S.A.",
+  "nit": "95189416",
+  "nombre_comercial": "GOM Solutions",
+  "sitio_web": "https://www.gomsolutions.com",
+  "fecha_autorizacion_sat": "2020-03-12",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "GRUPO-CDS",
+  "razon_social": "GRUPO CDS S.A.",
+  "nit": "107902281",
+  "nombre_comercial": "Grupo CDS",
+  "sitio_web": "https://www.grupocds.com.gt",
+  "fecha_autorizacion_sat": "2021-12-02",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "INDRESE",
+  "razon_social": "INTEGRAL ADMINISTRADORA DE RECURSOS Y SERVICIOS EMPRESARIALES, S.A",
+  "nit": "92721788",
+  "nombre_comercial": "INDRESE",
+  "sitio_web": "https://www.indrese.com",
+  "fecha_autorizacion_sat": "2020-01-17",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "INFILE",
+  "razon_social": "INFILE, S. A.",
+  "nit": "12521337",
+  "nombre_comercial": "INFILE",
+  "sitio_web": "https://www.infile.com",
+  "fecha_autorizacion_sat": "2018-10-29",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15. Primera integración implementada en esta aplicación."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "EDX",
+  "razon_social": "INFORUM CONSULTING, S. A.",
+  "nit": "43430775",
+  "nombre_comercial": "EDX Solutions",
+  "sitio_web": "https://www.edxsolutions.gt",
+  "fecha_autorizacion_sat": "2018-11-23",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "MEGAPRINT",
+  "razon_social": "MEGAPRINT, S. A.",
+  "nit": "50510231",
+  "nombre_comercial": "Megaprint",
+  "sitio_web": "https://www.megaprint.com.gt",
+  "fecha_autorizacion_sat": "2018-11-23",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "ECOFACTURA",
+  "razon_social": "OPERADORA ECONÓMICA, S.A.",
+  "nit": "64281167",
+  "nombre_comercial": "Ecofactura",
+  "sitio_web": "https://www.ecofactura.com.gt",
+  "fecha_autorizacion_sat": "2020-02-13",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ },
+ {
+  "doctype": "Certificador FEL",
+  "name": "TEKRA",
+  "razon_social": "TEKRA, S. A.",
+  "nit": "107346834",
+  "nombre_comercial": "TEKRA",
+  "sitio_web": "https://www.tekra.com.gt",
+  "fecha_autorizacion_sat": "2020-12-21",
+  "disabled": 0,
+  "notes": "Listado oficial SAT de certificadores de DTE. Fuente: https://portal.sat.gob.gt/portal/certificador-de-dte/ consultado el 2026-10-15."
+ }
+]

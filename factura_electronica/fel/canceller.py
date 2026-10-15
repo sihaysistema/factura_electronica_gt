@@ -150,54 +150,16 @@ class CancelDocument:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
 
 
-        # Generamos la peticion para firmar
+        # La firma la despacha el adaptador del certificador de esta configuración.
         try:
-            url = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                     {'name': self.__config_name}, 'url_firma')).strip()
-
-            alias = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                       {'name': self.__config_name}, 'alias')).strip()
-
-            anulacion = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                           {'name': self.__config_name}, 'es_anulacion')).strip()
-
-            self.__llave = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                              {'name': self.__config_name}, 'llave_pfx')).strip()
-
-            self.__data_a_firmar = {
-                "llave": self.__llave, # LLAVE
-                "archivo": str(self.__encoded_str),  # En base64
-                "alias": alias, # USUARIO
-                "es_anulacion": 'S' # "N" si es certificacion y "S" si es anulacion
-            }
-
-            # DEBUGGING WRITE JSON PETITION TO SITES FOLDER
-            # with open('peticion.json', 'w') as f:
-            #      f.write(json.dumps(self.__data_a_firmar, indent=2))
-
-            headers = {"content-type": "application/json"}
-            response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
-
-            # Guardamos en una variable privada la respuesta
-            self.__doc_firmado = json.loads((response.content).decode('utf-8'))
-
-            # Guardamos la respuesta en un archivo DEBUG
-            # with open('recibido_cancelador_firmado.json', 'w') as f:
-            #      f.write(json.dumps(self.__doc_firmado, indent=2))
-
-            # Si la respuesta es true
-            if self.__doc_firmado.get('resultado') == True:
-                # Guardamos en privado el documento firmado y encriptado
-                self.__encrypted = self.__doc_firmado.get('archivo')
-
-                # Retornamos el status del proceso
-                return True, ' sign'
-
-            else:  # Si ocurre un error retornamos la descripcion del error por INFILE
-                return False, self.__doc_firmado.get('descripcion')
-
+            from factura_electronica.fel.certifiers import sign_xml
+            ok_firma, firma_result = sign_xml(self.__config_name, self.__encoded_str, es_anulacion='S')
+            if not ok_firma:
+                return False, firma_result
+            self.__encrypted = firma_result
+            return True, 'OK'
         except:
-            return False, 'Ocurrio un problema al tratar de firmar documento para peticion Documento Electronico, mas detalles en: '+str(frappe.get_traceback())
+            return False, 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
 
     def request_cancel(self):
         """
@@ -210,27 +172,14 @@ class CancelDocument:
         try:
             data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
 
-            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_de_anulacion')
-            user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
-            llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'llave_ws')
-            correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'correo_copia')
-            ident = self.__invoice_code  # identificador
+            from factura_electronica.fel.certifiers import cancel_dte
+            ok_dte, dte_result = cancel_dte(
+                self.__config_name, self.tax_id_company, self.__encrypted, self.__invoice_code
+            )
+            if not ok_dte:
+                return False, dte_result
+            self.__response_ok = dte_result
 
-            req_dte = {
-                "nit_emisor": self.tax_id_company,
-                "correo_copia": correo_copia,  # "m.monroyc22@gmail.com",
-                "xml_dte": self.__encrypted
-            }
-
-            headers = {
-                "content-type": "application/json",
-                "usuario": user,
-                "llave": llave,
-                "identificador": ident
-            }
-
-            self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
-            self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
             # with open('response_cancelador.json', 'w') as f:

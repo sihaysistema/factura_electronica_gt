@@ -10,17 +10,42 @@ from frappe.model.document import Document
 
 
 class ConfiguracionFacturaElectronica(Document):
+    def before_insert(self):
+        from factura_electronica.utils.fel_config import apply_certifier_url_defaults
+
+        apply_certifier_url_defaults(self)
+
+    def before_save(self):
+        from factura_electronica.utils.fel_config import apply_certifier_url_defaults
+
+        apply_certifier_url_defaults(self)
+
     def validate(self):
-        # Compañía obligatoria. Al validar (docstatus 1) solo puede existir
-        # una configuración activa por compañía. Las series FEL y de compra
-        # son tablas hijas: heredan la compañía de este documento.
+        # Compañía y certificador obligatorios. Al validar (docstatus 1) solo
+        # puede existir una configuración activa por par compañía + certificador
+        # (Acuerdo 13-2018, art. 14). Las series son tablas hijas.
+        from factura_electronica.utils.fel_config import (
+            apply_certifier_url_defaults,
+            assert_certificador_selectable,
+            ensure_single_active_configuration,
+            ensure_single_default_for_company,
+        )
+
+        apply_certifier_url_defaults(self)
+
         if not self.company:
             frappe.throw(_("La compañía es obligatoria en Configuración Factura Electrónica."))
+        if not self.certificador:
+            frappe.throw(_("El certificador es obligatorio en Configuración Factura Electrónica."))
+
+        previous = None
+        if not self.is_new() and self.name and frappe.db.exists(self.doctype, self.name):
+            previous = frappe.db.get_value(self.doctype, self.name, "certificador")
+        assert_certificador_selectable(self.certificador, previous)
 
         if self.docstatus == 1:
-            from factura_electronica.utils.fel_config import ensure_single_active_configuration
-
-            ensure_single_active_configuration(self.company, self.name)
+            ensure_single_active_configuration(self.company, self.certificador, self.name)
+            ensure_single_default_for_company(self)
 # es-GT: Se hace whitelist o abre permiso para permitir llamados Asincronicos desde el navegador del usuario
 # en-US: Whitelisting the function to permit Asyncrhonous calls from the user's web browser
 # es-GT: Esta funcion obtiene el contenido del campo "Naming Series" configurada por el usuario para "Sale Invoice". (Las series configuradas por el usuario para Facturas de Venta)
