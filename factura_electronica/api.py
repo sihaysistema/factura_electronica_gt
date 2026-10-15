@@ -31,7 +31,8 @@ def guardar_pdf_servidor(nombre_archivo, cae_de_factura_electronica):
     * cae_de_factura_electronica (str) : CAE
     '''
     import os
-    modalidad_configurada = validar_configuracion()
+    company = frappe.db.get_value('Sales Invoice', nombre_archivo, 'company')
+    modalidad_configurada = validar_configuracion(company)
     nombre_de_sitio = get_site_name(frappe.local.site)
     ruta_archivo = '{0}/private/files/factura-electronica/'.format(nombre_de_sitio)
 
@@ -185,8 +186,9 @@ def facelec_api(serie_factura, nombre_cliente, pre_se):
     nombre_del_cliente = str(nombre_cliente)
     prefijo_serie = str(pre_se)
 
-    # Verifica que exista una configuracion validada para Factura Electronicaa
-    validar_config = validar_configuracion()
+    # Configuración activa de la compañía de la factura
+    company = frappe.db.get_value('Sales Invoice', serie_original_factura, 'company')
+    validar_config = validar_configuracion(company)
 
     # Si es igual a 1, hay una configuracion valida
     if validar_config[0] == 1:
@@ -368,9 +370,7 @@ def facelec_api(serie_factura, nombre_cliente, pre_se):
         return {
             "status": "ERROR",
             "cantidad_errores": 1,
-            "detalle_errores_facelec": ['''Existe más de una configuración para factura electrónica.
-                             Verifique que solo exista una validada en
-                             <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>'''],
+            "detalle_errores_facelec": [validar_config[1]],
             "uuid": ""
         }
 
@@ -378,8 +378,7 @@ def facelec_api(serie_factura, nombre_cliente, pre_se):
         return {
             "status": "ERROR",
             "cantidad_errores": 1,
-            "detalle_errores_facelec": ['''No se encontró una configuración válida. Verifique que exista una configuración validada en
-                             <a href='#List/Configuracion Factura Electronica'><b>Configuracion Factura Electronica</b></a>'''],
+            "detalle_errores_facelec": [validar_config[1]],
             "uuid": ""
         }
 
@@ -448,17 +447,18 @@ def invoice_exists(uuid):
 
 
 @frappe.whitelist()
-def btn_activator(electronic_doc):
+def btn_activator(electronic_doc, company=None):
     """Define si se muestra/oculta el boton generador de docs electronicos en el SI/PI
 
     Args:
-        electronic_doc (str): Sales Invoice/Purchase Invoice
+        electronic_doc (str): Campo de activación en la configuración FEL
+        company (str): Compañía del documento
 
     Returns:
         bool
     """
     try:
-        status = validar_configuracion()
+        status = validar_configuracion(company)
         if status[0] == 1:
             # Verifica si el doc electronico a generar esta activado en config facelec
             if frappe.db.exists('Configuracion Factura Electronica', {'name': status[1], electronic_doc: 1}):
@@ -538,8 +538,8 @@ def pos_calculations(doc, event):
         event (str): Nombre del evento ejecutado
     """
     try:
-        validar_config = validar_configuracion()
         sales_invoice = frappe.get_doc('Sales Invoice', {'name': doc.name})
+        validar_config = validar_configuracion(sales_invoice.company)
 
         # Si es una factura generada desde POS y exista una configuracion facelc
         if sales_invoice.is_pos:
@@ -607,7 +607,7 @@ def pos_calculations(doc, event):
             frappe.db.set_value('Sales Invoice', doc.name, 'shs_total_iva_fac', total_iva_fact, update_modified=True)
 
             # Si los calculos se aplican correctamente se genera factura electronica
-            validar_config = validar_configuracion()
+            validar_config = validar_configuracion(sales_invoice.company)
             if validar_config[0] == 1:
                 is_facelec_pos = frappe.db.get_value('Configuracion Factura Electronica', {'name': validar_config[1]}, 'factura_electronica_fel_pos')
                 if is_facelec_pos == 1:

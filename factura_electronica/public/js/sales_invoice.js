@@ -105,6 +105,7 @@ function btn_generator(frm) {
         frappe
           .call("factura_electronica.api.btn_activator", {
             electronic_doc: "anulador_de_facturas_ventas_fel",
+            company: frm.doc.company,
           })
           .then((r) => {
             // console.log(r.message)

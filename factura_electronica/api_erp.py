@@ -158,7 +158,9 @@ def add_address_info(doc):
 
             email_facelec = doc.get('email_id')
             if not doc.get('email_id'):
-                status_config = validate_configuration()
+                from factura_electronica.utils.fel_config import default_company_name
+
+                status_config = validate_configuration(default_company_name())
                 if status_config[0] and status_config[1]:
                     email_facelec = frappe.db.get_value('Configuracion Factura Electronica', {'name': status_config[1]}, 'correo_copia')
 
