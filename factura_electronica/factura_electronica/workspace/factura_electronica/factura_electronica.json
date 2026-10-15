@@ -245,6 +245,13 @@
   },
   {
    "doc_view": "List",
+   "icon": "",
+   "label": "Certificadores FEL",
+   "link_to": "Certificador FEL",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
    "icon": "check",
    "label": "Envios de documentos electr\u00f3nicos",
    "link_to": "Envio FEL",
