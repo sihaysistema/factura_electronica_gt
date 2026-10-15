@@ -32,14 +32,29 @@ Promedio
     Diferencia is that selected-year amount minus Promedio (negative when
     the month is under the average). "% vs Promedio" is
     (selected - Promedio) / Promedio * 100, blank when Promedio is 0.
-    On the Total row, Diferencia is the selected-year total minus the
-    Promedio total, and the percent is computed from those two totals.
+    "Dif. vs <year>" and "% vs <year>" compare the same month of the
+    previous calendar year (selected year - 1). They do not follow the
+    Years to compare filter. The percent is blank when that previous
+    month is 0.
 
-    The Total row sums the twelve displayed monthly cells (including Promedio
-    and the selected year) so the columns add down. That footer can differ
-    by a few cents from one GT Sales Ledger total run over a whole year,
-    because the ledger rounds the full-period sum once and this footer sums
-    already-rounded months.
+    When the selected year is the server's current year
+    (``frappe.utils.getdate``), the current month and later months are
+    incomplete. The current month still shows Promedio and the
+    month-to-date selected-year amount, but its comparison cells are
+    blank. Months that have not started are blank in Promedio, in the
+    selected-year column, and in every comparison column. Past years
+    treat all 12 months as complete.
+
+    The selected-year total is the year to date (months that show an
+    amount). The Promedio total sums only the months that show a
+    Promedio. Diferencia, both percents, and the previous-year
+    difference on the Total row use completed months only: the sum of
+    the selected year over those months against the sum of Promedio, or
+    against the sum of the previous year, for the same months.
+
+    The Total row can differ by a few cents from one GT Sales Ledger
+    total run over a whole year, because the ledger rounds the
+    full-period sum once and this footer sums already-rounded months.
 """
 
 from __future__ import unicode_literals
@@ -48,7 +63,7 @@ from datetime import date
 
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, getdate
 
 from factura_electronica.factura_electronica.report.gt_sales_ledger.queries import sales_invoices_monthly
 
@@ -97,11 +112,29 @@ def execute(filters=None):
         "to_date": "{0}-12-31".format(selected_year),
     }))
 
-    data = build_history(selected_year, ledger_rows, years_to_compare)
+    today = report_today()
+    data = build_history(selected_year, ledger_rows, years_to_compare, today=today)
     for row in data:
         row["currency"] = currency
 
-    return get_columns(years, selected_year), data
+    return get_columns(years, selected_year), data, comparison_message(selected_year, today)
+
+
+def report_today():
+    """Server date. Tests patch this instead of the clock."""
+
+    return getdate()
+
+
+def comparison_message(selected_year, today):
+    """Note shown when the selected year still has an open month."""
+
+    if int(selected_year) != today.year:
+        return None
+    return _(
+        "Comparaciones solo de meses completos. {0} muestra el acumulado y el promedio, "
+        "sin diferencia ni porcentaje. Los meses que aún no inician van en blanco."
+    ).format(SPANISH_MONTHS[today.month - 1])
 
 
 def default_company():
@@ -203,6 +236,21 @@ def get_columns(years, selected_year):
         "precision": 2,
         "width": 140,
     })
+    previous_year = int(selected_year) - 1
+    columns.append({
+        "label": "Dif. vs {0}".format(previous_year),
+        "fieldname": "dif_vs_prev",
+        "fieldtype": "Currency",
+        "options": "currency",
+        "width": 140,
+    })
+    columns.append({
+        "label": "% vs {0}".format(previous_year),
+        "fieldname": "pct_vs_prev",
+        "fieldtype": "Percent",
+        "precision": 2,
+        "width": 130,
+    })
     columns.append({
         "label": _("Currency"),
         "fieldname": "currency",
@@ -213,17 +261,21 @@ def get_columns(years, selected_year):
     return columns
 
 
-def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN):
+def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN, today=None):
     """Pivot GT Sales Ledger monthly totals into 12 month rows plus Total.
 
     ``ledger_rows`` is the list returned by ``sales_invoices_monthly``:
     ``month_repo``, ``year_repo`` and ``total`` (already summed in SQL).
     The ``years_to_compare`` years before ``selected_year`` are the history
     columns. ``selected_year`` is its own column after Promedio.
+    ``today`` defaults to the server date.
     """
 
     selected_year = int(selected_year)
+    if today is None:
+        today = report_today()
     years = history_years(selected_year, years_to_compare)
+    previous_year = selected_year - 1
     raw_totals = {}
     years_with_data = set()
 
@@ -247,6 +299,13 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN):
         return flt(raw_totals[(year, month)], PRECISION)
 
     rows = []
+    shown_promedio = []
+    shown_selected = []
+    complete_selected = []
+    complete_promedio = []
+    complete_previous = []
+    selected_field = year_fieldname(selected_year)
+
     for month_index, month_name in enumerate(SPANISH_MONTHS, start=1):
         row = {"mes": month_name}
         values = {}
@@ -256,9 +315,30 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN):
             values[year] = amount
         # ``years`` is the history window only, so the selected year stays
         # out of Promedio even when that year has invoices.
-        row["promedio"] = average_month(values, years, years_with_data)
-        row[year_fieldname(selected_year)] = month_total(selected_year, month_index)
-        apply_variance(row, selected_year)
+        promedio = average_month(values, years, years_with_data)
+        selected_amount = month_total(selected_year, month_index)
+        previous_amount = month_total(previous_year, month_index)
+        state = month_state(selected_year, month_index, today)
+
+        if state == "future":
+            row["promedio"] = None
+            row[selected_field] = None
+            clear_comparisons(row)
+        elif state == "current":
+            row["promedio"] = promedio
+            row[selected_field] = selected_amount
+            shown_promedio.append(promedio)
+            shown_selected.append(selected_amount)
+            clear_comparisons(row)
+        else:
+            row["promedio"] = promedio
+            row[selected_field] = selected_amount
+            shown_promedio.append(promedio)
+            shown_selected.append(selected_amount)
+            fill_comparisons(row, selected_amount, promedio, previous_amount)
+            complete_selected.append(selected_amount)
+            complete_promedio.append(promedio)
+            complete_previous.append(previous_amount)
         rows.append(row)
 
     total_row = {"mes": TOTAL_LABEL}
@@ -266,24 +346,51 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN):
         total_row[year_fieldname(year)] = flt(
             sum(row[year_fieldname(year)] for row in rows), PRECISION
         )
-    total_row["promedio"] = flt(sum(row["promedio"] for row in rows), PRECISION)
-    selected_field = year_fieldname(selected_year)
-    total_row[selected_field] = flt(
-        sum(row[selected_field] for row in rows), PRECISION
-    )
-    # From the two totals, not from a sum of the monthly percents.
-    apply_variance(total_row, selected_year)
+    total_row["promedio"] = sum_amounts(shown_promedio)
+    total_row[selected_field] = sum_amounts(shown_selected)
+    if complete_selected:
+        fill_comparisons(
+            total_row,
+            sum_amounts(complete_selected),
+            sum_amounts(complete_promedio),
+            sum_amounts(complete_previous),
+        )
+    else:
+        clear_comparisons(total_row)
     rows.append(total_row)
     return rows
 
 
-def apply_variance(row, selected_year):
-    """Diferencia and % vs Promedio for one month or for the Total row."""
+def month_state(selected_year, month_index, today):
+    """complete, current (month already started), or future (not started)."""
 
-    selected_amount = row[year_fieldname(selected_year)]
-    promedio = row["promedio"]
+    if selected_year < today.year:
+        return "complete"
+    if selected_year > today.year or month_index > today.month:
+        return "future"
+    if month_index == today.month:
+        return "current"
+    return "complete"
+
+
+def sum_amounts(values):
+    if not values:
+        return 0.0
+    return flt(sum(values), PRECISION)
+
+
+def fill_comparisons(row, selected_amount, promedio, previous_amount):
     row["diferencia"] = month_difference(selected_amount, promedio)
     row["vs_promedio"] = percent_vs_promedio(selected_amount, promedio)
+    row["dif_vs_prev"] = month_difference(selected_amount, previous_amount)
+    row["pct_vs_prev"] = percent_vs_promedio(selected_amount, previous_amount)
+
+
+def clear_comparisons(row):
+    row["diferencia"] = None
+    row["vs_promedio"] = None
+    row["dif_vs_prev"] = None
+    row["pct_vs_prev"] = None
 
 
 def month_difference(selected, promedio):

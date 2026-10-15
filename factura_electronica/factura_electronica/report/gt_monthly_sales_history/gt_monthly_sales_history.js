@@ -30,12 +30,12 @@ frappe.query_reports["GT Monthly Sales History"] = {
     },
   ],
   formatter: function (value, row, column, data, default_formatter) {
-    if (column && column.fieldname === "vs_promedio") {
+    if (column && (column.fieldname === "vs_promedio" || column.fieldname === "pct_vs_prev")) {
       var percent = gt_monthly_sales_history_format_percent(value);
       return gt_monthly_sales_history_colorize(percent, value);
     }
     var formatted = default_formatter(value, row, column, data);
-    if (column && column.fieldname === "diferencia") {
+    if (column && (column.fieldname === "diferencia" || column.fieldname === "dif_vs_prev")) {
       return gt_monthly_sales_history_colorize(formatted, value);
     }
     return formatted;
