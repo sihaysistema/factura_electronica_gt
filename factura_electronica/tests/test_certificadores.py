@@ -96,10 +96,9 @@ class TestOfficialCatalog(unittest.TestCase):
             self.assertTrue(row.get("nit"))
 
     def test_seed_skips_a_nit_that_already_exists(self):
-        frappe.db.table_exists.return_value = True
-        frappe.db.exists.return_value = False
-        frappe.db.sql.return_value = [("YA-EXISTE",)]
-        with patch(
+        with patch.object(frappe.db, "table_exists", return_value=True), patch.object(
+            frappe.db, "exists", return_value=False
+        ), patch.object(frappe.db, "sql", return_value=[("YA-EXISTE",)]), patch(
             "factura_electronica.patches.backfill_certificador_infile.frappe.get_doc"
         ) as get_doc:
             result = seed_official_certificadores()
@@ -108,11 +107,10 @@ class TestOfficialCatalog(unittest.TestCase):
         get_doc.assert_not_called()
 
     def test_seed_inserts_missing_certifiers_by_name(self):
-        frappe.db.table_exists.return_value = True
-        frappe.db.exists.return_value = False
-        frappe.db.sql.return_value = ()
         doc = MagicMock()
-        with patch(
+        with patch.object(frappe.db, "table_exists", return_value=True), patch.object(
+            frappe.db, "exists", return_value=False
+        ), patch.object(frappe.db, "sql", return_value=()), patch(
             "factura_electronica.patches.backfill_certificador_infile.frappe.get_doc",
             return_value=doc,
         ):
@@ -130,27 +128,27 @@ class TestSelectionRules(unittest.TestCase):
         )
 
     def test_explicit_configuration_wins_over_the_default(self):
-        frappe.db.get_value.return_value = {
+        with patch.object(frappe.db, "get_value", return_value={
             "name": "CONF-OTRO",
             "regimen": "FEL",
             "company": "Comercial",
             "certificador": "DIGIFACT",
             "docstatus": 1,
-        }
-        result = get_active_config_for_company("Comercial", configuracion="CONF-OTRO")
+        }):
+            result = get_active_config_for_company("Comercial", configuracion="CONF-OTRO")
         self.assertTrue(result["ok"])
         self.assertEqual(result["name"], "CONF-OTRO")
         self.assertEqual(result["certificador"], "DIGIFACT")
 
     def test_explicit_configuration_must_belong_to_the_company(self):
-        frappe.db.get_value.return_value = {
+        with patch.object(frappe.db, "get_value", return_value={
             "name": "CONF-OTRO",
             "regimen": "FEL",
             "company": "Otra",
             "certificador": "INFILE",
             "docstatus": 1,
-        }
-        result = get_active_config_for_company("Comercial", configuracion="CONF-OTRO")
+        }):
+            result = get_active_config_for_company("Comercial", configuracion="CONF-OTRO")
         self.assertFalse(result["ok"])
         self.assertIn("Comercial", result["message"])
 
@@ -192,39 +190,37 @@ class TestSelectionRules(unittest.TestCase):
 
 class TestDisableAndDelete(unittest.TestCase):
     def test_disabled_certifier_cannot_be_newly_selected(self):
-        frappe.db.get_value.return_value = 1
-        with self.assertRaises(Exception) as raised:
-            assert_certificador_selectable("DIGIFACT", previous=None)
+        with patch.object(frappe.db, "get_value", return_value=1):
+            with self.assertRaises(Exception) as raised:
+                assert_certificador_selectable("DIGIFACT", previous=None)
         self.assertIn("deshabilitado", str(raised.exception).lower())
         self.assertIn("DIGIFACT", str(raised.exception))
 
     def test_historical_link_to_a_disabled_certifier_can_stay(self):
-        frappe.db.get_value.return_value = 1
-        assert_certificador_selectable("DIGIFACT", previous="DIGIFACT")
+        with patch.object(frappe.db, "get_value", return_value=1):
+            assert_certificador_selectable("DIGIFACT", previous="DIGIFACT")
 
     def test_delete_is_blocked_when_envio_or_config_references_it(self):
-        frappe.db.table_exists.return_value = True
-        frappe.db.has_column.return_value = True
-
         def _count(doctype, filters=None):
             if doctype == "Envio FEL":
                 return 4
             return 1
 
-        frappe.db.count.side_effect = _count
-        with self.assertRaises(Exception) as raised:
-            prevent_certificador_deletion("INFILE")
+        with patch.object(frappe.db, "table_exists", return_value=True), patch.object(
+            frappe.db, "has_column", return_value=True
+        ), patch.object(frappe.db, "count", side_effect=_count):
+            with self.assertRaises(Exception) as raised:
+                prevent_certificador_deletion("INFILE")
         message = str(raised.exception)
         self.assertIn("INFILE", message)
         self.assertIn("Deshabilítelo", message)
         self.assertIn("Envio FEL", message)
 
     def test_delete_is_allowed_when_nothing_references_it(self):
-        frappe.db.table_exists.return_value = True
-        frappe.db.has_column.return_value = True
-        frappe.db.count.side_effect = None
-        frappe.db.count.return_value = 0
-        prevent_certificador_deletion("CERT-NUEVO")
+        with patch.object(frappe.db, "table_exists", return_value=True), patch.object(
+            frappe.db, "has_column", return_value=True
+        ), patch.object(frappe.db, "count", return_value=0):
+            prevent_certificador_deletion("CERT-NUEVO")
 
 
 class TestOriginalEnvioRouting(unittest.TestCase):
@@ -306,13 +302,14 @@ class TestCertifierDispatch(unittest.TestCase):
         self.assertIsNone(resolve_adapter_class("DIGIFACT", "77454820"))
         message = message_not_implemented("DIGIFACT SERVICIOS, S. A.", "77454820")
         self.assertIn("implementado aún", message)
-        frappe.db.exists.return_value = True
-        frappe.db.get_value.return_value = {
-            "nit": "77454820",
-            "razon_social": "DIGIFACT SERVICIOS, S. A.",
-        }
-        with self.assertRaises(Exception) as raised:
-            get_adapter("DIGIFACT")
+        with patch.object(frappe.db, "exists", return_value=True), patch.object(
+            frappe.db, "get_value", return_value={
+                "nit": "77454820",
+                "razon_social": "DIGIFACT SERVICIOS, S. A.",
+            }
+        ):
+            with self.assertRaises(Exception) as raised:
+                get_adapter("DIGIFACT")
         self.assertIn("implementado aún", str(raised.exception))
 
 
@@ -326,12 +323,10 @@ class TestBackfillSql(unittest.TestCase):
                 return ((2,),)
             return ()
 
-        frappe.db.table_exists.return_value = True
-        frappe.db.has_column.return_value = True
-        frappe.db.exists.return_value = True
-        with patch(
-            "factura_electronica.patches.backfill_certificador_infile.frappe.db.sql",
-            side_effect=sql,
+        with patch.object(frappe.db, "table_exists", return_value=True), patch.object(
+            frappe.db, "has_column", return_value=True
+        ), patch.object(frappe.db, "exists", return_value=True), patch.object(
+            frappe.db, "sql", side_effect=sql
         ):
             result = backfill_infile_links()
 
