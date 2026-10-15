@@ -373,10 +373,15 @@
    "label": "Llave Web Service"
   },
   {
+   "bold": 1,
+   "description": "Obligatoria. Solo puede haber una configuración validada por compañía. Las series FEL quedan en las tablas hijas de esta configuración.",
    "fieldname": "company",
    "fieldtype": "Link",
-   "label": "Company",
-   "options": "Company"
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Compañía",
+   "options": "Company",
+   "reqd": 1
   },
   {
    "description": "FEL: De acuerdo al R\u00e9gimen que\ntenga registrado el contribuyente, se refiere a que puede ser General/Exento o Peque\u00f1o Contribuyente.",
@@ -575,7 +580,7 @@
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2022-01-05 12:05:23.956265",
+ "modified": "2026-10-15 20:40:00.000000",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

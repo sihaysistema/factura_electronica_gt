@@ -55,26 +55,22 @@ def normalizar_texto(texto):
     return string_normalizado
 
 
-def validar_configuracion():
-    """Permite verificar que exista una configuración validada para Factura Electrónica,
-       retorna 1 de 3 opciones:
-       1 : Una configuracion valida
-       2 : Hay mas de una configuracion
-       3 : No hay configuraciones"""
-    # verifica que exista un documento validado, docstatus = 1 => validado
-    if frappe.db.exists('Configuracion Factura Electronica', {'docstatus': 1}):
+def validar_configuracion(company=None):
+    """Verifica la configuración FEL activa de una compañía.
 
-        configuracion_valida = frappe.db.get_values('Configuracion Factura Electronica',
-                                                   filters={'docstatus': 1},
-                                                   fieldname=['name', 'regimen'], as_dict=1)
-        if (len(configuracion_valida) == 1):
-            return (int(1), str(configuracion_valida[0]['name']), str(configuracion_valida[0]['regimen']))
+    Retorna:
+       (1, name, regimen) si hay exactamente una configuración validada
+       (2, mensaje) si hay más de una para esa compañía
+       (3, mensaje) si no hay configuración activa o no se indicó compañía
+    """
+    from factura_electronica.utils.fel_config import get_active_config_for_company
 
-        elif (len(configuracion_valida) > 1):
-            return (int(2), 'Error 2')
-
-    else:
-        return (int(3), 'Error 3')
+    result = get_active_config_for_company(company)
+    if result.get("ok"):
+        return (int(1), result.get("name"), result.get("regimen") or "")
+    if result.get("code") == "multiple":
+        return (int(2), result.get("message"))
+    return (int(3), result.get("message"))
 
 
 def generate_asl_file(datos_asiste, file_name='ASISTE', delimiter='|', extension='.ASL'):

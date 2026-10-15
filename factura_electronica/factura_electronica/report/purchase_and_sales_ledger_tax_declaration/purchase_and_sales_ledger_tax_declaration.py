@@ -424,7 +424,7 @@ def process_purchase_invoices(purchase_invoices, filters):
             # Column B: Compras/Ventas (ya viene procesado desde la base de datos) C o V, OK
 
             # Column C: Documento, OK
-            document_inv = validate_serie(purchase_invoice.get('serie_doc'))
+            document_inv = validate_serie(purchase_invoice.get('serie_doc'), filters.get('company'))
             purchase_invoice.update({'documento': document_inv})
 
             # Column D, Serie del documento, OK
@@ -604,7 +604,7 @@ def process_sales_invoices(sales_invoices, filters):
             # Column B: Compras/Ventas (ya viene procesado de la base de datos) C o V, OK
 
             # Column C: Documento, OK
-            document_inv = validate_serie(sales_invoice.get('serie_doc'))
+            document_inv = validate_serie(sales_invoice.get('serie_doc'), filters.get('company'))
             sales_invoice.update({'documento': document_inv})
 
             # Column D, Serie del documento, OK
