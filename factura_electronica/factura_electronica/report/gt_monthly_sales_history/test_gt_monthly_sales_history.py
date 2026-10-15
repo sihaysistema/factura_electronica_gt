@@ -125,10 +125,11 @@ class TestHistoryLayout(TestCase):
         visible = [column for column in columns if not column.get("hidden")]
         self.assertEqual(
             [column["label"] for column in visible],
-            ["Mes", "2021", "2022", "2023", "2024", "2025", "Promedio"],
+            ["Mes", "2021", "2022", "2023", "2024", "2025", "Promedio", "2026"],
         )
-        self.assertEqual(len(visible), 7)
+        self.assertEqual(len(visible), 8)
         self.assertEqual(len(rows), 13)
+        self.assertEqual(rows[0]["y_2026"], 0.0)
 
     @patch(
         "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
@@ -147,9 +148,10 @@ class TestHistoryLayout(TestCase):
             "years_to_compare": "3",
         })
         visible = [column["label"] for column in columns if not column.get("hidden")]
-        self.assertEqual(visible, ["Mes", "2023", "2024", "2025", "Promedio"])
+        self.assertEqual(visible, ["Mes", "2023", "2024", "2025", "Promedio", "2026"])
         self.assertEqual(len(rows), 13)
         self.assertNotIn("y_2022", rows[0])
+        self.assertEqual(rows[0]["y_2026"], 0.0)
 
 
 class TestLedgerTotals(TestCase):
@@ -259,6 +261,25 @@ class TestLedgerTotals(TestCase):
             total["promedio"],
             round_half_up(sum(row["promedio"] for row in rows[:-1])),
         )
+        self.assertEqual(total["y_2026"], 0.0)
+
+    def test_selected_year_column_is_after_promedio_and_not_averaged(self):
+        rows = build_history(2026, [
+            {"year_repo": 2022, "month_repo": 1, "total": 100},
+            {"year_repo": 2026, "month_repo": 1, "total": "40.126"},
+            {"year_repo": 2026, "month_repo": 6, "total": -15},
+        ])
+        enero = rows[0]
+        # 2022 is the only history year with invoices, so Promedio is 100,
+        # not an average that includes January 2026.
+        self.assertEqual(enero["promedio"], 100.0)
+        self.assertEqual(enero["y_2026"], 40.13)
+        self.assertEqual(rows[1]["y_2026"], 0.0)
+        junio = rows[5]
+        self.assertEqual(junio["y_2026"], -15.0)
+        self.assertEqual(junio["promedio"], 0.0)
+        total = rows[-1]
+        self.assertEqual(total["y_2026"], 25.13)
 
 
 class TestExecuteUsesSalesLedgerQuery(TestCase):
@@ -284,7 +305,7 @@ class TestExecuteUsesSalesLedgerQuery(TestCase):
         self.assertEqual(filters.company, "Acme GT")
         self.assertEqual(filters.company_currency, "GTQ")
         self.assertEqual(filters.from_date, "2021-01-01")
-        self.assertEqual(filters.to_date, "2025-12-31")
+        self.assertEqual(filters.to_date, "2026-12-31")
         self.assertNotIn("customer", filters)
 
         agosto = rows[7]
@@ -306,9 +327,9 @@ class TestExecuteUsesSalesLedgerQuery(TestCase):
     )
     def test_query_range_follows_years_to_compare(self, _currency, query):
         cases = (
-            ("4", "2022-01-01", "2025-12-31"),
-            ("3", "2023-01-01", "2025-12-31"),
-            (2, "2024-01-01", "2025-12-31"),
+            ("4", "2022-01-01", "2026-12-31"),
+            ("3", "2023-01-01", "2026-12-31"),
+            (2, "2024-01-01", "2026-12-31"),
         )
         for span, start, end in cases:
             execute({"company": "Acme GT", "year": 2026, "years_to_compare": span})
@@ -336,7 +357,7 @@ class TestExecuteUsesSalesLedgerQuery(TestCase):
         filters = query.call_args[0][0]
         self.assertEqual(filters.company, "Default Co")
         self.assertEqual(filters.from_date, "2020-01-01")
-        self.assertEqual(filters.to_date, "2024-12-31")
+        self.assertEqual(filters.to_date, "2025-12-31")
 
     def test_invalid_year_is_rejected(self):
         with self.assertRaises(Exception):
