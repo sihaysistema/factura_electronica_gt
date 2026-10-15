@@ -12,6 +12,7 @@ from __future__ import unicode_literals
 
 import sys
 import types
+from datetime import date
 from unittest import TestCase, main
 from unittest.mock import patch
 
@@ -73,6 +74,7 @@ def _ensure_import_stubs():
         return float(Decimal(str(number)).quantize(quant, rounding=ROUND_HALF_UP))
 
     utils.flt = flt
+    utils.getdate = lambda value=None: date(2027, 1, 1)
     frappe.utils = utils
 
     numinwords = types.ModuleType("numinwords")
@@ -92,6 +94,14 @@ from factura_electronica.factura_electronica.report.gt_monthly_sales_history.gt_
     execute,
     history_years,
 )
+
+# Existing cases treat 2026 as a finished year. Incomplete-month tests pass
+# their own date or patch report_today.
+patch(
+    "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+    "gt_monthly_sales_history.report_today",
+    return_value=date(2027, 1, 1),
+).start()
 
 
 class TestHistoryLayout(TestCase):
@@ -121,13 +131,16 @@ class TestHistoryLayout(TestCase):
         return_value="GTQ",
     )
     def test_column_labels_are_the_year_numbers(self, _currency, _query):
-        columns, rows = execute({"company": "Acme", "year": "2026"})
+        columns, rows = execute({"company": "Acme", "year": "2026"})[:2]
         visible = [column for column in columns if not column.get("hidden")]
         self.assertEqual(
             [column["label"] for column in visible],
-            ["Mes", "2021", "2022", "2023", "2024", "2025", "Promedio", "2026", "Diferencia", "% vs Promedio"],
+            [
+                "Mes", "2021", "2022", "2023", "2024", "2025", "Promedio", "2026",
+                "Diferencia", "% vs Promedio", "Dif. vs 2025", "% vs 2025",
+            ],
         )
-        self.assertEqual(len(visible), 10)
+        self.assertEqual(len(visible), 12)
         self.assertEqual(len(rows), 13)
         self.assertEqual(rows[0]["y_2026"], 0.0)
 
@@ -146,11 +159,14 @@ class TestHistoryLayout(TestCase):
             "company": "Acme",
             "year": "2026",
             "years_to_compare": "3",
-        })
+        })[:2]
         visible = [column["label"] for column in columns if not column.get("hidden")]
         self.assertEqual(
             visible,
-            ["Mes", "2023", "2024", "2025", "Promedio", "2026", "Diferencia", "% vs Promedio"],
+            [
+                "Mes", "2023", "2024", "2025", "Promedio", "2026",
+                "Diferencia", "% vs Promedio", "Dif. vs 2025", "% vs 2025",
+            ],
         )
         self.assertEqual(len(rows), 13)
         self.assertNotIn("y_2022", rows[0])
@@ -317,6 +333,132 @@ class TestLedgerTotals(TestCase):
         self.assertEqual(total["diferencia"], 8.0)
         # (11 - 3) / 3 * 100 = 266.666... -> 266.67, not the sum of monthly percents.
         self.assertEqual(total["vs_promedio"], 266.67)
+        # Previous year is 2025, independent of the 2-year window.
+        self.assertEqual(enero["dif_vs_prev"], -2.0)
+        self.assertEqual(enero["pct_vs_prev"], -66.67)
+        self.assertEqual(febrero["dif_vs_prev"], 10.0)
+        self.assertIsNone(febrero["pct_vs_prev"])
+        self.assertEqual(total["dif_vs_prev"], 8.0)
+        self.assertEqual(total["pct_vs_prev"], 266.67)
+
+
+class TestIncompleteMonths(TestCase):
+    def test_current_month_keeps_promedio_and_blanks_comparisons(self):
+        today = date(2026, 10, 15)
+        rows = build_history(2026, [
+            {"year_repo": 2022, "month_repo": 1, "total": 100},
+            {"year_repo": 2025, "month_repo": 1, "total": 40},
+            {"year_repo": 2025, "month_repo": 3, "total": 10},
+            {"year_repo": 2025, "month_repo": 11, "total": 80},
+            {"year_repo": 2026, "month_repo": 1, "total": 50},
+            {"year_repo": 2026, "month_repo": 3, "total": 20},
+            {"year_repo": 2026, "month_repo": 10, "total": 7},
+            {"year_repo": 2026, "month_repo": 11, "total": 999},
+        ], today=today)
+
+        enero = rows[0]
+        self.assertEqual(enero["promedio"], 70.0)
+        self.assertEqual(enero["y_2026"], 50.0)
+        self.assertEqual(enero["diferencia"], -20.0)
+        self.assertEqual(enero["vs_promedio"], -28.57)
+        self.assertEqual(enero["dif_vs_prev"], 10.0)
+        self.assertEqual(enero["pct_vs_prev"], 25.0)
+
+        marzo = rows[2]
+        self.assertEqual(marzo["promedio"], 5.0)
+        self.assertEqual(marzo["diferencia"], 15.0)
+        self.assertEqual(marzo["vs_promedio"], 300.0)
+        self.assertEqual(marzo["dif_vs_prev"], 10.0)
+        self.assertEqual(marzo["pct_vs_prev"], 100.0)
+
+        octubre = rows[9]
+        self.assertEqual(octubre["mes"], "Octubre")
+        self.assertEqual(octubre["promedio"], 0.0)
+        self.assertEqual(octubre["y_2026"], 7.0)
+        self.assertIsNone(octubre["diferencia"])
+        self.assertIsNone(octubre["vs_promedio"])
+        self.assertIsNone(octubre["dif_vs_prev"])
+        self.assertIsNone(octubre["pct_vs_prev"])
+
+        noviembre = rows[10]
+        self.assertEqual(noviembre["y_2025"], 80.0)
+        self.assertIsNone(noviembre["promedio"])
+        self.assertIsNone(noviembre["y_2026"])
+        self.assertIsNone(noviembre["diferencia"])
+        self.assertIsNone(noviembre["vs_promedio"])
+        self.assertIsNone(noviembre["dif_vs_prev"])
+        self.assertIsNone(noviembre["pct_vs_prev"])
+
+        total = rows[-1]
+        self.assertEqual(total["y_2025"], 130.0)
+        self.assertEqual(total["y_2026"], 77.0)
+        self.assertEqual(total["promedio"], 75.0)
+        # Completed months only: Jan-Sep selected 70 vs Promedio 75, vs 2025's 50.
+        self.assertEqual(total["diferencia"], -5.0)
+        self.assertEqual(total["vs_promedio"], -6.67)
+        self.assertEqual(total["dif_vs_prev"], 20.0)
+        self.assertEqual(total["pct_vs_prev"], 40.0)
+
+    def test_previous_year_comparison_ignores_years_to_compare(self):
+        rows = build_history(2026, [
+            {"year_repo": 2023, "month_repo": 1, "total": 999},
+            {"year_repo": 2025, "month_repo": 1, "total": 40},
+            {"year_repo": 2026, "month_repo": 1, "total": 50},
+        ], 2, today=date(2027, 1, 1))
+        enero = rows[0]
+        self.assertNotIn("y_2023", enero)
+        self.assertEqual(enero["promedio"], 40.0)
+        self.assertEqual(enero["dif_vs_prev"], 10.0)
+        self.assertEqual(enero["pct_vs_prev"], 25.0)
+
+    def test_past_year_compares_all_twelve_months(self):
+        rows = build_history(2025, [
+            {"year_repo": 2025, "month_repo": 12, "total": 75},
+            {"year_repo": 2024, "month_repo": 12, "total": 25},
+        ], today=date(2026, 10, 15))
+        diciembre = rows[11]
+        self.assertEqual(diciembre["y_2025"], 75.0)
+        self.assertEqual(diciembre["promedio"], 25.0)
+        self.assertEqual(diciembre["diferencia"], 50.0)
+        self.assertEqual(diciembre["dif_vs_prev"], 50.0)
+        self.assertEqual(diciembre["pct_vs_prev"], 200.0)
+        total = rows[-1]
+        self.assertEqual(total["y_2025"], 75.0)
+        self.assertEqual(total["diferencia"], 50.0)
+
+    def test_future_selected_year_blanks_every_month(self):
+        rows = build_history(2027, [
+            {"year_repo": 2027, "month_repo": 1, "total": 10},
+        ], today=date(2026, 10, 15))
+        self.assertTrue(all(row["promedio"] is None for row in rows[:-1]))
+        self.assertTrue(all(row["y_2027"] is None for row in rows[:-1]))
+        self.assertTrue(all(row["diferencia"] is None for row in rows))
+        total = rows[-1]
+        self.assertEqual(total["y_2027"], 0.0)
+        self.assertEqual(total["promedio"], 0.0)
+        self.assertIsNone(total["pct_vs_prev"])
+
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.sales_invoices_monthly",
+        return_value=[],
+    )
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.company_currency",
+        return_value="GTQ",
+    )
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.report_today",
+        return_value=date(2026, 10, 15),
+    )
+    def test_message_is_shown_only_for_the_current_year(self, _today, _currency, _query):
+        _columns, _rows, current = execute({"company": "Acme", "year": 2026})
+        self.assertIn("Octubre", current)
+        self.assertIn("meses completos", current)
+        _columns, _rows, past = execute({"company": "Acme", "year": 2025})
+        self.assertIsNone(past)
 
 
 class TestExecuteUsesSalesLedgerQuery(TestCase):
@@ -335,7 +477,7 @@ class TestExecuteUsesSalesLedgerQuery(TestCase):
         return_value="GTQ",
     )
     def test_queries_the_five_calendar_years_before_the_selector(self, _currency, query):
-        columns, rows = execute({"company": "Acme GT", "year": 2026})
+        columns, rows = execute({"company": "Acme GT", "year": 2026})[:2]
 
         query.assert_called_once()
         filters = query.call_args[0][0]
@@ -411,7 +553,7 @@ class TestExecuteUsesSalesLedgerQuery(TestCase):
             "gt_monthly_sales_history.default_company",
             return_value=None,
         ):
-            self.assertEqual(execute({}), ([], []))
+            self.assertEqual(execute({})[:2], ([], []))
 
 
 def round_half_up(value):
