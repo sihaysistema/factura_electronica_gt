@@ -350,7 +350,15 @@ class TestFelConfigOnSite(unittest.TestCase):
             }).insert(ignore_permissions=True))
         receivable = frappe.db.get_value("Company", company_name, "default_receivable_account")
         income = frappe.db.get_value("Company", company_name, "default_income_account")
+        if not income:
+            income = frappe.db.get_value(
+                "Account", {"company": company_name, "root_type": "Income", "is_group": 0}, "name"
+            )
         cost_center = frappe.db.get_value("Company", company_name, "cost_center")
+        if not cost_center:
+            cost_center = frappe.db.get_value(
+                "Cost Center", {"company": company_name, "is_group": 0}, "name"
+            )
         currency = frappe.db.get_value("Company", company_name, "default_currency") or "USD"
         invoice = frappe.get_doc({
             "doctype": "Sales Invoice",
