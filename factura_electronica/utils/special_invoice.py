@@ -37,39 +37,33 @@ def verificar_existencia_series(serie):
 
 
 @frappe.whitelist()
-def validate_serie_to_special_invoice(naming_series):
+def validate_serie_to_special_invoice(naming_series, company=None):
     """
-    Obtiene el name si existe una configuracion validada para factura electronica, para
-    verificar si la serie que se esta usando el la factura de compra se puede usar
-    para generar facturas especiales electronica
+    Verifica si la serie de la factura de compra está habilitada para factura
+    especial en la configuración activa de la compañía.
 
     Args:
         naming_series (str): Serie utilizada en la factura de compra
+        company (str): Compañía del documento
 
     Returns:
         boolean: True/False
     """
     try:
-        # verifica que exista un documento validado, docstatus = 1 => validado
-        if frappe.db.exists('Configuracion Factura Electronica', {'docstatus': 1}):
+        from factura_electronica.utils.fel_config import get_active_config_for_company
 
-            configuracion_valida = frappe.db.get_values('Configuracion Factura Electronica',
-                                                        filters={'docstatus': 1},
-                                                        fieldname=['name', 'regimen'], as_dict=1)
-            if (len(configuracion_valida) == 1):  # se encontro una sola configuracion OK
+        result = get_active_config_for_company(company)
+        if not result.get("ok"):
+            return False
 
-                if frappe.db.exists('Serial Configuration For Purchase Invoice',
-                                   {'parent': str(configuracion_valida[0]['name']), 'serie': naming_series,
-                                    'tipo_frase_factura_especial': '5 Frase de facturas especiales'}):
-                    return True
-                else:
-                    return False
+        return bool(frappe.db.exists(
+            'Serial Configuration For Purchase Invoice',
+            {
+                'parent': result.get("name"),
+                'serie': naming_series,
+                'tipo_frase_factura_especial': '5 Frase de facturas especiales',
+            },
+        ))
 
-            elif (len(configuracion_valida) > 1):  # se encontro mas de una configuracion
-                return False
-
-        else:
-            return False  # No se encoentro ninguna configuracion
-
-    except:
-        return False  # Por si acaso ocurre un error, no aplicara
+    except Exception:
+        return False

@@ -10,7 +10,17 @@ from frappe.model.document import Document
 
 
 class ConfiguracionFacturaElectronica(Document):
-    pass
+    def validate(self):
+        # Compañía obligatoria. Al validar (docstatus 1) solo puede existir
+        # una configuración activa por compañía. Las series FEL y de compra
+        # son tablas hijas: heredan la compañía de este documento.
+        if not self.company:
+            frappe.throw(_("La compañía es obligatoria en Configuración Factura Electrónica."))
+
+        if self.docstatus == 1:
+            from factura_electronica.utils.fel_config import ensure_single_active_configuration
+
+            ensure_single_active_configuration(self.company, self.name)
 # es-GT: Se hace whitelist o abre permiso para permitir llamados Asincronicos desde el navegador del usuario
 # en-US: Whitelisting the function to permit Asyncrhonous calls from the user's web browser
 # es-GT: Esta funcion obtiene el contenido del campo "Naming Series" configurada por el usuario para "Sale Invoice". (Las series configuradas por el usuario para Facturas de Venta)
