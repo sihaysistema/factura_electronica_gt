@@ -45,12 +45,14 @@ Promedio
     selected-year column, and in every comparison column. Past years
     treat all 12 months as complete.
 
-    The selected-year total is the year to date (months that show an
-    amount). The Promedio total sums only the months that show a
-    Promedio. Diferencia, both percents, and the previous-year
-    difference on the Total row use completed months only: the sum of
-    the selected year over those months against the sum of Promedio, or
-    against the sum of the previous year, for the same months.
+    On the Total row, Promedio and the selected year sum completed
+    months only, so Total Promedio plus Total Diferencia equals the
+    selected-year total. The current month still shows Promedio and the
+    month-to-date amount on its own row, and that row is left out of
+    those totals. History-year totals, including the previous year,
+    still sum all 12 months. Diferencia, both percents, and the
+    previous-year difference on the Total row use the same completed
+    months.
 
     The Total row can differ by a few cents from one GT Sales Ledger
     total run over a whole year, because the ledger rounds the
@@ -132,8 +134,9 @@ def comparison_message(selected_year, today):
     if int(selected_year) != today.year:
         return None
     return _(
-        "Comparaciones solo de meses completos. {0} muestra el acumulado y el promedio, "
-        "sin diferencia ni porcentaje. Los meses que aún no inician van en blanco."
+        "Totales y comparaciones solo de meses completos. {0} muestra el acumulado "
+        "y el promedio, sin diferencia ni porcentaje, y no entra en los totales. "
+        "Los meses que aún no inician van en blanco."
     ).format(SPANISH_MONTHS[today.month - 1])
 
 
@@ -299,8 +302,6 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN, tod
         return flt(raw_totals[(year, month)], PRECISION)
 
     rows = []
-    shown_promedio = []
-    shown_selected = []
     complete_selected = []
     complete_promedio = []
     complete_previous = []
@@ -327,14 +328,10 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN, tod
         elif state == "current":
             row["promedio"] = promedio
             row[selected_field] = selected_amount
-            shown_promedio.append(promedio)
-            shown_selected.append(selected_amount)
             clear_comparisons(row)
         else:
             row["promedio"] = promedio
             row[selected_field] = selected_amount
-            shown_promedio.append(promedio)
-            shown_selected.append(selected_amount)
             fill_comparisons(row, selected_amount, promedio, previous_amount)
             complete_selected.append(selected_amount)
             complete_promedio.append(promedio)
@@ -346,8 +343,10 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN, tod
         total_row[year_fieldname(year)] = flt(
             sum(row[year_fieldname(year)] for row in rows), PRECISION
         )
-    total_row["promedio"] = sum_amounts(shown_promedio)
-    total_row[selected_field] = sum_amounts(shown_selected)
+    # Current and future months stay off these two totals, so
+    # Promedio + Diferencia equals the selected-year total.
+    total_row["promedio"] = sum_amounts(complete_promedio)
+    total_row[selected_field] = sum_amounts(complete_selected)
     if complete_selected:
         fill_comparisons(
             total_row,

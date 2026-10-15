@@ -349,6 +349,7 @@ class TestIncompleteMonths(TestCase):
             {"year_repo": 2022, "month_repo": 1, "total": 100},
             {"year_repo": 2025, "month_repo": 1, "total": 40},
             {"year_repo": 2025, "month_repo": 3, "total": 10},
+            {"year_repo": 2025, "month_repo": 10, "total": 30},
             {"year_repo": 2025, "month_repo": 11, "total": 80},
             {"year_repo": 2026, "month_repo": 1, "total": 50},
             {"year_repo": 2026, "month_repo": 3, "total": 20},
@@ -373,7 +374,7 @@ class TestIncompleteMonths(TestCase):
 
         octubre = rows[9]
         self.assertEqual(octubre["mes"], "Octubre")
-        self.assertEqual(octubre["promedio"], 0.0)
+        self.assertEqual(octubre["promedio"], 15.0)
         self.assertEqual(octubre["y_2026"], 7.0)
         self.assertIsNone(octubre["diferencia"])
         self.assertIsNone(octubre["vs_promedio"])
@@ -390,14 +391,17 @@ class TestIncompleteMonths(TestCase):
         self.assertIsNone(noviembre["pct_vs_prev"])
 
         total = rows[-1]
-        self.assertEqual(total["y_2025"], 130.0)
-        self.assertEqual(total["y_2026"], 77.0)
+        # 2025 still sums all 12 months, including October and November.
+        self.assertEqual(total["y_2025"], 160.0)
+        # October's 7 and Promedio 15 stay on the row and out of the totals.
+        # Completed months: Jan-Sep selected 70 vs Promedio 75, vs 2025's 50.
+        self.assertEqual(total["y_2026"], 70.0)
         self.assertEqual(total["promedio"], 75.0)
-        # Completed months only: Jan-Sep selected 70 vs Promedio 75, vs 2025's 50.
         self.assertEqual(total["diferencia"], -5.0)
         self.assertEqual(total["vs_promedio"], -6.67)
         self.assertEqual(total["dif_vs_prev"], 20.0)
         self.assertEqual(total["pct_vs_prev"], 40.0)
+        self.assertEqual(total["promedio"] + total["diferencia"], total["y_2026"])
 
     def test_previous_year_comparison_ignores_years_to_compare(self):
         rows = build_history(2026, [
@@ -457,6 +461,8 @@ class TestIncompleteMonths(TestCase):
         _columns, _rows, current = execute({"company": "Acme", "year": 2026})
         self.assertIn("Octubre", current)
         self.assertIn("meses completos", current)
+        self.assertIn("Totales", current)
+        self.assertIn("no entra en los totales", current)
         _columns, _rows, past = execute({"company": "Acme", "year": 2025})
         self.assertIsNone(past)
 
