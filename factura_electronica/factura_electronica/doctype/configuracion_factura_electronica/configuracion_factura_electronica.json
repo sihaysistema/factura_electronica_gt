@@ -13,6 +13,8 @@
   "configuracion_pdf",
   "descargar_pdf_factura_electronica",
   "company",
+  "certificador",
+  "certificador_predeterminado",
   "is_individual",
   "facelec_name_of_owner",
   "usar_datos_prueba",
@@ -372,7 +374,7 @@
   },
   {
    "bold": 1,
-   "description": "Obligatoria. Solo puede haber una configuración validada por compañía. Las series FEL quedan en las tablas hijas de esta configuración.",
+   "description": "Obligatoria. Puede haber una configuración validada por cada certificador de esta compañía. Las series FEL quedan en las tablas hijas de esta configuración.",
    "fieldname": "company",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -380,6 +382,26 @@
    "label": "Compañía",
    "options": "Company",
    "reqd": 1
+  },
+  {
+   "bold": 1,
+   "description": "Entidad certificadora autorizada por la SAT. Una configuración activa por compañía y certificador (Acuerdo de Directorio 13-2018, artículo 14). Un certificador deshabilitado no se puede elegir aquí; los enlaces históricos se conservan.",
+   "fieldname": "certificador",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Certificador",
+   "options": "Certificador FEL",
+   "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "description": "Los documentos nuevos de esta compañía usan esta configuración cuando hay más de un certificador activo. Debe haber exactamente una predeterminada por compañía.",
+   "fieldname": "certificador_predeterminado",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Certificador Predeterminado"
   },
   {
    "description": "FEL: De acuerdo al R\u00e9gimen que\ntenga registrado el contribuyente, se refiere a que puede ser General/Exento o Peque\u00f1o Contribuyente.",
@@ -568,7 +590,7 @@
  "icon": "octicon octicon-gear",
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-15 20:40:00.000000",
+ "modified": "2026-10-15 21:40:00.000000",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Configuracion Factura Electronica",

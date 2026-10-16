@@ -505,30 +505,14 @@ class FacturaElectronicaFEL:
     def firmar_data(self, encodata):
         '''Funcion encargada de solicitar firma para archivo XML '''
         try:
-            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
-                                      'url_firma')
-            codigo = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
-                                         'codigo')
-            alias = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
-                                        'alias')
-            anulacion = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
-                                            'es_anulacion')
-            llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config},
-                                        'llave_pfx')
-            reqfel = {
-                "llave": llave, # LLAVE
-                "archivo": str(encodata),  # En base64
-                # "codigo": codigo, # Número interno de cada transacción
-                "alias":  alias, # USUARIO
-                "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
-            }
+            from factura_electronica.fel.certifiers import sign_xml
 
-            headers = {"content-type": "application/json"}
-            response = requests.post(url, data=json.dumps(reqfel), headers=headers)
+            ok_firma, firma_result = sign_xml(self.nombre_config, str(encodata))
+            if not ok_firma:
+                return False, firma_result
+            return True, json.dumps({"resultado": True, "archivo": firma_result})
         except:
             return False, 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
-        else:
-            return True, (response.content).decode('utf-8')
 
     def solicitar_factura_electronica(self, firmado):
         '''Funcion encargada de solicitar factura electronica al WS de INFILE'''
@@ -536,29 +520,16 @@ class FacturaElectronicaFEL:
             data_fac = frappe.db.get_value('Sales Invoice', {'name': self.serie_factura}, 'company')
             nit_company = frappe.db.get_value('Company', {'name': data_fac}, 'nit_face_company')
 
-            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'url_dte')
-            user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'alias')
-            llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'llave_ws')
-            correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.nombre_config}, 'correo_copia')
-            ident = self.serie_factura
+            from factura_electronica.fel.certifiers import certify_dte
 
-            req_dte = {
-                "nit_emisor": nit_company,
-                "correo_copia": correo_copia,  # "m.monroyc22@gmail.com",
-                "xml_dte": firmado["archivo"]
-            }
-
-            headers = {
-                "content-type": "application/json",
-                "usuario": user,
-                "llave": llave,
-                "identificador": ident
-            }
-            response = requests.post(url, data=json.dumps(req_dte), headers=headers)
+            ok_dte, dte_result = certify_dte(
+                self.nombre_config, nit_company, firmado["archivo"], self.serie_factura
+            )
+            if not ok_dte:
+                return False, dte_result
+            return True, json.dumps(dte_result)
         except:
             return False, 'Error al tratar de generar factura electronica: '+str(frappe.get_traceback())
-        else:
-            return True, (response.content).decode('utf-8')
 
     def validador_respuestas(self, msj_fel):
         '''Funcion encargada de verificar las respuestas de INFILE-SAT'''
@@ -754,6 +725,9 @@ class FacturaElectronicaFEL:
                 resp_fel.uuid = mensajes['uuid']
                 resp_fel.serie = mensajes['serie']
                 resp_fel.numero = mensajes['numero']
+
+                from factura_electronica.utils.fel_config import stamp_envio_fel
+                stamp_envio_fel(resp_fel, self.nombre_config)
 
                 decodedBytes = base64.b64decode(mensajes['xml_certificado'])
                 decodedStr = str(decodedBytes, "utf-8")
