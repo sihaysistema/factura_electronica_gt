@@ -55,20 +55,25 @@ def normalizar_texto(texto):
     return string_normalizado
 
 
-def validar_configuracion(company=None):
-    """Verifica la configuración FEL activa de una compañía.
+def validar_configuracion(company=None, certificador=None, configuracion=None):
+    """Verifica la configuración FEL para un documento nuevo de una compañía.
+
+    Con una sola configuración activa, devuelve esa. Con varias, la marcada
+    como certificador predeterminado. Si se pasa configuracion, usa esa.
 
     Retorna:
-       (1, name, regimen) si hay exactamente una configuración validada
-       (2, mensaje) si hay más de una para esa compañía
+       (1, name, regimen) si hay una configuración que usar
+       (2, mensaje) si hay ambigüedad (ninguna o varias predeterminadas)
        (3, mensaje) si no hay configuración activa o no se indicó compañía
     """
     from factura_electronica.utils.fel_config import get_active_config_for_company
 
-    result = get_active_config_for_company(company)
+    result = get_active_config_for_company(
+        company, certificador=certificador, configuracion=configuracion
+    )
     if result.get("ok"):
         return (int(1), result.get("name"), result.get("regimen") or "")
-    if result.get("code") == "multiple":
+    if result.get("code") in ("no_default", "multiple_defaults"):
         return (int(2), result.get("message"))
     return (int(3), result.get("message"))
 

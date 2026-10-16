@@ -1,0 +1,154 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "Prompt",
+ "creation": "2026-10-15 21:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "razon_social",
+  "nit",
+  "nombre_comercial",
+  "sitio_web",
+  "fecha_autorizacion_sat",
+  "disabled",
+  "column_break_datos",
+  "url_firma",
+  "url_dte",
+  "url_anulacion",
+  "url_pdf",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "razon_social",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Razón Social",
+   "reqd": 1
+  },
+  {
+   "description": "NIT del certificador autorizado por la SAT. No se repite.",
+   "fieldname": "nit",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "NIT",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "nombre_comercial",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nombre Comercial"
+  },
+  {
+   "fieldname": "sitio_web",
+   "fieldtype": "Data",
+   "label": "Sitio Web",
+   "options": "URL"
+  },
+  {
+   "description": "Fecha en que la SAT autorizó a esta entidad como certificador de DTE.",
+   "fieldname": "fecha_autorizacion_sat",
+   "fieldtype": "Date",
+   "label": "Fecha de Autorización SAT"
+  },
+  {
+   "default": "0",
+   "description": "Un certificador deshabilitado no se puede elegir en configuraciones nuevas. Los Envio FEL y las configuraciones ya enlazadas se conservan.",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Deshabilitado"
+  },
+  {
+   "fieldname": "column_break_datos",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Valor por defecto para URL Firma de una configuración nueva. La configuración puede usar otra URL.",
+   "fieldname": "url_firma",
+   "fieldtype": "Data",
+   "label": "URL Firma",
+   "options": "URL"
+  },
+  {
+   "description": "Valor por defecto para la URL de certificación / DTE.",
+   "fieldname": "url_dte",
+   "fieldtype": "Data",
+   "label": "URL Certificación DTE",
+   "options": "URL"
+  },
+  {
+   "description": "Valor por defecto para la URL de anulación.",
+   "fieldname": "url_anulacion",
+   "fieldtype": "Data",
+   "label": "URL Anulación",
+   "options": "URL"
+  },
+  {
+   "description": "Valor por defecto para la URL de descarga del PDF.",
+   "fieldname": "url_pdf",
+   "fieldtype": "Data",
+   "label": "URL PDF",
+   "options": "URL"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notas"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-15 21:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Factura Electronica",
+ "name": "Certificador FEL",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Admin Facelec",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Usuario Facelec",
+   "share": 1
+  }
+ ],
+ "quick_entry": 1,
+ "search_fields": "nit,razon_social,nombre_comercial",
+ "sort_field": "razon_social",
+ "sort_order": "ASC",
+ "title_field": "razon_social",
+ "track_changes": 1
+}

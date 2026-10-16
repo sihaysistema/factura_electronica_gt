@@ -665,52 +665,14 @@ class ExportInvoice:
         except:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
 
-        # Generamos la peticion para firmar
+        # La firma la despacha el adaptador del certificador de esta configuración.
         try:
-            url = frappe.db.get_value('Configuracion Factura Electronica',
-                                      {'name': self.__config_name}, 'url_firma')
-
-            # codigo = frappe.db.get_value('Configuracion Factura Electronica',
-            #                             {'name': self.__config_name}, 'codigo')
-
-            alias = frappe.db.get_value('Configuracion Factura Electronica',
-                                        {'name': self.__config_name}, 'alias')
-
-            anulacion = frappe.db.get_value('Configuracion Factura Electronica',
-                                            {'name': self.__config_name}, 'es_anulacion')
-
-            self.__llave = frappe.db.get_value('Configuracion Factura Electronica',
-                                               {'name': self.__config_name}, 'llave_pfx')
-
-            self.__data_a_firmar = {
-                "llave": self.__llave,  # LLAVE
-                "archivo": str(self.__encoded_str),  # En base64
-                # "codigo": codigo, # Número interno de cada transacción
-                "alias":  alias,  # USUARIO
-                "es_anulacion": anulacion  # "N" si es certificacion y "S" si es anulacion
-            }
-
-            headers = {"content-type": "application/json"}
-            response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
-
-            # Guardamos en una variable privada la respuesta
-            self.__doc_firmado = json.loads((response.content).decode('utf-8'))
-
-            # Guardamos la respuesta en un archivo DEBUG
-            # with open('resp_firmado_exportacion.json', 'w') as f:
-            #     f.write(json.dumps(self.__doc_firmado, indent=2))
-
-            # Si la respuesta es true
-            if self.__doc_firmado.get('resultado') == True:
-                # Guardamos en privado el documento firmado y encriptado
-                self.__encrypted = self.__doc_firmado.get('archivo')
-
-                # Retornamos el status del proceso
-                return True, 'OK'
-
-            else:  # Si ocurre un error retornamos la descripcion del error por INFILE
-                return False, self.__doc_firmado.get('descripcion')
-
+            from factura_electronica.fel.certifiers import sign_xml
+            ok_firma, firma_result = sign_xml(self.__config_name, self.__encoded_str)
+            if not ok_firma:
+                return False, firma_result
+            self.__encrypted = firma_result
+            return True, 'OK'
         except:
             return False, 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
 
@@ -726,30 +688,14 @@ class ExportInvoice:
             data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
             nit_company = frappe.db.get_value('Company', {'name': self.dat_fac[0]['company']}, 'nit_face_company')
 
-            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
-            user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
-            llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'llave_ws')
-            correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'correo_copia')
-            ident = self.__invoice_code  # identificador
+            from factura_electronica.fel.certifiers import certify_dte
+            ok_dte, dte_result = certify_dte(
+                self.__config_name, nit_company, self.__encrypted, self.__invoice_code
+            )
+            if not ok_dte:
+                return False, dte_result
+            self.__response_ok = dte_result
 
-            req_dte = {
-                "nit_emisor": nit_company,
-                "correo_copia": correo_copia,  # "m.monroyc22@gmail.com",
-                "xml_dte": self.__encrypted
-            }
-
-            headers = {
-                "content-type": "application/json",
-                "usuario": user,
-                "llave": llave,
-                "identificador": ident
-            }
-
-            # with open('peticion_fact_export.json', 'w') as f:
-            #     f.write(json.dumps(req_dte, indent=2))
-
-            self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
-            self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
 
             # with open('response_fact_export.json', 'w') as f:
             #     f.write(json.dumps(self.__response_ok, indent=2))
@@ -829,6 +775,9 @@ class ExportInvoice:
                 decodedBytes = base64.b64decode(self.__response_ok['xml_certificado'])
                 decodedStr = str(decodedBytes, "utf-8")
                 resp_fel.xml_certificado = str(self.__xml_string)  # decodedStr
+
+                from factura_electronica.utils.fel_config import stamp_envio_fel
+                stamp_envio_fel(resp_fel, self.__config_name)
 
                 resp_fel.save(ignore_permissions=True)
 
