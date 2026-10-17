@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2026-10-14 00:00:00.000000",
+ "modified": "2026-10-17 22:00:00.000000",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "GT Monthly Sales History",
@@ -27,6 +27,9 @@
   },
   {
    "role": "Reportes Facelec"
+  },
+  {
+   "role": "Accounts Manager"
   }
  ]
 }
