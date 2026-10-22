@@ -70,6 +70,24 @@
   {
    "hidden": 0,
    "is_query_report": 1,
+   "label": "GT Item Price Cards",
+   "link_to": "GT Item Price Cards",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "GT Sales Item Ranking",
+   "link_to": "GT Sales Item Ranking",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
    "label": "GT Journal",
    "link_to": "GT Journal",
    "link_type": "Report",
@@ -228,7 +246,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-10-17 12:00:00.000000",
+ "modified": "2026-10-22 21:15:00.000000",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Factura Electronica",
