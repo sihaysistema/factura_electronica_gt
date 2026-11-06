@@ -12,7 +12,8 @@ from __future__ import unicode_literals
 
 import sys
 import types
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 from unittest import TestCase, main
 from unittest.mock import patch
 
@@ -88,11 +89,22 @@ def _ensure_import_stubs():
 _ensure_import_stubs()
 
 from factura_electronica.factura_electronica.report.gt_monthly_sales_history.gt_monthly_sales_history import (  # noqa: E402
+    CONSERVATIVE_FIELD,
+    TREND_FIELD,
     SPANISH_MONTHS,
     TOTAL_LABEL,
     build_history,
+    build_year_projection,
+    conservative_day_parts,
+    elapsed_days,
     execute,
+    guatemala_today,
     history_years,
+    month_forecast_days,
+    remaining_days,
+    report_today as unpatched_report_today,
+    round_money,
+    sales_invoices_by_day,
 )
 
 # Existing cases treat 2026 as a finished year. Incomplete-month tests pass
@@ -138,9 +150,10 @@ class TestHistoryLayout(TestCase):
             [
                 "Mes", "2021", "2022", "2023", "2024", "2025", "Promedio", "2026",
                 "Diferencia", "% vs Promedio", "Dif. vs 2025", "% vs 2025",
+                "With the trend", "Conservative",
             ],
         )
-        self.assertEqual(len(visible), 12)
+        self.assertEqual(len(visible), 14)
         self.assertEqual(len(rows), 13)
         self.assertEqual(rows[0]["y_2026"], 0.0)
 
@@ -166,6 +179,7 @@ class TestHistoryLayout(TestCase):
             [
                 "Mes", "2023", "2024", "2025", "Promedio", "2026",
                 "Diferencia", "% vs Promedio", "Dif. vs 2025", "% vs 2025",
+                "With the trend", "Conservative",
             ],
         )
         self.assertEqual(len(rows), 13)
@@ -463,6 +477,8 @@ class TestIncompleteMonths(TestCase):
         self.assertIn("meses completos", current)
         self.assertIn("Totales", current)
         self.assertIn("no entra en los totales", current)
+        self.assertIn("31 de diciembre", current)
+        self.assertIn("pronóstico", current)
         _columns, _rows, past = execute({"company": "Acme", "year": 2025})
         self.assertIsNone(past)
 
@@ -560,6 +576,534 @@ class TestExecuteUsesSalesLedgerQuery(TestCase):
             return_value=None,
         ):
             self.assertEqual(execute({})[:2], ([], []))
+
+
+class TestProjections(TestCase):
+    def test_guatemala_date_lags_utc_in_the_evening(self):
+        utc = timezone(timedelta(hours=0))
+        # 02:00 UTC on 7 Nov is still 20:00 on 6 Nov in Guatemala.
+        self.assertEqual(
+            guatemala_today(datetime(2026, 11, 7, 2, 0, tzinfo=utc)),
+            date(2026, 11, 6),
+        )
+        # 05:30 UTC is 23:30 the previous evening.
+        self.assertEqual(
+            guatemala_today(datetime(2026, 11, 6, 5, 30, tzinfo=utc)),
+            date(2026, 11, 5),
+        )
+        # The Guatemala day starts at 06:00 UTC.
+        self.assertEqual(
+            guatemala_today(datetime(2026, 11, 6, 6, 0, tzinfo=utc)),
+            date(2026, 11, 6),
+        )
+
+    def test_report_today_uses_the_guatemala_calendar(self):
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                base = datetime(2026, 11, 7, 2, 0, tzinfo=timezone.utc)
+                if tz is not None:
+                    return base.astimezone(tz)
+                return base
+
+        with patch(
+            "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+            "gt_monthly_sales_history.datetime",
+            FixedDatetime,
+        ):
+            self.assertEqual(unpatched_report_today(), date(2026, 11, 6))
+
+    def test_cutoff_excludes_today_and_future_posting_dates(self):
+        today = date(2026, 3, 15)
+        yesterday = date(2026, 3, 14)
+        daily = each_day(2026, date(2026, 1, 1), yesterday, 10)
+        # Today's 999 and a later posting date must not become actuals.
+        daily.append(day_row(2026, date(2026, 3, 15), 999))
+        daily.append(day_row(2026, date(2026, 3, 20), 500))
+        daily.append(day_row(2026, date(2026, 11, 1), 999))
+        ledger = [
+            {"year_repo": 2025, "month_repo": 1, "total": 40},
+            {"year_repo": 2026, "month_repo": 1, "total": 310},
+            {"year_repo": 2026, "month_repo": 2, "total": 280},
+            # Monthly March includes today and the future posting date.
+            {"year_repo": 2026, "month_repo": 3, "total": 1639},
+            {"year_repo": 2026, "month_repo": 11, "total": 999},
+        ]
+        rows = build_history(2026, ledger, today=today, daily_rows=daily)
+        enero, febrero, marzo = rows[0], rows[1], rows[2]
+        noviembre = rows[10]
+        total = rows[-1]
+
+        # The existing actual column is unchanged, including today's invoices.
+        self.assertEqual(enero["y_2026"], 310.0)
+        self.assertEqual(enero["promedio"], 40.0)
+        self.assertEqual(enero["diferencia"], 270.0)
+        self.assertEqual(marzo["y_2026"], 1639.0)
+        self.assertIsNone(marzo["diferencia"])
+        self.assertIsNone(noviembre["y_2026"])
+        self.assertEqual(total["y_2026"], 590.0)
+
+        # Finished months keep that actual. March replaces today onward.
+        self.assertEqual(enero[TREND_FIELD], 310.0)
+        self.assertEqual(febrero[TREND_FIELD], 280.0)
+        self.assertEqual(marzo[TREND_FIELD], 310.0)
+        self.assertEqual(rows[3][TREND_FIELD], 300.0)
+        self.assertEqual(noviembre[TREND_FIELD], 300.0)
+        self.assertEqual(rows[11][TREND_FIELD], 310.0)
+        self.assertEqual(total[TREND_FIELD], 3650.0)
+        self.assertEqual(
+            total[TREND_FIELD],
+            round_money(sum(Decimal(str(row[TREND_FIELD])) for row in rows[:-1])),
+        )
+        # No history on the pending days, so conservative adds nothing.
+        self.assertEqual(marzo[CONSERVATIVE_FIELD], 140.0)
+        self.assertEqual(noviembre[CONSERVATIVE_FIELD], 0.0)
+        self.assertEqual(total[CONSERVATIVE_FIELD], 730.0)
+        self.assertNotEqual(total[TREND_FIELD], total["y_2026"])
+
+        info = build_year_projection(
+            2026, today, history_years(2026), {2025, 2026},
+            {(2026, 1): 310, (2026, 2): 280, (2026, 3): 1639, (2026, 11): 999,
+             (2025, 1): 40},
+            daily,
+        )
+        self.assertEqual(info["elapsed_days"], 73)
+        self.assertEqual(info["remaining_days"], 292)
+        self.assertEqual(info["ytd_actual"], Decimal("730"))
+        self.assertEqual(info["daily_rate"], Decimal("10"))
+        exact = sum((month["trend_exact"] for month in info["months"]), Decimal("0"))
+        self.assertEqual(
+            exact,
+            info["ytd_actual"] + info["daily_rate"] * info["remaining_days"],
+        )
+        conservative_exact = sum(
+            (month["conservative_exact"] for month in info["months"]), Decimal("0")
+        )
+        self.assertEqual(conservative_exact, Decimal("730"))
+
+    def test_years_to_compare_changes_conservative_only(self):
+        today = date(2026, 12, 31)
+        # No elapsed-day sales, so the trend rate is zero for every span.
+        # Today's 999 is the whole December ledger cell and must stay out.
+        daily = [day_row(2026, today, 999)]
+        history_amounts = {2021: 50, 2022: 40, 2023: 30, 2024: 20, 2025: 10}
+        for year, amount in history_amounts.items():
+            daily.append(day_row(year, date(year, 12, 31), amount))
+        ledger = [{"year_repo": year, "month_repo": 1, "total": 1} for year in history_amounts]
+        ledger.append({"year_repo": 2026, "month_repo": 12, "total": 999})
+
+        expected = {5: 30.0, 4: 25.0, 3: 20.0, 2: 15.0}
+        trend_totals = set()
+        for span, average in expected.items():
+            rows = build_history(
+                2026, ledger, span, today=today, daily_rows=daily
+            )
+            diciembre = rows[11]
+            total = rows[-1]
+            self.assertEqual(diciembre["y_2026"], 999.0)
+            self.assertEqual(diciembre[TREND_FIELD], 0.0)
+            self.assertEqual(diciembre[CONSERVATIVE_FIELD], average)
+            self.assertEqual(total[TREND_FIELD], 0.0)
+            self.assertEqual(total[CONSERVATIVE_FIELD], average)
+            self.assertEqual(
+                total[CONSERVATIVE_FIELD],
+                round_money(sum(Decimal(str(row[CONSERVATIVE_FIELD])) for row in rows[:-1])),
+            )
+            trend_totals.add(total[TREND_FIELD])
+            self.assertNotIn("y_{0}".format(2026 - span - 1), rows[0])
+        self.assertEqual(trend_totals, {0.0})
+
+    def test_january_first_leaves_the_trend_blank(self):
+        today = date(2026, 1, 1)
+        daily = [
+            day_row(2026, today, 500),
+            day_row(2025, date(2025, 1, 1), 10),
+        ]
+        ledger = [
+            {"year_repo": 2024, "month_repo": 6, "total": 1},
+            {"year_repo": 2025, "month_repo": 6, "total": 1},
+            {"year_repo": 2026, "month_repo": 1, "total": 500},
+        ]
+        rows = build_history(2026, ledger, 2, today=today, daily_rows=daily)
+        self.assertEqual(rows[0]["y_2026"], 500.0)
+        self.assertTrue(all(row[TREND_FIELD] is None for row in rows))
+        # Jan 1 is 10 and 0 across the two covered years. Later days are 0.
+        self.assertEqual(rows[0][CONSERVATIVE_FIELD], 5.0)
+        self.assertEqual(rows[-1][CONSERVATIVE_FIELD], 5.0)
+        self.assertEqual(rows[-1]["y_2026"], 0.0)
+
+        info = build_year_projection(
+            2026, today, history_years(2026, 2), {2024, 2025, 2026}, {}, daily
+        )
+        self.assertEqual(info["elapsed_days"], 0)
+        self.assertIsNone(info["daily_rate"])
+        self.assertEqual(info["ytd_actual"], Decimal("0"))
+        self.assertEqual(info["remaining_days"], 365)
+
+    def test_leap_day_is_a_real_trend_day_and_a_narrow_history_day(self):
+        self.assertEqual(elapsed_days(2024, date(2024, 3, 1)), 60)
+        self.assertEqual(elapsed_days(2025, date(2025, 3, 1)), 59)
+        self.assertEqual(elapsed_days(2026, date(2026, 1, 1)), 0)
+        self.assertEqual(remaining_days(2024, date(2024, 1, 1)), 366)
+        self.assertEqual(remaining_days(2026, date(2026, 1, 1)), 365)
+        self.assertEqual(month_forecast_days(2024, 2, date(2024, 2, 1)), 29)
+        self.assertEqual(month_forecast_days(2025, 2, date(2025, 2, 1)), 28)
+
+        # Feb 29 contributes its own sales and its own calendar day.
+        today = date(2024, 3, 1)
+        daily = each_day(2024, date(2024, 1, 1), date(2024, 2, 28), 10)
+        daily.append(day_row(2024, date(2024, 2, 29), 70))
+        ledger = [
+            {"year_repo": 2024, "month_repo": 1, "total": 310},
+            {"year_repo": 2024, "month_repo": 2, "total": 350},
+        ]
+        rows = build_history(2024, ledger, today=today, daily_rows=daily)
+        self.assertEqual(rows[1][TREND_FIELD], 350.0)
+        self.assertEqual(rows[2][TREND_FIELD], 341.0)
+        info = build_year_projection(
+            2024, today, history_years(2024), {2024},
+            {(2024, 1): 310, (2024, 2): 350}, daily,
+        )
+        self.assertEqual(info["elapsed_days"], 60)
+        self.assertEqual(info["ytd_actual"], Decimal("660"))
+        self.assertEqual(info["daily_rate"], Decimal("11"))
+
+        # On the leap day itself the 29th is forecast, not actual.
+        on_leap = date(2024, 2, 29)
+        pace = each_day(2024, date(2024, 1, 1), date(2024, 2, 28), 10)
+        pace.append(day_row(2024, on_leap, 999))
+        leap_rows = build_history(2024, [
+            {"year_repo": 2024, "month_repo": 1, "total": 310},
+            {"year_repo": 2024, "month_repo": 2, "total": 280 + 999},
+        ], today=on_leap, daily_rows=pace)
+        self.assertEqual(leap_rows[1]["y_2024"], 1279.0)
+        self.assertEqual(leap_rows[1][TREND_FIELD], 290.0)
+        self.assertEqual(elapsed_days(2024, on_leap), 59)
+
+        # 2025 has no Feb 29. The last day of February is only the 28th.
+        non_leap = date(2025, 2, 28)
+        non_leap_rows = build_history(2025, [
+            {"year_repo": 2025, "month_repo": 1, "total": 310},
+            {"year_repo": 2025, "month_repo": 2, "total": 270},
+        ], today=non_leap, daily_rows=each_day(2025, date(2025, 1, 1), date(2025, 2, 27), 10))
+        self.assertEqual(non_leap_rows[1][TREND_FIELD], 280.0)
+        self.assertEqual(elapsed_days(2025, non_leap), 58)
+
+    def test_leap_day_history_ignores_years_where_it_did_not_exist(self):
+        today = date(2028, 2, 29)
+        # 2023..2027. Only 2024 has a February 29.
+        years = [2023, 2024, 2025, 2026, 2027]
+        ledger = [{"year_repo": year, "month_repo": 1, "total": 1} for year in years]
+        daily = [day_row(2024, date(2024, 2, 29), 100)]
+        covered = set(years)
+        index_years = history_years(2028, 5)
+        amount, observations = conservative_day_parts(2, 29, index_years, covered, {
+            (2024, 2, 29): Decimal("100"),
+        })
+        self.assertEqual(observations, 1)
+        self.assertEqual(amount, Decimal("100"))
+
+        rows = build_history(2028, ledger, 5, today=today, daily_rows=daily)
+        # Dividing by all five years would show 20. Non-leap years are not zeros.
+        self.assertEqual(rows[1][CONSERVATIVE_FIELD], 100.0)
+
+        short = history_years(2028, 2)
+        amount, observations = conservative_day_parts(2, 29, short, covered, {
+            (2024, 2, 29): Decimal("100"),
+        })
+        self.assertEqual((amount, observations), (Decimal("0"), 0))
+        short_rows = build_history(2028, ledger, 2, today=today, daily_rows=daily)
+        self.assertEqual(short_rows[1][CONSERVATIVE_FIELD], 0.0)
+
+        # A covered leap year with no invoice that day is a zero, one observation.
+        amount, observations = conservative_day_parts(2, 29, index_years, covered, {})
+        self.assertEqual((amount, observations), (Decimal("0"), 1))
+
+        # The leap year itself has no invoices, so it is not coverage.
+        uncovered = set(years) - {2024}
+        amount, observations = conservative_day_parts(
+            2, 29, index_years, uncovered, {(2024, 2, 29): Decimal("100")}
+        )
+        self.assertEqual((amount, observations), (Decimal("0"), 0))
+
+    def test_zero_sale_stays_in_the_denominator_and_a_missing_year_does_not(self):
+        today = date(2026, 4, 10)
+        # 2023 = 30, 2024 = no invoice (zero), 2025 = no year at all.
+        ledger = [
+            {"year_repo": 2023, "month_repo": 1, "total": 1},
+            {"year_repo": 2024, "month_repo": 1, "total": 1},
+        ]
+        daily = [day_row(2023, date(2023, 4, 10), 30)]
+        years = history_years(2026, 3)
+        covered = {2023, 2024}
+        amount, observations = conservative_day_parts(4, 10, years, covered, {
+            (2023, 4, 10): Decimal("30"),
+        })
+        self.assertEqual(observations, 2)
+        self.assertEqual(amount, Decimal("15"))
+
+        rows = build_history(2026, ledger, 3, today=today, daily_rows=daily)
+        self.assertEqual(rows[3][CONSERVATIVE_FIELD], 15.0)
+        self.assertEqual(rows[-1][CONSERVATIVE_FIELD], 15.0)
+
+        # A year whose invoices net to zero still counts as coverage.
+        ledger.append({"year_repo": 2022, "month_repo": 3, "total": 0})
+        # Span 5 reaches 2021..2025. 2021 is absent. 2022 is present and zero
+        # on April 10. Average of 2022 (0), 2023 (30), 2024 (0) is 10, not 15
+        # and not 30/4.
+        wider = build_history(2026, ledger, 5, today=today, daily_rows=daily)
+        self.assertEqual(wider[3][CONSERVATIVE_FIELD], 10.0)
+
+    def test_returns_make_a_negative_rate_and_a_negative_day_average(self):
+        today = date(2026, 2, 1)
+        daily = each_day(2026, date(2026, 1, 1), date(2026, 1, 31), -5)
+        daily.append(day_row(2026, today, -999))
+        daily.append(day_row(2025, date(2025, 2, 1), -80))
+        daily.append(day_row(2024, date(2024, 2, 1), -40))
+        ledger = [
+            {"year_repo": 2024, "month_repo": 1, "total": 1},
+            {"year_repo": 2025, "month_repo": 1, "total": 1},
+            {"year_repo": 2026, "month_repo": 1, "total": -155},
+            {"year_repo": 2026, "month_repo": 2, "total": -999},
+        ]
+        rows = build_history(2026, ledger, 2, today=today, daily_rows=daily)
+        self.assertEqual(rows[0][TREND_FIELD], -155.0)
+        self.assertEqual(rows[1]["y_2026"], -999.0)
+        self.assertEqual(rows[1][TREND_FIELD], -140.0)
+        self.assertEqual(rows[1][CONSERVATIVE_FIELD], -60.0)
+        self.assertEqual(rows[-1][TREND_FIELD], -1825.0)
+        info = build_year_projection(
+            2026, today, history_years(2026, 2), {2024, 2025, 2026},
+            {(2026, 1): -155, (2026, 2): -999, (2024, 1): 1, (2025, 1): 1},
+            daily,
+        )
+        self.assertEqual(info["daily_rate"], Decimal("-5"))
+        self.assertLess(info["daily_rate"], 0)
+
+    def test_calendar_days_stay_in_the_trend_denominator_when_there_was_no_sale(self):
+        today = date(2026, 2, 1)
+        # One invoice in the whole elapsed month. The other 30 days still count.
+        daily = [day_row(2026, date(2026, 1, 31), "10.01")]
+        ledger = [{"year_repo": 2026, "month_repo": 1, "total": "10.01"}]
+        rows = build_history(2026, ledger, today=today, daily_rows=daily)
+        info = build_year_projection(
+            2026, today, history_years(2026), {2026}, {(2026, 1): Decimal("10.01")}, daily
+        )
+        self.assertEqual(info["elapsed_days"], 31)
+        self.assertEqual(info["ytd_actual"], Decimal("10.01"))
+        self.assertEqual(info["daily_rate"], Decimal("10.01") / Decimal(31))
+        self.assertEqual(rows[0][TREND_FIELD], 10.01)
+        self.assertEqual(rows[-1][TREND_FIELD], 117.87)
+        exact = sum((month["trend_exact"] for month in info["months"]), Decimal("0"))
+        self.assertEqual(
+            exact,
+            info["ytd_actual"] + info["daily_rate"] * info["remaining_days"],
+        )
+        # The footer sums rounded months. Rounding the exact year once is 117.86.
+        self.assertEqual(round_money(exact), 117.86)
+        self.assertNotEqual(rows[-1][TREND_FIELD], round_money(exact))
+        self.assertEqual(
+            rows[-1][TREND_FIELD],
+            round_money(sum(Decimal(str(row[TREND_FIELD])) for row in rows[:-1])),
+        )
+
+    def test_tax_inclusive_company_amount_is_the_whole_grand_total(self):
+        today = date(2026, 3, 2)
+        # 112 is 100 plus tax. The projection does not strip the tax back out.
+        daily = [day_row(2026, date(2026, 3, 1), "112.00")]
+        daily.append(day_row(2026, today, "50.00"))
+        info = build_year_projection(
+            2026, today, history_years(2026), set(), {}, daily
+        )
+        self.assertEqual(info["ytd_actual"], Decimal("112.00"))
+        self.assertNotEqual(info["ytd_actual"], Decimal("100"))
+        march = info["months"][2]
+        self.assertEqual(
+            march["trend_exact"],
+            Decimal("112.00") + info["daily_rate"] * 30,
+        )
+
+    def test_closed_year_repeats_actuals_and_a_future_year_stays_blank(self):
+        ledger = [
+            {"year_repo": 2024, "month_repo": 1, "total": 10},
+            {"year_repo": 2024, "month_repo": 6, "total": -15.126},
+        ]
+        rows = build_history(
+            2024, ledger, today=date(2026, 5, 1),
+            daily_rows=[day_row(2024, date(2024, 6, 1), 999999)],
+        )
+        junio = rows[5]
+        total = rows[-1]
+        self.assertEqual(junio["y_2024"], -15.13)
+        self.assertEqual(junio[TREND_FIELD], -15.13)
+        self.assertEqual(junio[CONSERVATIVE_FIELD], -15.13)
+        self.assertEqual(total[TREND_FIELD], total["y_2024"])
+        self.assertEqual(total[CONSERVATIVE_FIELD], total["y_2024"])
+        self.assertEqual(total["y_2024"], -5.13)
+
+        future = build_history(2027, [
+            {"year_repo": 2027, "month_repo": 1, "total": 10},
+        ], today=date(2026, 10, 15))
+        self.assertTrue(all(row[TREND_FIELD] is None for row in future))
+        self.assertTrue(all(row[CONSERVATIVE_FIELD] is None for row in future))
+        self.assertEqual(future[-1]["y_2027"], 0.0)
+
+    def test_duplicate_day_rows_are_summed_before_the_rate(self):
+        today = date(2026, 1, 3)
+        daily = [
+            day_row(2026, date(2026, 1, 1), 40),
+            day_row(2026, date(2026, 1, 1), 60),
+            day_row(2026, date(2026, 1, 2), -10),
+        ]
+        info = build_year_projection(2026, today, history_years(2026), set(), {}, daily)
+        self.assertEqual(info["ytd_actual"], Decimal("90"))
+        self.assertEqual(info["elapsed_days"], 2)
+        self.assertEqual(info["daily_rate"], Decimal("45"))
+
+    def test_open_year_uses_one_parameterized_day_query(self):
+        captured = {}
+
+        def fake_sql(query, params=None, *args, **kwargs):
+            captured["query"] = query
+            captured["params"] = params
+            captured["kwargs"] = kwargs
+            captured["calls"] = captured.get("calls", 0) + 1
+            return []
+
+        with patch(
+            "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+            "gt_monthly_sales_history.frappe.db.sql",
+            fake_sql,
+        ):
+            sales_invoices_by_day(
+                "O'Brien GT", "2021-01-01", "2026-12-31", 2026, date(2026, 3, 15)
+            )
+
+        query = captured["query"]
+        params = captured["params"]
+        self.assertEqual(captured["calls"], 1)
+        self.assertEqual(params["company"], "O'Brien GT")
+        self.assertNotIn("O'Brien", query)
+        self.assertNotIn("2026-03-15", query)
+        self.assertIn("SUM(SI.grand_total * SI.conversion_rate)", query)
+        self.assertNotIn("net_total", query)
+        self.assertNotIn("base_grand_total", query)
+        self.assertNotIn("is_return", query)
+        self.assertIn("SI.docstatus = 1", query)
+        self.assertIn("SI.posting_date < %(today)s", query)
+        self.assertIn("GROUP BY year_repo, month_repo, day_repo", query)
+        self.assertEqual(params["today"], "2026-03-15")
+        self.assertEqual(params["year_start"], "2026-01-01")
+        self.assertEqual(params["month"], 3)
+        self.assertEqual(params["day"], 15)
+        self.assertEqual(captured["kwargs"].get("as_dict"), True)
+
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.sales_invoices_by_day",
+        return_value=[],
+    )
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.sales_invoices_monthly",
+        return_value=[{
+            "year_repo": 2026,
+            "month_repo": 1,
+            "total": "112.50",
+        }],
+    )
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.company_currency",
+        return_value="USD",
+    )
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.report_today",
+        return_value=date(2026, 6, 15),
+    )
+    def test_execute_scopes_one_day_query_to_the_company(self, _today, _currency, monthly, daily):
+        columns, rows, message = execute({
+            "company": "Compania GT",
+            "year": 2026,
+            "years_to_compare": "4",
+        })
+        self.assertEqual(daily.call_count, 1)
+        company, start, end, year, today = daily.call_args[0]
+        self.assertEqual(company, "Compania GT")
+        self.assertEqual(start, "2022-01-01")
+        self.assertEqual(end, "2026-12-31")
+        self.assertEqual(year, 2026)
+        self.assertEqual(today, date(2026, 6, 15))
+        monthly_filters = monthly.call_args[0][0]
+        self.assertEqual(monthly_filters.company, "Compania GT")
+        self.assertEqual(monthly_filters.company_currency, "USD")
+        self.assertEqual(monthly_filters.from_date, "2022-01-01")
+        self.assertEqual(rows[0]["currency"], "USD")
+        self.assertEqual(rows[0]["y_2026"], 112.5)
+        self.assertIn("pronóstico", message)
+        labels = [column["label"] for column in columns if not column.get("hidden")]
+        self.assertEqual(labels[-2:], ["With the trend", "Conservative"])
+        self.assertEqual(columns[-1]["fieldname"], "currency")
+
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.sales_invoices_by_day",
+        side_effect=AssertionError("closed and future years do not need a day query"),
+    )
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.sales_invoices_monthly",
+        return_value=[],
+    )
+    @patch(
+        "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+        "gt_monthly_sales_history.company_currency",
+        return_value="GTQ",
+    )
+    def test_closed_and_future_years_do_not_query_days(self, _currency, _monthly, daily):
+        with patch(
+            "factura_electronica.factura_electronica.report.gt_monthly_sales_history."
+            "gt_monthly_sales_history.report_today",
+            return_value=date(2026, 6, 15),
+        ):
+            past_columns, past_rows = execute({"company": "Acme GT", "year": 2025})[:2]
+            future_columns, future_rows = execute({"company": "Acme GT", "year": 2027})[:2]
+        self.assertEqual(daily.call_count, 0)
+        self.assertEqual(past_rows[0][TREND_FIELD], 0.0)
+        self.assertEqual(past_rows[-1][CONSERVATIVE_FIELD], past_rows[-1]["y_2025"])
+        self.assertIsNone(future_rows[0][TREND_FIELD])
+        self.assertIsNone(future_rows[-1][CONSERVATIVE_FIELD])
+        self.assertEqual(
+            [column["fieldname"] for column in past_columns if column["fieldname"] in (
+                TREND_FIELD, CONSERVATIVE_FIELD
+            )],
+            [TREND_FIELD, CONSERVATIVE_FIELD],
+        )
+        self.assertEqual(
+            [column["fieldname"] for column in future_columns if column["fieldname"] in (
+                TREND_FIELD, CONSERVATIVE_FIELD
+            )],
+            [TREND_FIELD, CONSERVATIVE_FIELD],
+        )
+
+
+def each_day(year, start, end, amount):
+    rows = []
+    day = start
+    while day <= end:
+        rows.append(day_row(year, day, amount))
+        day += timedelta(days=1)
+    return rows
+
+
+def day_row(year, posted, amount):
+    return {
+        "year_repo": year,
+        "month_repo": posted.month,
+        "day_repo": posted.day,
+        "total": amount,
+    }
 
 
 def round_half_up(value):
