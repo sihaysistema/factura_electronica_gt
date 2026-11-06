@@ -59,7 +59,7 @@ Promedio
     full-period sum once and this footer sums already-rounded months.
 
 Projections
-    Two columns, "With the trend" and "Conservative", sit after the
+    Two columns, "Proyección s. Tendencia" and "Proyección Conservadora", sit after the
     comparisons. They do not change the actual columns, Promedio, or the
     differences. Both show every month and a Total through December 31.
 
@@ -78,7 +78,7 @@ Projections
     yesterday plus a forecast for today through the last day of the month.
     Months that have not started are forecast only.
 
-    With the trend
+    Proyección s. Tendencia
         Daily rate = net actual from January 1 through yesterday / calendar
         days in that same span. The rate is applied to every remaining
         calendar day through December 31, including today. Years to compare
@@ -89,7 +89,7 @@ Projections
         of zero. Once a day has elapsed, a net of zero is a real rate of
         zero. Returns can make the rate negative; it is not clamped.
 
-    Conservative
+    Proyección Conservadora
         For each pending calendar day, the average of that same month and
         day in the years already chosen by Years to compare (5, 4, 3 or 2;
         default 5). No growth uplift. There is no second history filter.
@@ -154,8 +154,8 @@ SPANISH_MONTHS = (
 
 TOTAL_LABEL = "Total"
 HISTORY_SPAN = 5
-TREND_LABEL = "With the trend"
-CONSERVATIVE_LABEL = "Conservative"
+TREND_LABEL = "Proyección s. Tendencia"
+CONSERVATIVE_LABEL = "Proyección Conservadora"
 TREND_FIELD = "with_the_trend"
 CONSERVATIVE_FIELD = "conservative"
 
@@ -239,7 +239,7 @@ def comparison_message(selected_year, today):
         "Totales y comparaciones solo de meses completos. {0} muestra el acumulado "
         "y el promedio, sin diferencia ni porcentaje, y no entra en los totales. "
         "Los meses que aún no inician van en blanco. "
-        "With the trend y Conservative proyectan hasta el 31 de diciembre: "
+        "Proyección s. Tendencia y Proyección Conservadora proyectan hasta el 31 de diciembre: "
         "real hasta ayer y pronóstico desde hoy."
     ).format(SPANISH_MONTHS[today.month - 1])
 

@@ -150,7 +150,7 @@ class TestHistoryLayout(TestCase):
             [
                 "Mes", "2021", "2022", "2023", "2024", "2025", "Promedio", "2026",
                 "Diferencia", "% vs Promedio", "Dif. vs 2025", "% vs 2025",
-                "With the trend", "Conservative",
+                "Proyección s. Tendencia", "Proyección Conservadora",
             ],
         )
         self.assertEqual(len(visible), 14)
@@ -179,7 +179,7 @@ class TestHistoryLayout(TestCase):
             [
                 "Mes", "2023", "2024", "2025", "Promedio", "2026",
                 "Diferencia", "% vs Promedio", "Dif. vs 2025", "% vs 2025",
-                "With the trend", "Conservative",
+                "Proyección s. Tendencia", "Proyección Conservadora",
             ],
         )
         self.assertEqual(len(rows), 13)
@@ -1043,7 +1043,7 @@ class TestProjections(TestCase):
         self.assertEqual(rows[0]["y_2026"], 112.5)
         self.assertIn("pronóstico", message)
         labels = [column["label"] for column in columns if not column.get("hidden")]
-        self.assertEqual(labels[-2:], ["With the trend", "Conservative"])
+        self.assertEqual(labels[-2:], ["Proyección s. Tendencia", "Proyección Conservadora"])
         self.assertEqual(columns[-1]["fieldname"], "currency")
 
     @patch(
