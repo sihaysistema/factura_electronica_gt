@@ -32,7 +32,7 @@ For installation details, features and more information please visit the [wiki](
 
 
 ## Disclaimer
-> **Nos nos hacemos responsables por el mal manejo o configuracion del app, uselo bajo su propio riesgo. Recuerde primero probar el app en un ambiente de pruebas.**
+> **No nos hacemos responsables por el mal manejo o configuracion del app, uselo bajo su propio riesgo. Recuerde primero probar el app en un ambiente de pruebas.**
 
 
 ## Electronic Invoice App
@@ -46,3 +46,7 @@ LGPL V3
 Electronic Invoice support for Guatemala - Factura Electronica de Guatemala
 
 
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch targets, public security hygiene, and the **4-year issue** policy.

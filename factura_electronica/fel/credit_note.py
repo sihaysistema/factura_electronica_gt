@@ -13,6 +13,8 @@ import xmltodict
 from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
+from factura_electronica.utils.fel_datetime import MODE_CREACION, get_fecha_hora_emision
+from factura_electronica.utils.fel_frases import ensure_late_origin_frase
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 # Una nota de crédito es un documento comercial emitido por
@@ -158,11 +160,14 @@ class ElectronicCreditNote:
         """
 
         try:
-            # NOTA: LA FECHA Y HORA DE EMISION A USAR ES DE LA FACTURA ELECTRONICA FEL ORIGINAL, SOBRE LA CUAL
-            # SE ESTA HACIENDO LA NOTA DE CREDITO
-            date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_date')
-            ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'posting_time'))
-            ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
+            # Credit note builders historically use posting of the NCRE document
+            # (not petition time), with system TZ offset for SAT.
+            ok_datetime = get_fecha_hora_emision(
+                config_name=self.__config_name,
+                invoice_name=self.__inv_credit_note,
+                doctype='Sales Invoice',
+                mode=MODE_CREACION,
+            )
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'currency'),
@@ -422,10 +427,32 @@ class ElectronicCreditNote:
                     }
                 }
 
+            # SAT tipo 9 escenario 22 when this NCRE is issued more than two
+            # calendar months after the origin invoice. Skipped if that phrase
+            # is already in the configured combination.
+            self.__d_frases = ensure_late_origin_frase(
+                self.__d_frases,
+                self.__d_general.get("@FechaHoraEmision"),
+                self._origin_invoice_date(),
+            )
+
             return True, 'OK'
 
         except:
             return False, 'Error, no se puedo obtener valor de Codigo Escenario y Tipo Frase'
+
+    def _origin_invoice_date(self):
+        """Origin FEL date used by the credit-note reference complement."""
+
+        rows = frappe.db.get_values(
+            'Envio FEL',
+            filters={'serie_para_factura': self.__invoice_code},
+            fieldname=['fecha'],
+            as_dict=1,
+        )
+        if not rows:
+            return None
+        return rows[0].get('fecha')
 
     def items(self):
         """
@@ -737,52 +764,14 @@ class ElectronicCreditNote:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
 
 
-        # Generamos la peticion para firmar
+        # La firma la despacha el adaptador del certificador de esta configuración.
         try:
-            url = frappe.db.get_value('Configuracion Factura Electronica',
-                                     {'name': self.__config_name}, 'url_firma')
-
-            # codigo = frappe.db.get_value('Configuracion Factura Electronica',
-            #                             {'name': self.__config_name}, 'codigo')
-
-            alias = frappe.db.get_value('Configuracion Factura Electronica',
-                                       {'name': self.__config_name}, 'alias')
-
-            anulacion = frappe.db.get_value('Configuracion Factura Electronica',
-                                           {'name': self.__config_name}, 'es_anulacion')
-
-            self.__llave = frappe.db.get_value('Configuracion Factura Electronica',
-                                              {'name': self.__config_name}, 'llave_pfx')
-
-            self.__data_a_firmar = {
-                "llave": self.__llave, # LLAVE
-                "archivo": str(self.__encoded_str),  # En base64
-                # "codigo": codigo, # Número interno de cada transacción
-                "alias":  alias, # USUARIO
-                "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
-            }
-
-            headers = {"content-type": "application/json"} # {'Content-Type': 'text/xml; charset=utf-8'}
-            response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
-
-            # Guardamos en una variable privada la respuesta
-            self.__doc_firmado = json.loads((response.content).decode('utf-8'))
-
-            # Guardamos la respuesta en un archivo DEBUG
-            # with open('respuesta_credit_note_firma.json', 'w') as f:
-            #     f.write(json.dumps(self.__doc_firmado, indent=2))
-
-            # Si la respuesta es true
-            if self.__doc_firmado.get('resultado') == True:
-                # Guardamos en privado el documento firmado y encriptado
-                self.__encrypted = self.__doc_firmado.get('archivo')
-
-                # Retornamos el status del proceso
-                return True, 'OK'
-
-            else:  # Si ocurre un error retornamos la descripcion del error por INFILE
-                return False, self.__doc_firmado.get('descripcion')
-
+            from factura_electronica.fel.certifiers import sign_xml
+            ok_firma, firma_result = sign_xml(self.__config_name, self.__encoded_str)
+            if not ok_firma:
+                return False, firma_result
+            self.__encrypted = firma_result
+            return True, 'OK'
         except:
             return False, 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
 
@@ -798,27 +787,13 @@ class ElectronicCreditNote:
             data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__inv_credit_note}, 'company')
             nit_company = (str(frappe.db.get_value('Company', {'name': self.dat_fac[0]['company']}, 'nit_face_company')).replace('-', '')).upper().strip()
 
-            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
-            user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
-            llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'llave_ws')
-            correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'correo_copia')
-            ident = self.__inv_credit_note  # identificador
-
-            req_dte = {
-                "nit_emisor": nit_company,
-                "correo_copia": correo_copia,  # "m.monroyc22@gmail.com",
-                "xml_dte": self.__encrypted
-            }
-
-            headers = {
-                "content-type": "application/json",
-                "usuario": user,
-                "llave": llave,
-                "identificador": ident
-            }
-
-            self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
-            self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
+            from factura_electronica.fel.certifiers import certify_dte
+            ok_dte, dte_result = certify_dte(
+                self.__config_name, nit_company, self.__encrypted, self.__invoice_code
+            )
+            if not ok_dte:
+                return False, dte_result
+            self.__response_ok = dte_result
 
             # with open('response_credit_note.json', 'w') as f:
             #     f.write(json.dumps(self.__response_ok, indent=2))
@@ -904,6 +879,8 @@ class ElectronicCreditNote:
                 resp_fel.enviado = str(self.__start_datetime)
                 resp_fel.recibido = str(self.__end_datetime)
 
+                from factura_electronica.utils.fel_config import stamp_envio_fel
+                stamp_envio_fel(resp_fel, self.__config_name)
                 resp_fel.save(ignore_permissions=True)
 
             return True, 'OK'

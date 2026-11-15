@@ -87,7 +87,7 @@ def validate_status_document(invoice):
     # Validar el caso de facturas con descuentos, si lleva descuento es D
 
 
-def validate_serie(naming_serie):
+def validate_serie(naming_serie, company=None):
     """
     Busca el tipo de documento relacionado a la serie usado en la factura venta/compra
     esto en configuraciones de series de factura electronica,
@@ -115,8 +115,8 @@ def validate_serie(naming_serie):
         str: Documento SAT
     """
 
-    # Obtenemos datos y status de la configuracion para factura electroncia
-    status_config_facelec =  validar_configuracion()
+    # Configuración activa de la compañía del reporte
+    status_config_facelec = validar_configuracion(company)
 
     # Si se encuentra una configuracion valida
     if status_config_facelec[0] == 1:

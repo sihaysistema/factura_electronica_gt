@@ -13,6 +13,8 @@ import xmltodict
 from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
+from factura_electronica.utils.fel_datetime import get_fecha_hora_emision
+from factura_electronica.utils.fel_frases import ensure_late_origin_frase
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 # Una nota de débito o memorando de débito es un documento comercial emitido por
@@ -39,6 +41,7 @@ class ElectronicDebitNote:
         self.__uuid_inv_origin = uuid_purch_inv
         self.__date_inv_origin = date_inv_origin
         self.__reason = reason
+        self.__d_frases = None
 
     def build_invoice(self):
         """
@@ -65,15 +68,7 @@ class ElectronicDebitNote:
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {
                                 "@ID": "DatosCertificados",
-                                "dte:DatosEmision": {
-                                    "@ID": "DatosEmision",
-                                    "dte:DatosGenerales": self.__d_general,
-                                    "dte:Emisor": self.__d_emisor,
-                                    "dte:Receptor": self.__d_receptor,
-                                    "dte:Items": self.__d_items,
-                                    "dte:Totales": self.__d_totales,
-                                    "dte:Complementos": self.__complemento,
-                                }
+                                "dte:DatosEmision": self._datos_emision(),
                             }
                         }
                     }
@@ -89,6 +84,22 @@ class ElectronicDebitNote:
         except:
             return False, str(frappe.get_traceback())
 
+    def _datos_emision(self):
+        """DatosEmision. Frases is present only when SAT 9/22 applies."""
+
+        datos = {
+            "@ID": "DatosEmision",
+            "dte:DatosGenerales": self.__d_general,
+            "dte:Emisor": self.__d_emisor,
+            "dte:Receptor": self.__d_receptor,
+        }
+        if self.__d_frases:
+            datos["dte:Frases"] = self.__d_frases
+        datos["dte:Items"] = self.__d_items
+        datos["dte:Totales"] = self.__d_totales
+        datos["dte:Complementos"] = self.__complemento
+        return datos
+
     def validate(self):
         """
         Funcion encargada de validar la data que construye la peticion a INFILE,
@@ -103,6 +114,14 @@ class ElectronicDebitNote:
         if status_data_gen[0] == False:
             # Si existe algun error se retornara una tupla
             return status_data_gen
+
+        # NDEB has no configured phrase list. Add SAT 9/22 only when the note
+        # is issued more than two calendar months after the origin invoice.
+        self.__d_frases = ensure_late_origin_frase(
+            None,
+            self.__d_general.get("@FechaHoraEmision"),
+            self.__date_inv_origin,
+        )
 
         # Validacion y generacion seccion emisor
         status_sender = self.sender()
@@ -143,15 +162,11 @@ class ElectronicDebitNote:
         """
 
         try:
-            opt_config = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
-
-            if opt_config == 'Fecha y tiempo de peticion a INFILE':
-                ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
-
-            else:
-                date_invoice_inv = frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_date')
-                ok_time = str(frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'posting_time'))
-                ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
+            ok_datetime = get_fecha_hora_emision(
+                config_name=self.__config_name,
+                invoice_name=self.__invoice_code,
+                doctype='Purchase Invoice',
+            )
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'currency'),
@@ -657,51 +672,14 @@ class ElectronicDebitNote:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
 
 
-        # Generamos la peticion para firmar
+        # La firma la despacha el adaptador del certificador de esta configuración.
         try:
-            url = frappe.db.get_value('Configuracion Factura Electronica',
-                                     {'name': self.__config_name}, 'url_firma')
-
-            # codigo = frappe.db.get_value('Configuracion Factura Electronica',
-            #                             {'name': self.__config_name}, 'codigo')
-
-            alias = frappe.db.get_value('Configuracion Factura Electronica',
-                                       {'name': self.__config_name}, 'alias')
-
-            anulacion = frappe.db.get_value('Configuracion Factura Electronica',
-                                           {'name': self.__config_name}, 'es_anulacion')
-
-            self.__llave = frappe.db.get_value('Configuracion Factura Electronica',
-                                              {'name': self.__config_name}, 'llave_pfx')
-
-            self.__data_a_firmar = {
-                "llave": self.__llave, # LLAVE
-                "archivo": str(self.__encoded_str),  # En base64
-                "alias":  alias, # USUARIO
-                "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
-            }
-
-            headers = {"content-type": "application/json"}
-            response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
-
-            # Guardamos en una variable privada la respuesta
-            self.__doc_firmado = json.loads((response.content).decode('utf-8'))
-
-            # Guardamos la respuesta en un archivo DEBUG
-            # with open('nota_debito_firmada.json', 'w') as f:
-            #     f.write(json.dumps(self.__doc_firmado, indent=2))
-
-            # Si la respuesta es true
-            if self.__doc_firmado.get('resultado') == True:
-                # Guardamos en privado el documento firmado y encriptado
-                self.__encrypted = self.__doc_firmado.get('archivo')
-
-                # Retornamos el status del proceso
-                return True, 'OK'
-
-            else:  # Si ocurre un error retornamos la descripcion del error por INFILE
-                return False, self.__doc_firmado.get('descripcion')
-
+            from factura_electronica.fel.certifiers import sign_xml
+            ok_firma, firma_result = sign_xml(self.__config_name, self.__encoded_str)
+            if not ok_firma:
+                return False, firma_result
+            self.__encrypted = firma_result
+            return True, 'OK'
         except:
             return False, 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
 
@@ -717,31 +695,13 @@ class ElectronicDebitNote:
             data_fac = frappe.db.get_value('Purchase Invoice', {'name': self.__invoice_code}, 'company')
             nit_company = (str(frappe.db.get_value('Company', {'name': self.dat_fac[0]['company']}, 'nit_face_company')).replace('-', '')).upper().strip()
 
-            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
-            user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
-            llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'llave_ws')
-            correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'correo_copia')
-            ident = self.__invoice_code  # identificador
-
-            req_dte = {
-                "nit_emisor": nit_company,
-                "correo_copia": correo_copia,  # "m.monroyc22@gmail.com",
-                "xml_dte": self.__encrypted
-            }
-
-            headers = {
-                "content-type": "application/json",
-                "usuario": user,
-                "llave": llave,
-                "identificador": ident
-            }
-
-            # DEBUG
-            # with open('request_debit_note.json', 'w') as f:
-            #     f.write(json.dumps(req_dte, indent=2))
-
-            self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
-            self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
+            from factura_electronica.fel.certifiers import certify_dte
+            ok_dte, dte_result = certify_dte(
+                self.__config_name, nit_company, self.__encrypted, self.__invoice_code
+            )
+            if not ok_dte:
+                return False, dte_result
+            self.__response_ok = dte_result
 
             # DEBUG
             # with open('response_debit_note.json', 'w') as f:
@@ -827,6 +787,8 @@ class ElectronicDebitNote:
                 resp_fel.enviado = str(self.__start_datetime)
                 resp_fel.recibido = str(self.__end_datetime)
 
+                from factura_electronica.utils.fel_config import stamp_envio_fel
+                stamp_envio_fel(resp_fel, self.__config_name)
                 resp_fel.save(ignore_permissions=True)
 
             return True, 'OK'

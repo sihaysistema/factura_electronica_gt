@@ -13,6 +13,7 @@ import xmltodict
 from frappe import _
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
+from factura_electronica.utils.fel_datetime import get_fecha_hora_emision
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 
@@ -53,7 +54,6 @@ class ElectronicInvoice:
                         "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 2
                         "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",                       
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@Version": "0.1",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
@@ -145,15 +145,12 @@ class ElectronicInvoice:
         """
 
         try:
-            opt_config = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
-
-            if opt_config == 'Fecha y tiempo de peticion a INFILE':
-                ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
-
-            else:
-                date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date')
-                ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
-                ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
+            # ISO-8601 with system TZ offset (SAT treats naive as UTC → FEL-GUI-88)
+            ok_datetime = get_fecha_hora_emision(
+                config_name=self.__config_name,
+                invoice_name=self.__invoice_code,
+                doctype='Sales Invoice',
+            )
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
@@ -216,23 +213,25 @@ class ElectronicInvoice:
                     return False, '''No se puede completar la operacion ya que el campo {} de la direccion de compania no\
                                      tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire))
 
-            # Si en configuracion de factura electronica esta seleccionada la opcion de usar datos de prueba
+            # Test data uses the configured test trade name. Production uses the
+            # commercial name, and the owner name only when the company is an individual.
+            # Both are initialized in every branch. Blank v14 config fields fall back
+            # to company_name, which is what v13 always sent.
+            company_name = dat_compania[0]["company_name"]
+            nombre_emisor = None
             if frappe.db.get_value('Configuracion Factura Electronica',
                                   {'name': self.__config_name}, 'usar_datos_prueba') == 1:
                 nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
                                                    {'name': self.__config_name}, 'nombre_empresa_prueba')
-            # Aplica Si los datos son para producción
             else:
                 nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
                                                    {'name': self.__config_name}, 'nombre_Comercial')  # must be company_name, do not use trade name
-                #Nombre Emisor
-                nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'nombre_Emisor')
-
-                # Si la compania es de un propietario
                 if frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'is_individual'):
                     nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'facelec_name_of_owner')
                 else:
                     nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'nombre_Emisor')
+            nom_comercial = nom_comercial or company_name
+            nombre_emisor = nombre_emisor or company_name
             # Asignacion data
             self.__d_emisor = {
                 "@AfiliacionIVA": frappe.db.get_value('Configuracion Factura Electronica',
@@ -719,56 +718,14 @@ class ElectronicInvoice:
             return False, 'La peticio no se pudo codificar. Si la falla persiste comunicarse con soporte'
 
 
-        # Generamos la peticion para firmar
+        # La firma la despacha el adaptador del certificador de esta configuración.
         try:
-            url = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                     {'name': self.__config_name}, 'url_firma')).strip()
-
-            # codigo = frappe.db.get_value('Configuracion Factura Electronica',
-            #                             {'name': self.__config_name}, 'codigo')
-
-            alias = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                       {'name': self.__config_name}, 'alias')).strip()
-
-            anulacion = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                           {'name': self.__config_name}, 'es_anulacion')).strip()
-
-            self.__llave = str(frappe.db.get_value('Configuracion Factura Electronica',
-                                              {'name': self.__config_name}, 'llave_pfx')).strip()
-
-            self.__data_a_firmar = {
-                "llave": self.__llave, # LLAVE
-                "archivo": str(self.__encoded_str),  # En base64
-                # "codigo": codigo, # Número interno de cada transacción
-                "alias": alias, # USUARIO
-                "es_anulacion": anulacion # "N" si es certificacion y "S" si es anulacion
-            }
-
-            # DEBUGGING WRITE JSON PETITION TO SITES FOLDER
-            # with open('peticion.json', 'w') as f:
-            #      f.write(json.dumps(self.__data_a_firmar, indent=2))
-
-            headers = {"content-type": "application/json"}
-            response = requests.post(url, data=json.dumps(self.__data_a_firmar), headers=headers)
-
-            # Guardamos en una variable privada la respuesta
-            self.__doc_firmado = json.loads((response.content).decode('utf-8'))
-
-            # Guardamos la respuesta en un archivo DEBUG
-            # with open('recibido_firmado.json', 'w') as f:
-            #      f.write(json.dumps(self.__doc_firmado, indent=2))
-
-            # Si la respuesta es true
-            if self.__doc_firmado.get('resultado') == True:
-                # Guardamos en privado el documento firmado y encriptado
-                self.__encrypted = self.__doc_firmado.get('archivo')
-
-                # Retornamos el status del proceso
-                return True, 'OK'
-
-            else:  # Si ocurre un error retornamos la descripcion del error por INFILE
-                return False, self.__doc_firmado.get('descripcion')
-
+            from factura_electronica.fel.certifiers import sign_xml
+            ok_firma, firma_result = sign_xml(self.__config_name, self.__encoded_str)
+            if not ok_firma:
+                return False, firma_result
+            self.__encrypted = firma_result
+            return True, 'OK'
         except:
             return False, 'Error al tratar de firmar el documento electronico: '+str(frappe.get_traceback())
 
@@ -784,31 +741,13 @@ class ElectronicInvoice:
             data_fac = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'company')
             nit_company = str(frappe.db.get_value('Company', {'name': self.dat_fac[0]['company']}, 'nit_face_company').replace('-', '')).upper().strip()
 
-            url = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'url_dte')
-            user = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'alias')
-            llave = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'llave_ws')
-            correo_copia = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'correo_copia')
-            ident = self.__invoice_code  # identificador
-
-            req_dte = {
-                "nit_emisor": nit_company,
-                "correo_copia": correo_copia,  # "m.monroyc22@gmail.com",
-                "xml_dte": self.__encrypted
-            }
-
-            headers = {
-                "content-type": "application/json",
-                "usuario": user,
-                "llave": llave,
-                "identificador": ident
-            }
-
-            # DEBUG: Para ver que datos se estan enviando al Web Service
-            # with open("peticion-fel.json", "w") as file:
-            #     file.write(json.dumps(req_dte, indent=2))
-
-            self.__response = requests.post(url, data=json.dumps(req_dte), headers=headers)
-            self.__response_ok = json.loads((self.__response.content).decode('utf-8'))
+            from factura_electronica.fel.certifiers import certify_dte
+            ok_dte, dte_result = certify_dte(
+                self.__config_name, nit_company, self.__encrypted, self.__invoice_code
+            )
+            if not ok_dte:
+                return False, dte_result
+            self.__response_ok = dte_result
 
             # DEBUGGING WRITE JSON RESPONSES TO SITES FOLDER
             # with open('RESPONSE-FACTURA-FEL.json', 'w') as f:
@@ -895,6 +834,8 @@ class ElectronicInvoice:
                 resp_fel.enviado = str(self.__start_datetime)
                 resp_fel.recibido = str(self.__end_datetime)
 
+                from factura_electronica.utils.fel_config import stamp_envio_fel
+                stamp_envio_fel(resp_fel, self.__config_name)
                 resp_fel.save(ignore_permissions=True)
 
             return True, 'OK'

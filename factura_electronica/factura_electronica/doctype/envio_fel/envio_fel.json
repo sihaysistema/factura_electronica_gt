@@ -7,6 +7,9 @@
  "engine": "InnoDB",
  "field_order": [
   "status",
+  "company",
+  "configuracion",
+  "certificador",
   "detalles_fel_column",
   "tipo_documento",
   "resultado",
@@ -40,6 +43,34 @@
   "recibido"
  ],
  "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Compañía",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "description": "Configuración con la que se certificó este documento. La anulación vuelve a usar esta misma configuración.",
+   "fieldname": "configuracion",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Configuración",
+   "options": "Configuracion Factura Electronica",
+   "read_only": 1
+  },
+  {
+   "description": "Certificador que emitió este documento. La anulación se envía a este mismo certificador.",
+   "fieldname": "certificador",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Certificador",
+   "options": "Certificador FEL",
+   "read_only": 1
+  },
   {
    "collapsible": 1,
    "fieldname": "detalles_fel_column",
@@ -242,7 +273,7 @@
   }
  ],
  "links": [],
- "modified": "2021-08-22 20:39:43.307461",
+ "modified": "2026-10-15 21:40:00.000000",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Envio FEL",

@@ -55,26 +55,27 @@ def normalizar_texto(texto):
     return string_normalizado
 
 
-def validar_configuracion():
-    """Permite verificar que exista una configuración validada para Factura Electrónica,
-       retorna 1 de 3 opciones:
-       1 : Una configuracion valida
-       2 : Hay mas de una configuracion
-       3 : No hay configuraciones"""
-    # verifica que exista un documento validado, docstatus = 1 => validado
-    if frappe.db.exists('Configuracion Factura Electronica', {'docstatus': 1}):
+def validar_configuracion(company=None, certificador=None, configuracion=None):
+    """Verifica la configuración FEL para un documento nuevo de una compañía.
 
-        configuracion_valida = frappe.db.get_values('Configuracion Factura Electronica',
-                                                   filters={'docstatus': 1},
-                                                   fieldname=['name', 'regimen'], as_dict=1)
-        if (len(configuracion_valida) == 1):
-            return (int(1), str(configuracion_valida[0]['name']), str(configuracion_valida[0]['regimen']))
+    Con una sola configuración activa, devuelve esa. Con varias, la marcada
+    como certificador predeterminado. Si se pasa configuracion, usa esa.
 
-        elif (len(configuracion_valida) > 1):
-            return (int(2), 'Error 2')
+    Retorna:
+       (1, name, regimen) si hay una configuración que usar
+       (2, mensaje) si hay ambigüedad (ninguna o varias predeterminadas)
+       (3, mensaje) si no hay configuración activa o no se indicó compañía
+    """
+    from factura_electronica.utils.fel_config import get_active_config_for_company
 
-    else:
-        return (int(3), 'Error 3')
+    result = get_active_config_for_company(
+        company, certificador=certificador, configuracion=configuracion
+    )
+    if result.get("ok"):
+        return (int(1), result.get("name"), result.get("regimen") or "")
+    if result.get("code") in ("no_default", "multiple_defaults"):
+        return (int(2), result.get("message"))
+    return (int(3), result.get("message"))
 
 
 def generate_asl_file(datos_asiste, file_name='ASISTE', delimiter='|', extension='.ASL'):

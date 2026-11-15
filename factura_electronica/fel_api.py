@@ -147,8 +147,8 @@ def generate_electronic_invoice(invoice_code, naming_series):
     """
 
     try:
-        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
-        status_config = validate_configuration()
+        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA LA COMPAÑIA DE LA FACTURA
+        status_config = validate_configuration(_company_for('Sales Invoice', invoice_code))
 
         if status_config[0] == False:
             return status_config
@@ -224,8 +224,8 @@ def generate_credit_note(invoice_code, naming_series, reference_inv, reason):
     """
     try:
         actual_inv_name = invoice_code
-        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
-        status_config = validate_configuration()
+        # La nota de crédito sigue al certificador que emitió la factura original.
+        status_config = configuration_for_original_document('Sales Invoice', reference_inv)
 
         if status_config[0] == False:
             return status_config
@@ -327,7 +327,7 @@ def generate_debit_note(invoice_code, naming_series, uuid_purch_inv, date_inv_or
         tuple: [description]
     """
     try:
-        status_config = validate_configuration()
+        status_config = validate_configuration(_company_for('Purchase Invoice', invoice_code))
 
         if status_config[0] == False:
             return status_config
@@ -413,8 +413,8 @@ def generate_debit_note(invoice_code, naming_series, uuid_purch_inv, date_inv_or
 @frappe.whitelist()
 def generate_special_invoice(invoice_code, naming_series):
     try:
-        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
-        status_config = validate_configuration()
+        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA LA COMPAÑIA DE LA FACTURA
+        status_config = validate_configuration(_company_for('Purchase Invoice', invoice_code))
 
         if status_config[0] == False:
             return status_config
@@ -495,30 +495,52 @@ def generate_special_invoice(invoice_code, naming_series):
         return False, str(frappe.get_traceback())
 
 
-def validate_configuration():
+def validate_configuration(company=None, certificador=None, configuracion=None):
     """
-    Verifica que exista una configuracion valida para generar Factura electronica
+    Configuración FEL para un documento nuevo.
+
+    Una sola activa se usa tal cual. Si hay varias, se usa el certificador
+    predeterminado. configuracion obliga a usar esa configuración activa.
+
+    Args:
+        company (str): Compañía del documento (Sales Invoice, Purchase Invoice, etc.)
+        certificador (str): Limita la búsqueda a ese certificador.
+        configuracion (str): Nombre de configuración explícita.
 
     Returns:
-        tuple: En primera posicion True/False, segunda posicion mensaje status
+        tuple: (True, name) o (False, mensaje en español)
     """
+    from factura_electronica.utils.fel_config import get_active_config_for_company
 
-    # verifica que exista un documento validado, docstatus = 1 => validado
-    if frappe.db.exists('Configuracion Factura Electronica', {'docstatus': 1}):
+    result = get_active_config_for_company(
+        company, certificador=certificador, configuracion=configuracion
+    )
+    if result.get("ok"):
+        return (True, result.get("name"))
+    return (False, result.get("message"))
 
-        configuracion_valida = frappe.db.get_values('Configuracion Factura Electronica',
-                                                    filters={'docstatus': 1},
-                                                    fieldname=['name', 'regimen'], as_dict=1)
-        if (len(configuracion_valida) == 1):
-            return (True, str(configuracion_valida[0]['name']))
 
-        elif (len(configuracion_valida) > 1):
-            return (False, 'Se encontro mas de una configuración, por favor verifica que solo exista \
-                    una en Configuracion Factura Electronia')
+def configuration_for_original_document(doctype, name):
+    """Configuración del Envio FEL original, para anular o dar seguimiento.
 
-    else:
-        return (False, 'No se encontro ninguna configuración valida para generacion de facturas electronicas, por favor crea y valida una en \
-                        Configuracion Factura Electronica')
+    No usa la configuración activa ni el certificador predeterminado.
+
+    Returns:
+        tuple: (True, name) o (False, mensaje en español)
+    """
+    from factura_electronica.utils.fel_config import resolve_original_configuration
+
+    result = resolve_original_configuration(doctype, name)
+    if result.get("ok"):
+        return (True, result.get("name"))
+    return (False, result.get("message"))
+
+
+def _company_for(doctype, name):
+    """Compañía del documento que se va a certificar o anular."""
+    from factura_electronica.utils.fel_config import company_of
+
+    return company_of(doctype, name)
 
 
 def check_invoice_records(invoice_code):
@@ -671,8 +693,8 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
 
     try:
 
-        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
-        status_config = validate_configuration()
+        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA LA COMPAÑIA DE LA FACTURA
+        status_config = validate_configuration(_company_for('Sales Invoice', invoice_code))
 
         if status_config[0] == False:
             return status_config
@@ -773,8 +795,8 @@ def generate_exempt_electronic_invoice(invoice_code, naming_series):
 
     try:
 
-        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
-        status_config = validate_configuration()
+        # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA LA COMPAÑIA DE LA FACTURA
+        status_config = validate_configuration(_company_for('Sales Invoice', invoice_code))
 
         if status_config[0] == False:
             frappe.msgprint(_(status_config[1]))
@@ -858,7 +880,8 @@ def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='S
         document (str, optional): [description]. Defaults to 'Sales Invoice'.
     """
 
-    status_config = validate_configuration()
+    # La anulación sale por el certificador del Envio FEL original, no por el predeterminado.
+    status_config = configuration_for_original_document(document, invoice_name)
 
     if status_config[0] == True:
         cancel_invoice = CancelDocument(invoice_name, status_config[1], reason_cancelation, document)
@@ -896,6 +919,15 @@ def invoice_canceller(invoice_name, reason_cancelation='Anulación', document='S
         return
 
 
+def _configuration_for_fel_action(docinv):
+    """Configuración del documento: la original si es anulación o nota de crédito."""
+    if docinv.doctype in ("Sales Invoice", "Purchase Invoice") and docinv.docstatus == 2 and docinv.get("numero_autorizacion_fel"):
+        return configuration_for_original_document(docinv.doctype, docinv.name)
+    if docinv.doctype == "Sales Invoice" and docinv.get("is_return") and docinv.get("return_against"):
+        return configuration_for_original_document("Sales Invoice", docinv.return_against)
+    return validate_configuration(docinv.get("company"))
+
+
 @frappe.whitelist()
 def is_valid_to_fel(doctype, docname):
     """
@@ -909,8 +941,8 @@ def is_valid_to_fel(doctype, docname):
 
     # FACT, FACTEXP, NCRED, FESP, NDEB, CANCEL
     status_list = ['Credit Note Issued', 'Debit Note Issued', 'Return']
-    stat = validate_configuration()
-    docinv = frappe.get_doc(doctype, {'name': docname})
+    docinv = frappe.get_doc(doctype, docname)
+    stat = _configuration_for_fel_action(docinv)
 
     if stat[0] == True:
         config_name = stat[1]
@@ -1052,8 +1084,8 @@ def generate_exchange_invoice_si(invoice_code: str, naming_series: str) -> tuple
     Funcion intermediaria para generar factura cambiaria
     """
     try:
-        # Validacion configuracion serie para doc electronico
-        status_config = validate_configuration()
+        # Validacion configuracion serie para doc electronico de la compañía de la factura
+        status_config = validate_configuration(_company_for('Sales Invoice', invoice_code))
         if status_config[0] == False:
             return status_config
 
