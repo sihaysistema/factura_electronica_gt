@@ -57,7 +57,6 @@ class ExportInvoice:
                         "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
                         "@Version": "0.1",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0 C:\\Users\\Nadir\\Desktop\\SAT_FEL_FINAL_V1\\Esquemas\\GT_Documento-0.1.0.xsd",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {
@@ -615,7 +614,6 @@ class ExportInvoice:
                     "cex:Exportacion": {
                         "@xmlns:cex": "http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0",
                         "@Version": "1",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0 C:\\Users\\Nadir\\Desktop\\SAT_FEL_FINAL_V1\\Esquemas\\GT_Complemento_Exportaciones-0.1.0.xsd",
                         "cex:NombreConsignatarioODestinatario": str(self.dat_fac[0]["customer"]),
                         "cex:DireccionConsignatarioODestinatario": str(dat_direccion[0].get('address_line1'))[:70],  # solo acepta 70 digitos
                         "cex:CodigoConsignatarioODestinatario": codigo_consignatario_comprador,

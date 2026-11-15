@@ -1,27 +1,25 @@
-// this will help prevent duplicate calls
-let added = false;
+frappe.listview_settings["Sales Invoice"] = frappe.listview_settings["Sales Invoice"] || {};
 
-// This function is called any time the page is updated
-$(document).bind("DOMSubtreeModified", function () {
-  if ("List/Sales Invoice/List" in frappe.pages && frappe.pages["List/Sales Invoice/List"].page && !added) {
-    added = true;
-    frappe.pages["List/Sales Invoice/List"].page.add_action_item(__("Crear Lote Factura Electronica GT"), function (event) {
-      // Convert list of UI checks to list of IDs
-      let selected = [];
-      for (let check of event.view.cur_list.$checks) {
-        selected.push({ invoice: check.dataset.name });
-      }
-      // Do action
-      // console.log(selected); // View selected
+const previous_sales_invoice_onload = frappe.listview_settings["Sales Invoice"].onload;
 
-      // batch creator
-      frappe.call({
-        method: "factura_electronica.api_erp.batch_generator_api",
-        freeze: true,
-        args: {
-          invoices: JSON.stringify(selected),
-        },
-      });
-    });
+frappe.listview_settings["Sales Invoice"].onload = function (listview) {
+  if (typeof previous_sales_invoice_onload === "function") {
+    previous_sales_invoice_onload.call(this, listview);
   }
-});
+
+  listview.page.add_action_item(__("Create GT Electronic Invoice Batch"), function () {
+    const checked = listview.get_checked_items() || [];
+    const selected = checked.map(function (row) {
+      const name = typeof row === "string" ? row : row.name;
+      return { invoice: name };
+    });
+
+    frappe.call({
+      method: "factura_electronica.api_erp.batch_generator_api",
+      freeze: true,
+      args: {
+        invoices: JSON.stringify(selected),
+      },
+    });
+  });
+};

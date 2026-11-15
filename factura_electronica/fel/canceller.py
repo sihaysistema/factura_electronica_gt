@@ -73,7 +73,6 @@ class CancelDocument:
                     "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
                     "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
                     "@Version": "0.1",
-                    "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
                     "dte:SAT": {
                         "dte:AnulacionDTE": {
                             "@ID": "DatosCertificados",
@@ -98,7 +97,6 @@ class CancelDocument:
                     "@xmlns:n1": "http://www.altova.com/samplexml/other-namespace",
                     "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
                     "@Version": "0.1",
-                    "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.1.0",
                     "dte:SAT": {
                         "dte:AnulacionDTE": {
                             "@ID": "DatosCertificados",

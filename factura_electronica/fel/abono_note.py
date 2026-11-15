@@ -318,7 +318,6 @@ class ElectronicAbonoNote:
                         "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
                         "@Version": "0.1",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {

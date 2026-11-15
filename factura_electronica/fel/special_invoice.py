@@ -610,7 +610,6 @@ class ElectronicSpecialInvoice:
                     "cfe:RetencionesFacturaEspecial": {
                         "@xmlns:cfe": "http://www.sat.gob.gt/face2/ComplementoFacturaEspecial/0.1.0",
                         "@Version": "1",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/face2/ComplementoFacturaEspecial/0.1.0 C:\\Users\\User\\Desktop\\FEL\\Esquemas\\GT_Complemento_Fac_Especial-0.1.0.xsd",
                         "cfe:RetencionISR": ISR,
                         "cfe:RetencionIVA": IVA,
                         "cfe:TotalMenosRetenciones": MONTO_TOTAL_COMPLEMENTO

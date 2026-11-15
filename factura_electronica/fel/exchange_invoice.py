@@ -623,7 +623,6 @@ class SalesExchangeInvoice:
                     "cfc:AbonosFacturaCambiaria": {
                         "@xmlns:cfc": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
                         "@Version": "1",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
                         "cfc:Abono": abonos
                         # {
                         #     "cfc:NumeroAbono": "1",

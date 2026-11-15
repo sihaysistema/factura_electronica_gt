@@ -462,12 +462,12 @@ def get_payment_ref(inv_name):
     # Si aplica se generan los link a Payment Entry o Journal Entry
     for i in ref_per:
         if i.get("parent"):
-            link_ref += f'''<a class="btn-open no-decoration" href="/app/payment-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
+            link_ref += f'''<a class="btn-open no-decoration" href="/desk/payment-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
             # link_ref = f'https://{site_erp}/app/payment-entry/{ref_per}'  # para v13
 
     for i in ref_je:
         if i.get("parent"):
-            link_ref += f'''<a class="btn-open no-decoration" href="/app/journal-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
+            link_ref += f'''<a class="btn-open no-decoration" href="/desk/journal-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
             # link_ref = f'https://{site_erp}/app/journal-entry/{ref_je}'
 
     return link_ref
