@@ -14,6 +14,7 @@ from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
 from factura_electronica.utils.fel_datetime import MODE_CREACION, get_fecha_hora_emision
+from factura_electronica.utils.fel_frases import ensure_late_origin_frase
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 # Una nota de crédito es un documento comercial emitido por
@@ -426,10 +427,32 @@ class ElectronicCreditNote:
                     }
                 }
 
+            # SAT tipo 9 escenario 22 when this NCRE is issued more than two
+            # calendar months after the origin invoice. Skipped if that phrase
+            # is already in the configured combination.
+            self.__d_frases = ensure_late_origin_frase(
+                self.__d_frases,
+                self.__d_general.get("@FechaHoraEmision"),
+                self._origin_invoice_date(),
+            )
+
             return True, 'OK'
 
         except:
             return False, 'Error, no se puedo obtener valor de Codigo Escenario y Tipo Frase'
+
+    def _origin_invoice_date(self):
+        """Origin FEL date used by the credit-note reference complement."""
+
+        rows = frappe.db.get_values(
+            'Envio FEL',
+            filters={'serie_para_factura': self.__invoice_code},
+            fieldname=['fecha'],
+            as_dict=1,
+        )
+        if not rows:
+            return None
+        return rows[0].get('fecha')
 
     def items(self):
         """

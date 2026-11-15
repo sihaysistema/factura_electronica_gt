@@ -14,6 +14,7 @@ from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
 from factura_electronica.utils.fel_datetime import get_fecha_hora_emision
+from factura_electronica.utils.fel_frases import ensure_late_origin_frase
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 # Una nota de débito o memorando de débito es un documento comercial emitido por
@@ -40,6 +41,7 @@ class ElectronicDebitNote:
         self.__uuid_inv_origin = uuid_purch_inv
         self.__date_inv_origin = date_inv_origin
         self.__reason = reason
+        self.__d_frases = None
 
     def build_invoice(self):
         """
@@ -66,15 +68,7 @@ class ElectronicDebitNote:
                             "@ClaseDocumento": "dte",
                             "dte:DTE": {
                                 "@ID": "DatosCertificados",
-                                "dte:DatosEmision": {
-                                    "@ID": "DatosEmision",
-                                    "dte:DatosGenerales": self.__d_general,
-                                    "dte:Emisor": self.__d_emisor,
-                                    "dte:Receptor": self.__d_receptor,
-                                    "dte:Items": self.__d_items,
-                                    "dte:Totales": self.__d_totales,
-                                    "dte:Complementos": self.__complemento,
-                                }
+                                "dte:DatosEmision": self._datos_emision(),
                             }
                         }
                     }
@@ -90,6 +84,22 @@ class ElectronicDebitNote:
         except:
             return False, str(frappe.get_traceback())
 
+    def _datos_emision(self):
+        """DatosEmision. Frases is present only when SAT 9/22 applies."""
+
+        datos = {
+            "@ID": "DatosEmision",
+            "dte:DatosGenerales": self.__d_general,
+            "dte:Emisor": self.__d_emisor,
+            "dte:Receptor": self.__d_receptor,
+        }
+        if self.__d_frases:
+            datos["dte:Frases"] = self.__d_frases
+        datos["dte:Items"] = self.__d_items
+        datos["dte:Totales"] = self.__d_totales
+        datos["dte:Complementos"] = self.__complemento
+        return datos
+
     def validate(self):
         """
         Funcion encargada de validar la data que construye la peticion a INFILE,
@@ -104,6 +114,14 @@ class ElectronicDebitNote:
         if status_data_gen[0] == False:
             # Si existe algun error se retornara una tupla
             return status_data_gen
+
+        # NDEB has no configured phrase list. Add SAT 9/22 only when the note
+        # is issued more than two calendar months after the origin invoice.
+        self.__d_frases = ensure_late_origin_frase(
+            None,
+            self.__d_general.get("@FechaHoraEmision"),
+            self.__date_inv_origin,
+        )
 
         # Validacion y generacion seccion emisor
         status_sender = self.sender()
