@@ -8,6 +8,7 @@ import datetime
 import json
 
 import frappe
+from factura_electronica.utils.receptor_name import nombre_receptor_for_row
 import requests
 import xmltodict
 from frappe import _, _dict
@@ -193,7 +194,7 @@ class ElectronicDebitNote:
             # De la factura obtenemos la compañia y direccion compañia emisora
             self.dat_fac = frappe.db.get_values('Purchase Invoice', filters={'name': self.__invoice_code},
                                                 fieldname=['company', 'shipping_address', 'facelec_nit_fproveedor',
-                                                           'supplier_address', 'supplier_name', 'total_taxes_and_charges',
+                                                           'supplier_address', 'supplier', 'supplier_name', 'total_taxes_and_charges',
                                                            'grand_total', 'net_total', 'currency', 'credit_to',
                                                            'conversion_rate', 'contact_person'], as_dict=1)
             if len(self.dat_fac) == 0:
@@ -322,7 +323,7 @@ class ElectronicDebitNote:
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
                         "@IDReceptor": self.nit_proveedor_limpio,
-                        "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
+                        "@NombreReceptor": nombre_receptor_for_row(self.dat_fac[0]),
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -337,7 +338,7 @@ class ElectronicDebitNote:
                     self.__d_receptor = {
                         "@CorreoReceptor": datos_default.get('email'),
                         "@IDReceptor": self.nit_proveedor_limpio,
-                        "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
+                        "@NombreReceptor": nombre_receptor_for_row(self.dat_fac[0]),
                         "dte:DireccionReceptor": {
                             "dte:Direccion": datos_default.get('address'),
                             "dte:CodigoPostal": datos_default.get('pincode'),
@@ -355,7 +356,7 @@ class ElectronicDebitNote:
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
                         "@IDReceptor": self.nit_proveedor_limpio, # (self.dat_fac[0]['facelec_nit_fproveedor']).replace('/', ''),  # NIT => CF
-                        "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
+                        "@NombreReceptor": nombre_receptor_for_row(self.dat_fac[0]),
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
@@ -369,7 +370,7 @@ class ElectronicDebitNote:
                     self.__d_receptor = {
                         "@CorreoReceptor": dat_direccion[0].get('email_id', datos_default.get('email')),
                         "@IDReceptor": self.nit_proveedor_limpio,  # NIT
-                        "@NombreReceptor": str(self.dat_fac[0]["supplier_name"]),
+                        "@NombreReceptor": nombre_receptor_for_row(self.dat_fac[0]),
                         "dte:DireccionReceptor": {
                             "dte:Direccion": dat_direccion[0].get('address_line1', datos_default.get('address')),
                             "dte:CodigoPostal": dat_direccion[0].get('pincode', datos_default.get('pincode')),
