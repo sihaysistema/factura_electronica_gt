@@ -10,6 +10,7 @@ import base64
 import datetime
 import json
 import frappe
+from factura_electronica.utils.receptor_name import nombre_receptor_for_row
 import requests
 import xmltodict
 from frappe import _, _dict
@@ -55,7 +56,7 @@ class ElectronicAbonoNote:
             # De la factura obtenemos la compañia y direccion compañia emisora
             self.dat_fac = frappe.db.get_values('Sales Invoice', filters={'name': self.__inv_credit_note},
                                                 fieldname=['company', 'company_address', 'nit_face_customer',
-                                                           'customer_address', 'customer_name', 'total_taxes_and_charges',
+                                                           'customer_address', 'customer_name', 'customer', 'nombre_segun_sat', 'total_taxes_and_charges',
                                                            'grand_total'], as_dict=1)
             if len(self.dat_fac) == 0:
                 return False, f'''No se encontro ninguna factura con serie: {self.__inv_credit_note}.\
@@ -167,7 +168,7 @@ class ElectronicAbonoNote:
 
             self.__d_receptor = {
                 "@IDReceptor": nit_receptor,
-                "@NombreReceptor": self.dat_fac[0]['customer_name'],
+                "@NombreReceptor": nombre_receptor_for_row(self.dat_fac[0]),
                 "dte:DireccionReceptor": {
                     "dte:Direccion": direccion,
                     "dte:CodigoPostal": codigo_postal,

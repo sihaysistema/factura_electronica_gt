@@ -1,51 +1,80 @@
-import frappe
-import urllib.request
-import urllib.parse
+# -*- coding: utf-8 -*-
+"""Optional SAT receiver-name lookup on Sales Invoice submit."""
+
+from __future__ import unicode_literals
+
 import json
+import urllib.request
 
-def buscar_nombre (doc, method):
+import frappe
+
+SAT_RECEIVER_URL = "https://consultareceptores.feel.com.gt/rest/action"
+SAT_LOOKUP_TIMEOUT = 10
+SAT_LOOKUP_FIELD = "lookup_receiver_name_on_submit"
+
+
+def sat_lookup_enabled():
+    """True only when a submitted FEL configuration turns the lookup on."""
+    try:
+        value = frappe.db.get_value(
+            "Configuracion Factura Electronica",
+            {"docstatus": 1},
+            SAT_LOOKUP_FIELD,
+        )
+    except Exception:
+        return False
+    return value in (1, "1", True)
+
+
+def buscar_nombre(doc, method):
+    """Look up the SAT receiver name when the setting is on.
+
+    customer_name is never changed. Network and parse errors are logged
+    and do not block submit.
     """
-    Busca el nombre con la API de INFILE
-    """
-    if doc.es_dpi == False and doc.es_pasaporte == False:
-        try:
-            # Your custom logic here
-            # Example: Accessing Sales Invoice data
-            result_llave = frappe.db.sql("SELECT `tabConfiguracion Factura Electronica`.`llave_ws` FROM `tabConfiguracion Factura Electronica` WHERE `tabConfiguracion Factura Electronica`.`docstatus` = 1")
-            llave = result_llave[0][0] if result_llave else None #Extrae la llave, si no existe devuelve None.
-            result_alias = frappe.db.sql("SELECT `tabConfiguracion Factura Electronica`.`Alias` FROM `tabConfiguracion Factura Electronica` WHERE `tabConfiguracion Factura Electronica`.`docstatus` = 1")
-            alias = result_alias[0][0] if result_alias else None #Extrae el alias, si no existe devuelve None.
-            nit = doc.nit_face_customer
-            
-            payload = {
-                "emisor_codigo": alias,
-                "emisor_clave": llave,
-                "nit_consulta": nit
-            }
-            payload_json = json.dumps(payload).encode('utf-8')
-            #test
-            # Configurar la solicitud POST
-            url = "https://consultareceptores.feel.com.gt/rest/action"
-            headers = {'Content-Type': 'application/json'}
-            req = urllib.request.Request(url, data=payload_json, headers=headers)
-
-            # Realizar la solicitud
-            with urllib.request.urlopen(req) as response:
-                response_json = json.loads(response.read().decode('utf-8'))
-                # Extraer el nombre y asignarlo a doc.nombre_segun_sat
-                if response_json and 'nombre' in response_json:
-                    nombre = response_json['nombre']
-                    frappe.db.set_value("Sales Invoice",{"name":doc.name},{"nombre_segun_sat":nombre})
-                    frappe.db.set_value("Sales Invoice",{"name":doc.name},{"customer_name":nombre})
-                else:
-                    frappe.log_error("La respuesta de la API no contiene el campo 'nombre'", "Error Extracción Nombre") #Log en caso de no existir nombre.
-
-            return response_json
-
-        except Exception as e:
-                frappe.log_error(f"Error al conectar con la API de FEL: {e}", "Buscar NIT")
-                return None
-    else:
-        
-            
-        frappe.db.set_value("Sales Invoice",{"name":doc.name},{"customer_name":doc.customer_name})
+    if not sat_lookup_enabled():
+        return None
+    if getattr(doc, "es_dpi", False) or getattr(doc, "es_pasaporte", False):
+        return None
+    try:
+        result_llave = frappe.db.sql(
+            "SELECT `tabConfiguracion Factura Electronica`.`llave_ws` "
+            "FROM `tabConfiguracion Factura Electronica` "
+            "WHERE `tabConfiguracion Factura Electronica`.`docstatus` = 1"
+        )
+        llave = result_llave[0][0] if result_llave else None
+        result_alias = frappe.db.sql(
+            "SELECT `tabConfiguracion Factura Electronica`.`Alias` "
+            "FROM `tabConfiguracion Factura Electronica` "
+            "WHERE `tabConfiguracion Factura Electronica`.`docstatus` = 1"
+        )
+        alias = result_alias[0][0] if result_alias else None
+        payload = {
+            "emisor_codigo": alias,
+            "emisor_clave": llave,
+            "nit_consulta": doc.nit_face_customer,
+        }
+        payload_json = json.dumps(payload).encode("utf-8")
+        headers = {"Content-Type": "application/json"}
+        request = urllib.request.Request(SAT_RECEIVER_URL, data=payload_json, headers=headers)
+        with urllib.request.urlopen(request, timeout=SAT_LOOKUP_TIMEOUT) as response:
+            response_json = json.loads(response.read().decode("utf-8"))
+        if response_json and response_json.get("nombre"):
+            frappe.db.set_value(
+                "Sales Invoice",
+                doc.name,
+                "nombre_segun_sat",
+                response_json.get("nombre"),
+            )
+        else:
+            frappe.log_error(
+                message="The SAT response has no receiver name",
+                title="FEL receiver lookup",
+            )
+        return response_json
+    except Exception as exc:
+        frappe.log_error(
+            message="FEL receiver lookup failed: {0}".format(exc),
+            title="FEL receiver lookup",
+        )
+        return None
