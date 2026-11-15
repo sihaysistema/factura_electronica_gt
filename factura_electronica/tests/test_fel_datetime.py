@@ -25,6 +25,21 @@ def _ensure_frappe_stub():
     frappe.db = MagicMock()
     frappe.throw = MagicMock(side_effect=Exception)
     frappe.log_error = MagicMock()
+
+    def whitelist(*args, **kwargs):
+        if len(args) == 1 and callable(args[0]) and not kwargs:
+            return args[0]
+
+        def decorator(fn):
+            return fn
+
+        return decorator
+
+    frappe.whitelist = whitelist
+    if "numinwords" not in sys.modules:
+        numinwords = types.ModuleType("numinwords")
+        numinwords.numinwords = lambda *args, **kwargs: ""
+        sys.modules["numinwords"] = numinwords
     utils = types.ModuleType("frappe.utils")
 
     def get_time_zone():
