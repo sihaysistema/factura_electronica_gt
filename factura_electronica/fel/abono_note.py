@@ -15,6 +15,7 @@ import xmltodict
 from frappe import _, _dict
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
+from factura_electronica.utils.fel_datetime import get_fecha_hora_now
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 # EN RESUMEN, ES DEVOLUCION DESDE SALES INVOICE sin iva
@@ -383,7 +384,7 @@ class ElectronicAbonoNote:
         try:
             self.__d_general = {
                 "@CodigoMoneda": "GTQ",
-                "@FechaHoraEmision": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S-06:00"),
+                "@FechaHoraEmision": get_fecha_hora_now(),
                 "@Tipo": "NABN"
             }
             return True, 'OK'

@@ -16,6 +16,7 @@ import xmltodict
 from frappe import _
 from frappe.utils import cint, flt, get_datetime, nowdate, nowtime
 
+from factura_electronica.utils.fel_datetime import get_fecha_hora_emision
 from factura_electronica.utils.utilities_facelec import get_currency_precision, remove_html_tags
 
 class ElectronicInvoice:
@@ -55,7 +56,6 @@ class ElectronicInvoice:
                         "@xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",  # Version 2
                         "@xmlns:dte": "http://www.sat.gob.gt/dte/fel/0.2.0",                       
                         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                        "@xsi:schemaLocation": "http://www.sat.gob.gt/dte/fel/0.2.0",
                         "@Version": "0.1",
                         "dte:SAT": {
                             "@ClaseDocumento": "dte",
@@ -147,15 +147,12 @@ class ElectronicInvoice:
         """
 
         try:
-            opt_config = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'fecha_y_tiempo_documento_electronica')
-
-            if opt_config == 'Fecha y tiempo de peticion a INFILE':
-                ok_datetime = str(nowdate())+'T'+str(nowtime().rpartition('.')[0])
-
-            else:
-                date_invoice_inv = frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_date')
-                ok_time = str(frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'posting_time'))
-                ok_datetime = str(date_invoice_inv)+'T'+str(datetime.datetime.strptime(ok_time.split('.')[0], "%H:%M:%S").time())
+            # ISO-8601 with system TZ offset (SAT treats naive as UTC → FEL-GUI-88)
+            ok_datetime = get_fecha_hora_emision(
+                config_name=self.__config_name,
+                invoice_name=self.__invoice_code,
+                doctype='Sales Invoice',
+            )
 
             self.__d_general = {
                 "@CodigoMoneda": frappe.db.get_value('Sales Invoice', {'name': self.__invoice_code}, 'currency'),
@@ -218,23 +215,25 @@ class ElectronicInvoice:
                     return False, '''No se puede completar la operacion ya que el campo {} de la direccion de compania no\
                                      tiene data, por favor asignarle un valor e intentar de nuevo'''.format(str(dire))
 
-            # Si en configuracion de factura electronica esta seleccionada la opcion de usar datos de prueba
+            # Test data uses the configured test trade name. Production uses the
+            # commercial name, and the owner name only when the company is an individual.
+            # Both are initialized in every branch. Blank config fields fall back
+            # to company_name, which is what v13 always sent.
+            company_name = dat_compania[0]["company_name"]
+            nombre_emisor = None
             if frappe.db.get_value('Configuracion Factura Electronica',
                                   {'name': self.__config_name}, 'usar_datos_prueba') == 1:
                 nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
                                                    {'name': self.__config_name}, 'nombre_empresa_prueba')
-            # Aplica Si los datos son para producción
             else:
                 nom_comercial = frappe.db.get_value('Configuracion Factura Electronica',
                                                    {'name': self.__config_name}, 'nombre_Comercial')  # must be company_name, do not use trade name
-                #Nombre Emisor
-                nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'nombre_Emisor')
-
-                # Si la compania es de un propietario
                 if frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'is_individual'):
                     nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'facelec_name_of_owner')
                 else:
                     nombre_emisor = frappe.db.get_value('Configuracion Factura Electronica', {'name': self.__config_name}, 'nombre_Emisor')
+            nom_comercial = nom_comercial or company_name
+            nombre_emisor = nombre_emisor or company_name
             # Asignacion data
             self.__d_emisor = {
                 "@AfiliacionIVA": frappe.db.get_value('Configuracion Factura Electronica',
