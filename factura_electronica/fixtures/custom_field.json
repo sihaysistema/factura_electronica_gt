@@ -12587,7 +12587,7 @@
   "in_list_view": 0,
   "in_preview": 0,
   "in_standard_filter": 0,
-  "insert_after": "appointment",
+  "insert_after": "is_pos",
   "label": "Is it an international invoice?",
   "length": 0,
   "mandatory_depends_on": null,
