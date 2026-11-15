@@ -138,7 +138,6 @@ function btn_generator(frm) {
   //   btn_journal_entry_retention(frm);
   // }
   // FIN GENERACION POLIZA CON RETENCIONES
-}
 
 /**
  * @summary Para impuestos especiales (OJO SOLO COMBUSTIBLES) crear entradas en GL Entry para cuadrar montos
