@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import datetime
+import io
 # from erpnext.accounts.report.utils import convert  # value, from_, to, date
 import json
 
@@ -341,7 +342,7 @@ def process_invoice_items(invoice_name, type_inv='C'):
             items = get_items_sales_invoice(invoice_name)
 
         # Cargamos a un dataframe
-        df_items = pd.read_json(json.dumps(items))
+        df_items = pd.read_json(io.StringIO(json.dumps(items)))
 
         # Localizamos aquellos items que sean bienes, y lo sumamos
         sum_goods = (df_items.loc[df_items['is_good'] == 1].sum()).to_dict()

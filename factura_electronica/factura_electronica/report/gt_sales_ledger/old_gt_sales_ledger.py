@@ -242,7 +242,7 @@ def process_data_db(filters, data_db):
 
 
         # Carga de items categorizados a un DataFrame
-        df = pd.DataFrame.from_dict(items_ok)
+        df = pd.DataFrame(items_ok)
 
         # Por cada factura buscamos sus items y sumamos aquellos items que sean de
         # la misma categoria para dejarlo en una sola linea
@@ -289,7 +289,7 @@ def process_data_db(filters, data_db):
             })
 
 
-        df_totals = pd.DataFrame.from_dict(invoices)
+        df_totals = pd.DataFrame(invoices)
         # Sumas para dejar un total por fila factura
         totals = df_totals[['total', 'amount', 'fuel_iva', 'goods_iva', 'net_amount', 'net_fuel',
                             'sales_of_goods', 'sales_of_services', 'services_iva']].sum()
@@ -330,11 +330,11 @@ def sales_invoice_grouper(invoices, filters):
         list: Lista de diccionarios
     """
     try:
-        df_purchase_invoice = pd.DataFrame.from_dict(invoices)
+        df_purchase_invoice = pd.DataFrame(invoices)
 
         # Agrupamos y sumamos por type_doc
         grouped = df_purchase_invoice.groupby(['type_doc']).sum()
-        grouped.reset_index(inplace=True)
+        grouped = grouped.reset_index()
 
         # Sumamos los montos agrupados
         total_grouped = grouped[['amount', 'fuel_iva', 'goods_iva', 'net_amount', 'net_fuel',
