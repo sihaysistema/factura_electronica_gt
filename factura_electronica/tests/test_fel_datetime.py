@@ -14,7 +14,7 @@ import datetime
 import sys
 import types
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 
 def _ensure_frappe_stub():
@@ -22,9 +22,23 @@ def _ensure_frappe_stub():
     if "frappe" in sys.modules:
         return
     frappe = types.ModuleType("frappe")
-    frappe.db = MagicMock()
-    frappe.throw = MagicMock(side_effect=Exception)
-    frappe.log_error = MagicMock()
+
+    class _DB:
+        @staticmethod
+        def get_value(*args, **kwargs):
+            return None
+
+        @staticmethod
+        def get_system_setting(*args, **kwargs):
+            return "America/Guatemala"
+
+    frappe.db = _DB()
+
+    def _throw(message):
+        raise Exception(message)
+
+    frappe.throw = _throw
+    frappe.log_error = lambda *args, **kwargs: None
 
     def whitelist(*args, **kwargs):
         if len(args) == 1 and callable(args[0]) and not kwargs:
@@ -105,27 +119,35 @@ class TestFelDatetimeFormat(unittest.TestCase):
 
 
 class TestFelDatetimeModes(unittest.TestCase):
+    def _replace_get_value(self, fn):
+        import factura_electronica.utils.fel_datetime as fel_datetime
+
+        original = fel_datetime.frappe.db.get_value
+        fel_datetime.frappe.db.get_value = fn
+        return original
+
+    def _restore_get_value(self, original):
+        import factura_electronica.utils.fel_datetime as fel_datetime
+
+        fel_datetime.frappe.db.get_value = original
+
     @patch("factura_electronica.utils.fel_datetime.now_datetime")
     def test_petition_mode_uses_now(self, mock_now):
         mock_now.return_value = datetime.datetime(2026, 8, 7, 12, 28, 41)
-        with patch(
-            "factura_electronica.utils.fel_datetime.frappe.db.get_value",
-            return_value=MODE_PETICION,
-        ):
+        original = self._replace_get_value(lambda *args, **kwargs: MODE_PETICION)
+        try:
             result = get_fecha_hora_emision(
                 config_name="CONFIG-TEST",
                 invoice_name="SINV-001",
                 tz_name="America/Guatemala",
             )
+        finally:
+            self._restore_get_value(original)
         self.assertEqual(result, "2026-08-07T12:28:41-06:00")
         self.assertTrue(is_valid_fel_datetime(result))
 
     def test_creation_mode_uses_posting(self):
         def fake_get_value(doctype, filters, field=None, **kwargs):
-            # get_fecha_hora_emision may call with field as 3rd positional
-            if field is None and isinstance(filters, dict):
-                # unexpected shape
-                pass
             fname = field
             if doctype == "Configuracion Factura Electronica":
                 return MODE_CREACION
@@ -135,16 +157,16 @@ class TestFelDatetimeModes(unittest.TestCase):
                 return "09:15:30"
             return None
 
-        with patch(
-            "factura_electronica.utils.fel_datetime.frappe.db.get_value",
-            side_effect=fake_get_value,
-        ):
+        original = self._replace_get_value(fake_get_value)
+        try:
             result = get_fecha_hora_emision(
                 config_name="CONFIG-TEST",
                 invoice_name="SINV-001",
                 doctype="Sales Invoice",
                 tz_name="America/Guatemala",
             )
+        finally:
+            self._restore_get_value(original)
         self.assertEqual(result, "2026-08-07T09:15:30-06:00")
 
     @patch("factura_electronica.utils.fel_datetime.now_datetime")

@@ -13,7 +13,6 @@ from erpnext.accounts.report.utils import convert_to_presentation_currency, get_
 from erpnext.accounts.utils import get_account_currency
 from frappe import _, _dict, scrub
 from frappe.utils import cstr, flt, fmt_money, getdate
-from six import iteritems
 
 
 def execute(filters=None):
@@ -214,7 +213,7 @@ def get_data_with_opening_closing(filters, account_details, gl_entries):
     data.append(totals.opening)
 
     if filters.get("group_by") != _('Group by Voucher (Consolidated)'):
-        for acc, acc_dict in iteritems(gle_map):
+        for acc, acc_dict in gle_map.items():
             # acc
             if acc_dict.entries:
                 # opening

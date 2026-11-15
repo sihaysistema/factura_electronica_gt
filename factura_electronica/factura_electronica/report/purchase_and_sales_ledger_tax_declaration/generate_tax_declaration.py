@@ -36,7 +36,10 @@ def generate_vat_declaration(company, year, month, declared, report_data):
         # por facilidad creamos un df para obtener el total de todas las facturas incluidas
         total_inv = 0
         if len(records) > 0:
-            df_inv = pd.DataFrame.from_dict(records).fillna(0)
+            df_inv = pd.DataFrame(records)
+            for column in df_inv.columns:
+                if df_inv[column].dtype != object:
+                    df_inv[column] = df_inv[column].fillna(0)
             total_inv = df_inv['total_valor_doc'].sum(skipna=True)
 
             frappe.msgprint(str(total_inv))

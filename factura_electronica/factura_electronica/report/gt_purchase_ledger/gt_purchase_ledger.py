@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import datetime
+import io
 import json
 
 import frappe
@@ -60,7 +61,7 @@ def execute(filters=None):
             if filters.options == "Weekly":
                 columns = get_columns_weekly_report()
                 invoices_db = purchase_invoices_weekly(filters)
-                df_inv = pd.DataFrame.from_dict(json.loads(json.dumps(invoices_db, default=str)))
+                df_inv = pd.DataFrame(json.loads(json.dumps(invoices_db, default=str)))
                 data = calculate_total(df_inv, columns_data_db, filters, 'week_repo')
 
             if filters.options == "Monthly":
@@ -69,7 +70,7 @@ def execute(filters=None):
 
                  # Formatea y traduce la columna mes para reporte mensual
                 [invoice.update({"month": f"{invoice.get('year_repo')} {_(MONTHS[invoice.get('month_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
-                df_inv = pd.DataFrame.from_dict(json.loads(json.dumps(invoices_db, default=str)))
+                df_inv = pd.DataFrame(json.loads(json.dumps(invoices_db, default=str)))
                 data = calculate_total(df_inv, columns_data_db, filters, 'month')
 
             if filters.options == "Quarterly":
@@ -79,7 +80,7 @@ def execute(filters=None):
 
                 # Formatea la columna para reporte mensual
                 [invoice.update({"quarter": f"{invoice.get('year_repo')} {_(QUARTERS[invoice.get('quarter_repo')-1], lang=filters.language)}"}) for invoice in invoices_db]
-                df_inv = pd.DataFrame.from_dict(json.loads(json.dumps(invoices_db, default=str)))
+                df_inv = pd.DataFrame(json.loads(json.dumps(invoices_db, default=str)))
                 data = calculate_total(df_inv, columns_data_db, filters, 'quarter')
 
             if not data: return columns, []
@@ -339,7 +340,7 @@ def process_data_db(filters, data_db):
     site_erp = get_site_name(frappe.local.site)
 
     # Los datos se cargan a un df
-    df_inv = pd.DataFrame.from_dict(invoices)
+    df_inv = pd.DataFrame(invoices)
 
     # Crea una columna con las referencias de pagos (si existen)
     df_inv['accounting_document'] = df_inv['num_doc'].apply(lambda x: get_payment_ref(x))
@@ -399,11 +400,14 @@ def purchase_invoice_grouper(invoices, filters):
         list: Lista de diccionarios
     """
     try:
-        df_purchase_invoice = pd.read_json(invoices)
+        if isinstance(invoices, str):
+            df_purchase_invoice = pd.read_json(io.StringIO(invoices))
+        else:
+            df_purchase_invoice = pd.DataFrame(invoices)
 
         # Agrupamos y sumamos por type_doc
         grouped = df_purchase_invoice.groupby(['type_doc']).sum()
-        grouped.reset_index(inplace=True)
+        grouped = grouped.reset_index()
 
         # Sumamos los monto agrupados, para la fila de totales
         total_grouped = grouped[['purchases', 'services', 'iva', 'total']].sum()
@@ -458,12 +462,12 @@ def get_payment_ref(inv_name):
     # Si aplica se generan los link a Payment Entry o Journal Entry
     for i in ref_per:
         if i.get("parent"):
-            link_ref += f'''<a class="btn-open no-decoration" href="/app/payment-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
+            link_ref += f'''<a class="btn-open no-decoration" href="/desk/payment-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
             # link_ref = f'https://{site_erp}/app/payment-entry/{ref_per}'  # para v13
 
     for i in ref_je:
         if i.get("parent"):
-            link_ref += f'''<a class="btn-open no-decoration" href="/app/journal-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
+            link_ref += f'''<a class="btn-open no-decoration" href="/desk/journal-entry/{i.get('parent')}" target="_blank">{i.get("parent")}</a>, '''
             # link_ref = f'https://{site_erp}/app/journal-entry/{ref_je}'
 
     return link_ref

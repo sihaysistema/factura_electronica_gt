@@ -12,6 +12,16 @@ app_icon = "octicon octicon-desktop-download"
 app_color = "#112C5E"
 app_email = "m.monroyc22@gmail.com"
 app_license = "GNU General Public License (v3)"
+required_apps = ["erpnext"]
+
+add_to_apps_screen = [
+    {
+        "name": "factura_electronica",
+        "logo": "/assets/factura_electronica/images/factura-electronica-logo.svg",
+        "title": "Factura Electronica",
+        "route": "/desk/sales-invoice",
+    }
+]
 # es-GT: Indica la existencia de campos a la medida para agregar a la instalación estandar de ERPNext
 # en-US: Indicates the existense of custom fields to add to existing ERPNext installation
 # fixtures = ["Custom Field", "Tax Category"]
@@ -70,7 +80,8 @@ app_include_js = ["factura_electronica.bundle.js"]
 # ------------
 
 # before_install = "factura_electronica.install.before_install"
-# after_install = "factura_electronica.install.after_install"
+after_install = "factura_electronica.install.after_install"
+after_migrate = "factura_electronica.install.after_migrate"
 
 # Desk Notifications
 # ------------------

@@ -1,8 +1,0 @@
-frappe
-xmltodict
-pyopenssl
-pandas
-numpy
-numinwords
-reportlab
-xlsxwriter

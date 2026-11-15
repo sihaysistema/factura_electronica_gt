@@ -91,7 +91,10 @@ def generate_asl_file(datos_asiste, file_name='ASISTE', delimiter='|', extension
 
     try:
         # Cargamos a un df la data, para limpiar los valores None
-        df = pd.DataFrame(json.loads(datos_asiste)).fillna('')
+        df = pd.DataFrame(json.loads(datos_asiste))
+        for column in df.columns:
+            if df[column].dtype == object:
+                df[column] = df[column].fillna("")
         data_asl = df.to_dict(orient='records')
 
         # Para debug
@@ -233,7 +236,10 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
         invoices = content
 
         # Horizontal
-        df = pd.DataFrame.from_dict(invoices).fillna("")
+        df = pd.DataFrame(invoices)
+        for column in df.columns:
+            if df[column].dtype == object:
+                df[column] = df[column].fillna("")
 
         # Se eliminan las etiquetas HTML para que se muestre correctamente en archivo generado JSON/XLSX
         if column_idx == "date":
@@ -274,7 +280,7 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
         df_transpose.to_excel(writer, sheet_name='Horizontal')
 
         # Cierra y guarda los datos en Excel.
-        writer.save()
+        writer.close()
 
         # Obtiene los datos del archivo generado en bytes
         xlsx_data = output.getvalue()

@@ -6,6 +6,7 @@ import json
 import frappe
 from frappe import _
 
+from factura_electronica.utils.rename_invoice import sync_item_wise_tax_amounts
 from factura_electronica.utils.utilities_facelec import get_currency_precision
 from frappe.utils import flt
 
@@ -108,6 +109,9 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                             base_tax_amount=%(nuevo_monto)s, base_tax_amount_after_discount_amount=%(nuevo_monto)s,
                             tax_amount_after_discount_amount=%(nuevo_monto)s
                             WHERE parent=%(serie_original)s''', {'nuevo_monto': valor_iva, 'serie_original': invoice_name})
+            # v16 stores the same tax on Item Wise Tax Detail. Scale those
+            # rows so they still sum to the rewritten tax amount.
+            sync_item_wise_tax_amounts(invoice_name, valor_iva, parenttype=invoice_type)
 
         # Actualizacion sobre la tabla `tabGL Entry` - NOTA DE CREDITO
         if invoice_type == 'Sales Invoice' and is_return == 1:
@@ -166,6 +170,7 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                             base_tax_amount=%(nuevo_monto)s, base_tax_amount_after_discount_amount=%(nuevo_monto)s,
                             tax_amount_after_discount_amount=%(nuevo_monto)s
                             WHERE parent=%(serie_original)s''', {'nuevo_monto': valor_iva, 'serie_original': invoice_name})
+            sync_item_wise_tax_amounts(invoice_name, valor_iva, parenttype=invoice_type)
 
         if invoice_type == 'Purchase Invoice' and is_return == 0:
             # Total Tasable
@@ -219,6 +224,7 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                             base_tax_amount=%(nuevo_monto)s, base_tax_amount_after_discount_amount=%(nuevo_monto)s,
                             tax_amount_after_discount_amount=%(nuevo_monto)s
                             WHERE parent=%(serie_original)s''', {'nuevo_monto': valor_iva, 'serie_original': invoice_name})
+            sync_item_wise_tax_amounts(invoice_name, valor_iva, parenttype=invoice_type)
 
         # NOTA DE DEBITO
         if invoice_type == 'Purchase Invoice' and is_return == 1:
@@ -276,6 +282,7 @@ def calculate_values_with_special_tax(data_gl_entry, tax_rate, invoice_type, inv
                             base_tax_amount=%(nuevo_monto)s, base_tax_amount_after_discount_amount=%(nuevo_monto)s,
                             tax_amount_after_discount_amount=%(nuevo_monto)s
                             WHERE parent=%(serie_original)s''', {'nuevo_monto': valor_iva, 'serie_original': invoice_name})
+            sync_item_wise_tax_amounts(invoice_name, valor_iva, parenttype=invoice_type)
 
     except Exception as e:
         frappe.msgprint(_(f'Ocurrio un problema al tratar de actualizar los montos en GL Entry {e} <hr> {frappe.get_traceback()}'))

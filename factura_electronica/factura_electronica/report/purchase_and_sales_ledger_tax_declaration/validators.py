@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import io
 import json
 
 import pandas as pd
@@ -203,7 +204,7 @@ def validate_invoice_of_goods_or_services(invoice_name, type_inv='C'):
         items = get_items_sales_invoice(invoice_name)
 
     # Cargamos a un dataframe
-    df = pd.read_json(json.dumps(items))
+    df = pd.read_json(io.StringIO(json.dumps(items)))
 
     # Obtenemos todos los registros que sean bienes, luego hacemos un conteo
     # y luego obtenemos solamente el conteo del campo que nos interesa
