@@ -93,3 +93,8 @@ def create_fel_svg_qrcode(authorization_number):
     qr_svg_string = svg_as_string[second+2:]
 
     return qr_svg_string
+
+
+def fel_qr_svg(authorization_number):
+    """Jinja alias kept from v13 (jenv 'fel_qr_svg:...'), used by the FEL Fogliasana print format."""
+    return create_fel_svg_qrcode(authorization_number)

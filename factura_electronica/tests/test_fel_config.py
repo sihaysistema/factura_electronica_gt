@@ -30,7 +30,12 @@ def _ensure_frappe_stub():
     frappe.log_error = MagicMock()
     frappe._ = lambda msg: msg
     frappe.defaults = MagicMock()
+    frappe.whitelist = lambda *args, **kwargs: (lambda fn: fn)
     sys.modules["frappe"] = frappe
+    if "numinwords" not in sys.modules:
+        numinwords = types.ModuleType("numinwords")
+        numinwords.numinwords = lambda *args, **kwargs: ""
+        sys.modules["numinwords"] = numinwords
 
 
 _ensure_frappe_stub()

@@ -20,7 +20,8 @@ fixtures = fill_fixtures()
 jinja = {
     "methods": [
         'factura_electronica.currency_in_words',
-        'factura_electronica.fel.qrcode.create_fel_svg_qrcode'
+        'factura_electronica.fel.qrcode.create_fel_svg_qrcode',
+        'factura_electronica.fel.qrcode.fel_qr_svg',  # v13 alias used by print formats
     ]
 }
 
