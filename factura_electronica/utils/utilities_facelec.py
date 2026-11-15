@@ -20,6 +20,25 @@ from frappe.utils import cint, flt, get_site_name, now
 from frappe.utils.file_manager import save_file
 
 
+def fill_blank_text(df):
+    """Fill missing values in every non-numeric column with an empty string.
+
+    pandas 3 stores text in StringDtype, which is not ``object``. A check
+    for ``dtype == object`` leaves those cells empty, and the SAT ASISTE
+    file and the JSON/XLSX export then contain the text ``nan``.
+    """
+    for column in df.select_dtypes(exclude="number").columns:
+        df[column] = df[column].fillna("")
+    return df
+
+
+def fill_numeric_zeros(df):
+    """Fill missing values in numeric columns with zero."""
+    for column in df.select_dtypes(include="number").columns:
+        df[column] = df[column].fillna(0)
+    return df
+
+
 def encuentra_errores(cadena):
     """Reemplazo múltiple de cadenas, para finalmente retornarlo como diccionario
        y acceder a la descripcion de cada error."""
@@ -91,10 +110,7 @@ def generate_asl_file(datos_asiste, file_name='ASISTE', delimiter='|', extension
 
     try:
         # Cargamos a un df la data, para limpiar los valores None
-        df = pd.DataFrame(json.loads(datos_asiste))
-        for column in df.columns:
-            if df[column].dtype == object:
-                df[column] = df[column].fillna("")
+        df = fill_blank_text(pd.DataFrame(json.loads(datos_asiste)))
         data_asl = df.to_dict(orient='records')
 
         # Para debug
@@ -236,10 +252,7 @@ def save_excel_data(fname, content, to_dt, to_dn, folder, is_private, column_idx
         invoices = content
 
         # Horizontal
-        df = pd.DataFrame(invoices)
-        for column in df.columns:
-            if df[column].dtype == object:
-                df[column] = df[column].fillna("")
+        df = fill_blank_text(pd.DataFrame(invoices))
 
         # Se eliminan las etiquetas HTML para que se muestre correctamente en archivo generado JSON/XLSX
         if column_idx == "date":

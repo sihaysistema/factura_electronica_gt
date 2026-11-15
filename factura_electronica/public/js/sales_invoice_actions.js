@@ -1,10 +1,13 @@
+// Loaded from doctype_list_js so it runs with the Sales Invoice list,
+// after ERPNext has assigned listview_settings. The desk bundle is too
+// early: ERPNext's sales_invoice_list.js replaces that object later.
 frappe.listview_settings["Sales Invoice"] = frappe.listview_settings["Sales Invoice"] || {};
 
-const previous_sales_invoice_onload = frappe.listview_settings["Sales Invoice"].onload;
+const erpnext_sales_invoice_onload = frappe.listview_settings["Sales Invoice"].onload;
 
 frappe.listview_settings["Sales Invoice"].onload = function (listview) {
-  if (typeof previous_sales_invoice_onload === "function") {
-    previous_sales_invoice_onload.call(this, listview);
+  if (typeof erpnext_sales_invoice_onload === "function") {
+    erpnext_sales_invoice_onload.call(this, listview);
   }
 
   listview.page.add_action_item(__("Create GT Electronic Invoice Batch"), function () {
