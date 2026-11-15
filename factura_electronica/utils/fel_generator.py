@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import frappe
+from factura_electronica.utils.receptor_name import nombre_receptor, nombre_receptor_for_row
 from frappe import _
 from datetime import datetime
 from factura_electronica.utils.fel_datetime import get_fecha_hora_now
@@ -302,7 +303,8 @@ class FacturaElectronicaFEL:
             # Obtencion data de RECEPTOR/CLIENTE
             dat_fac = frappe.db.get_values('Sales Invoice',
                                            filters={'name': self.serie_factura},
-                                           fieldname=['nit_face_customer', 'customer_address'],
+                                           fieldname=['nit_face_customer', 'customer_address',
+                                                      'customer', 'customer_name', 'nombre_segun_sat'],
                                            as_dict=1)
 
             # Intentara obtener data de direccion cliente, si no hay mostrara error
@@ -326,7 +328,7 @@ class FacturaElectronicaFEL:
                 self.d_receptor = {
                     "@CorreoReceptor": dat_direccion[0]['email_id'],
                     "@IDReceptor": (dat_fac[0]['nit_face_customer']).replace('/', ''),  # NIT => CF
-                    "@NombreReceptor": str(self.nombre_cliente),
+                    "@NombreReceptor": nombre_receptor_for_row(dat_fac[0]) or nombre_receptor(None, self.nombre_cliente),
                     "dte:DireccionReceptor": {
                         "dte:Direccion": dat_direccion[0]['address_line1'],
                         "dte:CodigoPostal": dat_direccion[0]['pincode'],
@@ -339,7 +341,7 @@ class FacturaElectronicaFEL:
                 self.d_receptor = {
                     "@CorreoReceptor": dat_direccion[0]['email_id'],
                     "@IDReceptor": (dat_fac[0]['nit_face_customer']).replace('-', ''),  # NIT
-                    "@NombreReceptor": str(self.nombre_cliente),
+                    "@NombreReceptor": nombre_receptor_for_row(dat_fac[0]) or nombre_receptor(None, self.nombre_cliente),
                     "dte:DireccionReceptor": {
                         "dte:Direccion": dat_direccion[0]['address_line1'],
                         "dte:CodigoPostal": dat_direccion[0]['pincode'],
