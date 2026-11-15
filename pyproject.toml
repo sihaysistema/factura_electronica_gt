@@ -4,20 +4,24 @@ authors = [
     { name = "SHS", email = "m.monroy123ap@gmail.com"}
 ]
 description = "Aplicacion para la generacion de facturas electronicas en guatemala."
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = [
-    # Core dependencies
+    # Core dependencies. Frappe and ERPNext come from the bench, not pip.
     "numinwords",
     "numpy",
     "pandas",
+    "qrcode",
     "reportlab",
-    "frappe",
     "xmltodict",
     "pyopenssl",
     "xlsxwriter",
 ]
+
+[tool.bench.frappe-dependencies]
+frappe = ">=16,<17"
+erpnext = ">=16,<17"
 
 
 [build-system]
