@@ -3,23 +3,30 @@
 
 """FEL authorization QR for print formats.
 
-wkhtmltopdf 0.12.6 (the PDF button and ``frappe.get_pdf``) drops inline
-SVG, so the QR is a PNG embedded as a data-URI ``<img>``. The public
-names stay ``create_fel_svg_qrcode`` and ``fel_qr_svg`` because existing
-print formats call those Jinja methods.
+The drawing is the original reportlab SVG: QrCodeWidget, CMYK blue
+(84.29, 50.99, 0, 0), a 100 by 100 code inside a 120 by 120 drawing,
+error correction L, and a 4-module quiet zone. wkhtmltopdf 0.12.6 drops
+inline SVG, so the same markup is delivered as an SVG data-URI image.
+
+renderPM is not used. reportlab 4 needs rlPyCairo for that backend, and
+a missing library must not break printing.
 """
 
 from __future__ import unicode_literals
 
 import base64
-import io
+import logging
 
 import frappe
 
 _FEL_QR_URL = (
     "https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="
 )
-_QR_SIZE = 120
+_DISPLAY_SIZE = 120
+_QR_DRAW_SIZE = 100
+_QUIET_ZONE = 4
+
+_log = logging.getLogger(__name__)
 
 
 def fel_qr_url(authorization_number):
@@ -27,75 +34,72 @@ def fel_qr_url(authorization_number):
     return _FEL_QR_URL + str(authorization_number)
 
 
-def _png_with_renderpm(url):
-    """Draw the QR with reportlab renderPM. Raises if that backend is missing."""
-    from reportlab.graphics import renderPM
+def _log_failure(title, exc):
+    """Record a QR failure without letting the logger break the print."""
+    try:
+        message = "{0}".format(exc)
+        if hasattr(frappe, "get_traceback"):
+            message = frappe.get_traceback()
+        frappe.log_error(message=message, title=title)
+    except Exception:
+        _log.warning("%s: %s", title, exc)
+
+
+def _svg_markup(url):
+    """Original inline SVG, without the XML declaration or the debug print."""
     from reportlab.graphics.barcode import qr
     from reportlab.graphics.shapes import Drawing
+    from reportlab.graphics import renderSVG
+    from reportlab.lib.colors import PCMYKColor
 
-    widget = qr.QrCodeWidget(url)
-    bounds = widget.getBounds()
-    width = bounds[2] - bounds[0]
-    height = bounds[3] - bounds[1]
-    if not width or not height:
-        raise ValueError("QR drawing has no size")
-    drawing = Drawing(
-        _QR_SIZE,
-        _QR_SIZE,
-        transform=[float(_QR_SIZE) / width, 0, 0, float(_QR_SIZE) / height, 0, 0],
+    widget = qr.QrCodeWidget(
+        url,
+        barFillColor=PCMYKColor(84.29, 50.99, 0, 0),
+        x=0,
+        y=0,
+        barWidth=_QR_DRAW_SIZE,
+        barHeight=_QR_DRAW_SIZE,
+        barBorder=_QUIET_ZONE,
     )
+    drawing = Drawing(_DISPLAY_SIZE, _DISPLAY_SIZE)
     drawing.add(widget)
-    png = renderPM.drawToString(drawing, fmt="PNG")
-    if isinstance(png, str):
-        png = png.encode("latin-1")
-    if not png.startswith(b"\x89PNG"):
-        raise ValueError("renderPM did not return a PNG")
-    return png
+    svg_as_string = renderSVG.drawToString(drawing)
+    first = svg_as_string.find(">", 0)
+    second = svg_as_string.find(">", first + 1)
+    return svg_as_string[second + 2:]
 
 
-def _png_with_qrcode(url):
-    """Draw the QR with the qrcode package and Pillow."""
-    import qrcode
-
-    code = qrcode.QRCode(border=1, box_size=4)
-    code.add_data(url)
-    code.make(fit=True)
-    image = code.make_image(fill_color="black", back_color="white")
-    buffer = io.BytesIO()
-    image.save(buffer, format="PNG")
-    return buffer.getvalue()
+def _svg_img(svg):
+    encoded = base64.b64encode(svg.encode("utf-8")).decode("ascii")
+    return (
+        '<img src="data:image/svg+xml;base64,{encoded}" alt="FEL QR" '
+        'width="{size}" height="{size}">'
+    ).format(encoded=encoded, size=_DISPLAY_SIZE)
 
 
-def fel_qr_png_bytes(authorization_number):
-    """PNG bytes for the authorization QR.
+def _plain_fallback(authorization_number, url):
+    return "{0}\n{1}".format(authorization_number, url)
 
-    reportlab renderPM is used when it can actually draw. Sites without
-    that backend (no Cairo/rlPyCairo) fall back to qrcode and Pillow.
-    """
+
+def fel_qr_markup(authorization_number):
+    """SVG data-URI image, inline SVG, or plain text. Does not raise."""
     url = fel_qr_url(authorization_number)
     try:
-        return _png_with_renderpm(url)
-    except Exception:
-        return _png_with_qrcode(url)
-
-
-def fel_qr_png_img(authorization_number, size=_QR_SIZE):
-    """``<img>`` with a base64 PNG data URI."""
-    encoded = base64.b64encode(fel_qr_png_bytes(authorization_number)).decode("ascii")
-    return (
-        '<img src="data:image/png;base64,{encoded}" alt="FEL QR" '
-        'width="{size}" height="{size}">'
-    ).format(encoded=encoded, size=int(size))
+        svg = _svg_markup(url)
+    except Exception as exc:
+        _log_failure("FEL QR SVG", exc)
+        return _plain_fallback(authorization_number, url)
+    try:
+        return _svg_img(svg)
+    except Exception as exc:
+        _log_failure("FEL QR image", exc)
+        return svg
 
 
 @frappe.whitelist()
 def create_fel_svg_qrcode(authorization_number):
-    """Jinja/whitelist name kept for existing print formats.
-
-    Returns a PNG data-URI image. The previous SVG string does not survive
-    wkhtmltopdf 0.12.6.
-    """
-    return fel_qr_png_img(authorization_number)
+    """Jinja/whitelist name kept for existing print formats."""
+    return fel_qr_markup(authorization_number)
 
 
 def fel_qr_svg(authorization_number):
