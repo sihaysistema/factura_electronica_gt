@@ -1,0 +1,746 @@
+[
+ {
+  "name": "Box",
+  "faceleccodigo_unidad_de_medida": " CJ"
+ },
+ {
+  "name": "Pair",
+  "faceleccodigo_unidad_de_medida": " PR"
+ },
+ {
+  "name": "Set",
+  "faceleccodigo_unidad_de_medida": "JGO"
+ },
+ {
+  "name": "Meter",
+  "faceleccodigo_unidad_de_medida": "  M"
+ },
+ {
+  "name": "Centimeter",
+  "faceleccodigo_unidad_de_medida": " CM"
+ },
+ {
+  "name": "Foot",
+  "faceleccodigo_unidad_de_medida": "FT"
+ },
+ {
+  "name": "Inch",
+  "faceleccodigo_unidad_de_medida": " IN"
+ },
+ {
+  "name": "Milimeter",
+  "faceleccodigo_unidad_de_medida": " MM"
+ },
+ {
+  "name": "Yard",
+  "faceleccodigo_unidad_de_medida": " YD"
+ },
+ {
+  "name": "Square Meter",
+  "faceleccodigo_unidad_de_medida": " M2"
+ },
+ {
+  "name": "Square Kilometer",
+  "faceleccodigo_unidad_de_medida": "KM2"
+ },
+ {
+  "name": "Square Yard",
+  "faceleccodigo_unidad_de_medida": "YD2"
+ },
+ {
+  "name": "Square Foot",
+  "faceleccodigo_unidad_de_medida": " P2"
+ },
+ {
+  "name": "Cubic Foot",
+  "faceleccodigo_unidad_de_medida": "FT3"
+ },
+ {
+  "name": "Cubic Meter",
+  "faceleccodigo_unidad_de_medida": " M3"
+ },
+ {
+  "name": "Cup",
+  "faceleccodigo_unidad_de_medida": "COP"
+ },
+ {
+  "name": "Liter",
+  "faceleccodigo_unidad_de_medida": " LT"
+ },
+ {
+  "name": "Milliliter",
+  "faceleccodigo_unidad_de_medida": " MM"
+ },
+ {
+  "name": "Day",
+  "faceleccodigo_unidad_de_medida": "DIA"
+ },
+ {
+  "name": "Hour",
+  "faceleccodigo_unidad_de_medida": "HOR"
+ },
+ {
+  "name": "Kilowatt-Hour",
+  "faceleccodigo_unidad_de_medida": "KWH"
+ },
+ {
+  "name": "Kilowatt",
+  "faceleccodigo_unidad_de_medida": " KW"
+ },
+ {
+  "name": "Abampere",
+  "faceleccodigo_unidad_de_medida": "  A"
+ },
+ {
+  "name": "Mes",
+  "faceleccodigo_unidad_de_medida": "MES"
+ },
+ {
+  "name": "Caja",
+  "faceleccodigo_unidad_de_medida": "CJ"
+ },
+ {
+  "name": "Bolsa",
+  "faceleccodigo_unidad_de_medida": "BLS"
+ },
+ {
+  "name": "Frasco",
+  "faceleccodigo_unidad_de_medida": "FR"
+ },
+ {
+  "name": "Par",
+  "faceleccodigo_unidad_de_medida": "PR"
+ },
+ {
+  "name": "Galón",
+  "faceleccodigo_unidad_de_medida": "GAL"
+ },
+ {
+  "name": "Bucket",
+  "faceleccodigo_unidad_de_medida": "CUB"
+ },
+ {
+  "name": "Fardo",
+  "faceleccodigo_unidad_de_medida": "FRD"
+ },
+ {
+  "name": "Sin Empaque",
+  "faceleccodigo_unidad_de_medida": "UNI"
+ },
+ {
+  "name": "Ninguno",
+  "faceleccodigo_unidad_de_medida": "UNI"
+ },
+ {
+  "name": "Half hundred",
+  "faceleccodigo_unidad_de_medida": "12C"
+ },
+ {
+  "name": "Half dozen",
+  "faceleccodigo_unidad_de_medida": "12D"
+ },
+ {
+  "name": "12 Grams",
+  "faceleccodigo_unidad_de_medida": "12G"
+ },
+ {
+  "name": "1/2 Liter",
+  "faceleccodigo_unidad_de_medida": "12L"
+ },
+ {
+  "name": "1/2 Meter",
+  "faceleccodigo_unidad_de_medida": "12M"
+ },
+ {
+  "name": "1/2 Quintal",
+  "faceleccodigo_unidad_de_medida": "12Q"
+ },
+ {
+  "name": "55 Lb. roll",
+  "faceleccodigo_unidad_de_medida": "22L"
+ },
+ {
+  "name": "80 Grams",
+  "faceleccodigo_unidad_de_medida": "80G"
+ },
+ {
+  "name": "85 Grams",
+  "faceleccodigo_unidad_de_medida": "85G"
+ },
+ {
+  "name": "Adapter",
+  "faceleccodigo_unidad_de_medida": "ADA"
+ },
+ {
+  "name": "Needle",
+  "faceleccodigo_unidad_de_medida": "AGU"
+ },
+ {
+  "name": "Ampoule",
+  "faceleccodigo_unidad_de_medida": "AMP"
+ },
+ {
+  "name": "Headphone",
+  "faceleccodigo_unidad_de_medida": "AUD"
+ },
+ {
+  "name": "50 Lb. Barrel",
+  "faceleccodigo_unidad_de_medida": "B50"
+ },
+ {
+  "name": "55LB. Gallons",
+  "faceleccodigo_unidad_de_medida": "B55"
+ },
+ {
+  "name": "Bags",
+  "faceleccodigo_unidad_de_medida": "BAG"
+ },
+ {
+  "name": "Barrel",
+  "faceleccodigo_unidad_de_medida": "BAR"
+ },
+ {
+  "name": "Battery",
+  "faceleccodigo_unidad_de_medida": "BAT"
+ },
+ {
+  "name": "Liquid Measure Barrel",
+  "faceleccodigo_unidad_de_medida": "BBL"
+ },
+ {
+  "name": "Wide Mouth",
+  "faceleccodigo_unidad_de_medida": "BCA"
+ },
+ {
+  "name": "Bag",
+  "faceleccodigo_unidad_de_medida": "BLS"
+ },
+ {
+  "name": "Bundle",
+  "faceleccodigo_unidad_de_medida": "BLT"
+ },
+ {
+  "name": "Horn",
+  "faceleccodigo_unidad_de_medida": "BOC"
+ },
+ {
+  "name": "Bottle",
+  "faceleccodigo_unidad_de_medida": "BOT"
+ },
+ {
+  "name": "Bracket",
+  "faceleccodigo_unidad_de_medida": "BRA"
+ },
+ {
+  "name": "Canister",
+  "faceleccodigo_unidad_de_medida": "BTL"
+ },
+ {
+  "name": "Unit C/U = Cada Uno = For Each",
+  "faceleccodigo_unidad_de_medida": "C/U"
+ },
+ {
+  "name": "Box of 10",
+  "faceleccodigo_unidad_de_medida": "C10"
+ },
+ {
+  "name": "Box of 5",
+  "faceleccodigo_unidad_de_medida": "C5"
+ },
+ {
+  "name": "Box of 6",
+  "faceleccodigo_unidad_de_medida": "C6"
+ },
+ {
+  "name": "Boxes",
+  "faceleccodigo_unidad_de_medida": "CAJ"
+ },
+ {
+  "name": "Camare",
+  "faceleccodigo_unidad_de_medida": "CAM"
+ },
+ {
+  "name": "Can",
+  "faceleccodigo_unidad_de_medida": "CAN"
+ },
+ {
+  "name": "Case",
+  "faceleccodigo_unidad_de_medida": "CAS"
+ },
+ {
+  "name": "Cellular",
+  "faceleccodigo_unidad_de_medida": "CEL"
+ },
+ {
+  "name": "Hundred",
+  "faceleccodigo_unidad_de_medida": "CIE"
+ },
+ {
+  "name": "Cylindre",
+  "faceleccodigo_unidad_de_medida": "CIL"
+ },
+ {
+  "name": "Tape",
+  "faceleccodigo_unidad_de_medida": "CIN"
+ },
+ {
+  "name": "Circles",
+  "faceleccodigo_unidad_de_medida": "CIR"
+ },
+ {
+  "name": "Truckload",
+  "faceleccodigo_unidad_de_medida": "CMA"
+ },
+ {
+  "name": "Connector",
+  "faceleccodigo_unidad_de_medida": "CON"
+ },
+ {
+  "name": "Spool",
+  "faceleccodigo_unidad_de_medida": "CSE"
+ },
+ {
+  "name": "Quarter Gallon",
+  "faceleccodigo_unidad_de_medida": "CTO"
+ },
+ {
+  "name": "Two Pack Box",
+  "faceleccodigo_unidad_de_medida": "CTP"
+ },
+ {
+  "name": "Ten count",
+  "faceleccodigo_unidad_de_medida": "DEC"
+ },
+ {
+  "name": "Dieciseis",
+  "faceleccodigo_unidad_de_medida": "DIC"
+ },
+ {
+  "name": "Disc",
+  "faceleccodigo_unidad_de_medida": "DIS"
+ },
+ {
+  "name": "Dozens",
+  "faceleccodigo_unidad_de_medida": "DOC"
+ },
+ {
+  "name": "DVD",
+  "faceleccodigo_unidad_de_medida": "DSP"
+ },
+ {
+  "name": "Electrode",
+  "faceleccodigo_unidad_de_medida": "ELE"
+ },
+ {
+  "name": "Marketing element",
+  "faceleccodigo_unidad_de_medida": " EP"
+ },
+ {
+  "name": "Multiple Marketing Element",
+  "faceleccodigo_unidad_de_medida": "EPM"
+ },
+ {
+  "name": "Equipment",
+  "faceleccodigo_unidad_de_medida": "EQU"
+ },
+ {
+  "name": "Desk",
+  "faceleccodigo_unidad_de_medida": "ESC"
+ },
+ {
+  "name": "EST",
+  "faceleccodigo_unidad_de_medida": "EST"
+ },
+ {
+  "name": "Sticker",
+  "faceleccodigo_unidad_de_medida": "ETI"
+ },
+ {
+  "name": "Bales",
+  "faceleccodigo_unidad_de_medida": "FAR"
+ },
+ {
+  "name": "Four Pack",
+  "faceleccodigo_unidad_de_medida": "FPK"
+ },
+ {
+  "name": "Jar",
+  "faceleccodigo_unidad_de_medida": " FR"
+ },
+ {
+  "name": "Fountain",
+  "faceleccodigo_unidad_de_medida": "FUE"
+ },
+ {
+  "name": "Gallon",
+  "faceleccodigo_unidad_de_medida": "GAL"
+ },
+ {
+  "name": "Glove",
+  "faceleccodigo_unidad_de_medida": "GLO"
+ },
+ {
+  "name": "Gross",
+  "faceleccodigo_unidad_de_medida": "GRS"
+ },
+ {
+  "name": "Giga Watts",
+  "faceleccodigo_unidad_de_medida": "GW"
+ },
+ {
+  "name": "Thread",
+  "faceleccodigo_unidad_de_medida": "HIL"
+ },
+ {
+  "name": "Sheet",
+  "faceleccodigo_unidad_de_medida": "HOJ"
+ },
+ {
+  "name": "Printer",
+  "faceleccodigo_unidad_de_medida": "IMP"
+ },
+ {
+  "name": "Incubator",
+  "faceleccodigo_unidad_de_medida": "INC"
+ },
+ {
+  "name": "Syringe",
+  "faceleccodigo_unidad_de_medida": "JER"
+ },
+ {
+  "name": "Kilogram",
+  "faceleccodigo_unidad_de_medida": " KG"
+ },
+ {
+  "name": "Kilograms",
+  "faceleccodigo_unidad_de_medida": "KGS"
+ },
+ {
+  "name": "Kit",
+  "faceleccodigo_unidad_de_medida": "KIT"
+ },
+ {
+  "name": "Kilometers Travelled",
+  "faceleccodigo_unidad_de_medida": "KMR"
+ },
+ {
+  "name": "Kilovolts",
+  "faceleccodigo_unidad_de_medida": " KV"
+ },
+ {
+  "name": "Kilovolt Amps",
+  "faceleccodigo_unidad_de_medida": "KVA"
+ },
+ {
+  "name": "Lancet",
+  "faceleccodigo_unidad_de_medida": "LAN"
+ },
+ {
+  "name": "Laptop",
+  "faceleccodigo_unidad_de_medida": "LAP"
+ },
+ {
+  "name": "Spanish Pound",
+  "faceleccodigo_unidad_de_medida": "LBE"
+ },
+ {
+  "name": "Pounds",
+  "faceleccodigo_unidad_de_medida": "LBS"
+ },
+ {
+  "name": "Reader",
+  "faceleccodigo_unidad_de_medida": "LEC"
+ },
+ {
+  "name": "Canvas",
+  "faceleccodigo_unidad_de_medida": "LIE"
+ },
+ {
+  "name": "Literature",
+  "faceleccodigo_unidad_de_medida": "LIT"
+ },
+ {
+  "name": "Liquid Metric Tons",
+  "faceleccodigo_unidad_de_medida": "LMT"
+ },
+ {
+  "name": "Liters",
+  "faceleccodigo_unidad_de_medida": "LTR"
+ },
+ {
+  "name": "Labor",
+  "faceleccodigo_unidad_de_medida": "MDO"
+ },
+ {
+  "name": "Half Kit",
+  "faceleccodigo_unidad_de_medida": "MED"
+ },
+ {
+  "name": "Memory",
+  "faceleccodigo_unidad_de_medida": "MEM"
+ },
+ {
+  "name": "Month",
+  "faceleccodigo_unidad_de_medida": "MES"
+ },
+ {
+  "name": "Thousand count",
+  "faceleccodigo_unidad_de_medida": "MIL"
+ },
+ {
+  "name": "Mini mause",
+  "faceleccodigo_unidad_de_medida": "MIN"
+ },
+ {
+  "name": "Backpack",
+  "faceleccodigo_unidad_de_medida": "MOC"
+ },
+ {
+  "name": "Mouse",
+  "faceleccodigo_unidad_de_medida": "MOU"
+ },
+ {
+  "name": "Linear Meter",
+  "faceleccodigo_unidad_de_medida": " MT"
+ },
+ {
+  "name": "Milimeters",
+  "faceleccodigo_unidad_de_medida": " MM"
+ },
+ {
+  "name": "Meters",
+  "faceleccodigo_unidad_de_medida": "MTS"
+ },
+ {
+  "name": "Mega Volt Amps",
+  "faceleccodigo_unidad_de_medida": "MVA"
+ },
+ {
+  "name": "Megawatts",
+  "faceleccodigo_unidad_de_medida": " MW"
+ },
+ {
+  "name": "Megawatt-hour",
+  "faceleccodigo_unidad_de_medida": "MEH"
+ },
+ {
+  "name": "Not Applicable",
+  "faceleccodigo_unidad_de_medida": "N/A"
+ },
+ {
+  "name": "Eigt",
+  "faceleccodigo_unidad_de_medida": "OCT"
+ },
+ {
+  "name": "Patch Panel",
+  "faceleccodigo_unidad_de_medida": "PAN"
+ },
+ {
+  "name": "Package",
+  "faceleccodigo_unidad_de_medida": "PAQ"
+ },
+ {
+  "name": "Pairs",
+  "faceleccodigo_unidad_de_medida": "PAR"
+ },
+ {
+  "name": "Pack",
+  "faceleccodigo_unidad_de_medida": "PCK"
+ },
+ {
+  "name": "PET",
+  "faceleccodigo_unidad_de_medida": "PET"
+ },
+ {
+  "name": "Feet",
+  "faceleccodigo_unidad_de_medida": "PIE"
+ },
+ {
+  "name": "Pipette",
+  "faceleccodigo_unidad_de_medida": "PIP"
+ },
+ {
+  "name": "Plate",
+  "faceleccodigo_unidad_de_medida": "PLC"
+ },
+ {
+  "name": "Portion",
+  "faceleccodigo_unidad_de_medida": "POR"
+ },
+ {
+  "name": "Period",
+  "faceleccodigo_unidad_de_medida": "PRD"
+ },
+ {
+  "name": "Processor",
+  "faceleccodigo_unidad_de_medida": "PRO"
+ },
+ {
+  "name": "Test",
+  "faceleccodigo_unidad_de_medida": "PRU"
+ },
+ {
+  "name": "Inches",
+  "faceleccodigo_unidad_de_medida": "PUL"
+ },
+ {
+  "name": "Piece",
+  "faceleccodigo_unidad_de_medida": "PZA"
+ },
+ {
+  "name": "HundredWeight",
+  "faceleccodigo_unidad_de_medida": "QIT"
+ },
+ {
+  "name": "Quart",
+  "faceleccodigo_unidad_de_medida": " QT"
+ },
+ {
+  "name": "R87",
+  "faceleccodigo_unidad_de_medida": "R87"
+ },
+ {
+  "name": "Bunches or Racemes",
+  "faceleccodigo_unidad_de_medida": "RAC"
+ },
+ {
+  "name": "Spare part",
+  "faceleccodigo_unidad_de_medida": "REP"
+ },
+ {
+  "name": "Reams",
+  "faceleccodigo_unidad_de_medida": "RES"
+ },
+ {
+  "name": "Roll",
+  "faceleccodigo_unidad_de_medida": " RL"
+ },
+ {
+  "name": "Rolls",
+  "faceleccodigo_unidad_de_medida": "RLS"
+ },
+ {
+  "name": "Ream",
+  "faceleccodigo_unidad_de_medida": "RM"
+ },
+ {
+  "name": "Sack",
+  "faceleccodigo_unidad_de_medida": "SAC"
+ },
+ {
+  "name": "Envelope, Sachet or Packet",
+  "faceleccodigo_unidad_de_medida": "SBR"
+ },
+ {
+  "name": "Lite",
+  "faceleccodigo_unidad_de_medida": "SEM"
+ },
+ {
+  "name": "Service",
+  "faceleccodigo_unidad_de_medida": "SER"
+ },
+ {
+  "name": "Units",
+  "faceleccodigo_unidad_de_medida": "ST"
+ },
+ {
+  "name": "Switch",
+  "faceleccodigo_unidad_de_medida": "SWI"
+ },
+ {
+  "name": "Drum",
+  "faceleccodigo_unidad_de_medida": "TAM"
+ },
+ {
+  "name": "Tarea (Land area unit)",
+  "faceleccodigo_unidad_de_medida": "TAR"
+ },
+ {
+  "name": "Spanish tonnes",
+  "faceleccodigo_unidad_de_medida": " TE"
+ },
+ {
+  "name": "Keyboard",
+  "faceleccodigo_unidad_de_medida": "TEC"
+ },
+ {
+  "name": "Thousands",
+  "faceleccodigo_unidad_de_medida": "THS"
+ },
+ {
+  "name": "Strip",
+  "faceleccodigo_unidad_de_medida": "TIR"
+ },
+ {
+  "name": "Metric Tonnes",
+  "faceleccodigo_unidad_de_medida": " TM"
+ },
+ {
+  "name": "Ton",
+  "faceleccodigo_unidad_de_medida": "TND"
+ },
+ {
+  "name": "CTWO Pack",
+  "faceleccodigo_unidad_de_medida": "TPK"
+ },
+ {
+  "name": "Stiff",
+  "faceleccodigo_unidad_de_medida": "TSA"
+ },
+ {
+  "name": "Pipe or Tube",
+  "faceleccodigo_unidad_de_medida": "TUB"
+ },
+ {
+  "name": "Up",
+  "faceleccodigo_unidad_de_medida": " UP"
+ },
+ {
+  "name": "Ups",
+  "faceleccodigo_unidad_de_medida": "UPS"
+ },
+ {
+  "name": "USB",
+  "faceleccodigo_unidad_de_medida": "USB"
+ },
+ {
+  "name": "Class or Vessel",
+  "faceleccodigo_unidad_de_medida": "VAS"
+ },
+ {
+  "name": "Vehicle",
+  "faceleccodigo_unidad_de_medida": "VEH"
+ },
+ {
+  "name": "Yards",
+  "faceleccodigo_unidad_de_medida": "YDS"
+ },
+ {
+  "name": "Gram",
+  "faceleccodigo_unidad_de_medida": "GR"
+ },
+ {
+  "name": "Pound",
+  "faceleccodigo_unidad_de_medida": "LB"
+ },
+ {
+  "name": "Hora",
+  "faceleccodigo_unidad_de_medida": "HR"
+ },
+ {
+  "name": "Unit",
+  "faceleccodigo_unidad_de_medida": " EA"
+ },
+ {
+  "name": "Ounce",
+  "faceleccodigo_unidad_de_medida": "ONZ"
+ },
+ {
+  "name": "Paquete",
+  "faceleccodigo_unidad_de_medida": "UNI"
+ },
+ {
+  "name": "Unidad",
+  "faceleccodigo_unidad_de_medida": "UNI"
+ }
+]

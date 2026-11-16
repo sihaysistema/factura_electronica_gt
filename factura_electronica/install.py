@@ -6,6 +6,9 @@ are not installed on every site. Frappe skips an entire fixture file when
 any DocType it names is missing, which would drop the FEL custom fields on
 a site without HRMS. These records are applied from after_install and
 after_migrate only when the target table exists.
+
+UOM FEL codes are applied from the same hooks. They are not fixtures:
+a full UOM fixture reinserts the row on every migrate and clears enabled.
 """
 
 from __future__ import unicode_literals
@@ -14,6 +17,8 @@ import json
 import os
 
 import frappe
+
+from factura_electronica.utils.uom_fel_codes import sync_uom_fel_codes
 
 _DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
@@ -140,7 +145,9 @@ def sync_optional_fixtures():
 
 def after_install():
     sync_optional_fixtures()
+    sync_uom_fel_codes()
 
 
 def after_migrate():
     sync_optional_fixtures()
+    sync_uom_fel_codes()
