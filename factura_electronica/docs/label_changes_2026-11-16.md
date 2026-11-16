@@ -2,7 +2,7 @@
 
 English is the label. Spanish comes from `translations/es.csv`. The shared source `Is Exempt` stays `Es exento` in Translation fixture `fb33b8c6b4`, so Sales Invoice Item `facelec_si_is_exempt` and Purchase Invoice Item `facelec_pr_is_exempt` keep that Spanish. Sales Invoice `es_extempta` uses the separate source `Exempt Invoice`, translated `Es exenta` in `es.csv`.
 
-Revert instruction: revert commit `1d0e4b43709f0abf451db99221ff356dc824fc39`, then `bench migrate`. That commit is the English label conversion. The exempt checkbox label is the later commit that sets it to `Exempt Invoice`.
+Revert instruction: revert commit `1d0e4b43709f0abf451db99221ff356dc824fc39`, then `bench migrate`. That commit is the English label conversion. The exempt checkbox uses `Exempt Invoice` in commit `05d6f3fe428da72bd928c7fa98ad287056b4bf3e`.
 
 | Record name | Fieldname | Old label | New English label | Spanish translation |
 | --- | --- | --- | --- | --- |
