@@ -483,6 +483,9 @@ def fill_fixtures():
 
     # Identification Document Type is a Healthcare doctype. Those rows are
     # created from after_install/after_migrate only when the doctype exists.
+    # UOM is not a fixture. A full UOM row is deleted and reinserted on every
+    # migrate, and the old file had no enabled key, so v15/v16 stored enabled=0.
+    # FEL codes are applied from data/uom_fel_codes.json.
     fixtures_fillup.append(custom_field)
     fixtures_fillup.append(translation)
     fixtures_fillup.append(tax_category)
