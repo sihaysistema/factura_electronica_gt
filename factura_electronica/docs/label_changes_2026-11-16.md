@@ -1,14 +1,12 @@
 # Custom field label changes, 2026-11-16
 
-English is the label. Spanish comes from `translations/es.csv`, except `Is Exempt`, which is Translation fixture `fb33b8c6b4`.
+English is the label. Spanish comes from `translations/es.csv`. The shared source `Is Exempt` stays `Es exento` in Translation fixture `fb33b8c6b4`, so Sales Invoice Item `facelec_si_is_exempt` and Purchase Invoice Item `facelec_pr_is_exempt` keep that Spanish. Sales Invoice `es_extempta` uses the separate source `Exempt Invoice`, translated `Es exenta` in `es.csv`.
 
-Revert instruction: revert commit `1d0e4b43709f0abf451db99221ff356dc824fc39`, then `bench migrate`.
-
-That commit is the English label conversion. The exempt checkbox is earlier on the same branch: `acd93e46847bad3e73e06d3031ef201621d2c7ab` sets the label to `Is Exempt`, and `2f4c9cdc38dbdb5b4e4a160baaa1bf16ca935fa5` changes the Spanish from `Es exento` to `Es exenta`.
+Revert instruction: revert commit `1d0e4b43709f0abf451db99221ff356dc824fc39`, then `bench migrate`. That commit is the English label conversion. The exempt checkbox label is the later commit that sets it to `Exempt Invoice`.
 
 | Record name | Fieldname | Old label | New English label | Spanish translation |
 | --- | --- | --- | --- | --- |
-| Sales Invoice-es_extempta | es_extempta | Es extempta | Is Exempt | Es exenta |
+| Sales Invoice-es_extempta | es_extempta | Es extempta | Exempt Invoice | Es exenta |
 | UOM-faceleccodigo_unidad_de_medida | faceleccodigo_unidad_de_medida | Codigo Unidad de Medida | Unit of Measurement Code | Código Unidad de Medida |
 | Supplier-facelec_nit_proveedor | facelec_nit_proveedor | NIT Proveedor | Supplier NIT | NIT Proveedor |
 | Purchase Invoice-facelec_nit_fproveedor | facelec_nit_fproveedor | NIT Proveedor | Supplier NIT | NIT Proveedor |

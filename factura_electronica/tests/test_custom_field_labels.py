@@ -14,6 +14,7 @@ _APP_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 # record name, fieldname, old label, English label, Spanish
 LABELS = [
+    ("Sales Invoice-es_extempta", "es_extempta", "Es extempta", "Exempt Invoice", "Es exenta"),
     ("UOM-faceleccodigo_unidad_de_medida", "faceleccodigo_unidad_de_medida", "Codigo Unidad de Medida", "Unit of Measurement Code", "Código Unidad de Medida"),
     ("Supplier-facelec_nit_proveedor", "facelec_nit_proveedor", "NIT Proveedor", "Supplier NIT", "NIT Proveedor"),
     ("Purchase Invoice-facelec_nit_fproveedor", "facelec_nit_fproveedor", "NIT Proveedor", "Supplier NIT", "NIT Proveedor"),
@@ -78,16 +79,19 @@ class TestCustomFieldLabels(unittest.TestCase):
             self.assertEqual(sources.count(source), 1)
         self.assertNotIn("Is Exempt", sources)
 
-    def test_exempt_translation_fixture_is_es_exenta(self):
+    def test_shared_is_exempt_stays_es_exento(self):
         rows = _load_json("fixtures/translation.json")
         exempt = [row for row in rows if row.get("name") == "fb33b8c6b4"]
         question = [row for row in rows if row.get("name") == "03b0ad38c4"]
         special = [row for row in rows if row.get("source_text") == "Is Special Invoice" and row.get("language") == "es"]
-        self.assertEqual(exempt[0]["translated_text"], "Es exenta")
+        self.assertEqual(exempt[0]["translated_text"], "Es exento")
         self.assertEqual(exempt[0]["source_text"], "Is Exempt")
         self.assertEqual(question[0]["translated_text"], "Es Excento")
         self.assertEqual(question[0]["source_text"], "Is Exempt?")
         self.assertEqual(special[0]["translated_text"], "Es Factura Especial")
+        fields = {row["name"]: row for row in _load_json("fixtures/custom_field.json")}
+        self.assertEqual(fields["Sales Invoice Item-facelec_si_is_exempt"]["label"], "Is Exempt")
+        self.assertEqual(fields["Purchase Invoice Item-facelec_pr_is_exempt"]["label"], "Is Exempt")
 
 
 if __name__ == "__main__":
