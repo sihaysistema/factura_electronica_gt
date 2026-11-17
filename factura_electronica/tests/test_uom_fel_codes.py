@@ -10,10 +10,15 @@ import os
 import sys
 import types
 import unittest
+from unittest.mock import patch
+
+_MISSING = object()
 
 
 def _ensure_import_stubs():
-    if "frappe" not in sys.modules:
+    try:
+        import frappe  # noqa: F401
+    except ImportError:
         frappe = types.ModuleType("frappe")
 
         def whitelist(*args, **kwargs):
@@ -28,11 +33,31 @@ def _ensure_import_stubs():
         frappe.whitelist = whitelist
         frappe.db = types.SimpleNamespace()
         frappe.get_installed_apps = lambda: []
+        frappe.get_doc = lambda payload: None
         sys.modules["frappe"] = frappe
     if "numinwords" not in sys.modules:
-        numinwords = types.ModuleType("numinwords")
-        numinwords.numinwords = lambda *args, **kwargs: ""
-        sys.modules["numinwords"] = numinwords
+        try:
+            import numinwords  # noqa: F401
+        except ImportError:
+            numinwords = types.ModuleType("numinwords")
+            numinwords.numinwords = lambda *args, **kwargs: ""
+            sys.modules["numinwords"] = numinwords
+
+
+def _patch_frappe(name, value):
+    saved = frappe.__dict__.get(name, _MISSING)
+    proxy = saved is not _MISSING and type(saved).__name__ == "LocalProxy"
+    if proxy:
+        frappe.__dict__[name] = None
+    patcher = patch.object(frappe, name, value, create=(saved is _MISSING))
+    patcher.start()
+
+    def restore():
+        patcher.stop()
+        if proxy:
+            frappe.__dict__[name] = saved
+
+    return restore
 
 
 _ensure_import_stubs()
@@ -115,8 +140,9 @@ class TestUomFelCodes(unittest.TestCase):
                 },
             }
         )
-        frappe.db = self.store
-        frappe.get_doc = lambda payload: _Doc(payload)
+        self.addCleanup(_patch_frappe("db", self.store))
+        self.addCleanup(_patch_frappe("get_doc", lambda payload: _Doc(payload)))
+        self.addCleanup(_patch_frappe("get_installed_apps", lambda: []))
 
     def test_existing_disabled_uom_keeps_enabled_and_gains_an_empty_code(self):
         result = sync_uom_fel_codes(_CATALOG)

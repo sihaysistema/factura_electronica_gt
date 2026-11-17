@@ -148,6 +148,13 @@ def generate_electronic_invoice(invoice_code, naming_series):
     """
 
     try:
+        # A retry with the pre-rename name no longer has a Sales Invoice row,
+        # so the company lookup would fail before the duplicate guard. The
+        # guard does not need the company.
+        gated = _gate_before_sat(str(invoice_code))
+        if gated:
+            return gated
+
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA LA COMPAÑIA DE LA FACTURA
         status_config = validate_configuration(_company_for('Sales Invoice', invoice_code))
 
@@ -158,11 +165,6 @@ def generate_electronic_invoice(invoice_code, naming_series):
         if not frappe.db.exists('Configuracion Series FEL', {'parent': str(status_config[1]), 'serie': str(naming_series)}):
             return False, f'La serie utilizada en la factura no se encuentra configurada para Factura electronica \
                             Por favor agreguela en Series Fel de Configuracion Factura Electronica, y vuelva a intentar'
-
-        # PASO 2: VALIDACION EXTRA PARA NO GENERAR FACTURAS ELECTRONICA DUPLICADAS, SI OCURRIERA EN ALGUN ESCENARIO
-        gated = _gate_before_sat(str(invoice_code))
-        if gated:
-            return gated
 
         # PASO 3: FACTURA ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
@@ -331,6 +333,14 @@ def generate_nota_abono(invoice_code, naming_series):
     """
     try:
         actual_inv_name = invoice_code
+        status_credit_note = check_invoice_records(str(invoice_code))
+        if status_credit_note[0] == True:  # Si ya existe en DB
+            new_serie_cre = frappe.db.get_value('Envio FEL', {'serie_para_factura': invoice_code}, 'name')
+            frappe.msgprint(msg=_(f'La nota de credito que solicitas generar, ya se encuentra registrada como generada en ENVIOS FEL, con UUID {new_serie_cre}'),
+                            title=_('Proceso no completado'), indicator='yellow')
+
+            return False, 'No completed'
+
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA FACTURA ELECTRONICA
         status_config = validate_configuration(_company_for('Sales Invoice', invoice_code))
 
@@ -346,15 +356,7 @@ def generate_nota_abono(invoice_code, naming_series):
 
         # PASO 2: VALIDA EXISTENCIA DE REGISTROS EN ENVIOS FEL, PARA GENERAR EL DOCUMENTO
         # DEPRECATED. ESTE PASO YA NO ES NECESARIO
-
-        # 2.1 - VALIDAMOS QUE NO SE HAYA GENERANDO ANTEIORMENTE OTRA NOTA DE CREDITO CON LA MISMA DATA
-        status_credit_note = check_invoice_records(str(invoice_code))
-        if status_credit_note[0] == True:  # Si ya existe en DB
-            new_serie_cre = frappe.db.get_value('Envio FEL', {'serie_para_factura': invoice_code}, 'name')
-            frappe.msgprint(msg=_(f'La nota de credito que solicitas generar, ya se encuentra registrada como generada en ENVIOS FEL, con UUID {new_serie_cre}'),
-                            title=_('Proceso no completado'), indicator='yellow')
-
-            return False, 'No completed'
+        # 2.1 queda antes de la compañía: un reintento con el nombre viejo ya no tiene fila.
 
         # PASO 3: NOTA DE ABONO ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
@@ -430,6 +432,14 @@ def generate_debit_note(invoice_code, naming_series, uuid_purch_inv, date_inv_or
         tuple: [description]
     """
     try:
+        status_debit_note = check_invoice_records(str(invoice_code), doctype="Purchase Invoice")
+        if status_debit_note[0] == True:  # Si ya existe en DB
+            new_serie_cre = frappe.db.get_value('Envio FEL', {'serie_para_factura': invoice_code}, 'name')
+            frappe.msgprint(msg=_(f'La nota de debito que solicitas generar, ya se encuentra registrada como generada en ENVIOS FEL, con UUID {new_serie_cre}'),
+                            title=_('Proceso no completado'), indicator='yellow')
+
+            return False, 'No completed'
+
         status_config = validate_configuration(_company_for('Purchase Invoice', invoice_code))
 
         if status_config[0] == False:
@@ -449,14 +459,7 @@ def generate_debit_note(invoice_code, naming_series, uuid_purch_inv, date_inv_or
 
             return False, 'No completed'
 
-        # 2.1 - VALIDAMOS QUE NO SE HAYA GENERANDO ANTEIORMENTE OTRA NOTA DE DEBITO CON LA MISMA DATA
-        status_debit_note = check_invoice_records(str(invoice_code))
-        if status_debit_note[0] == True:  # Si ya existe en DB
-            new_serie_cre = frappe.db.get_value('Envio FEL', {'serie_para_factura': invoice_code}, 'name')
-            frappe.msgprint(msg=_(f'La nota de debito que solicitas generar, ya se encuentra registrada como generada en ENVIOS FEL, con UUID {new_serie_cre}'),
-                            title=_('Proceso no completado'), indicator='yellow')
-
-            return False, 'No completed'
+        # 2.1 queda antes de la compañía.
 
         # PASO 3: NOTA DE DEBITO ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
@@ -517,6 +520,14 @@ def generate_debit_note(invoice_code, naming_series, uuid_purch_inv, date_inv_or
 @frappe.whitelist()
 def generate_special_invoice(invoice_code, naming_series):
     try:
+        status_invoice = check_invoice_records(str(invoice_code), doctype="Purchase Invoice")
+        if status_invoice[0] == True:  # Si ya existe en DB
+            frappe.msgprint(msg=_(f'La factura especial se encuentra registrada como ya generada, puedes validar los detalles en \
+                                    Envios FEL, con codigo UUID {status_invoice[1]}'),
+                            title=_('Proceso no completado'), indicator='yellow')
+
+            return False, 'No completed'
+
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA LA COMPAÑIA DE LA FACTURA
         status_config = validate_configuration(_company_for('Purchase Invoice', invoice_code))
 
@@ -530,15 +541,7 @@ def generate_special_invoice(invoice_code, naming_series):
                             title=_('Proceso no completado'), indicator='red')
             return False, 'No completed'
 
-        # PASO 2: VALIDA EXISTENCIA DE REGISTROS EN ENVIOS FEL, PARA GENERAR EL DOCUMENTO
-        # ES NECESARIO CREARLA SOBRE UN DOCUMENTO ELECTRONICA YA GENERADO
-        status_invoice = check_invoice_records(str(invoice_code))
-        if status_invoice[0] == True:  # Si ya existe en DB
-            frappe.msgprint(msg=_(f'La factura especial se encuentra registrada como ya generada, puedes validar los detalles en \
-                                    Envios FEL, con codigo UUID {status_invoice[1]}'),
-                            title=_('Proceso no completado'), indicator='yellow')
-
-            return False, 'No completed'
+        # PASO 2 queda antes de la compañía.
 
         # PASO 3: FACTURA ESPECIAL ELECTRONICA
         # paso 3.1 - NUEVA INSTANCIA
@@ -819,6 +822,10 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
     """
 
     try:
+        status_invoice = check_invoice_records(str(invoice_code))
+        if status_invoice[0] == True:
+            return False, f'La factura se encuentra registrada como ya generada, puedes validar los detalles en \
+                            Envios FEL, con codigo UUID {status_invoice[1]}'
 
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA LA COMPAÑIA DE LA FACTURA
         status_config = validate_configuration(_company_for('Sales Invoice', invoice_code))
@@ -830,12 +837,6 @@ def generate_electronic_export_invoice(invoice_code, naming_series):
         if not frappe.db.exists('Configuracion Series FEL', {'parent': str(status_config[1]), 'serie': str(naming_series)}):
             return False, f'La serie utilizada en la factura no se encuentra configurada para Factura electronica Exportacion \
                             Por favor agreguela en Series Fel de Configuracion Factura Electronica, y vuelva a intentar'
-
-        # PASO 2: VALIDACION EXTRA PARA NO GENERAR FACTURAS ELECTRONICA EXPORTACION DUPLICADAS, SI OCURRIERA EN ALGUN ESCENARIO
-        status_invoice = check_invoice_records(str(invoice_code))
-        if status_invoice[0] == True:
-            return False, f'La factura se encuentra registrada como ya generada, puedes validar los detalles en \
-                            Envios FEL, con codigo UUID {status_invoice[1]}'
 
         # Validamos que el rate en la tabla de impuestos sea 0, se hace para tener lo mismo en facelec y facelec normal
         if not frappe.db.exists('Sales Taxes and Charges', {'parent': invoice_code, 'parenttype': 'Sales Invoice', 'rate': 0}):
@@ -922,6 +923,12 @@ def generate_exempt_electronic_invoice(invoice_code, naming_series):
     """
 
     try:
+        status_invoice = check_invoice_records(str(invoice_code))
+        if status_invoice[0] == True:
+            frappe.msgprint(_(f'La factura se encuentra registrada como ya generada, puedes validar los detalles en \
+                                Envios FEL, con codigo UUID {status_invoice[1]}'))
+            return False, f'La factura se encuentra registrada como ya generada, puedes validar los detalles en \
+                            Envios FEL, con codigo UUID {status_invoice[1]}'
 
         # PASO 1: VALIDAMOS QUE EXISTA UNA CONFIGURACION PARA LA COMPAÑIA DE LA FACTURA
         status_config = validate_configuration(_company_for('Sales Invoice', invoice_code))
@@ -937,13 +944,7 @@ def generate_exempt_electronic_invoice(invoice_code, naming_series):
             return False, f'La serie utilizada en la factura no se encuentra configurada para Factura electronica Exenta \
                             Por favor agreguela en Series Fel de Configuracion Factura Electronica, y vuelva a intentar'
 
-        # PASO 2: VALIDACION EXTRA PARA NO GENERAR FACTURAS ELECTRONICA EXPORTACION DUPLICADAS, SI OCURRIERA EN ALGUN ESCENARIO
-        status_invoice = check_invoice_records(str(invoice_code))
-        if status_invoice[0] == True:
-            frappe.msgprint(_(f'La factura se encuentra registrada como ya generada, puedes validar los detalles en \
-                                Envios FEL, con codigo UUID {status_invoice[1]}'))
-            return False, f'La factura se encuentra registrada como ya generada, puedes validar los detalles en \
-                            Envios FEL, con codigo UUID {status_invoice[1]}'
+        # PASO 2 queda antes de la compañía.
 
         # PASO 3: FACTURA ELECTRONICA EXPORTACION
         # paso 3.1 - NUEVA INSTANCIA
@@ -1227,6 +1228,14 @@ def generate_exchange_invoice_si(invoice_code: str, naming_series: str) -> tuple
     Funcion intermediaria para generar factura cambiaria
     """
     try:
+        status_inv = check_invoice_records(invoice_code)
+        if status_inv[0] == True:  # Si ya existe en DB
+            new_serie_cre = frappe.db.get_value('Envio FEL', {'serie_para_factura': invoice_code}, 'name')
+            frappe.msgprint(msg=_(f'El documento electronico que solicitas generar, ya se encuentra registrada como generada en ENVIOS FEL, con UUID {new_serie_cre}'),
+                            title=_('<b>Factura Cambiaria</b>: Proceso no completado'), indicator='yellow')
+
+            return False, 'No completed'
+
         # Validacion configuracion serie para doc electronico de la compañía de la factura
         status_config = validate_configuration(_company_for('Sales Invoice', invoice_code))
         if status_config[0] == False:
@@ -1238,14 +1247,7 @@ def generate_exchange_invoice_si(invoice_code: str, naming_series: str) -> tuple
                             title=_('<b>Factura Cambiaria</b>: Proceso no completado'), indicator='red')
             return False, 'No completed'
 
-        # validacion existencias, para evitar duplicados
-        status_inv = check_invoice_records(invoice_code)
-        if status_inv[0] == True:  # Si ya existe en DB
-            new_serie_cre = frappe.db.get_value('Envio FEL', {'serie_para_factura': invoice_code}, 'name')
-            frappe.msgprint(msg=_(f'El documento electronico que solicitas generar, ya se encuentra registrada como generada en ENVIOS FEL, con UUID {new_serie_cre}'),
-                            title=_('<b>Factura Cambiaria</b>: Proceso no completado'), indicator='yellow')
-
-            return False, 'No completed'
+        # validacion existencias queda antes de la compañía.
 
         # Generacion peticion
         new_exch_inv = SalesExchangeInvoice(invoice_code, status_config[1], naming_series)
