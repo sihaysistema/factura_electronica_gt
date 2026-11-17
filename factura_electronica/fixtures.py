@@ -502,6 +502,9 @@ def fill_fixtures():
     }
 
     # NEW FUNCTIONALITY FOR EXPORTING
+    # UOM is not a fixture. A full UOM row is deleted and reinserted on every
+    # migrate, and the old file had no enabled key, so v15 stored enabled=0.
+    # FEL codes are applied from data/uom_fel_codes.json.
     fixtures_fillup.append(custom_field)
     fixtures_fillup.append(translation)
     fixtures_fillup.append(tax_category)
