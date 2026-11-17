@@ -313,15 +313,8 @@ def fill_fixtures():
                     "Sales Taxes and Charges-taxable_unit_name",
                     "Purchase Taxes and Charges-taxable_unit_name",
                     "Item-taxable_unit_name", "Item-taxable_unit_code", "Item-tax_name",
-                    "Expense Claim Detail-reference",
-                    "Expense Claim Detail-details_reference",
-                    "Expense Claim Detail-supplier", "Expense Claim Detail-nit",
-                    "Expense Claim Detail-date", "Expense Claim Detail-goods",
-                    "Expense Claim Detail-services", "Expense Claim Detail-fuel",
-                    "Expense Claim Detail-column_break_9", "Expense Claim Detail-grand_total",
-                    "Expense Claim Detail-account_credit", "Expense Claim Detail-payable_account",
-                    "Expense Claim Detail-column_break_26", "Expense Claim Detail-column_break_28",
-                    "Expense Claim Detail-section_break_30", "Expense Claim Detail-from_invoice_reference",
+                    # Expense Claim Detail fields are HRMS-only. They are created
+                    # from after_install/after_migrate when that doctype exists.
                     "Customer-facelec_trade_name", "Supplier-facelec_trade_name", "Company-facelec_trade_name",
                     "Sales Invoice-access_number_fel", "Item Default-facelec_tax_rate_per_uom_purchase_account",
                     "Item Default-facelec_tax_rate_per_uom_selling_account", "Item Default-facelec_tax_rate_per_uom",
@@ -466,19 +459,8 @@ def fill_fixtures():
         ]
     }
 
-    id_doctype = {
-        "dt": "Identification Document Type", "filters": [
-            [
-                "identification_document_type", "in", [
-                    "PAS",
-                    "PASSPORT",
-                    "DUI",
-                    "DPI"
-                ]
-            ]
-        ]
-    }
-
+    # Identification Document Type is a Healthcare doctype. Those rows are
+    # created from after_install/after_migrate only when the doctype exists.
     frases_fel = {
         "dt": "FEL Catalogo Frases", "filters": [
             [
@@ -508,7 +490,6 @@ def fill_fixtures():
     fixtures_fillup.append(custom_field)
     fixtures_fillup.append(translation)
     fixtures_fillup.append(tax_category)
-    fixtures_fillup.append(id_doctype)
     fixtures_fillup.append(frases_fel)
     fixtures_fillup.append(tax_cat)
     fixtures_fillup.append(cat_taxable_units)

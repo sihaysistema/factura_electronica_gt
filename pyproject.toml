@@ -8,16 +8,19 @@ requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = [
-    # Core dependencies
+    # Core dependencies. Frappe and ERPNext come from the bench, not pip.
     "numinwords",
     "numpy",
     "pandas",
     "reportlab",
-    "frappe",
     "xmltodict",
     "pyopenssl",
     "xlsxwriter",
 ]
+
+[tool.bench.frappe-dependencies]
+frappe = ">=15,<16"
+erpnext = ">=15,<16"
 
 
 [build-system]
