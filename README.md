@@ -45,4 +45,21 @@ LGPL V3
 
 Electronic Invoice support for Guatemala - Factura Electronica de Guatemala
 
+## on_fel_signed
+
+Otras apps pueden registrar `on_fel_signed` en su `hooks.py`. Facelec llama cada ruta despues de una certificacion exitosa y despues de `upgrade_records` / `rename_invoice_links`. Si no hay hooks, la firma no cambia. Si un hook lanza un error, se registra con `frappe.log_error` y la firma no se revierte.
+
+```python
+on_fel_signed = ["my_app.fel.on_fel_signed"]
+```
+
+```python
+def on_fel_signed(doctype, old_name, new_name, uuid, serie, numero, envio_fel):
+    # doctype is Sales Invoice or Purchase Invoice
+    # envio_fel is the Envio FEL name (the SAT UUID)
+    pass
+```
+
+A retry with the original invoice name does not call SAT again when an `Envio FEL` row already has `serie_factura_original` equal to that name. The rename is finished when the invoice still has the old name. Issue #349.
+
 

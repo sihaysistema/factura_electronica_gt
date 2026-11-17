@@ -120,6 +120,9 @@ def generate_electronic_invoice(invoice_code, naming_series):
         if status_upgrade[0] == False:
             return status_upgrade
 
+        from factura_electronica.fel_api import _notify_fel_signed
+
+        _notify_fel_signed(invoice_code, status_upgrade, "Sales Invoice")
         return True, status_upgrade[1]
 
     except:
@@ -140,13 +143,9 @@ def validate_configuration():
                         Configuracion Factura Electronica')
 
 def check_invoice_records(invoice_code):
-    if frappe.db.exists('Envio FEL', {'serie_para_factura': invoice_code}):
-        facelec = frappe.db.get_values('Envio FEL',  filters={'serie_para_factura': invoice_code},
-                                       fieldname=['serie_factura_original', 'uuid'],
-                                       as_dict=1)
-        return True, str(facelec[0]['uuid'])
-    else:
-        return False, 'A generar una nueva'
+    from factura_electronica.fel_api import check_invoice_records as shared_check
+
+    return shared_check(invoice_code)
 
 @frappe.whitelist()
 def is_valid_to_fel(doctype, docname):
