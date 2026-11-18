@@ -198,6 +198,50 @@ class TestUomFelCodes(unittest.TestCase):
             install.sync_uom_fel_codes = original
         self.assertIsNone(result["rows"])
 
+    def test_after_sync_runs_the_sync_after_fixtures(self):
+        result = {}
+
+        def record(rows=None):
+            result["called"] = True
+            return {"skipped": False, "filled": 0, "kept": 0, "created": 0}
+
+        original = install.sync_uom_fel_codes
+        install.sync_uom_fel_codes = record
+        try:
+            install.after_sync()
+        finally:
+            install.sync_uom_fel_codes = original
+        self.assertTrue(result["called"])
+        with open(os.path.join(_APP_ROOT, "hooks.py"), encoding="utf-8") as handle:
+            hooks = handle.read()
+        self.assertIn('after_sync = "factura_electronica.install.after_sync"', hooks)
+
+    def test_leading_space_is_stripped_and_only_the_prefixed_value_is_rewritten(self):
+        self.store.rows["Box"] = {
+            "enabled": 1,
+            CODE_FIELD: " CJ",
+            "must_be_whole_number": 0,
+        }
+        self.store.rows["Yard"] = {
+            "enabled": 0,
+            CODE_FIELD: "SITE",
+            "must_be_whole_number": 1,
+        }
+        catalog = [
+            {"name": "Box", CODE_FIELD: "CJ", "raw_code": " CJ"},
+            {"name": "Yard", CODE_FIELD: "YD", "raw_code": " YD"},
+            {"name": "Each", CODE_FIELD: "EA", "raw_code": " EA"},
+        ]
+        result = sync_uom_fel_codes(catalog)
+        self.assertEqual(self.store.rows["Box"][CODE_FIELD], "CJ")
+        self.assertEqual(self.store.rows["Box"]["enabled"], 1)
+        self.assertEqual(self.store.rows["Yard"][CODE_FIELD], "SITE")
+        self.assertEqual(self.store.rows["Yard"]["enabled"], 0)
+        self.assertEqual(result["created"], 1)
+        created = self.store.inserts[0]
+        self.assertEqual(created[CODE_FIELD], "EA")
+        self.assertEqual(result["filled"], 1)
+
     def test_uom_is_not_a_fixture(self):
         doctypes = []
         for entry in fill_fixtures():
@@ -222,9 +266,15 @@ class TestUomFelCodes(unittest.TestCase):
         self.assertEqual(by_name["Galón"], "GAL")
         self.assertEqual(by_name["Caja"], "CJ")
         self.assertEqual(by_name["Bolsa"], "BLS")
+        spaced = [code for code in by_name.values() if code != str(code).strip()]
+        self.assertEqual(len(spaced), 27)
+        self.assertTrue(all(code.startswith(" ") for code in spaced))
         loaded = load_uom_fel_codes(path)
         self.assertEqual(len(loaded), 186)
-        self.assertEqual(loaded[0][CODE_FIELD], " CJ")
+        by_loaded = {row["name"]: row for row in loaded}
+        self.assertEqual(by_loaded["Box"][CODE_FIELD], "CJ")
+        self.assertEqual(by_loaded["Box"]["raw_code"], " CJ")
+        self.assertTrue(all(row[CODE_FIELD] == row[CODE_FIELD].strip() for row in loaded))
 
 
 if __name__ == "__main__":

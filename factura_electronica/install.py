@@ -181,3 +181,13 @@ def after_install():
 def after_migrate():
     sync_optional_fixtures()
     sync_uom_fel_codes()
+
+
+def after_sync():
+    """Fill FEL UOM codes after fixtures create the custom field.
+
+    ``after_install`` runs before ``sync_fixtures``, so the code column is
+    not there yet and that call fills nothing. Frappe 15 calls ``after_sync``
+    once the fixtures have been imported.
+    """
+    sync_uom_fel_codes()
