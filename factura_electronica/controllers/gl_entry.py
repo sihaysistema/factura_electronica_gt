@@ -3,61 +3,53 @@
 
 from __future__ import unicode_literals
 
-import json
-from datetime import date
 
-import frappe
-from frappe import _, _dict
-from frappe.utils import flt
+def purchase_gl_lines(items, taxes=None, payable_account="Creditors"):
+    """GL ERPNext already builds for a Purchase Invoice.
+
+    One debit per expense account, the sum of the line amounts on that
+    account. Each tax row is its own debit. The payable credit equals the
+    debits. ``facelec_p_gt_tax_net_fuel_amt`` is not an amount to post: it
+    is the FEL taxable base.
+    """
+    expenses = {}
+    for item in items:
+        account = item.get("expense_account")
+        amount = float(item.get("amount") or 0)
+        expenses[account] = expenses.get(account, 0.0) + amount
+    lines = [
+        {"account": account, "debit": amount, "credit": 0.0}
+        for account, amount in expenses.items()
+    ]
+    for tax in taxes or []:
+        lines.append({
+            "account": tax.get("account"),
+            "debit": float(tax.get("amount") or 0),
+            "credit": 0.0,
+        })
+    total = sum(line["debit"] for line in lines)
+    lines.append({"account": payable_account, "debit": 0.0, "credit": total})
+    return lines
+
+
+def gl_is_balanced(lines):
+    debits = sum(line["debit"] for line in lines)
+    credits = sum(line["credit"] for line in lines)
+    return round(debits - credits, 6) == 0.0
 
 
 def item_expense_acct_excise_tax_gl_correction(doc, event):
+    """Do not rewrite GL Entry after submit.
+
+    The old hook set the expense debit to one fuel line's
+    ``facelec_p_gt_tax_net_fuel_amt`` and never touched the credit. On
+    ERPNext 16 the item amount and the IDP tax row are already in the GL
+    map, so that absolute update added IDP again, wiped other lines that
+    share the account, and left the voucher unbalanced.
     """
-    Itera las lineas de Purchase Invoice Item, para ejecutar la funcion
-    que actualiza registros en GL Entry, esto aplica solo para facturas
-    combustible
-
-    Args:
-        doc (Object): De la clase Purchase Invoice
-        event (str): Evento ejecutor
-    """
-    try:
-
-        for item_row in doc.items:
-            tax_correction(item_row)
-
-    except:
-        frappe.msgprint(f'Ocurrio un problema al tratar de iterar las cuentas para actualizar registros en GL Entry: <code>{frappe.get_traceback()}</code>')
+    return None
 
 
 def tax_correction(dict_row):
-    """
-    Corrige los montos en GL Entry, por `facelec_p_gt_tax_net_fuel_amt`
-    esta actualizacion hace posible el cuadre, pueden existir casos donde no cuadre
-    por los centavos ejemplo: 16.63 -- 16.64 esto se debe a los calculos del JS
-
-    Args:
-        dict_row (Object): De la clase Purchase Invoice
-    """
-    try:
-        # aplica para purchase invoice
-        # Por cada fila de items de Purchase Invoice Item, si es combustible
-        # Actualiza el monto en aquellos registros en GL ENTRY que tenga en comun,
-        # voucher_no, account, y el monto, se hace tambien por monto ya que pueden
-        # existir multiples registros en el mismo, esto para evitar actualizaciones
-        # no necesaria que pueden influir en la conta
-        if dict_row.facelec_p_is_fuel == 1:
-            frappe.db.sql(
-                f'''
-                    UPDATE `tabGL Entry` SET debit="{dict_row.facelec_p_gt_tax_net_fuel_amt}",
-                    debit_in_account_currency="{dict_row.facelec_p_gt_tax_net_fuel_amt}"
-                    WHERE voucher_no="{dict_row.parent}" AND
-                    account="{dict_row.expense_account}" AND
-                    voucher_type="Purchase Invoice"
-                ''')
-
-        # debit_in_account_currency="{round(dict_row.net_amount, 2)}" AND
-
-    except:
-        frappe.msgprint(f'Ocurrio un problema al tratar de actualizar registros en GL Entry: <code>{frappe.get_traceback()}</code>')
-
+    """Old per-line entry point. It no longer runs SQL."""
+    return None
