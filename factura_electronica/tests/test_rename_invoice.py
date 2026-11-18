@@ -124,6 +124,127 @@ class TestRenameInvoice(unittest.TestCase):
         self.assertEqual(scaled_item_wise_amounts([0, 0], 8), [8.0, 0.0])
         self.assertEqual(scaled_item_wise_amounts([], 8), [])
 
+    def test_credit_note_ar_and_journal_payment_follow_the_new_name(self):
+        table_exists, has_column = _guards()
+        old = "FEL-TEMP-0001"
+        new = "NCE64FSNCA001190000000154"
+        statements = build_rename_statements(old, new, "Sales Invoice", table_exists, has_column)
+        gl_sql = [sql for sql, _params in statements if "`tabGL Entry`" in sql]
+        joined = "\n".join(gl_sql)
+        self.assertNotIn("AND against_voucher=%(serieFa)s", joined)
+        self.assertIn("SET voucher_no=%(name)s WHERE voucher_no=%(serieFa)s", joined)
+        self.assertIn("against_voucher_type=%(link_doctype)s", joined)
+
+        ple_against = [
+            sql for sql, _params in statements
+            if "`tabPayment Ledger Entry`" in sql and "against_voucher_no" in sql
+        ]
+        self.assertTrue(ple_against)
+        self.assertIn("against_voucher_type=%(link_doctype)s", ple_against[0])
+        self.assertNotIn("AND voucher_no", ple_against[0])
+
+        gl = [
+            {
+                "voucher_type": "Sales Invoice",
+                "voucher_no": old,
+                "against_voucher": "FACT-ORIG",
+                "against_voucher_type": "Sales Invoice",
+                "account": "AR",
+                "docstatus": 1,
+            },
+            {
+                "voucher_type": "Sales Invoice",
+                "voucher_no": old,
+                "against_voucher": old,
+                "against_voucher_type": "Sales Invoice",
+                "account": "Income",
+                "docstatus": 1,
+            },
+            {
+                "voucher_type": "Journal Entry",
+                "voucher_no": "PARTIDA-11270",
+                "against_voucher": old,
+                "against_voucher_type": "Sales Invoice",
+                "account": "Debtors",
+                "docstatus": 1,
+            },
+            {
+                "voucher_type": "Journal Entry",
+                "voucher_no": "PARTIDA-11270",
+                "against_voucher": old,
+                "against_voucher_type": "Purchase Invoice",
+                "account": "Creditors",
+                "docstatus": 1,
+            },
+        ]
+        ple = [
+            {
+                "voucher_type": "Journal Entry",
+                "voucher_no": "PARTIDA-11270",
+                "against_voucher_no": old,
+                "against_voucher_type": "Sales Invoice",
+                "amount": 400,
+            },
+            {
+                "voucher_type": "Journal Entry",
+                "voucher_no": "PARTIDA-11270",
+                "against_voucher_no": old,
+                "against_voucher_type": "Purchase Invoice",
+                "amount": 50,
+            },
+        ]
+        _apply_rename(statements, gl, ple)
+
+        ar = next(row for row in gl if row["account"] == "AR")
+        self.assertEqual(ar["voucher_no"], new)
+        self.assertEqual(ar["against_voucher"], "FACT-ORIG")
+        income = next(row for row in gl if row["account"] == "Income")
+        self.assertEqual(income["voucher_no"], new)
+        self.assertEqual(income["against_voucher"], new)
+        je_sales = next(row for row in gl if row["account"] == "Debtors")
+        self.assertEqual(je_sales["voucher_no"], "PARTIDA-11270")
+        self.assertEqual(je_sales["against_voucher"], new)
+        je_purchase = next(row for row in gl if row["account"] == "Creditors")
+        self.assertEqual(je_purchase["against_voucher"], old)
+
+        sales_ple = next(row for row in ple if row["against_voucher_type"] == "Sales Invoice")
+        self.assertEqual(sales_ple["against_voucher_no"], new)
+        self.assertEqual(sales_ple["voucher_no"], "PARTIDA-11270")
+        purchase_ple = next(row for row in ple if row["against_voucher_type"] == "Purchase Invoice")
+        self.assertEqual(purchase_ple["against_voucher_no"], old)
+
+        invoice_total = 1000
+        paid = sum(
+            row["amount"] for row in ple
+            if row["against_voucher_no"] == new and row["against_voucher_type"] == "Sales Invoice"
+        )
+        self.assertEqual(invoice_total - paid, 600)
+        self.assertFalse(any(row["against_voucher_no"] == old and row["against_voucher_type"] == "Sales Invoice" for row in ple))
+
+
+def _apply_rename(statements, gl_rows, ple_rows):
+    """Apply the generated updates to in-memory ledger rows."""
+    for sql, params in statements:
+        old = params["serieFa"]
+        new = params["name"]
+        doctype = params["link_doctype"]
+        if "`tabGL Entry`" in sql and "SET voucher_no=%(name)s WHERE voucher_no=%(serieFa)s" in sql:
+            for row in gl_rows:
+                if row["voucher_no"] == old:
+                    row["voucher_no"] = new
+        elif "`tabGL Entry`" in sql and "SET against_voucher=%(name)s" in sql:
+            for row in gl_rows:
+                if row["against_voucher"] == old and row.get("against_voucher_type") == doctype:
+                    row["against_voucher"] = new
+        elif "`tabPayment Ledger Entry`" in sql and "SET voucher_no=%(name)s" in sql:
+            for row in ple_rows:
+                if row["voucher_no"] == old:
+                    row["voucher_no"] = new
+        elif "`tabPayment Ledger Entry`" in sql and "SET against_voucher_no=%(name)s" in sql:
+            for row in ple_rows:
+                if row["against_voucher_no"] == old and row.get("against_voucher_type") == doctype:
+                    row["against_voucher_no"] = new
+
 
 if __name__ == "__main__":
     unittest.main()

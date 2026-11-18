@@ -59,18 +59,31 @@ LEGACY_PARENT_TABLES = (
 _VOUCHER_LINKS = (
     ("Stock Ledger Entry", "voucher_no", "voucher_no", None),
     ("Repost Item Valuation", "voucher_no", "voucher_no", None),
+    # Own rows of this voucher, then every allocation that points at it.
+    # The two Payment Ledger updates stay separate: a return's AR row has
+    # voucher_no = the note and against_voucher_no = the original invoice.
     ("Payment Ledger Entry", "voucher_no", "voucher_no", None),
-    ("Payment Ledger Entry", "against_voucher_no", "against_voucher_no", None),
+    ("Payment Ledger Entry", "against_voucher_no", "against_voucher_no", "against_voucher_type"),
     ("Advance Payment Ledger Entry", "voucher_no", "voucher_no", "voucher_type"),
     ("Advance Payment Ledger Entry", "against_voucher_no", "against_voucher_no", "against_voucher_type"),
     ("Serial and Batch Bundle", "voucher_no", "voucher_no", "voucher_type"),
     ("Serial and Batch Entry", "voucher_no", "voucher_no", "voucher_type"),
 )
 
+# (table, column to set, column to match, optional type column)
+# Type columns keep a Purchase Invoice from stealing a Sales Invoice name.
 _REFERENCE_LINKS = (
     ("Subscription", "reference_document", "reference_document", None),
-    ("Journal Entry Account", "reference_name", "reference_name", None),
-    ("Payment Entry Reference", "reference_name", "reference_name", None),
+    ("Journal Entry Account", "reference_name", "reference_name", "reference_type"),
+    ("Payment Entry Reference", "reference_name", "reference_name", "reference_doctype"),
+    ("Payment Request", "reference_name", "reference_name", "reference_doctype"),
+    ("Unreconcile Payment Entries", "reference_name", "reference_name", "reference_doctype"),
+    (
+        "Process Payment Reconciliation Log Allocations",
+        "invoice_number",
+        "invoice_number",
+        "invoice_type",
+    ),
     ("Invoice Declaration", "link_name", "link_name", None),
     ("Tax Retention Guatemala", "sales_invoice", "sales_invoice", None),
     ("Tax Withholding Entry", "taxable_name", "taxable_name", "taxable_doctype"),
@@ -122,18 +135,23 @@ def build_rename_statements(old_name, new_name, doctype, table_exists, has_colum
         add(sql)
 
     if table_exists("GL Entry") and has_column("GL Entry", "voucher_no"):
+        # Every row of this voucher, including a credit note's AR line whose
+        # against_voucher is the original invoice rather than the note itself.
+        add("UPDATE `tabGL Entry` SET voucher_no=%(name)s WHERE voucher_no=%(serieFa)s")
         if has_column("GL Entry", "against_voucher"):
+            type_sql = ""
+            if has_column("GL Entry", "against_voucher_type"):
+                type_sql = " AND against_voucher_type=%(link_doctype)s"
+            # Any voucher (journal entry, payment, return) that still points here.
             add(
-                "UPDATE `tabGL Entry` SET voucher_no=%(name)s, against_voucher=%(name)s "
-                "WHERE voucher_no=%(serieFa)s AND against_voucher=%(serieFa)s"
+                "UPDATE `tabGL Entry` SET against_voucher=%(name)s "
+                "WHERE against_voucher=%(serieFa)s{type_sql}".format(type_sql=type_sql)
             )
-            docstatus = ", docstatus=1" if has_column("GL Entry", "docstatus") else ""
-            add(
-                "UPDATE `tabGL Entry` SET voucher_no=%(name)s{docstatus} "
-                "WHERE voucher_no=%(serieFa)s AND against_voucher IS NULL".format(docstatus=docstatus)
-            )
-        else:
-            add("UPDATE `tabGL Entry` SET voucher_no=%(name)s WHERE voucher_no=%(serieFa)s")
+            if has_column("GL Entry", "docstatus"):
+                add(
+                    "UPDATE `tabGL Entry` SET docstatus=1 "
+                    "WHERE voucher_no=%(name)s AND against_voucher IS NULL"
+                )
 
     for table, set_col, where_col, type_col in _VOUCHER_LINKS + _REFERENCE_LINKS:
         if not table_exists(table):
