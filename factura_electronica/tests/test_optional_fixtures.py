@@ -10,10 +10,15 @@ import os
 import sys
 import types
 import unittest
+from unittest.mock import patch
+
+_MISSING = object()
 
 
 def _ensure_import_stubs():
-    if "frappe" not in sys.modules:
+    try:
+        import frappe  # noqa: F401
+    except ImportError:
         frappe = types.ModuleType("frappe")
 
         def whitelist(*args, **kwargs):
@@ -26,17 +31,37 @@ def _ensure_import_stubs():
             return decorator
 
         frappe.whitelist = whitelist
-        frappe.db = types.SimpleNamespace()
+        frappe.db = types.SimpleNamespace(table_exists=lambda doctype: False)
         frappe.get_installed_apps = lambda: []
         sys.modules["frappe"] = frappe
     if "numinwords" not in sys.modules:
-        numinwords = types.ModuleType("numinwords")
-        numinwords.numinwords = lambda *args, **kwargs: ""
-        sys.modules["numinwords"] = numinwords
+        try:
+            import numinwords  # noqa: F401
+        except ImportError:
+            numinwords = types.ModuleType("numinwords")
+            numinwords.numinwords = lambda *args, **kwargs: ""
+            sys.modules["numinwords"] = numinwords
+
+
+def _patch_frappe(name, value):
+    saved = frappe.__dict__.get(name, _MISSING)
+    proxy = saved is not _MISSING and type(saved).__name__ == "LocalProxy"
+    if proxy:
+        frappe.__dict__[name] = None
+    patcher = patch.object(frappe, name, value, create=(saved is _MISSING))
+    patcher.start()
+
+    def restore():
+        patcher.stop()
+        if proxy:
+            frappe.__dict__[name] = saved
+
+    return restore
 
 
 _ensure_import_stubs()
 
+import frappe  # noqa: E402
 from factura_electronica.fixtures import fill_fixtures  # noqa: E402
 from factura_electronica.install import (  # noqa: E402
     doctype_installed,
@@ -67,6 +92,10 @@ def _fixture_text():
 
 
 class TestOptionalFixtures(unittest.TestCase):
+    def setUp(self):
+        self.addCleanup(_patch_frappe("db", types.SimpleNamespace(table_exists=lambda doctype: False)))
+        self.addCleanup(_patch_frappe("get_installed_apps", lambda: []))
+
     def test_plain_fixtures_do_not_name_hrms_or_healthcare(self):
         text = _fixture_text()
         self.assertNotIn("Expense Claim Detail", text)
@@ -120,8 +149,9 @@ class TestOptionalFixtures(unittest.TestCase):
         def fail_import(*args, **kwargs):
             created.append("imported")
 
-        frappe.db.table_exists = lambda doctype: False
-        frappe.get_installed_apps = lambda: ["hrms", "healthcare"]
+        database = types.SimpleNamespace(table_exists=lambda doctype: False)
+        self.addCleanup(_patch_frappe("db", database))
+        self.addCleanup(_patch_frappe("get_installed_apps", lambda: ["hrms", "healthcare"]))
         custom = types.ModuleType("frappe.custom.doctype.custom_field.custom_field")
         custom.create_custom_fields = fail_import
         sys.modules["frappe.custom.doctype.custom_field.custom_field"] = custom
