@@ -7,7 +7,7 @@ from numinwords import numinwords
 
 # locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
 
-__version__ = '8.0.5'
+__version__ = '8.0.7'
 
 
 @frappe.whitelist()
