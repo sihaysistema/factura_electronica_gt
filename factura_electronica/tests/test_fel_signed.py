@@ -9,10 +9,15 @@ import os
 import sys
 import types
 import unittest
+from unittest.mock import patch
+
+_MISSING = object()
 
 
 def _ensure_import_stubs():
-    if "frappe" not in sys.modules:
+    try:
+        import frappe  # noqa: F401
+    except ImportError:
         frappe = types.ModuleType("frappe")
 
         def whitelist(*args, **kwargs):
@@ -25,15 +30,74 @@ def _ensure_import_stubs():
             return decorator
 
         frappe.whitelist = whitelist
+        frappe._ = lambda message, *args, **kwargs: message
+        frappe._dict = dict
+        frappe.throw = lambda *args, **kwargs: (_ for _ in ()).throw(Exception(args[0] if args else ""))
+        frappe.msgprint = lambda *args, **kwargs: None
         frappe.db = types.SimpleNamespace()
         frappe.get_hooks = lambda key=None: []
         frappe.log_error = lambda *args, **kwargs: None
         frappe.get_traceback = lambda: ""
+        frappe.get_attr = lambda path: None
         sys.modules["frappe"] = frappe
     if "numinwords" not in sys.modules:
-        numinwords = types.ModuleType("numinwords")
-        numinwords.numinwords = lambda *args, **kwargs: ""
-        sys.modules["numinwords"] = numinwords
+        try:
+            import numinwords  # noqa: F401
+        except ImportError:
+            numinwords = types.ModuleType("numinwords")
+            numinwords.numinwords = lambda *args, **kwargs: ""
+            sys.modules["numinwords"] = numinwords
+
+
+def _load_generate_electronic_invoice():
+    import frappe as frappe_mod
+
+    if not hasattr(frappe_mod, "__path__"):
+        frappe_mod.__path__ = []
+    utils = sys.modules.get("frappe.utils")
+    if utils is None:
+        utils = types.ModuleType("frappe.utils")
+        utils.__path__ = []
+        sys.modules["frappe.utils"] = utils
+        frappe_mod.utils = utils
+    for name in (
+        "flt", "cint", "get_datetime", "nowdate", "nowtime",
+        "now_datetime", "get_site_name", "now",
+    ):
+        if not hasattr(utils, name):
+            setattr(utils, name, lambda *args, **kwargs: None)
+    if "requests" not in sys.modules:
+        requests = types.ModuleType("requests")
+        requests.post = lambda *args, **kwargs: None
+        sys.modules["requests"] = requests
+    if "pandas" not in sys.modules:
+        sys.modules["pandas"] = types.ModuleType("pandas")
+    file_manager = sys.modules.get("frappe.utils.file_manager")
+    if file_manager is None:
+        file_manager = types.ModuleType("frappe.utils.file_manager")
+        sys.modules["frappe.utils.file_manager"] = file_manager
+        utils.file_manager = file_manager
+    if not hasattr(file_manager, "save_file"):
+        file_manager.save_file = lambda *args, **kwargs: None
+    from factura_electronica.fel_api import generate_electronic_invoice
+
+    return generate_electronic_invoice
+
+
+def _patch_frappe(name, value):
+    saved = frappe.__dict__.get(name, _MISSING)
+    proxy = saved is not _MISSING and type(saved).__name__ == "LocalProxy"
+    if proxy:
+        frappe.__dict__[name] = None
+    patcher = patch.object(frappe, name, value, create=(saved is _MISSING))
+    patcher.start()
+
+    def restore():
+        patcher.stop()
+        if proxy:
+            frappe.__dict__[name] = saved
+
+    return restore
 
 
 _ensure_import_stubs()
@@ -86,10 +150,12 @@ class _DB(object):
 class TestFelSigned(unittest.TestCase):
     def setUp(self):
         self.errors = []
-        frappe.log_error = lambda *args, **kwargs: self.errors.append((args, kwargs))
-        frappe.get_traceback = lambda: "trace"
-        frappe.get_hooks = lambda key=None: []
-        frappe.db = _DB([], [])
+        self.db = _DB([], [])
+        self.addCleanup(_patch_frappe("log_error", lambda *args, **kwargs: self.errors.append((args, kwargs))))
+        self.addCleanup(_patch_frappe("get_traceback", lambda: "trace"))
+        self.addCleanup(_patch_frappe("get_hooks", lambda key=None: []))
+        self.addCleanup(_patch_frappe("get_attr", lambda path: None))
+        self.addCleanup(_patch_frappe("db", self.db))
 
     def test_raising_hook_does_not_change_the_sign_result(self):
         def explode(**kwargs):
@@ -190,6 +256,97 @@ class TestFelSigned(unittest.TestCase):
 
         self.assertEqual(called, ["sat"])
         self.assertEqual(result, (True, "UUID-NEW"))
+
+    def _envio(self, name, serie, numero, new_name, original):
+        return {
+            "name": name,
+            "uuid": name,
+            "serie": serie,
+            "numero": numero,
+            "serie_para_factura": new_name,
+            "serie_factura_original": original,
+        }
+
+    def test_unfinished_rename_calls_the_hook_once(self):
+        calls = []
+
+        def hook(**kwargs):
+            calls.append(kwargs)
+
+        frappe.get_hooks = lambda key=None: ["park_entry.fel.on_fel_signed"]
+        frappe.get_attr = lambda path: hook
+        frappe.db = _DB(
+            [self._envio("UUID-9", "B*", "3", "B3", "ACC-SINV-9")],
+            [("Sales Invoice", "ACC-SINV-9")],
+        )
+
+        first = assess_existing_envio("ACC-SINV-9")
+        self.assertTrue(first[0])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["doctype"], "Sales Invoice")
+        self.assertEqual(calls[0]["old_name"], "ACC-SINV-9")
+        self.assertEqual(calls[0]["new_name"], "B3")
+        self.assertEqual(calls[0]["uuid"], "UUID-9")
+        self.assertEqual(calls[0]["serie"], "B*")
+        self.assertEqual(calls[0]["numero"], "3")
+        self.assertEqual(calls[0]["envio_fel"], "UUID-9")
+
+    def test_finished_rename_does_not_notify_again(self):
+        calls = []
+
+        def hook(**kwargs):
+            calls.append(kwargs)
+
+        frappe.get_hooks = lambda key=None: ["park_entry.fel.on_fel_signed"]
+        frappe.get_attr = lambda path: hook
+        frappe.db = _DB(
+            [self._envio("UUID-9", "B*", "3", "B3", "ACC-SINV-9")],
+            [("Sales Invoice", "B3")],
+        )
+
+        by_new_name = assess_existing_envio("B3")
+        by_old_name = assess_existing_envio("ACC-SINV-9")
+
+        self.assertEqual(by_new_name, (True, "UUID-9"))
+        self.assertTrue(by_old_name[0])
+        self.assertEqual(calls, [])
+        self.assertEqual(frappe.db.sqls, [])
+
+    def test_hook_error_on_retry_still_reports_the_existing_envio(self):
+        def explode(**kwargs):
+            raise RuntimeError("park ticket failed")
+
+        frappe.get_hooks = lambda key=None: ["park_entry.fel.on_fel_signed"]
+        frappe.get_attr = lambda path: explode
+        frappe.db = _DB(
+            [self._envio("UUID-9", "B*", "3", "B3", "ACC-SINV-9")],
+            [("Sales Invoice", "ACC-SINV-9")],
+        )
+
+        result = assess_existing_envio("ACC-SINV-9")
+        self.assertTrue(result[0])
+        self.assertIn("UUID-9", result[1])
+        self.assertEqual(len(self.errors), 1)
+
+    def test_old_name_after_a_full_sign_does_not_look_up_the_company(self):
+        generate_electronic_invoice = _load_generate_electronic_invoice()
+        companies = []
+        frappe.db = _DB(
+            [self._envio("UUID-9", "B*", "3", "B3", "ACC-SINV-9")],
+            [("Sales Invoice", "B3")],
+        )
+
+        def company(doctype, name):
+            companies.append((doctype, name))
+            return None
+
+        with patch("factura_electronica.fel_api._company_for", company):
+            result = generate_electronic_invoice("ACC-SINV-9", "ACC-SINV-.YYYY.-")
+
+        self.assertEqual(companies, [])
+        self.assertFalse(result[0])
+        self.assertIn("ya generada", result[1])
+        self.assertIn("UUID-9", result[1])
 
     def test_sql_rename_does_not_update_file_attached_to_name(self):
         """The v15 rename SQL leaves File.attached_to_name on the old name."""

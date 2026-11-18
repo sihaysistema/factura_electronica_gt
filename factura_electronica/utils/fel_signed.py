@@ -140,9 +140,17 @@ def assess_existing_envio(invoice_code, doctype="Sales Invoice"):
 
     by_original = _envio_row({"serie_factura_original": invoice_code})
     if by_original:
-        _finish_rename_if_incomplete(invoice_code, by_original, doctype)
+        renamed_as = _finish_rename_if_incomplete(invoice_code, by_original, doctype)
         uuid = by_original.get("uuid") or ""
         envio_name = by_original.get("name") or uuid
+        if renamed_as:
+            # The first certification never reached notify, because the rename
+            # had not finished. Fire the hook once now. A later retry finds
+            # the new name and does not notify again.
+            try:
+                notify_after_sign(invoice_code, uuid or envio_name, doctype=renamed_as)
+            except Exception as exc:
+                _log_hook_error("on_fel_signed", exc)
         return True, "{0} (Envio FEL {1})".format(uuid, envio_name)
 
     return False, "A generar una nueva"
@@ -214,15 +222,20 @@ def _table_present(table):
 
 
 def _finish_rename_if_incomplete(old_name, envio, doctype):
+    """Finish a rename that stopped after SAT. Return the doctype, or None.
+
+    None means nothing was written: the invoice was already on the new name,
+    or the old row is gone. Callers must not notify in that case.
+    """
     new_name = _target_name(envio.get("serie"), envio.get("numero"))
     if not new_name or new_name == old_name:
-        return
+        return None
     try:
         current = _document_doctype(old_name, doctype)
         if current not in ("Sales Invoice", "Purchase Invoice"):
-            return
+            return None
         if frappe.db.exists(current, new_name):
-            return
+            return None
         params = {
             "name": new_name,
             "no_correcto": envio.get("uuid"),
@@ -266,5 +279,7 @@ def _finish_rename_if_incomplete(old_name, envio, doctype):
         commit = getattr(frappe.db, "commit", None)
         if commit:
             commit()
+        return current
     except Exception as exc:
         _log_hook_error("finish_rename", exc)
+        return None
