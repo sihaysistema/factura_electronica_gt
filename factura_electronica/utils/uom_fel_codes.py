@@ -36,7 +36,11 @@ def load_uom_fel_codes(path=None):
         code = row.get(CODE_FIELD)
         if not name or code is None or str(code) == "":
             continue
-        codes.append({"name": name, CODE_FIELD: code})
+        raw = str(code)
+        stripped = raw.strip()
+        if not stripped:
+            continue
+        codes.append({"name": name, CODE_FIELD: stripped, "raw_code": raw})
     return codes
 
 
@@ -78,14 +82,21 @@ def sync_uom_fel_codes(rows=None):
         code = row.get(CODE_FIELD)
         if not name or code is None or str(code) == "":
             continue
+        # The catalog file keeps SAT's leading spaces. The value written is
+        # stripped. An existing row is rewritten only when it still holds
+        # that exact space-prefixed catalog value.
+        raw = str(row.get("raw_code") if row.get("raw_code") is not None else code)
+        stripped = str(code).strip()
+        if not stripped:
+            continue
         if frappe.db.exists("UOM", name):
             current = frappe.db.get_value("UOM", name, CODE_FIELD)
-            if _blank(current):
+            if _blank(current) or (raw != stripped and str(current) == raw):
                 frappe.db.set_value(
                     "UOM",
                     name,
                     CODE_FIELD,
-                    code,
+                    stripped,
                     update_modified=False,
                 )
                 filled += 1
@@ -97,7 +108,7 @@ def sync_uom_fel_codes(rows=None):
                 "doctype": "UOM",
                 "uom_name": name,
                 "enabled": 1,
-                CODE_FIELD: code,
+                CODE_FIELD: stripped,
             }
         )
         doc.insert(ignore_permissions=True)

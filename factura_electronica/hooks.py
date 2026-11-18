@@ -72,6 +72,7 @@ app_include_js = ["factura_electronica.bundle.js"]
 # before_install = "factura_electronica.install.before_install"
 after_install = "factura_electronica.install.after_install"
 after_migrate = "factura_electronica.install.after_migrate"
+after_sync = "factura_electronica.install.after_sync"
 
 # Desk Notifications
 # ------------------
