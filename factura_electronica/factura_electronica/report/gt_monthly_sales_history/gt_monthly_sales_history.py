@@ -40,8 +40,21 @@ Promedio
     When the selected year is the server's current year
     (``frappe.utils.getdate``), the current month and later months are
     incomplete. The current month still shows Promedio and the
-    month-to-date selected-year amount, but its comparison cells are
-    blank. Months that have not started are blank in Promedio, in the
+    month-to-date selected-year amount. Its comparison cells are filled
+    only once the month has beaten the comparison, so the open month is
+    never shown as a loss while it can still bring in sales:
+
+    * Diferencia and "% vs Promedio" stay blank until the month-to-date
+      amount is strictly greater than Promedio. Equal is not exceeded.
+    * "Dif. vs <year>" and "% vs <year>" stay blank until the
+      month-to-date amount is strictly greater than the same month of
+      the previous year. Equal is not exceeded.
+    * Each pair is decided on its own comparison.
+    * A shown percent is blank when its comparison is 0 (as before) or
+      negative (net returns), because that percent would print with a
+      minus sign even though the month is ahead.
+
+    Months that have not started are blank in Promedio, in the
     selected-year column, and in every comparison column. Past years
     treat all 12 months as complete.
 
@@ -237,7 +250,8 @@ def comparison_message(selected_year, today):
         return None
     return _(
         "Totales y comparaciones solo de meses completos. {0} muestra el acumulado "
-        "y el promedio, sin diferencia ni porcentaje, y no entra en los totales. "
+        "y el promedio; su diferencia y porcentaje aparecen solo cuando ya supera "
+        "el promedio o el año anterior, y no entra en los totales. "
         "Los meses que aún no inician van en blanco. "
         "Proyección s. Tendencia y Proyección Conservadora proyectan hasta el 31 de diciembre: "
         "real hasta ayer y pronóstico desde hoy."
@@ -460,7 +474,8 @@ def build_history(selected_year, ledger_rows, years_to_compare=HISTORY_SPAN, tod
         elif state == "current":
             row["promedio"] = promedio
             row[selected_field] = selected_amount
-            clear_comparisons(row)
+            # Shown only once beaten; never part of the totals below.
+            fill_open_month_comparisons(row, selected_amount, promedio, previous_amount)
         else:
             row["promedio"] = promedio
             row[selected_field] = selected_amount
@@ -517,6 +532,32 @@ def fill_comparisons(row, selected_amount, promedio, previous_amount):
     row["vs_promedio"] = percent_vs_promedio(selected_amount, promedio)
     row["dif_vs_prev"] = month_difference(selected_amount, previous_amount)
     row["pct_vs_prev"] = percent_vs_promedio(selected_amount, previous_amount)
+
+
+def fill_open_month_comparisons(row, selected_amount, promedio, previous_amount):
+    """Comparison cells for the month in progress.
+
+    Each pair (Diferencia / % vs Promedio and Dif. / % vs the previous
+    year) stays blank until the month-to-date amount is strictly greater
+    than that pair's comparison. Equal counts as not exceeded. A filled
+    difference is therefore always positive, so the open month never shows
+    a loss. A percent over a comparison that is not positive is left blank
+    because it would not read as a gain.
+    """
+
+    clear_comparisons(row)
+    if _to_decimal(selected_amount) > _to_decimal(promedio):
+        row["diferencia"] = month_difference(selected_amount, promedio)
+        row["vs_promedio"] = open_month_percent(selected_amount, promedio)
+    if _to_decimal(selected_amount) > _to_decimal(previous_amount):
+        row["dif_vs_prev"] = month_difference(selected_amount, previous_amount)
+        row["pct_vs_prev"] = open_month_percent(selected_amount, previous_amount)
+
+
+def open_month_percent(selected, comparison):
+    if _to_decimal(comparison) <= 0:
+        return None
+    return percent_vs_promedio(selected, comparison)
 
 
 def clear_comparisons(row):
