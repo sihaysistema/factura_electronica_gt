@@ -477,10 +477,167 @@ class TestIncompleteMonths(TestCase):
         self.assertIn("meses completos", current)
         self.assertIn("Totales", current)
         self.assertIn("no entra en los totales", current)
+        self.assertIn("solo cuando ya supera", current)
+        self.assertNotIn("sin diferencia ni porcentaje", current)
         self.assertIn("31 de diciembre", current)
         self.assertIn("pronóstico", current)
         _columns, _rows, past = execute({"company": "Acme", "year": 2025})
         self.assertIsNone(past)
+
+
+class TestOpenMonthComparisons(TestCase):
+    """The month in progress shows a comparison only once it is beaten."""
+
+    TODAY = date(2026, 10, 15)
+
+    def history(self, current, promedio_years=(30, 30), previous=None, extra=()):
+        # 2024 and 2025 are the history years used for Promedio with span 2.
+        prev = promedio_years[1] if previous is None else previous
+        ledger = [
+            {"year_repo": 2024, "month_repo": 10, "total": promedio_years[0]},
+            {"year_repo": 2025, "month_repo": 10, "total": prev},
+            {"year_repo": 2026, "month_repo": 10, "total": current},
+        ]
+        ledger.extend(extra)
+        return build_history(2026, ledger, 2, today=self.TODAY)
+
+    def assert_blank(self, row, *fields):
+        for field in fields:
+            self.assertIsNone(row[field], field)
+
+    def test_below_both_comparisons_is_blank(self):
+        octubre = self.history(10, (20, 40))[9]
+        self.assertEqual(octubre["promedio"], 30.0)
+        self.assertEqual(octubre["y_2026"], 10.0)
+        self.assert_blank(octubre, "diferencia", "vs_promedio", "dif_vs_prev", "pct_vs_prev")
+
+    def test_equal_to_both_comparisons_is_not_exceeded(self):
+        octubre = self.history(30, (30, 30))[9]
+        self.assertEqual(octubre["promedio"], 30.0)
+        self.assert_blank(octubre, "diferencia", "vs_promedio", "dif_vs_prev", "pct_vs_prev")
+
+    def test_equal_after_rounding_to_cents_is_not_exceeded(self):
+        # 30.004 shows as 30.00, the same as Promedio and the previous year.
+        octubre = self.history(30.004, (30, 30))[9]
+        self.assertEqual(octubre["y_2026"], 30.0)
+        self.assert_blank(octubre, "diferencia", "vs_promedio", "dif_vs_prev", "pct_vs_prev")
+
+    def test_exceeding_both_fills_both_pairs_positive(self):
+        octubre = self.history(45, (20, 40))[9]
+        self.assertEqual(octubre["promedio"], 30.0)
+        self.assertEqual(octubre["diferencia"], 15.0)
+        self.assertEqual(octubre["vs_promedio"], 50.0)
+        self.assertEqual(octubre["dif_vs_prev"], 5.0)
+        self.assertEqual(octubre["pct_vs_prev"], 12.5)
+
+    def test_one_cent_over_is_exceeded(self):
+        octubre = self.history(30.01, (30, 30))[9]
+        self.assertEqual(octubre["diferencia"], 0.01)
+        self.assertEqual(octubre["vs_promedio"], 0.03)
+        self.assertEqual(octubre["dif_vs_prev"], 0.01)
+        self.assertEqual(octubre["pct_vs_prev"], 0.03)
+
+    def test_each_pair_is_decided_on_its_own_comparison(self):
+        # Above Promedio 30 but below 2025's 40.
+        above_average = self.history(35, (20, 40))[9]
+        self.assertEqual(above_average["diferencia"], 5.0)
+        self.assertEqual(above_average["vs_promedio"], 16.67)
+        self.assert_blank(above_average, "dif_vs_prev", "pct_vs_prev")
+
+        # Above 2025's 20 but below Promedio 30.
+        above_previous = self.history(25, (40, 20))[9]
+        self.assertEqual(above_previous["promedio"], 30.0)
+        self.assert_blank(above_previous, "diferencia", "vs_promedio")
+        self.assertEqual(above_previous["dif_vs_prev"], 5.0)
+        self.assertEqual(above_previous["pct_vs_prev"], 25.0)
+
+        # Equal to Promedio, above the previous year.
+        equal_average = self.history(30, (40, 20))[9]
+        self.assert_blank(equal_average, "diferencia", "vs_promedio")
+        self.assertEqual(equal_average["dif_vs_prev"], 10.0)
+
+    def test_no_open_month_value_is_ever_negative(self):
+        for current in (0, -5, 10, 29.99, 30, 30.01, 35, 45, 100):
+            for history in ((20, 40), (40, 20), (30, 30), (0, 0), (-10, -20)):
+                octubre = self.history(current, history)[9]
+                for field in ("diferencia", "vs_promedio", "dif_vs_prev", "pct_vs_prev"):
+                    value = octubre[field]
+                    if value is not None:
+                        self.assertGreaterEqual(value, 0, (current, history, field))
+
+    def test_zero_comparison_shows_difference_and_blank_percent(self):
+        # No history invoices at all: Promedio 0 and previous year 0.
+        rows = build_history(2026, [
+            {"year_repo": 2026, "month_repo": 10, "total": 12},
+        ], 2, today=self.TODAY)
+        octubre = rows[9]
+        self.assertEqual(octubre["promedio"], 0.0)
+        self.assertEqual(octubre["diferencia"], 12.0)
+        self.assertIsNone(octubre["vs_promedio"])
+        self.assertEqual(octubre["dif_vs_prev"], 12.0)
+        self.assertIsNone(octubre["pct_vs_prev"])
+
+    def test_negative_comparison_shows_difference_and_blank_percent(self):
+        # Net returns made both history months negative.
+        octubre = self.history(5, (-10, -20))[9]
+        self.assertEqual(octubre["promedio"], -15.0)
+        self.assertEqual(octubre["diferencia"], 20.0)
+        self.assertIsNone(octubre["vs_promedio"])
+        self.assertEqual(octubre["dif_vs_prev"], 25.0)
+        self.assertIsNone(octubre["pct_vs_prev"])
+
+    def test_open_month_stays_out_of_the_totals(self):
+        extra = [
+            {"year_repo": 2024, "month_repo": 1, "total": 100},
+            {"year_repo": 2025, "month_repo": 1, "total": 60},
+            {"year_repo": 2026, "month_repo": 1, "total": 50},
+        ]
+        beaten = self.history(500, (20, 40), extra=extra)
+        not_beaten = self.history(1, (20, 40), extra=extra)
+        self.assertEqual(beaten[9]["diferencia"], 470.0)
+        self.assertIsNone(not_beaten[9]["diferencia"])
+        for field in ("promedio", "y_2026", "diferencia", "vs_promedio", "dif_vs_prev",
+                      "pct_vs_prev"):
+            self.assertEqual(beaten[-1][field], not_beaten[-1][field], field)
+        total = beaten[-1]
+        # January only: 50 vs Promedio 80 and vs 2025's 60.
+        self.assertEqual(total["y_2026"], 50.0)
+        self.assertEqual(total["promedio"], 80.0)
+        self.assertEqual(total["diferencia"], -30.0)
+        self.assertEqual(total["vs_promedio"], -37.5)
+        self.assertEqual(total["dif_vs_prev"], -10.0)
+        self.assertEqual(total["pct_vs_prev"], -16.67)
+
+    def test_completed_months_still_show_losses(self):
+        extra = [
+            {"year_repo": 2024, "month_repo": 9, "total": 100},
+            {"year_repo": 2025, "month_repo": 9, "total": 60},
+            {"year_repo": 2026, "month_repo": 9, "total": 50},
+        ]
+        septiembre = self.history(500, (20, 40), extra=extra)[8]
+        self.assertEqual(septiembre["diferencia"], -30.0)
+        self.assertEqual(septiembre["vs_promedio"], -37.5)
+        self.assertEqual(septiembre["dif_vs_prev"], -10.0)
+        self.assertEqual(septiembre["pct_vs_prev"], -16.67)
+
+    def test_future_months_stay_blank_even_with_data(self):
+        noviembre = build_history(2026, [
+            {"year_repo": 2025, "month_repo": 11, "total": 1},
+            {"year_repo": 2026, "month_repo": 11, "total": 999},
+        ], 2, today=self.TODAY)[10]
+        self.assertIsNone(noviembre["y_2026"])
+        self.assert_blank(noviembre, "diferencia", "vs_promedio", "dif_vs_prev", "pct_vs_prev")
+
+    def test_past_year_with_the_same_month_is_unchanged(self):
+        # 2025 is closed on 2026-10-15, so October 2025 is a complete month.
+        octubre = build_history(2025, [
+            {"year_repo": 2024, "month_repo": 10, "total": 40},
+            {"year_repo": 2025, "month_repo": 10, "total": 10},
+        ], 2, today=self.TODAY)[9]
+        self.assertEqual(octubre["diferencia"], -30.0)
+        self.assertEqual(octubre["vs_promedio"], -75.0)
+        self.assertEqual(octubre["dif_vs_prev"], -30.0)
+        self.assertEqual(octubre["pct_vs_prev"], -75.0)
 
 
 class TestExecuteUsesSalesLedgerQuery(TestCase):
@@ -639,7 +796,13 @@ class TestProjections(TestCase):
         self.assertEqual(enero["promedio"], 40.0)
         self.assertEqual(enero["diferencia"], 270.0)
         self.assertEqual(marzo["y_2026"], 1639.0)
-        self.assertIsNone(marzo["diferencia"])
+        # March is the open month. It already beats a Promedio and a 2025
+        # March of 0, so the differences show; the percents stay blank (0 base).
+        self.assertEqual(marzo["promedio"], 0.0)
+        self.assertEqual(marzo["diferencia"], 1639.0)
+        self.assertIsNone(marzo["vs_promedio"])
+        self.assertEqual(marzo["dif_vs_prev"], 1639.0)
+        self.assertIsNone(marzo["pct_vs_prev"])
         self.assertIsNone(noviembre["y_2026"])
         self.assertEqual(total["y_2026"], 590.0)
 

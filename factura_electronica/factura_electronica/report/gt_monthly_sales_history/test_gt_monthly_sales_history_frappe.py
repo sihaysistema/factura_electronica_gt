@@ -354,6 +354,58 @@ class TestFrappeMariaDBProjections(unittest.TestCase):
         self.assertEqual(rows[5][TREND_FIELD], -15.13)
         self.assertEqual(rows[-1][TREND_FIELD], rows[-1]["y_2024"])
 
+    def test_open_month_comparisons_appear_only_once_beaten(self):
+        self._company("Acme GT", "GTQ")
+        # October history: Promedio (2024, 2025) = 30, previous year 2025 = 40.
+        self._invoice("H24", "2024-10-10", "Acme GT", "20.00")
+        self._invoice("H25", "2025-10-10", "Acme GT", "40.00")
+        # A completed month behind 2025 keeps its negative comparison.
+        self._invoice("S25", "2025-09-10", "Acme GT", "60.00")
+        self._invoice("S26", "2026-09-10", "Acme GT", "50.00")
+        self._invoice("O1", "2026-10-02", "Acme GT", "30.00")
+        frappe.db.commit()
+
+        def run():
+            with self._today(date(2026, 10, 15)):
+                return execute({"company": "Acme GT", "year": 2026, "years_to_compare": "2"})
+
+        fields = ("diferencia", "vs_promedio", "dif_vs_prev", "pct_vs_prev")
+        _columns, rows, message = run()
+        octubre = rows[9]
+        # Equal to Promedio and under 2025: nothing shown.
+        self.assertEqual(octubre["promedio"], 30.0)
+        self.assertEqual(octubre["y_2026"], 30.0)
+        for field in fields:
+            self.assertIsNone(octubre[field], field)
+        # September: 50 vs Promedio (0 + 60) / 2 = 30, and vs 2025's 60.
+        self.assertEqual(rows[8]["diferencia"], 20.0)
+        self.assertEqual(rows[8]["dif_vs_prev"], -10.0)
+        self.assertEqual(rows[8]["pct_vs_prev"], -16.67)
+        total_before = dict(rows[-1])
+        self.assertIn("solo cuando ya supera", message)
+
+        self._invoice("O2", "2026-10-05", "Acme GT", "5.00")
+        frappe.db.commit()
+        octubre = run()[1][9]
+        # 35: beats Promedio 30 only.
+        self.assertEqual(octubre["diferencia"], 5.0)
+        self.assertEqual(octubre["vs_promedio"], 16.67)
+        self.assertIsNone(octubre["dif_vs_prev"])
+        self.assertIsNone(octubre["pct_vs_prev"])
+
+        self._invoice("O3", "2026-10-06", "Acme GT", "10.00")
+        frappe.db.commit()
+        rows = run()[1]
+        octubre = rows[9]
+        # 45: beats both.
+        self.assertEqual(octubre["diferencia"], 15.0)
+        self.assertEqual(octubre["vs_promedio"], 50.0)
+        self.assertEqual(octubre["dif_vs_prev"], 5.0)
+        self.assertEqual(octubre["pct_vs_prev"], 12.5)
+        # The open month never enters the totals.
+        for field in ("promedio", "y_2026") + fields:
+            self.assertEqual(rows[-1][field], total_before[field], field)
+
     def _company(self, name, currency):
         self._original_sql(
             """INSERT INTO `tabCompany` (name, default_currency, modified)
