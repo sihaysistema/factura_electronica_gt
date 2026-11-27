@@ -16,7 +16,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Reports",
-   "link_count": 8,
+   "link_count": 10,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -67,6 +67,26 @@
    "label": "GT Monthly Sales History",
    "link_count": 0,
    "link_to": "GT Monthly Sales History",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "GT Item Sales Analytics",
+   "link_count": 0,
+   "link_to": "GT Item Sales Analytics",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "GT Item Sales History",
+   "link_count": 0,
+   "link_to": "GT Item Sales History",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
@@ -270,7 +290,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-10-22 21:15:00.000000",
+ "modified": "2026-11-27 20:45:00.000000",
  "modified_by": "Administrator",
  "module": "Factura Electronica",
  "name": "Factura Electronica",
