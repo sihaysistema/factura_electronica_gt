@@ -151,26 +151,38 @@ def get_columns(period_type, years, selected_year, metric):
 
 def build_chart(data, years, selected_year, metric, currency):
     periods = [row for row in data if not row.get("is_total_row")]
+    # Values must be JSON numbers. Classic frappe-charts (System Settings
+    # use_classic_charts) first paints zeros and animates the real series in;
+    # if that update is skipped, bars stay flat at 0 while the y-axis already
+    # shows shortened ticks like 30K/20K, often stacked on one line. Skip the
+    # entry animation. Do not attach fieldtype/options/currency: those keys
+    # are what get_chart_options uses to wrap y values as Currency, and the
+    # Amount chart (with them) was the one that drew flat while Units (without
+    # them) rendered. The table still formats as Currency.
     chart = {
         "type": "axis-mixed",
         "data": {
             "labels": [row["period"] for row in periods],
             "datasets": [
                 {"name": str(selected_year), "chartType": "bar",
-                 "values": [engine.chart_number(row["selected"]) for row in periods]},
+                 "values": [_chart_value(row["selected"]) for row in periods]},
                 {"name": _("Average"), "chartType": "line",
-                 "values": [engine.chart_number(row["promedio"]) for row in periods]},
+                 "values": [_chart_value(row["promedio"]) for row in periods]},
                 {"name": str(selected_year - 1), "chartType": "line",
-                 "values": [engine.chart_number(row.get(year_field(selected_year - 1)))
+                 "values": [_chart_value(row.get(year_field(selected_year - 1)))
                             for row in periods]},
             ],
         },
         "colors": ["#5e64ff", "#98d85b", "#ffa00a"],
         "height": 280,
+        "animate": 0,
+        "disableEntryAnimation": 1,
     }
-    if metric == engine.AMOUNT:
-        chart.update({"fieldtype": "Currency", "options": "currency", "currency": currency})
     return chart
+
+
+def _chart_value(value):
+    return float(engine.chart_number(value))
 
 
 def build_message(period_type, selected_year, metric, include_iva, today):

@@ -479,6 +479,46 @@ class TestHistoryReport(_Patched):
         self.assertEqual([c["label"] for c in columns][2:4], ["2024", "2025"])
         self.assertEqual(data[3]["state"], engine.CURRENT)
 
+    def test_amount_chart_keeps_numeric_monthly_values(self):
+        # Staging bug: item 7401168804760, Amount + IVA, 2026 monthly, showed a
+        # flat-at-0 chart with repeating 30K y-axis labels while the table had
+        # Q14k-29k months. The Python payload was already numeric; this locks
+        # that in and checks the chart no longer carries Currency keys that the
+        # v16 classic renderer mishandled, and skips the zero-frame animation.
+        amounts = [
+            14213.98, 14275.99, 23808.02, 23664.01, 25248.02, 22242.01,
+            26687.02, 29154.02, 29848.02, 28590.02, 19138.0,
+        ]
+        rows = []
+        for year in range(2021, 2026):
+            for month, amount in enumerate(amounts, start=1):
+                rows.append(row("A", year, month, 1, amount=amount * 0.8))
+        for month, amount in enumerate(amounts, start=1):
+            rows.append(row("A", 2026, month, 1, amount=amount))
+        _c, data, _m, chart = self.run_with(
+            history,
+            {"company": "C", "year": "2026", "metric": "Amount", "include_iva": 0},
+            rows,
+            date(2026, 11, 27),
+        )
+        selected = chart["data"]["datasets"][0]["values"]
+        self.assertEqual(chart["data"]["labels"], [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December",
+        ])
+        self.assertEqual(selected[:11], amounts)
+        self.assertEqual(selected[11], 0)
+        for value in selected[:11]:
+            self.assertIsInstance(value, float)
+            self.assertGreater(value, 0)
+        self.assertNotIn("fieldtype", chart)
+        self.assertNotIn("options", chart)
+        self.assertEqual(chart["animate"], 0)
+        self.assertEqual(chart["disableEntryAnimation"], 1)
+        # Table still has the same monthly amounts (open December is blank).
+        self.assertEqual([row["selected"] for row in data[:11]], amounts)
+        self.assertIsNone(data[11]["selected"])
+
     def test_no_company_returns_empty(self):
         self.assertEqual(history.execute({}), ([], []))
 
