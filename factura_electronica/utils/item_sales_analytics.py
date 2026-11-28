@@ -527,14 +527,31 @@ def comparison_cells(selected, average, last_year, state):
         cells["dif_vs_prev"] = difference(selected, last_year)
         cells["pct_vs_prev"] = percent(selected, last_year)
         return cells
-    # Open period: blank until strictly exceeded, then a gain.
-    if average is not None and to_decimal(selected) > to_decimal(average):
-        cells["diferencia"] = difference(selected, average)
-        cells["vs_promedio"] = percent(selected, average) if to_decimal(average) > 0 else None
-    if last_year is not None and to_decimal(selected) > to_decimal(last_year):
-        cells["dif_vs_prev"] = difference(selected, last_year)
-        cells["pct_vs_prev"] = percent(selected, last_year) if to_decimal(last_year) > 0 else None
+    # Open period: a pair is shown only when the period is strictly ahead
+    # and the amount itself is above zero. A negative base from returns
+    # (average -0.2, actual 0) is not a gain. Percent stays blank when
+    # the base is not positive.
+    _fill_open_pair(cells, "diferencia", "vs_promedio", selected, average)
+    _fill_open_pair(cells, "dif_vs_prev", "pct_vs_prev", selected, last_year)
     return cells
+
+
+def _fill_open_pair(cells, difference_field, percent_field, selected, base):
+    if selected is None or base is None:
+        return
+    selected_amount = to_decimal(selected)
+    base_amount = to_decimal(base)
+    if not (selected_amount > 0 and selected_amount > base_amount):
+        return
+    gap = difference(selected, base)
+    if gap is None or to_decimal(gap) <= 0:
+        return
+    cells[difference_field] = gap
+    if base_amount <= 0:
+        return
+    ratio = percent(selected, base)
+    if ratio is not None and to_decimal(ratio) > 0:
+        cells[percent_field] = ratio
 
 
 def value_column(label, fieldname, metric, width=110):

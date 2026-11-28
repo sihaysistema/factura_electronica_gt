@@ -98,7 +98,7 @@ function gt_item_sales_format(value, row, column, data, default_formatter) {
   }
   if (fieldname === "diferencia" || fieldname === "dif_vs_prev" ||
       fieldname === "vs_promedio" || fieldname === "pct_vs_prev") {
-    html = gt_item_sales_colorize(html, value);
+    html = gt_item_sales_colorize(html, value, data, fieldname);
   }
   if (data && (data.is_total_row || data.is_group) && html) {
     html = "<b>" + html + "</b>";
@@ -118,7 +118,7 @@ function gt_item_sales_percent(value) {
     Math.abs(number).toFixed(2) + "%</div>";
 }
 
-function gt_item_sales_colorize(html, value) {
+function gt_item_sales_colorize(html, value, data, fieldname) {
   if (!html) {
     return html;
   }
@@ -126,5 +126,29 @@ function gt_item_sales_colorize(html, value) {
   if (value === null || value === undefined || value === "" || isNaN(number) || number === 0) {
     return html;
   }
+  // A positive result over a negative base is not a gain when the period
+  // itself is still at or below zero (net returns). Leave it uncolored.
+  if (number > 0 && gt_item_sales_negative_base_not_ahead(data, fieldname)) {
+    return html;
+  }
   return "<span style='color:" + (number > 0 ? "green" : "red") + "'>" + html + "</span>";
+}
+
+function gt_item_sales_negative_base_not_ahead(data, fieldname) {
+  if (!data || data.selected === null || data.selected === undefined || data.selected === "") {
+    return false;
+  }
+  var selected = Number(data.selected);
+  if (!(selected <= 0)) {
+    return false;
+  }
+  var base;
+  if (fieldname === "diferencia" || fieldname === "vs_promedio") {
+    base = data.promedio;
+  } else if (fieldname === "dif_vs_prev" || fieldname === "pct_vs_prev") {
+    base = data.last_year;
+  } else {
+    return false;
+  }
+  return base !== null && base !== undefined && base !== "" && Number(base) < 0;
 }

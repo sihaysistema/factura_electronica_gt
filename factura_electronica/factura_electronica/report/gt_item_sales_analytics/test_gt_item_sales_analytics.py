@@ -14,6 +14,7 @@ from __future__ import unicode_literals
 
 import sys
 import types
+import os
 from datetime import date
 from decimal import Decimal
 from unittest import TestCase, main
@@ -200,6 +201,27 @@ class TestAverages(TestCase):
                                             "Monthly", [2024, 2025], {2024, 2025}, 1), 1.5)
 
 
+class TestReportScript(TestCase):
+    def test_analytics_click_handler_is_global(self):
+        """Frappe evals report JS with new Function.
+
+        An inline onclick cannot call a function that exists only inside
+        that script. The handler is assigned to window, and GT Item Sales
+        History has no row link of its own.
+        """
+        root = os.path.dirname(__file__)
+        with open(os.path.join(root, "gt_item_sales_analytics.js"), encoding="utf-8") as handle:
+            analytics = handle.read()
+        history_path = os.path.join(
+            os.path.dirname(root), "gt_item_sales_history", "gt_item_sales_history.js"
+        )
+        with open(history_path, encoding="utf-8") as handle:
+            history = handle.read()
+        self.assertIn("window.gt_item_sales_open_history = function", analytics)
+        self.assertIn("window.gt_item_sales_open_history(", analytics)
+        self.assertNotIn("onclick=", history)
+
+
 class TestComparisons(TestCase):
     def test_complete_period_shows_losses(self):
         cells = engine.comparison_cells(80, 100, 90, engine.COMPLETE)
@@ -224,6 +246,25 @@ class TestComparisons(TestCase):
         self.assertIsNone(cells["vs_promedio"])
         self.assertEqual(cells["dif_vs_prev"], 15.0)
         self.assertIsNone(cells["pct_vs_prev"])
+
+    def test_open_period_negative_base_needs_a_positive_actual(self):
+        # 0.2 against an average of -0.2 is a real gain. The percent stays
+        # blank because the base is not positive.
+        ahead = engine.comparison_cells(0.2, -0.2, -0.2, engine.CURRENT)
+        self.assertEqual(ahead["diferencia"], 0.4)
+        self.assertIsNone(ahead["vs_promedio"])
+        self.assertEqual(ahead["dif_vs_prev"], 0.4)
+        self.assertIsNone(ahead["pct_vs_prev"])
+        # Zero (or still negative) against a negative base is not ahead.
+        for actual in (0, -0.1):
+            cells = engine.comparison_cells(actual, -0.2, -0.5, engine.CURRENT)
+            self.assertTrue(all(value is None for value in cells.values()), actual)
+
+    def test_closed_period_still_shows_a_difference_over_a_negative_base(self):
+        cells = engine.comparison_cells(0, -0.2, -0.2, engine.COMPLETE)
+        self.assertEqual(cells["diferencia"], 0.2)
+        self.assertEqual(cells["dif_vs_prev"], 0.2)
+        self.assertIsNotNone(cells["vs_promedio"])
 
     def test_open_period_missing_comparison_stays_blank(self):
         cells = engine.comparison_cells(10, None, None, engine.CURRENT)
@@ -490,6 +531,9 @@ class TestAnalyticsReport(_Patched):
         indicators = {card["label"]: card["indicator"] for card in summary}
         self.assertEqual(indicators["% vs Average"], "Green")
         self.assertNotIn("Red", indicators.values())
+        cards = {card["label"]: card for card in summary}
+        self.assertGreater(cards["% vs Average"]["value"], 0)
+        self.assertEqual(cards["% vs Average"]["datatype"], "Percent")
 
     def test_open_period_never_red_in_summary(self):
         rows = [r for r in self.rows() if not (r["year"] == 2026 and r["item_code"] == "A")]
@@ -497,6 +541,10 @@ class TestAnalyticsReport(_Patched):
             analytics, {"company": "C", "year": "2026", "period": "11"}, rows, date(2026, 11, 27))
         self.assertIsNone(data[-1]["diferencia"])
         self.assertNotIn("Red", [card["indicator"] for card in summary])
+        cards = {card["label"]: card for card in summary}
+        for label in ("% vs Average", "% vs last year"):
+            self.assertEqual(cards[label]["value"], "")
+            self.assertNotEqual(cards[label]["datatype"], "Percent")
 
     def test_closed_period_shows_losses_and_red_card(self):
         rows = [r for r in self.rows() if not (r["year"] == 2026 and r["item_code"] == "A")]

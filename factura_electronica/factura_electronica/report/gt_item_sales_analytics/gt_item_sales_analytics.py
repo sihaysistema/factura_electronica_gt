@@ -278,16 +278,29 @@ def build_summary(total, items, state, metric, currency):
     datatype = "Currency" if metric == engine.AMOUNT else "Float"
 
     def card(label, value, indicator, kind=datatype):
-        entry = {"label": label, "value": value if value is not None else "", "indicator": indicator,
-                 "datatype": kind}
+        shown = value if value is not None else ""
+        # A Percent card formats a blank as 0%. While the open period is
+        # not ahead, the cell is empty, so the card must not be a Percent.
+        if kind == "Percent" and shown == "":
+            kind = "Data"
+        entry = {"label": label, "value": shown, "indicator": indicator, "datatype": kind}
         if kind == "Currency":
             entry["currency"] = currency
         return entry
 
-    def indicator(value):
+    def indicator(value, base=None):
         if value is None:
             return "Blue"
         if value > 0:
+            selected = total.get("selected")
+            # Closed period: a positive percent over a negative base is not
+            # a gain when the period itself is still at or below zero.
+            if (
+                base is not None
+                and engine.to_decimal(base) < 0
+                and (selected is None or engine.to_decimal(selected) <= 0)
+            ):
+                return "Blue"
             return "Green"
         # The open period never shows red (cells are blank until ahead).
         return "Red" if state == engine.COMPLETE and value < 0 else "Blue"
@@ -295,8 +308,8 @@ def build_summary(total, items, state, metric, currency):
     return [
         card(_("Selected period"), total["selected"], "Blue"),
         card(_("Average"), total["promedio"], "Blue"),
-        card(_("% vs Average"), total["vs_promedio"], indicator(total["vs_promedio"]), "Percent"),
-        card(_("% vs last year"), total["pct_vs_prev"], indicator(total["pct_vs_prev"]), "Percent"),
+        card(_("% vs Average"), total["vs_promedio"], indicator(total["vs_promedio"], total.get("promedio")), "Percent"),
+        card(_("% vs last year"), total["pct_vs_prev"], indicator(total["pct_vs_prev"], total.get("last_year")), "Percent"),
         card(_("Items sold"), len([row for row in items if row["selected"]]), "Blue", "Int"),
     ]
 

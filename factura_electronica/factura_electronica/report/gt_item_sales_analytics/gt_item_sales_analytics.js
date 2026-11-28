@@ -106,8 +106,10 @@ frappe.query_reports["GT Item Sales Analytics"] = {
     if (column && column.fieldname === "item_name" && data && !data.is_total_row && value) {
       var key = data.is_group ? "item_group" : "item_code";
       var target = data.is_group ? data.item_group : data.item_code;
+      // The onclick runs in the page, not inside this script. Frappe evals
+      // report JS with `new Function`, so the handler has to be on window.
       var html = "<a href='#' title='" + frappe.utils.escape_html(__("Open history")) +
-        "' onclick='return gt_item_sales_open_history(" +
+        "' onclick='return window.gt_item_sales_open_history(" +
         JSON.stringify(key).replace(/'/g, "&#39;") + "," +
         JSON.stringify(target).replace(/'/g, "&#39;") + ")'>" +
         frappe.utils.escape_html(value) + "</a>";
@@ -117,7 +119,7 @@ frappe.query_reports["GT Item Sales Analytics"] = {
   },
 };
 
-function gt_item_sales_open_history(key, target) {
+window.gt_item_sales_open_history = function (key, target) {
   var values = frappe.query_report.get_filter_values();
   var options = {
     company: values.company,
@@ -134,7 +136,7 @@ function gt_item_sales_open_history(key, target) {
   frappe.route_options = options;
   frappe.set_route("query-report", "GT Item Sales History");
   return false;
-}
+};
 
 // ISO week helpers (Monday to Sunday). December 28 is always in the last
 // ISO week of its year.
@@ -241,7 +243,7 @@ function gt_item_sales_format(value, row, column, data, default_formatter) {
   }
   if (fieldname === "diferencia" || fieldname === "dif_vs_prev" ||
       fieldname === "vs_promedio" || fieldname === "pct_vs_prev") {
-    html = gt_item_sales_colorize(html, value);
+    html = gt_item_sales_colorize(html, value, data, fieldname);
   }
   if (data && (data.is_total_row || data.is_group) && html) {
     html = "<b>" + html + "</b>";
@@ -261,7 +263,7 @@ function gt_item_sales_percent(value) {
     Math.abs(number).toFixed(2) + "%</div>";
 }
 
-function gt_item_sales_colorize(html, value) {
+function gt_item_sales_colorize(html, value, data, fieldname) {
   if (!html) {
     return html;
   }
@@ -269,5 +271,29 @@ function gt_item_sales_colorize(html, value) {
   if (value === null || value === undefined || value === "" || isNaN(number) || number === 0) {
     return html;
   }
+  // A positive result over a negative base is not a gain when the period
+  // itself is still at or below zero (net returns). Leave it uncolored.
+  if (number > 0 && gt_item_sales_negative_base_not_ahead(data, fieldname)) {
+    return html;
+  }
   return "<span style='color:" + (number > 0 ? "green" : "red") + "'>" + html + "</span>";
+}
+
+function gt_item_sales_negative_base_not_ahead(data, fieldname) {
+  if (!data || data.selected === null || data.selected === undefined || data.selected === "") {
+    return false;
+  }
+  var selected = Number(data.selected);
+  if (!(selected <= 0)) {
+    return false;
+  }
+  var base;
+  if (fieldname === "diferencia" || fieldname === "vs_promedio") {
+    base = data.promedio;
+  } else if (fieldname === "dif_vs_prev" || fieldname === "pct_vs_prev") {
+    base = data.last_year;
+  } else {
+    return false;
+  }
+  return base !== null && base !== undefined && base !== "" && Number(base) < 0;
 }
